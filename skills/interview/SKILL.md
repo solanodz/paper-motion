@@ -20,9 +20,9 @@ Done when every decision you could find is written and the open ones sit under `
 
 ## 2 · Ask in rounds
 
-The **frontier** is every open decision whose prerequisites are settled. Ask the whole frontier in one round, numbered, then wait. A question whose answer depends on another question still open belongs to a later round. When a recommendation only *softly* depends on an open question, ask it now with a conditional recommendation ("C; if you pick B in Q1, I'd go with recta").
+The **frontier** is every open decision whose prerequisites are settled. Ask the whole frontier in one round, numbered, then wait. The frontier decides the order; a calling skill's list of topics is its question bank grouped by dependency, never a schedule to pad. A question whose answer depends on another question still open belongs to a later round. When a recommendation only *softly* depends on an open question, ask it now with a conditional recommendation ("C; if you pick B in Q1, I'd go with recta").
 
-Open round 1 with two lines: what you took as given, and what waits for a later round and why. Then:
+Open round 1 with what you took as given (two lines, up to four when material settled a lot) and what waits for a later round and why. Then:
 
 ```
 ❓ **Q1** - **<title>**: <the question, worded so "yes" accepts the recommendation>
@@ -37,12 +37,13 @@ Board: `brand/.interview/<topic>.png`
 ❓ **Q2** - ...
 ```
 
-Drop the option list and the board line for questions that are not visual choices.
+Keep the option list for any multiple-choice question; add the board line only for visual choices. Several small positions on one topic (a set of sliders) form one question the user can accept as a block ("yes to all") or adjust item by item.
 
 - Plain words for someone who has never done motion. Define an unavoidable term once, in parentheses, at its first use in the round. Designers can answer in their own vocabulary; take it as given.
+- Open-ended questions (references, words they love) still carry a recommendation: a short starting set you propose, clearly marked as a suggestion, with an invitation to swap in their own.
 - After the user answers, mirror back in two to four lines what is now settled, write it (step 4), recompute the frontier, and ask the next round.
 
-The calling skill sets the depth (identity three to four rounds, most others one or two). Depth is a ceiling, never a quota: stop as soon as the frontier is empty.
+The calling skill sets the depth (identity three to four rounds, most others one or two). Depth is a ceiling, never a quota: stop as soon as the frontier is empty. An import start usually needs one or two rounds.
 
 ## 3 · Show visual choices as option boards
 
@@ -76,7 +77,7 @@ When a choice is about how something **looks** or **moves**, the user picks from
 
 Write each decision the moment it settles, in two places:
 
-1. **The calling skill's file**, in its section, removing it from `## Open`.
+1. **The calling skill's file**, in its section, removing it from `## Open`. Write a partly settled section now with what is settled, and keep the rest under `## Open`. Sections not asked yet stay empty and listed under `## Open`. Provenance (`By:`) lives only in the log.
 2. **The decision log**: one file per decision in `brand/decisions/`, numbered (scan for the highest number and add one, e.g. `0007-type-pairing.md`):
 
 ```md

@@ -37,6 +37,7 @@ Web app and MCP server are out of scope for v1.
 9. **Skills in English, conversation in the user's language.**
 10. **One piece at a time.** The user picks the format of each piece (16:9, 9:16 or 1:1); another format is another
     piece, made on its own.
+11. **Every skill fires on its own.** All skills are model-invoked: they trigger from what the user says ("help me define my brand") as well as by name (`/identity`), because the primary user doesn't know the skill names. `/paper-motion` stays the guided entry. Descriptions carry distinct triggers so two skills never claim the same request.
 
 ## Repo layout
 
@@ -87,7 +88,7 @@ A skill only writes its own rows. `decisions/` is shared and append-only.
 Every skill reads `brand/` first, offers the two starts, and ends by updating its files, logging decisions, and naming
 the next skill (the router's logic, inlined).
 
-### `paper-motion` (router, user-invoked)
+### `paper-motion` (router)
 Reads which brand files exist, tells the user where they are ("identity and visual system done"), and proposes the next
 step on the main flow: identity → visual-system → brand-sheet → motion-style → sound-kit → shader-set → make-video.
 Lets the user enter anywhere. Holds no state of its own.
@@ -96,7 +97,7 @@ Lets the user enter anywhere. Holds no state of its own.
 The mechanics only: design tree, frontier, rounds, recommended answers, "decide for me", and option boards (`pm board`
 renders 2–6 options as one lettered still or clip). Each calling skill brings its own question bank and depth.
 
-### `identity`
+### `identity` · built
 - **Guided:** 3–4 rounds. Purpose, audience, what it is and isn't, personality (pairs like calm/loud, warm/cold),
   voice samples, references and anti-references (links to work they admire and why).
 - **Import:** a website URL, a brand manual (PDF), an existing deck or doc.
