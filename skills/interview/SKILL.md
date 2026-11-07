@@ -50,19 +50,19 @@ The calling skill sets the depth (identity three to four rounds, most others one
 
 When a choice is about how something **looks** or **moves**, the user picks from a board, never from a description.
 
-**Build the options.** One scene per option in `brand/.interview/<topic>/a.html`, `b.html`, …, all in the same format.
+**Build the options.** One scene per option, `brand/.interview/<topic>/<letter>/scene.html` (what `pm new <letter> --dir brand/.interview/<topic>` creates), all in the same format.
 - **Form** (typefaces, palette, shape, layout): a still scene; `pm new a --dir brand/.interview/<topic> --still` starts one (1600×900, 3 s, reads `brand/tokens.json` when it exists, neutral stand-ins otherwise; `organicPath()` draws organic shapes). Board with `--t 1`; type and wordmark boards add `--cols 1` so text shows at real size.
-- **Motion** (pace, camera, moves, text behavior, how color enters): a moving scene; board with `--clip 4` (writes `.mp4`).
+- **Motion** (pace, camera, moves, text behavior, how color enters): a moving scene; board with `--clip <seconds>` at the length the calling skill gives (writes `.mp4`).
 - Load fonts with an `@font-face` or a Google Fonts `<link>`, then `await document.fonts.load('<weight> <size>px <family>')` for every face before `await s.start()`; otherwise the still renders in a fallback face.
 
 **Hold everything else equal.** The options differ only in the dimension being asked.
 - Same words, same layout, same timing in every option.
 - Dimensions already settled: use the settled choice.
-- Dimensions still open: use a **neutral stand-in**, a system sans and greys (`#f2f2f2`, `#8a8a8a`, `#1a1a1a`), never your own recommendation, so one board never pre-sells another question.
+- Dimensions still open: use a **neutral stand-in**, never your own recommendation, so one board never pre-sells another question. For form: a system sans and greys (`#f2f2f2`, `#8a8a8a`, `#1a1a1a`); for motion: the calling skill names them.
 
 **Use the brand's own words.** Take copy from the brand folder and the user's material. Where none exists, write filler of the right kind and length in the brand's voice. Facts stay real: never invent hours, prices, addresses, names or claims.
 
-**Board.** `pm board a.html b.html c.html --t 1 --labels "A · <name>: <specifics>|B · ..." --out brand/.interview/<topic>.png` (labels split on `|`). Two to four options; three sit in one row unless `--cols` says otherwise. Labels are short, in the user's language, with the defining specifics (font names, the core hex codes); anything longer goes in the question. One option is your recommendation.
+**Board.** `pm board brand/.interview/<topic>/a/scene.html … --t 1 --labels "A · <name>: <specifics>|B · ..." --out brand/.interview/<topic>.png` (labels split on `|`). Two to four options; three sit in one row unless `--cols` says otherwise. Labels are short, in the user's language, with the defining specifics (font names, the core hex codes); anything longer goes in the question. One option is your recommendation.
 
 **Check it before showing.** Read the board yourself and rebuild any option that fails:
 - the options read as different at a glance;

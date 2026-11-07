@@ -26,26 +26,26 @@ Call `interview` with this question bank, the file `brand/MOTION.md`, and a dept
 
 ```
 pm new <letter> --dir brand/.interview/<topic> --move <move> --pace <calm|medium|fast> --text <typing|rise|blur|track|plain> --camera <still|drift|travel>
-pm board brand/.interview/<topic>/a/scene.html … --clip 5 --labels "A · …|B · …" --out brand/.interview/<topic>.mp4
+pm board brand/.interview/<topic>/a/scene.html … --clip 7 --labels "A · …|B · …" --out brand/.interview/<topic>.mp4
 ```
 
-Each option changes only the dimension asked; the others hold at your current recommendation, said in the question.
+The demo (7 s) alternates the brand's name and its own line at the chosen pace, in its colors and type, read from `brand/` (run `pm` from the project root). Each option changes only the dimension asked. Dimensions already settled use the settled choice; open ones use neutral stand-ins (medium pace, still camera, crossfade, plain text), never your recommendation, so one board never pre-sells another. Option scenes are sketches: edit them freely, and keep those edits in the brand's clips later.
 
 **Round 1**
 - **Pace** (clip board): the same move and text at calm, medium and fast.
-- **Camera** (clip board): still, drift, travel.
+- **Camera** (clip board): still, drift, travel. Travel pans one continuous world from frame to frame and replaces the transition.
 - **Text behavior** (clip board, three or four): typing, rise, blur, track. Offer typing only when the identity is a terminal, a chat or a process.
 
 **Round 2**
 - **Transitions** (clip board, three or four moves at the chosen pace and camera): the user keeps one to three as the brand's repertoire; say where each would be used (between sections, into a detail, the ending).
 - **How color enters** (a question): constant, per section, or only through shaders as an event. Recommend from VISUAL.md's rules.
-- **Endings** (a question): resolve on the wordmark, on a line, or cut to the ground.
+- **Endings** (a question): resolve on the wordmark, on a line, or cut to the ground; say which repertoire move leads into it.
 
 ## 4 · Write
 
 When the user confirms the interview's summary:
 
-1. **Move clips.** For each move in the repertoire, keep its option scene at the chosen pace, text and camera as `brand/motion/<move>/scene.html` and render it: `pm render brand/motion/<move>/scene.html --out brand/motion/<move>.mp4 --motion-blur 8 --no-sfx`. Watch each once.
+1. **Move clips.** For each move in the repertoire, keep its option scene (`pm new … --move <move>` with the chosen pace, text and camera) as `brand/motion/<move>/scene.html` and render it from the project root: `pm render brand/motion/<move>/scene.html --out brand/motion/<move>.mp4 --motion-blur 8 --no-sfx`. Check each against the motion craft's "Checking a clip".
 2. **`brand/motion.json`**, for scenes and the brand sheet:
 
 ```json
@@ -78,7 +78,7 @@ When the user confirms the interview's summary:
 ## Open
 ```
 
-Every decision also has its entry in `brand/decisions/`, as `interview` describes. Then re-run `pm sheet` if `brand/sheet/` exists, so the sheet shows the new motion.
+Rules are yours to derive from the decisions (one type animation at a time, motion blur on finals, ...): show them in the closing summary and log them with `By: agent`. Every decision has its entry in `brand/decisions/`, as `interview` describes. Then re-run `pm sheet` if `brand/sheet/` exists, so the sheet shows the new motion.
 
 ## 5 · Close
 

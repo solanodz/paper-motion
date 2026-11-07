@@ -3,33 +3,31 @@
 <head>
 <meta charset="utf-8">
 <title>move demo</title>
+<!--
+  A 7 s demo of one motion style in the brand's look: frames alternate (the name, then a line in the brand's
+  words) at the chosen pace, so the clip shows rhythm, not one move. Reads /brand/tokens.json and
+  /brand/IDENTITY.md: render it from the project root. Edit freely: it is a sketch for a board.
+-->
 <style>
   #stage { overflow: hidden; }
-  #world, .frame { position: absolute; inset: 0; }
-  .frame { display: flex; flex-direction: column; justify-content: center; padding: 0 140px; box-sizing: border-box; }
-  #name { white-space: nowrap; }
-  #line { max-width: 1200px; }
-  #cur { display: inline-block; width: 0.5em; height: 0.95em; vertical-align: -0.12em; margin-left: 4px; }
-  #scan { position: absolute; left: 0; right: 0; height: 2px; opacity: 0; }
+  #world { position: absolute; inset: 0; }
+  .frame { position: absolute; top: 0; width: 1600px; height: 900px; display: flex; flex-direction: column; justify-content: center; padding: 0 140px; box-sizing: border-box; }
+  .name { white-space: nowrap; }
+  .cur { display: inline-block; width: 0.5em; height: 0.95em; vertical-align: -0.12em; margin-left: 4px; }
 </style>
 </head>
 <body>
-<main id="stage">
-  <div id="world">
-    <div id="a" class="frame"><div id="name"></div></div>
-    <div id="b" class="frame"><div><span id="line"></span><span id="cur"></span></div><div id="cap" style="margin-top:28px"></div></div>
-    <div id="scan"></div>
-  </div>
-</main>
+<main id="stage"><div id="world"></div></main>
 <script type="module">
-import { scene } from 'paper-motion';
+import { scene, ease, clamp } from 'paper-motion';
 import * as M from 'paper-motion/moves';
 
 // The four choices this demo shows. `pm new <name> --move … --pace … --text … --camera …` sets them.
-const MOVE = 'wipe';      // a transition from paper-motion/moves: cut crossfade wipe push maskReveal scanReveal zoomThrough
+const MOVE = 'crossfade'; // transition between frames: cut crossfade wipe push maskReveal scanReveal zoomThrough
 const PACE = 'medium';    // calm | medium | fast
-const TEXT = 'rise';      // typing | rise | blur | track | plain
-const CAMERA = 'still';   // still | drift | travel
+const TEXT = 'plain';     // how the line appears: typing | rise | blur | track | plain
+const CAMERA = 'still';   // still | drift | travel (travel moves the camera between frames and replaces MOVE)
+const DURATION = 7;
 
 const tokens = await fetch('/brand/tokens.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
 const identity = await fetch('/brand/IDENTITY.md').then((r) => (r.ok ? r.text() : '')).catch(() => '');
@@ -39,42 +37,81 @@ const fam = (k, fb) => (tokens?.fonts?.[k]?.family ? `'${tokens.fonts[k].family}
 await Promise.all(Object.values(tokens?.fonts ?? {}).filter((f) => f?.css).map((f) => new Promise((res) => document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: f.css, onload: res, onerror: res })))));
 for (const f of Object.values(tokens?.fonts ?? {})) if (f?.file) document.head.append(Object.assign(document.createElement('style'), { textContent: `@font-face { font-family: '${f.family}'; src: url('/brand/${f.file}'); font-weight: 100 900; }` }));
 
+// The brand's own words: its one line, else the voice sample, else the first sentence of its offer.
+const section = (h) => (identity.split(new RegExp(`^## ${h}\\s*$`, 'm'))[1] ?? '').split(/^## /m)[0].trim();
+const firstLine = (s) => s.split('\n').map((l) => l.replace(/^[-*]\s*/, '').trim()).find(Boolean) ?? '';
+const quoted = section('Voice').match(/[“"]([^”"]{4,90})[”"]/)?.[1];
 const name = tokens?.wordmark?.text ?? tokens?.brand ?? 'brand';
-const oneLine = (identity.split(/^## In one line\s*$/m)[1] ?? '').split(/^## /m)[0].trim().split('\n')[0] || 'one line in the brand’s own words.';
-const keywords = ((identity.split(/^## Keywords\s*$/m)[1] ?? '').split(/^## /m)[0].trim().split('\n')[0] || '').replace(/^[-*]\s*/, '');
+const line = firstLine(section('In one line')) || quoted || firstLine(section('Offer') || section('Purpose')).split(/(?<=\.)\s/)[0] || name;
 
-const s = scene({ width: 1600, height: 900, fps: 30, duration: 5, background: col('ground', '#f2f2f2') });
-const $ = (id) => document.getElementById(id);
+// Two frames that contrast enough for every move to read: ground, and figure (or a surface far from ground).
+const lum = (hex) => { const n = parseInt((hex ?? '#888').slice(1), 16); return ((n >> 16 & 255) * 0.299 + (n >> 8 & 255) * 0.587 + (n & 255) * 0.114) / 255; };
+const ground = col('ground', '#f2f2f2'), figure = col('figure', '#1a1a1a'), surface = C.surface?.hex;
+const bBg = surface && Math.abs(lum(surface) - lum(ground)) > 0.25 ? surface : figure;
+const bInk = bBg === figure ? ground : figure;
+
 const T = tokens?.type ?? {};
-Object.assign($('a').style, { background: col('ground', '#f2f2f2'), color: col('figure', '#1a1a1a') });
-Object.assign($('b').style, { background: col('surface', col('figure', '#1a1a1a')), color: col(C.surface ? 'figure' : 'ground', '#f2f2f2'), opacity: 0 });
-Object.assign($('name').style, { font: `${T.display?.weight ?? 600} 220px ${fam('display', 'system-ui, sans-serif')}`, letterSpacing: T.display?.tracking ?? '-0.02em', lineHeight: 0.95 });
-Object.assign($('line').parentElement.style, { font: `${T.title?.weight ?? 500} 76px/1.08 ${fam('display', 'system-ui, sans-serif')}`, letterSpacing: T.title?.tracking ?? '-0.01em' });
-Object.assign($('cap').style, { font: `${T.caption?.weight ?? 500} 24px ${fam(T.caption?.font === 'mono' ? 'mono' : 'text', 'ui-monospace, monospace')}`, letterSpacing: T.caption?.tracking ?? '0.02em', opacity: 0.7 });
-$('cur').style.background = $('b').style.color; $('cur').style.opacity = 0;
-$('scan').style.background = col('accent', '#888');
-$('name').textContent = name; $('line').textContent = oneLine; $('cap').textContent = keywords || `${MOVE} · ${PACE} · ${TEXT}`;
+const s = scene({ width: 1600, height: 900, fps: 30, duration: DURATION, background: ground });
+const world = document.getElementById('world');
+const mk = (i, kind) => {
+  const el = document.createElement('div'); el.className = 'frame';
+  el.style.left = CAMERA === 'travel' ? `${i * 1600}px` : '0';
+  el.style.background = kind === 'name' ? ground : bBg; el.style.color = kind === 'name' ? figure : bInk;
+  if (kind === 'name') {
+    el.innerHTML = '<div class="name"></div>';
+    Object.assign(el.firstChild.style, { font: `${T.display?.weight ?? 600} 220px ${fam('display', 'system-ui, sans-serif')}`, letterSpacing: T.display?.tracking ?? '-0.02em', lineHeight: 0.95 });
+    el.firstChild.textContent = name;
+  } else {
+    el.innerHTML = '<div><span class="ln"></span><span class="cur"></span></div>';
+    Object.assign(el.firstChild.style, { font: `${T.title?.weight ?? 500} 80px/1.08 ${fam('display', 'system-ui, sans-serif')}`, letterSpacing: T.title?.tracking ?? '-0.01em', maxWidth: '1300px' });
+    el.querySelector('.ln').textContent = line;
+    el.querySelector('.cur').style.background = bInk; el.querySelector('.cur').style.opacity = 0;
+  }
+  world.append(el);
+  return el;
+};
 
-const P = M.PACE[PACE];
-const T1 = 0.4 + P.hold * 0.5;                 // when the transition starts
-const T2 = T1 + P.enter * 1.6;                 // when it ends and the text behavior begins
+// Beats: name, line, name, line… each holds for the pace, then the move carries it to the next.
+const P = M.PACE[PACE], trans = P.enter * 1.6, textDur = P.enter * 1.6;
+const beats = [];
+for (let t = 0.3, i = 0; t < DURATION; i++) {
+  const kind = i % 2 ? 'line' : 'name';
+  const hold = kind === 'line' ? textDur + P.hold : P.hold * 0.7;
+  beats.push({ kind, start: t, end: t + hold, el: mk(i, kind) });
+  t += hold + trans;
+}
+beats.forEach((b, i) => { b.el.style.opacity = i === 0 ? 1 : 0; });
+const cps = { calm: 18, medium: 28, fast: 42 }[PACE];
+
 s.update((t) => {
-  const q = Math.min(1, Math.max(0, (t - T1) / (T2 - T1)));
-  const a = $('a'), b = $('b');
-  ({ cut: () => M.cut(a, b, t >= T1 ? 1 : 0), crossfade: () => M.crossfade(a, b, q), wipe: () => M.wipe(a, b, q),
-     push: () => M.push(a, b, q), maskReveal: () => M.maskReveal(a, b, q), scanReveal: () => M.scanReveal(a, b, q, { line: $('scan') }),
-     zoomThrough: () => M.zoomThrough(a, b, q) })[MOVE]?.();
-  const start = MOVE === 'cut' ? T1 : T2 - P.enter * 0.4;
-  if (TEXT === 'typing') M.typeOn($('line'), oneLine, t, { start, cps: PACE === 'fast' ? 50 : PACE === 'calm' ? 22 : 35, cursor: $('cur') });
-  else if (TEXT === 'rise') M.wordRise($('line'), t, { start, each: P.stagger });
-  else if (TEXT === 'blur') M.blurIn($('line'), t, { start, duration: P.enter * 1.6 });
-  else if (TEXT === 'track') M.trackIn($('line'), t, { start, duration: P.enter * 2 });
-  $('cap').style.opacity = 0.7 * Math.min(1, Math.max(0, (t - start - P.enter) / P.enter));
-  if (CAMERA === 'drift') M.drift($('world'), t, { amount: 0.05, duration: 5 });
-  if (CAMERA === 'travel') $('world').style.transform = `translateX(${40 - t * 16}px) scale(1.08)`;
+  // Every frame is derived from t alone: reset, then apply only the transition in progress (or last finished).
+  for (const b of beats) Object.assign(b.el.style, { opacity: CAMERA === 'travel' ? 1 : 0, transform: '', maskImage: '', webkitMaskImage: '', clipPath: '' });
+  let k = -1;
+  beats.forEach((b, i) => { if (beats[i + 1] && t >= b.end) k = i; });
+  const p = k < 0 ? 0 : clamp((t - beats[k].end) / trans);
+  const drift = CAMERA === 'drift' ? ` scale(${1 + 0.05 * t / DURATION})` : '';
+  if (CAMERA === 'travel') world.style.transform = `translateX(${-(Math.max(0, k) + (k < 0 ? 0 : ease.inOutCubic(p))) * 1600}px)`;
+  else {
+    world.style.transform = drift.trim();
+    if (k < 0) beats[0].el.style.opacity = 1;
+    else {
+      const a = beats[k].el, b = beats[k + 1].el;
+      ({ cut: () => M.cut(a, b, p >= 0.5 ? 1 : 0), crossfade: () => M.crossfade(a, b, p), wipe: () => M.wipe(a, b, p),
+         push: () => M.push(a, b, p), maskReveal: () => M.maskReveal(a, b, p), scanReveal: () => M.scanReveal(a, b, p),
+         zoomThrough: () => M.zoomThrough(a, b, p, { origin: beats[k].kind === 'name' ? '30% 50%' : '50% 50%' }) })[MOVE]?.();
+    }
+  }
+  // the line appears as its frame lands
+  for (const b of beats.filter((x) => x.kind === 'line')) {
+    const el = b.el.querySelector('.ln'), start = b.start - (CAMERA === 'travel' ? 0 : trans * 0.3);
+    if (TEXT === 'typing') M.typeOn(el, line, t, { start, cps, cursor: t < b.end + trans ? b.el.querySelector('.cur') : null });
+    else if (TEXT === 'rise') M.wordRise(el, t, { start, each: P.stagger, duration: textDur });
+    else if (TEXT === 'blur') M.blurIn(el, t, { start, duration: textDur });
+    else if (TEXT === 'track') M.trackIn(el, t, { start, duration: textDur * 1.2 });
+  }
 });
 
-await Promise.all(['name', 'line', 'cap'].map((id) => { const c = getComputedStyle(id === 'line' ? $(id).parentElement : $(id)); return document.fonts.load(`${c.fontWeight} ${c.fontSize} ${c.fontFamily}`); }));
+await Promise.all([...document.querySelectorAll('.name, .frame > div')].map((el) => { const c = getComputedStyle(el); return document.fonts.load(`${c.fontWeight} ${c.fontSize} ${c.fontFamily}`); }));
 await s.start();
 </script>
 </body>

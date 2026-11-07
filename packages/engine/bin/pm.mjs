@@ -326,7 +326,12 @@ async function main() {
           pg.on('pageerror', (e) => errs.push(e.message));
           await pg.goto(url());
           await pg.waitForFunction(() => window.__sheetReady === true, null, { timeout: 60000 }).catch(() => { throw new Error(`sheet did not finish loading${errs.length ? `: ${errs[0]}` : ''}`); });
-          await pg.waitForTimeout(1500); // let videos and the live shader draw a frame
+          // show every clip at a telling moment (60 % in), not its first second
+          await pg.evaluate(async () => { await Promise.all([...document.querySelectorAll('video')].map((v) => new Promise((res) => {
+            const go = () => { v.pause(); v.currentTime = (v.duration || 1) * 0.6; v.onseeked = res; setTimeout(res, 3000); };
+            v.readyState >= 1 ? go() : (v.onloadedmetadata = go, setTimeout(res, 5000));
+          }))); });
+          await pg.waitForTimeout(800); // let the live shader draw
           const png = path.join(sheetDir, 'sheet.png');
           await pg.screenshot({ path: png, fullPage: true });
           console.log(`✓ ${path.relative(process.cwd(), png)}`);
