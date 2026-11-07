@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+
+# Local work: pieces in progress (one holds a copyrighted instrumental) and their outputs
+works/
+renders/
+stills/
+
+# Personal shader library while it is being moved into examples/paper-motion-brand (spec step 11)
+library/

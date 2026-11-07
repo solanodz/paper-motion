@@ -1,0 +1,25 @@
+{
+  "name": "@paper-motion/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Frame-exact video renderer for HTML scenes built with Paper Shaders. The engine behind the paper-motion skills.",
+  "bin": {
+    "pm": "./bin/pm.mjs",
+    "paper-motion": "./bin/pm.mjs"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "@paper-design/shaders": "0.0.82",
+    "@paper-design/shaders-react": "0.0.82",
+    "playwright-core": "^1.49.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/solanodz/paper-motion",
+    "directory": "packages/engine"
+  }
+}

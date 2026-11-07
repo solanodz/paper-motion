@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>signal</title>
+<style>
+  #stage { color: #e8e6df; font: 500 14px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.18em; }
+  .layer { position: absolute; inset: 0; }
+  .tl, .tr, .bl, .br { position: absolute; }
+  .tl { left: 64px; top: 60px; } .tr { right: 64px; top: 60px; text-align: right; }
+  .bl { left: 64px; bottom: 60px; } .br { right: 64px; bottom: 60px; }
+  .rule { position: absolute; left: 64px; right: 64px; bottom: 96px; height: 1px; background: #e8e6df; transform-origin: 0 0; opacity: .5; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="field" class="layer"></div>
+  <div class="tl">SIGNAL / 001</div>
+  <div class="tr" id="tc">00:00:00</div>
+  <div class="rule" id="rule"></div>
+  <div class="bl">A SPHERE, SAMPLED IN 4×4</div>
+  <div class="br" id="pct">000</div>
+</main>
+<script type="module">
+  import { scene, keys, progress, ease } from 'paper-motion';
+
+  const s = scene({ width: 1920, height: 1080, fps: 30, duration: 10, background: '#0a0a0a' });
+
+  const field = s.shader('#field', 'Dithering', {
+    colorBack: '#0a0a0a', colorFront: '#e8e6df',
+    shape: 'sphere', type: '4x4', size: 3, speed: 0.5,
+  });
+
+  const tc = document.querySelector('#tc'), pct = document.querySelector('#pct'), rule = document.querySelector('#rule');
+
+  s.update((t, { frame, fps }) => {
+    // The sphere approaches, holds, then recedes: one gesture, no tricks.
+    field.set({ scale: keys(t, [[0, 0.3], [6, 0.72, ease.inOutCubic], [10, 0.62, ease.inOutSine]]) });
+    const ff = String(frame % fps).padStart(2, '0');
+    const ss = String(Math.floor(t)).padStart(2, '0');
+    tc.textContent = `00:${ss}:${ff}`;
+    const p = progress(t, 0, 10);
+    pct.textContent = String(Math.round(p * 100)).padStart(3, '0');
+    rule.style.transform = `scaleX(${progress(t, 0.4, 9.6, ease.inOutQuart)})`;
+  });
+
+  await s.start();
+</script>
+</body>
+</html>

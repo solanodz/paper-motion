@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>chrome-endcard</title>
+<style>
+  @font-face { font-family: 'GSerif'; src: url(./fonts/GeistSerif-Regular.woff2); }
+  @font-face { font-family: 'GMono'; font-weight: 100 900; src: url(./fonts/GeistMono-Variable.woff2) format('woff2-variations'); }
+  #stage { background: #000; overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; white-space: pre; }
+  #logo { left: 0; top: 190px; width: 1920px; height: 520px; }
+  #tag { left: 0; width: 1920px; top: 668px; text-align: center; font: 400 26px/32px GMono; color: #8a8a8a; }
+  #cmdrow { left: 0; width: 1920px; top: 762px; height: 26px; text-align: center; font: 500 21px/26px GMono; color: #e6e6e6; }
+  #cur { display: inline-block; width: 11px; height: 24px; background: #e6e6e6; vertical-align: -5px; margin-left: 2px; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="logo" class="abs"></div>
+  <div id="tag" class="abs">art-directed video from a conversation</div>
+  <div id="cmdrow" class="abs"><span id="cmd"></span><span id="cur"></span></div>
+</main>
+<script type="module">
+import { scene, progress, keys, ease } from 'paper-motion';
+import { wordmark } from './wordmark.js';
+
+const s = scene({ width: 1920, height: 1080, fps: 30, duration: 7, background: '#000' });
+await document.fonts.load('400 26px GMono');
+const logoEl = document.querySelector('#logo');
+
+// Look B · chrome, approved from the looks board.
+const CHROME = { colorBack: '#000000', colorTint: '#ffffff', softness: 0.12, repetition: 5, shiftRed: 0.3, shiftBlue: 0.3, distortion: 0.14, contour: 0.6, angle: 20 };
+const metal = s.shader(logoEl, 'LiquidMetal', { image: await wordmark(), fit: 'contain', scale: 0.8, speed: 1, shape: 'none', ...CHROME });
+
+const tag = document.querySelector('#tag');
+const cmd = document.querySelector('#cmd'), cur = document.querySelector('#cur');
+const CMD = '$ npx skills add solanodz/paper-motion';
+const TYPE = [3.3, 4.7];
+
+s.update((t) => {
+  // Entrance: a soft diagonal wipe uncovers the word while it settles from 104% and the metal calms down.
+  const w = progress(t, 0.3, 2.0, ease.outCubic) * 150 - 30;
+  const m = `linear-gradient(100deg, #000 ${w}%, transparent ${w + 30}%)`;
+  logoEl.style.maskImage = m; logoEl.style.webkitMaskImage = m;
+  logoEl.style.transform = `scale(${1.04 - 0.04 * progress(t, 0.35, 2.6, ease.outExpo)})`;
+  metal.set({ distortion: keys(t, [[0, 0.45], [2.6, 0.14, ease.outCubic]]) });
+
+  // Tagline rises in; the install line types, then the cursor blinks.
+  const a = progress(t, 2.3, 3.0, ease.outCubic);
+  tag.style.opacity = a; tag.style.transform = `translateY(${(1 - a) * 14}px)`;
+  const n = Math.floor(CMD.length * progress(t, TYPE[0], TYPE[1]));
+  cmd.textContent = CMD.slice(0, n);
+  const typing = t > TYPE[0] && t < TYPE[1];
+  cur.style.opacity = t < 3.1 ? 0 : typing || Math.floor(t * 2) % 2 === 0 ? 1 : 0;
+});
+
+// Sound: one low swell under the reveal, then soft keys. Nothing bright.
+let seed = 7;
+s.sfx(0.3, 'whoosh', { dur: 1.5, from: 260, to: 900, peak: 0.55, gain: 0.32, body: 0.5, seed: seed++ });
+s.sfx(0.55, 'thud', { freq: 48, gain: 0.3, decay: 0.7 });
+s.sfx(2.3, 'paper', { dur: 0.6, gain: 0.04 });
+for (let i = 0; i < CMD.length; i++) {
+  const t = TYPE[0] + (i / CMD.length) * (TYPE[1] - TYPE[0]);
+  s.sfx(t, 'key', { kind: CMD[i] === ' ' ? 'space' : 'letter', gain: 0.22, seed: seed++, pan: ((i % 5) - 2) * 0.04 });
+}
+s.sfx(TYPE[1] + 0.25, 'key', { kind: 'enter', gain: 0.28, seed: seed++ });
+s.sound({ lowpass: 2400, gain: 1 });
+
+await s.start();
+</script>
+</body>
+</html>

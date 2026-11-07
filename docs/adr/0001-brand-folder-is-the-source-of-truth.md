@@ -1,0 +1,3 @@
+# The brand folder is the single source of truth
+
+Every skill in the pack reads the user's brand folder before acting and writes back only what it decided, in its own file (identity, visual system, motion style, sound kit, decisions, assets). Skills never pass decisions to each other through the conversation, so any skill can be entered first, a later session picks up where the last one stopped, and a brand stays the same from one piece to the next. The alternative, each skill holding its own state or one monolithic config, would make the skills depend on running in order and would lose the user's taste between sessions.

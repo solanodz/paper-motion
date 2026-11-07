@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>untitled</title>
+<style>
+  /* Everything lives inside #stage, sized by the scene config. */
+  #stage { font-family: ui-sans-serif, system-ui, sans-serif; color: #f2efe9; }
+  .layer { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="field" class="layer"></div>
+</main>
+
+<script type="module">
+  import { scene, progress, keys, ease, osc, noise, rng } from 'paper-motion';
+
+  // The whole piece is a pure function of t (seconds). No Date.now(), no Math.random(),
+  // no setTimeout: use rng(seed) / noise() and derive every value from t.
+  const s = scene({ width: 1920, height: 1080, fps: 30, duration: 10, background: '#0e0e0e' });
+
+  // Any Paper shader by name, with the same props as its React component.
+  // `paper-motion shaders` lists them all with defaults and presets.
+  const field = s.shader('#field', 'GrainGradient', {
+    colorBack: '#0e0e0e',
+    colors: ['#3b3a36', '#8c7e6a', '#e8e1d4'],
+    softness: 0.7, intensity: 0.15, noise: 0.35,
+    shape: 'blob', speed: 0.6,
+  });
+  // For a seamless loop of a diffuse field (mesh gradients, grain, noise), pass
+  // { loop: 2 } as 4th arg: it crossfades the last 2s into the first frame.
+  // Avoid it for crisp figures (blobs, shapes): they ghost during the crossfade.
+
+  s.update((t) => {
+    // Animate shader params over time, e.g.:
+    // field.set({ intensity: keys(t, [[0, 0.1], [5, 0.4, ease.inOutSine], [10, 0.1, ease.inOutSine]]) });
+  });
+
+  await s.start();
+</script>
+</body>
+</html>

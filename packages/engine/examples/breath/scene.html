@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>breath</title>
+<style>
+  #stage { color: #f3ece2; }
+  .layer { position: absolute; inset: 0; }
+  .word {
+    position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+    text-align: center; font: 400 64px/1 "Iowan Old Style", "Palatino", Georgia, serif;
+    letter-spacing: 0.16em; text-indent: 0.16em; font-style: italic;
+    color: #e9dccb; mix-blend-mode: difference; /* stays legible over light and dark */
+  }
+  .foot {
+    position: absolute; left: 0; right: 0; bottom: 72px; text-align: center;
+    font: 500 13px/1 ui-monospace, Menlo, monospace; letter-spacing: 0.4em; color: #e9dccb; mix-blend-mode: difference;
+  }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="field" class="layer"></div>
+  <div class="word" id="word">breathe</div>
+  <div class="foot" id="foot">IN · OUT</div>
+</main>
+<script type="module">
+  import { scene, split, stagger, progress, keys, ease, osc } from 'paper-motion';
+
+  const s = scene({ width: 1080, height: 1350, fps: 30, duration: 12, background: '#1b1a17' });
+
+  const field = s.shader('#field', 'MeshGradient', {
+    colors: ['#1b1a17', '#3d3328', '#a8927a', '#e9dccb'],
+    distortion: 0.9, swirl: 0.12, speed: 0.22,
+    grainMixer: 0.18, grainOverlay: 0.22,
+  }, { loop: 3 });
+
+  const chars = split('#word', 'chars');
+  const foot = document.querySelector('#foot');
+
+  s.update((t) => {
+    // One slow breath per loop: period = duration keeps the loop seamless.
+    field.set({ scale: 1.15 + 0.08 * osc(t, 12, -0.25) });
+
+    chars.forEach((c, i) => {
+      const inP = stagger(t, i, { start: 1.2, each: 0.14, duration: 1.6, easing: ease.outCubic });
+      const outP = stagger(t, chars.length - 1 - i, { start: 8.2, each: 0.1, duration: 1.4, easing: ease.inCubic });
+      const v = inP * (1 - outP);
+      c.style.opacity = v;
+      c.style.filter = `blur(${(1 - v) * 10}px)`;
+      c.style.transform = `translateY(${(1 - inP) * 14 - outP * 10}px)`;
+    });
+    foot.style.opacity = 0.8 * keys(t, [[2.5, 0], [4, 1, ease.inOutSine], [8, 1], [9.5, 0, ease.inOutSine]]);
+  });
+
+  await s.start();
+</script>
+</body>
+</html>
