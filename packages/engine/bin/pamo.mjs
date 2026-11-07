@@ -11,7 +11,7 @@ const REPO_SKILL = path.resolve(ENGINE, '..', '..', 'skills', 'make-video');
 
 const HELP = `paper-motion — minimal, creative-directed video from code + Paper Shaders
 
-Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages/engine/bin/pm.mjs in the repo)
+Usage: pamo <command> [options]   (pamo = npx @paper-motion/engine, or node packages/engine/bin/pamo.mjs in the repo)
 
   setup                              install engine deps, check ffmpeg + browser
   doctor                             only check the environment
@@ -58,6 +58,7 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
                                      build writes one scene per entry and review boards;
                                      boards renders them to PNG (12 per board, numbered);
                                      render writes each loop to renders/ and records it in set.json
+  status [--brand brand]              what the brand folder has, and the next step on the main flow
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
 `;
@@ -451,6 +452,30 @@ async function main() {
         break;
       }
       console.error('Usage: shader-set <build|boards|render> [--brand brand] [--only 3,7]'); process.exit(1);
+    }
+
+    case 'status': {
+      const B = path.resolve(args.brand ?? 'brand');
+      const has = (f) => fs.existsSync(path.join(B, f));
+      const filled = (f) => has(f) && fs.readFileSync(path.join(B, f), 'utf8').replace(/^#.*$/gm, '').replace(/^## Open[\s\S]*$/m, '').trim().length > 40;
+      const n = (dir, re) => (has(dir) ? fs.readdirSync(path.join(B, dir)).filter((f) => re.test(f)).length : 0);
+      let setN = 0, setR = 0;
+      if (has('shader-set/set.json')) { const j = JSON.parse(fs.readFileSync(path.join(B, 'shader-set/set.json'), 'utf8')); const e = Array.isArray(j) ? j : j.entries ?? []; setN = e.length; setR = e.filter((x) => x.video).length; }
+      const steps = [
+        ['identity', filled('IDENTITY.md'), 'IDENTITY.md'],
+        ['visual-system', has('tokens.json') && filled('VISUAL.md'), 'VISUAL.md + tokens.json' + (has('assets/wordmark-on-light.png') || has('assets/wordmark-on-dark.png') ? ' + wordmark' : '')],
+        ['brand-sheet', has('sheet/sheet.png'), 'sheet/sheet.png'],
+        ['motion-style', has('motion.json'), 'MOTION.md + motion.json' + (n('motion', /\.mp4$/) ? ` + ${n('motion', /\.mp4$/)} move clips` : '')],
+        ['sound-kit', has('sound.json'), 'SOUND.md + sound.json' + (has('sound/keys/keys.json') ? ' + keystroke bank' : '')],
+        ['shader-set', setN > 0, `shader-set: ${setN} entries, ${setR} rendered`],
+        ['make-video', n('pieces', /^[^.]/) > 0, `pieces: ${n('pieces', /^[^.]/)}`],
+      ];
+      if (!fs.existsSync(B)) { console.log(`No brand folder at ${path.relative(process.cwd(), B) || '.'} yet. Start with: identity`); break; }
+      for (const [skill, done, what] of steps) console.log(`${done ? '✓' : '·'} ${skill.padEnd(14)} ${done ? what : ''}`);
+      console.log(`  decisions      ${n('decisions', /\.md$/)}`);
+      const next = steps.find(([, done]) => !done);
+      console.log(next ? `\nnext: ${next[0]}` : '\nThe brand is complete: make another piece with make-video, or revisit any part.');
+      break;
     }
 
     case 'shaders': {

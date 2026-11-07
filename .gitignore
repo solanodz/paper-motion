@@ -17,7 +17,7 @@ examples/paper-motion-brand/brand/sheet/sheet.pdf
 # Interview option boards are throwaway
 **/brand/.interview/
 
-# Shader sets: shots, boards and shot.js are rebuilt by `pm shader-set build`
+# Shader sets: shots, boards and shot.js are rebuilt by `pamo shader-set build`
 **/brand/shader-set/shots/
 **/brand/shader-set/boards/
 **/brand/shader-set/shot.js

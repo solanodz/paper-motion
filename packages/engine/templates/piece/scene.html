@@ -20,7 +20,7 @@ import { wordRise, blurIn, typeOn, typingTimes, keySounds } from 'paper-motion/m
 import { loadBrand } from 'paper-motion/brand';
 
 const B = await loadBrand();
-const W = 1920, H = 1080, SHORT = Math.min(W, H), M = Math.round(SHORT * 0.08);   // `pm new --format` sets W and H
+const W = 1920, H = 1080, SHORT = Math.min(W, H), M = Math.round(SHORT * 0.08);   // `pamo new --format` sets W and H
 const s = scene({ width: W, height: H, fps: 30, duration: 8, background: B.color('ground') });
 
 // Material: the brand's first shader-set entry, or a slow field from its ramp.

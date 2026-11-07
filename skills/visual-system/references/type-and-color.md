@@ -46,13 +46,13 @@ Use it to build options, to write recommendations, and to check boards.
 - The name, cased as the brand writes it, in the display face. Adjust only weight and tracking (lighter weights take
   more negative tracking, heavy weights little or none) and check spacing pairs by eye (`rn`, `va`, `ff`). Never distort, outline or add effects in the mark itself; effects
   are treatments applied in a piece.
-- Render both versions with `pm wordmark` (cropped to the ink): `wordmark-on-light.png` in the figure color,
+- Render both versions with `pamo wordmark` (cropped to the ink): `wordmark-on-light.png` in the figure color,
   `wordmark-on-dark.png` in the ground color, or the reverse for a dark brand. Clear space is a rule in VISUAL.md.
 - If the user has a logo, it leads; the wordmark supports it in type that matches.
 
 ## Checking a board
 
-- Type and wordmark boards stack the options (`pm board --cols 1`) so type shows at its real size; set sizes from
+- Type and wordmark boards stack the options (`pamo board --cols 1`) so type shows at its real size; set sizes from
   the type scale, never inflated to survive a small board.
 - Squint: do the options differ at a glance?
 - Every size legible at board scale; the intended face loaded, no fallback.

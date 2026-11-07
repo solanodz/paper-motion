@@ -7,7 +7,7 @@ description: Make one video (a piece) for a brand, from brief to final render, w
 
 You and the user make one piece of moving image together. You are the studio: you propose, render, look critically and refine. The user is the director. The medium: an HTML **scene** that is a pure function of time `t`; Paper Shaders give the material, DOM/SVG/CSS the type and geometry, and the engine renders every frame in headless Chromium and encodes it with ffmpeg, so output is exact and repeatable.
 
-`pm` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pm.mjs`), run from the user's project root. First time on a machine: `pm setup` (Node ≥ 18, ffmpeg, Chrome); if it fails, read `references/rendering.md` → Troubleshooting.
+`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root. First time on a machine: `pamo setup` (Node ≥ 18, ffmpeg, Chrome); if it fails, read `references/rendering.md` → Troubleshooting.
 
 ## 1 · Read the brand
 
@@ -39,8 +39,8 @@ Guessing is the failure mode of this job. Keep asking until you could describe t
 From the approved brief, make 2–3 stills of the key moments at final quality, in the brand's look:
 
 ```bash
-pm new <name> --dir brand/pieces --format 9:16 --piece   # a scene already wired to the brand
-pm still brand/pieces/<name>/scene.html --count 4        # stills + contact-sheet.jpg
+pamo new <name> --dir brand/pieces --format 9:16 --piece   # a scene already wired to the brand
+pamo still brand/pieces/<name>/scene.html --count 4        # stills + contact-sheet.jpg
 ```
 
 Pieces with several beats (a list, a song, more than 20 s): write a storyboard with one distinct visual idea per beat, each tied to what that beat says and with its own mechanic, and get it approved before building. Never run every beat through the same treatment.
@@ -52,7 +52,7 @@ Look at every contact sheet yourself before showing it (`references/aesthetics.m
 Render the most important 3–8 seconds at final quality, with the brand's moves and sound:
 
 ```bash
-pm render brand/pieces/<name>/scene.html --to 6 --motion-blur 6 --dpr 2
+pamo render brand/pieces/<name>/scene.html --to 6 --motion-blur 6 --dpr 2
 ```
 
 Get an explicit OK on pace, movement, look and sound.
@@ -60,21 +60,21 @@ Get an explicit OK on pace, movement, look and sound.
 ## 5 · Gate C: build the full piece and iterate
 
 1. Edit `scene.html`; record each decision in `brief.md` (Decisions log).
-2. `pm still` at the moments that matter and critique the frames yourself first: legibility, edges, balance, contrast, banding, does it still feel like the brief and the brand.
-3. Show stills; for motion, a short draft render or `pm preview brand/pieces/<name>/scene.html` (live reload, scrub with ←/→).
+2. `pamo still` at the moments that matter and critique the frames yourself first: legibility, edges, balance, contrast, banding, does it still feel like the brief and the brand.
+3. Show stills; for motion, a short draft render or `pamo preview brand/pieces/<name>/scene.html` (live reload, scrub with ←/→).
 
 Change one or two things per round and say what changed. Keep what the user liked.
 
 ## 6 · Gate D: render the final
 
 ```bash
-pm render brand/pieces/<name>/scene.html --motion-blur 8 --dpr 2 --loudness -16   # the brand's loudness
-pm render brand/pieces/<name>/scene.html --format prores                          # master for editing
-pm render brand/pieces/<name>/scene.html --format gif --gif-width 720
-pm render brand/pieces/<name>/scene.html --audio track.wav --loudness -14         # with the user's music
+pamo render brand/pieces/<name>/scene.html --motion-blur 8 --dpr 2 --loudness -16   # the brand's loudness
+pamo render brand/pieces/<name>/scene.html --format prores                          # master for editing
+pamo render brand/pieces/<name>/scene.html --format gif --gif-width 720
+pamo render brand/pieces/<name>/scene.html --audio track.wav --loudness -14         # with the user's music
 ```
 
-Check the first and last frame of a loop (`pm still --t 0,<duration − 1/fps>`). Report the file path, size, duration and loudness.
+Check the first and last frame of a loop (`pamo still --t 0,<duration − 1/fps>`). Report the file path, size, duration and loudness.
 
 ## Writing a scene
 
@@ -114,7 +114,7 @@ Hard rules (break them and frames flicker or differ between renders):
 30 Paper shaders, all usable by name with the same props as their React
 components. `references/shaders.md` lists every one with defaults, enum options
 and named presets — start from a preset, then tune. Quick live list:
-`pm shaders` · details: `pm shaders MeshGradient`.
+`pamo shaders` · details: `pamo shaders MeshGradient`.
 
 - "still" shaders (Waves, DotGrid, StaticMeshGradient, PaperTexture, image
   filters) don't move by themselves: animate them by driving params from `t`.
@@ -133,11 +133,11 @@ free-plan budget (100 calls a week) are in `references/paper-canvas.md`. Nothing
 
 ## Bundled examples
 
-`pm examples` — deliberately different pieces shipped with the engine
+`pamo examples` — deliberately different pieces shipped with the engine
 in `packages/engine/examples/`: `breath` (warm field), `signal` (dithered
 sphere), `install-loop` (terminal typing over a seamless shader loop) and
 `chrome-endcard` (LiquidMetal wordmark, mask wipe, sound cues). Read them to
-learn the API; start from one with `pm new <name> --from breath` only
+learn the API; start from one with `pamo new <name> --from breath` only
 if the user wants that direction.
 Never default to them.
 

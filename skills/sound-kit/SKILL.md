@@ -7,7 +7,7 @@ description: Decide how a brand sounds (sound palette, typing, music stance, lou
 
 Settle **how the brand sounds**: the family of cues its gestures make, how its typing sounds, whether music plays, and how loud pieces are. The user chooses by ear, from clips that play one after another. This skill owns sound craft: read [references/sound-craft.md](references/sound-craft.md) before building any option.
 
-`pm` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pm.mjs`), run from the user's project root.
+`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root.
 
 ## 1 · Read what exists
 
@@ -17,7 +17,7 @@ If `SOUND.md` exists, ask what should change and re-run only those branches.
 
 ## 2 · Pick the start
 
-- **Import start** when the user brings sounds: a typing recording, sound effects they own, a music track, a sonic guide. Typing recordings are split with `pm keys <file> --out brand/sound/keys`; music goes to `brand/assets/music/`. Write what is stated (`By: source`), and ask only for what is missing.
+- **Import start** when the user brings sounds: a typing recording, sound effects they own, a music track, a sonic guide. Typing recordings are split with `pamo keys <file> --out brand/sound/keys`; music goes to `brand/assets/music/`. Write what is stated (`By: source`), and ask only for what is missing.
 - **Guided start** otherwise.
 
 ## 3 · Interview
@@ -25,14 +25,14 @@ If `SOUND.md` exists, ask what should change and re-run only those branches.
 Call `interview` with this question bank, the file `brand/SOUND.md`, and a depth of one round (two if typing needs a recording). Sound options are heard, so boards play in sequence:
 
 ```
-pm new <letter> --dir brand/.interview/sound --move <brand's move> --pace <brand's pace> --text <brand's text> --camera <brand's camera> --sound <soft|crisp|airy|ambient|none>
-pm board brand/.interview/sound/a/scene.html … --clip 7 --sequence --labels "A · …|B · …" --out brand/.interview/sound.mp4
+pamo new <letter> --dir brand/.interview/sound --move <brand's move> --pace <brand's pace> --text <brand's text> --camera <brand's camera> --sound <soft|crisp|airy|ambient|none>
+pamo board brand/.interview/sound/a/scene.html … --clip 7 --sequence --labels "A · …|B · …" --out brand/.interview/sound.mp4
 ```
 
 The demo carries the brand's motion, so only the sound changes; the board levels each option's loudness so the comparison is fair. Ask the user to listen with headphones or speakers.
 
 - **Palette** (sequence board): soft, crisp, airy (subtle swells); add ambient (airy over a low bed) only for brands that want constant atmosphere, and "none" when the identity leans silent.
-- **Typing** (only when `motion.json`'s text is typing, or pieces will show a terminal or chat): the source of keystrokes. A recording the user makes or owns (best: 20–30 s of their own keyboard, split with `pm keys`), a CC0 pack they approve downloading, or synthesized keys. Published work needs a source the user can vouch for.
+- **Typing** (only when `motion.json`'s text is typing, or pieces will show a terminal or chat): the source of keystrokes. A recording the user makes or owns (best: 20–30 s of their own keyboard, split with `pamo keys`), a CC0 pack they approve downloading, or synthesized keys. Published work needs a source the user can vouch for.
 - **Music** (a question of fact): their own track, or sound design only.
 - **Loudness** (a question): −14 LUFS for social feeds, −16 for web and presentations; recommend from where people meet the brand.
 
@@ -59,7 +59,7 @@ When the user confirms the interview's summary:
 ```
 
    The cue values are the chosen palette's (they are in the demo scene's `PAL`); adjust them only from what the user said. `keys.bank` is `null` when typing is synthesized (then `style` is `creamy`, `thock` or `clack`).
-2. **Samples for the sheet:** `pm sound-samples` renders each cue and a typing line to `brand/sound/*.wav` and `sounds.json`.
+2. **Samples for the sheet:** `pamo sound-samples` renders each cue and a typing line to `brand/sound/*.wav` and `sounds.json`.
 3. **`brand/SOUND.md`**, the same in words:
 
 ```md
@@ -76,7 +76,7 @@ When the user confirms the interview's summary:
 ## Open
 ```
 
-Rules are yours to derive: show them in the closing summary and log them with `By: agent`. Every decision has its entry in `brand/decisions/`. Then re-run `pm sheet` if `brand/sheet/` exists, so the sheet plays the samples.
+Rules are yours to derive: show them in the closing summary and log them with `By: agent`. Every decision has its entry in `brand/decisions/`. Then re-run `pamo sheet` if `brand/sheet/` exists, so the sheet plays the samples.
 
 ## 5 · Close
 

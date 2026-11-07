@@ -1,92 +1,104 @@
 # paper-motion
 
-An agent skill for making **minimal, creative-directed videos** — loops, animated
-posters, ambient pieces, title cards — with [Paper Shaders](https://shaders.paper.design)
-and your coding agent (Claude Code, Codex, Cursor, …).
+**Creative-directed videos for people who use coding agents.**
 
-There is no built-in style. You describe a feeling; the agent proposes a few
-directions as stills, you pick and steer, and it renders a frame-exact video.
+A pack of agent skills that takes you from "I have a brand" to a brand sheet and your first videos, from a
+conversation with Claude Code, Codex, Cursor or any agent that reads skills. It finds out who your brand is, how it
+looks, moves and sounds, and then makes videos that stay on brand, rendered frame-exact with
+[Paper Shaders](https://shaders.paper.design).
 
-<p>
-  <img src="packages/engine/examples/breath/poster.jpg" width="32%">
-  <img src="packages/engine/examples/signal/poster.jpg" width="32%">
-  <img src="packages/engine/examples/chrome-endcard/poster.jpg" width="32%">
-</p>
+If you already know your brand, bring it (fonts, colors, a brand manual, a website, a Figma or Paper file) and skip to
+the parts you need.
+
+<p><img src="docs/images/brand-sheet.jpg" width="100%" alt="paper-motion's own brand sheet"></p>
 
 ## How it works
 
-- A piece is one HTML **scene**: a pure function of time `t`.
-- **Paper Shaders** (all 30: mesh gradients, grain, dithering, halftone, waves,
-  fluted glass, paper texture…) provide the material; HTML/SVG/CSS provide type
-  and geometry.
-- The engine seeks every frame in headless Chrome and encodes with ffmpeg →
-  MP4, 10-bit HEVC, ProRes, WebM, GIF or PNG sequence. Same input, same pixels.
-- The agent works like a small studio: brief → 2–3 directions as contact
-  sheets → iterate with stills and live preview → final render. It critiques its
-  own frames (composition, legibility, banding) before showing you.
-- Optional: connect the [Paper Desktop](https://paper.design) MCP to use the
-  canvas as a shared sketchbook (layouts, type, hand-tuned shaders).
+The pack asks before it makes. Every step is an interview in rounds: numbered questions, each with a recommended
+answer you can accept with a "yes", and for anything you judge with your eyes or ears, **option boards** (stills,
+short clips, or sounds played in turn) you answer with a letter.
+
+<p><img src="docs/images/option-board.jpg" width="100%" alt="An option board: three palettes for a café, set in its own words"></p>
+
+Every decision lands in one place, your project's `brand/` folder, so each step builds on the last and your videos
+stay consistent from one to the next.
+
+| Step | Skill | What it settles |
+|---|---|---|
+| 1 | `identity` | Who the brand is: offer, audience, personality, voice, facts, references |
+| 2 | `visual-system` | Typefaces, palette, shape language, wordmark |
+| 3 | `brand-sheet` | The whole brand on one live page, plus PNG and PDF |
+| 4 | `motion-style` | Pace, camera, how text appears, a repertoire of transitions, endings |
+| 5 | `sound-kit` | Sound palette, typing sounds, music stance, loudness |
+| 6 | `shader-set` | The brand's moving material: fields, patterns, logo effects, image filters |
+| 7 | `make-video` | One video, from brief to final render, in 16:9, 9:16 or 1:1 |
+
+Start with `/paper-motion`: it reads your brand folder and tells you where you are and what comes next. Or just ask
+for what you want ("help me define my brand", "make a launch video") and the right skill picks it up.
 
 ## Install
 
 Requirements: Node ≥ 18, ffmpeg, Google Chrome (or `npx playwright-core install chromium`).
 
-**Claude Code** — copy or symlink the skill folder:
 ```bash
-git clone <this-repo> paper-motion
+npx skills add solanodz/paper-motion
+```
+
+The skills call the render engine, `@paper-motion/engine` (the `pamo` command). From a clone of this repository:
+
+```bash
+git clone https://github.com/solanodz/paper-motion
 for d in paper-motion/skills/*/; do ln -s "$PWD/$d" ~/.claude/skills/; done
-node paper-motion/packages/engine/bin/pm.mjs setup
+node paper-motion/packages/engine/bin/pamo.mjs setup
 ```
 
-**Any agent with skills support** (Codex, Cursor, Gemini CLI, OpenCode…) — put
-the folders in `skills/` in that agent's skills folder, or use the cross-agent
-installer: `npx skills add <owner>/<repo>`.
+Optional: connect the [Paper Desktop](https://paper.design) MCP to tune shaders by hand on the canvas and use it for
+style frames. Recommended, never required; the free plan allows 100 calls a week.
 
-**Any agent at all** — open this repo (or copy `skills/` into your
-project) and keep `AGENTS.md`; it tells the agent to read the skill.
+## The engine
 
-## Use
-
-Just ask:
-
-> make a 12 second 4:5 loop that feels like breathing, warm and grainy
->
-> turn this photo into a dithered, slowly drifting piece for my site hero
->
-> a square, Swiss-print style animated poster for "Tide Tables No. 3"
-
-Or drive the CLI yourself:
+`packages/engine` renders an HTML scene, a pure function of time, frame by frame in headless Chrome and encodes it
+with ffmpeg: MP4, 10-bit HEVC, ProRes, WebM, GIF. Same input, same pixels.
 
 ```bash
-node packages/engine/bin/pm.mjs new my-piece --size 1080x1350 --duration 12
-node packages/engine/bin/pm.mjs preview works/my-piece/scene.html
-node packages/engine/bin/pm.mjs still   works/my-piece/scene.html --count 6
-node packages/engine/bin/pm.mjs render  works/my-piece/scene.html --format hevc
-node packages/engine/bin/pm.mjs shaders
+pamo new launch --dir brand/pieces --format 9:16 --piece   # a scene wired to your brand
+pamo preview brand/pieces/launch/scene.html                # live, scrub with ←/→
+pamo render brand/pieces/launch/scene.html --motion-blur 8 --loudness -14
+pamo status                                                # what your brand folder has
+pamo                                                       # every command
 ```
 
-## Layout
+All 30 Paper Shaders, a library of moves (wipes, pushes, mask reveals, dives into a frame, terminal typing),
+synthesized sound effects or real keystrokes split from your own recording, option boards, wordmarks and the brand
+sheet.
+
+## Repository
 
 ```
-skills/make-video/
-  SKILL.md              the workflow the agent follows
-  references/           craft guide, scene API, shader catalog, rendering, Paper canvas
-packages/engine/        @paper-motion/engine: CLI, runtime, preview server, renderer
-  examples/             breath · signal · install-loop · chrome-endcard
+skills/                 the pack: paper-motion (entry), interview, identity, visual-system, brand-sheet,
+                        motion-style, sound-kit, shader-set, make-video
+packages/engine/        @paper-motion/engine: CLI, runtime, renderer, templates, examples
+examples/paper-motion-brand/   paper-motion's own brand folder, built with the pack
+docs/                   spec-v1.md, ADRs
+GLOSSARY.md             the shared language every skill uses
 ```
+
+## Credits
+
+- The interview mechanics follow Matt Pocock's [`grilling`](https://github.com/mattpocock/skills) skill: a design
+  tree worked in rounds, with a recommended answer for every question.
+- Rendering material: [Paper Shaders](https://shaders.paper.design), Apache-2.0, © Paper. "Powered by Paper Shaders."
+
+## License
+
+MIT for the skills and the engine. Paper Shaders: Apache-2.0.
 
 ---
 
 ### En español
 
-**paper-motion** es una skill para agentes (Claude Code, Codex, Cursor…) que
-genera videos minimalistas con calidad de obra, usando Paper Shaders. No impone
-un estilo: describís lo que querés sentir, el agente propone 2–3 direcciones
-como fotogramas, vos elegís y ajustás, y renderiza un video exacto cuadro a
-cuadro (MP4, HEVC 10-bit, ProRes, WebM, GIF). Opcionalmente usa el MCP de
-Paper Desktop como lienzo compartido. Instalación y uso: ver arriba.
-
-## License
-
-The skill and engine: MIT. Paper Shaders: Apache-2.0, © Paper —
-"Powered by Paper Shaders" (https://shaders.paper.design).
+**paper-motion** es un paquete de skills para agentes (Claude Code, Codex, Cursor…) que te lleva de "tengo una
+marca" a tu página de identidad y tus primeros videos, conversando. Define quién es tu marca, cómo se ve, cómo se
+mueve y cómo suena, con preguntas en rondas y tableros de opciones que elegís con una letra, y después hace videos
+que respetan esa marca, renderizados cuadro a cuadro con Paper Shaders. Si ya tenés tu marca definida, la traés y
+saltás a lo que necesites. Empezá con `/paper-motion`.

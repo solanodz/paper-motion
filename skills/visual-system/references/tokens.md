@@ -57,6 +57,6 @@ The example is a fictional musician, "Ondas"; it shows the shape, not a recommen
 - **shape**: `language` is `soft`, `hard` or `organic`; `radius` and `stroke` in px at the reference size. Organic
   shapes are drawn with the engine's `organicPath()`.
 - **wordmark**: the name as the brand writes it, the font role, weight and tracking it is set in, and the rendered
-  files (`pm wordmark`, cropped to the ink): `onLight` is dark ink for light grounds, `onDark` light ink for dark
+  files (`pamo wordmark`, cropped to the ink): `onLight` is dark ink for light grounds, `onDark` light ink for dark
   grounds. `logo` is the path of a logo the user brought, or `null`. When a logo exists, it leads and the wordmark
   supports it.

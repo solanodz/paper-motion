@@ -110,7 +110,7 @@ project root) and loads its fonts. Then: `B.color('ground')`, `B.ramp`, `B.font(
 `B.type('title', short)`, `B.style(el, 'display', { short, color })`, `B.wordmark.onDark`, `B.pace` (`{ enter, hold,
 stagger }`), `B.shader(s, el, '<set entry id>')`, `B.cue(s, 'transition' | 'land' | 'text', t)`, `B.keys` (for
 `keySounds`), `B.sound(s)` (low-pass and bed), `B.loudness`, `B.identity` (IDENTITY.md sections), `B.name`.
-`pm new <name> --dir brand/pieces --format 9:16 --piece` starts a scene already wired to it.
+`pamo new <name> --dir brand/pieces --format 9:16 --piece` starts a scene already wired to it.
 
 ## Moves
 
@@ -119,15 +119,15 @@ stagger }`), `B.shader(s, el, '<set entry id>')`, `B.cue(s, 'transition' | 'land
 Named, reusable motion. Transitions take two layers and progress `p` (0 → 1): `wipe(a, b, p)`. Text and camera moves
 take scene time `t`: `typeOn(el, text, t, { start, cps, cursor })`, `wordRise(el, t, { start, each })`,
 `drift(world, t)`. `PACE.calm|medium|fast` gives `{ enter, hold, stagger }` in seconds. When the brand has a
-`brand/motion.json`, use its pace, text behavior and repertoire. `pm new <name> --move <move> --pace … --text …
+`brand/motion.json`, use its pace, text behavior and repertoire. `pamo new <name> --move <move> --pace … --text …
 --camera …` writes a 5 s demo of one combination in the brand's look.
 
 ## Shapes and stills
 
 - `organicPath(w, h, { radius, wobble, seed })` returns an SVG path `d` for a hand-cut rounded rectangle (the
   "organic" shape language). Deterministic per seed; keep `wobble` low.
-- `pm new <name> --still` starts a still scene (1600×900, 3 s) that reads `brand/tokens.json` when it exists.
-- `pm still scene.html --t 1 --out frame.png` writes a single frame to a file.
+- `pamo new <name> --still` starts a still scene (1600×900, 3 s) that reads `brand/tokens.json` when it exists.
+- `pamo still scene.html --t 1 --out frame.png` writes a single frame to a file.
 
 ## 3D camera (CSS)
 

@@ -7,7 +7,7 @@ description: Build a brand's shader set, its bank of moving material (fields, pa
 
 Give the brand its own **moving material**: a bank of loops in one format that every piece draws from, so videos look like the brand even before type appears. Entries are data (a Paper shader and its props, or a file), so pieces re-render them natively at any size; the rendered loops are previews and footage.
 
-`pm` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pm.mjs`), run from the user's project root. `pm shaders` lists every Paper shader with its props and presets; `pm shaders <Name>` shows one.
+`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root. `pamo shaders` lists every Paper shader with its props and presets; `pamo shaders <Name>` shows one.
 
 ## 1 · Read what exists
 
@@ -46,7 +46,7 @@ Call `interview` with this question bank, the file `brand/shader-set/SET.md`, an
 }
 ```
 
-- **props** are the shader's React props exactly (`pm shaders <Name>`), colors from the palette and ramp only.
+- **props** are the shader's React props exactly (`pamo shaders <Name>`), colors from the palette and ramp only.
 - **image**: `wordmark` (light ink, for LiquidMetal and GemSmoke), `wordmark-dark` (dark ink: Heatmap reads dark shapes on white), or a path in `brand/`.
 - **loop** (seconds) crossfades the end into the start; only for diffuse fields, never crisp shapes.
 - **motion** animates one prop back and forth over the loop: what keeps static shaders (image filters, Waves, DotGrid) alive.
@@ -55,9 +55,9 @@ Call `interview` with this question bank, the file `brand/shader-set/SET.md`, an
 ## 4 · Build, look, render
 
 ```
-pm shader-set build      # one scene per entry (shots/) and numbered boards (boards/)
-pm shader-set boards     # boards/board-<k>.png, 12 per board
-pm shader-set render     # renders/<nn>-<id>.mp4 for every entry (or --only 3,7), recorded in set.json
+pamo shader-set build      # one scene per entry (shots/) and numbered boards (boards/)
+pamo shader-set boards     # boards/board-<k>.png, 12 per board
+pamo shader-set render     # renders/<nn>-<id>.mp4 for every entry (or --only 3,7), recorded in set.json
 ```
 
 Look at every board yourself before showing it, and rebuild entries that fail: nothing empty or sparse at the board's
@@ -68,7 +68,7 @@ the boards for round 2; render only the entries the user keeps, and drop the res
 
 Write `brand/shader-set/SET.md`: the format, the families and what each entry is for (atmosphere, transitions, end
 cards, behind type), and the sources with their licenses for user material. Log the decisions in `brand/decisions/`.
-Re-run `pm sheet` if `brand/sheet/` exists.
+Re-run `pamo sheet` if `brand/sheet/` exists.
 
 Done when every kept entry has its loop in `renders/`, `set.json` lists only kept entries, and the user has seen
 them. Name the next step: `make-video`, the first piece.

@@ -26,7 +26,7 @@ recommendations, set `SOUND.md`'s rules, and check every mix.
 ## Typing
 
 - Real keystrokes over synthesized ones: a typing recording the user made or one with a clear license (CC0),
-  split with `pm keys`. Synthesis (`style` creamy, thock, clack) is the fallback.
+  split with `pamo keys`. Synthesis (`style` creamy, thock, clack) is the fallback.
 - Human rhythm, shared with the picture (`typingTimes` → `typeOn` and `keySounds`): bursts in words, a beat between
   them, more after punctuation.
 
@@ -38,7 +38,7 @@ recommendations, set `SOUND.md`'s rules, and check every mix.
 ## Loudness
 
 - **−14 LUFS** for pieces that live in social feeds (Instagram, TikTok, X), **−16 LUFS** for web, README and
-  presentations; peaks at −1.5 dBFS. `pm render … --loudness -14` applies it.
+  presentations; peaks at −1.5 dBFS. `pamo render … --loudness -14` applies it.
 
 ## Checking a mix
 

@@ -7,7 +7,7 @@ description: Decide how a brand moves (pace, camera, text behavior, a repertoire
 
 Settle **how the brand moves** before any piece exists, so every video moves the same way: its pace, its camera, how its text appears, the one to three transitions it keeps, how color enters, and how pieces end. The user chooses from short clips set in the brand's own look. This skill owns motion craft: read [references/motion-craft.md](references/motion-craft.md) before building any option.
 
-`pm` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pm.mjs`), run from the user's project root. The engine's moves live in `paper-motion/moves` (`MOVES` lists them all; `PACE` holds the timing per pace).
+`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root. The engine's moves live in `paper-motion/moves` (`MOVES` lists them all; `PACE` holds the timing per pace).
 
 ## 1 · Read what exists
 
@@ -25,11 +25,11 @@ If `MOTION.md` exists, ask what should change and re-run only those branches.
 Call `interview` with this question bank, the file `brand/MOTION.md`, and a depth of two rounds. Every visual question is a clip board: build each option with
 
 ```
-pm new <letter> --dir brand/.interview/<topic> --move <move> --pace <calm|medium|fast> --text <typing|rise|blur|track|plain> --camera <still|drift|travel>
-pm board brand/.interview/<topic>/a/scene.html … --clip 7 --labels "A · …|B · …" --out brand/.interview/<topic>.mp4
+pamo new <letter> --dir brand/.interview/<topic> --move <move> --pace <calm|medium|fast> --text <typing|rise|blur|track|plain> --camera <still|drift|travel>
+pamo board brand/.interview/<topic>/a/scene.html … --clip 7 --labels "A · …|B · …" --out brand/.interview/<topic>.mp4
 ```
 
-The demo (7 s) alternates the brand's name and its own line at the chosen pace, in its colors and type, read from `brand/` (run `pm` from the project root). Each option changes only the dimension asked. Dimensions already settled use the settled choice; open ones use neutral stand-ins (medium pace, still camera, crossfade, plain text), never your recommendation, so one board never pre-sells another. Option scenes are sketches: edit them freely, and keep those edits in the brand's clips later.
+The demo (7 s) alternates the brand's name and its own line at the chosen pace, in its colors and type, read from `brand/` (run `pamo` from the project root). Each option changes only the dimension asked. Dimensions already settled use the settled choice; open ones use neutral stand-ins (medium pace, still camera, crossfade, plain text), never your recommendation, so one board never pre-sells another. Option scenes are sketches: edit them freely, and keep those edits in the brand's clips later.
 
 **Round 1**
 - **Pace** (clip board): the same move and text at calm, medium and fast.
@@ -45,7 +45,7 @@ The demo (7 s) alternates the brand's name and its own line at the chosen pace, 
 
 When the user confirms the interview's summary:
 
-1. **Move clips.** For each move in the repertoire, keep its option scene (`pm new … --move <move>` with the chosen pace, text and camera) as `brand/motion/<move>/scene.html` and render it from the project root: `pm render brand/motion/<move>/scene.html --out brand/motion/<move>.mp4 --motion-blur 8 --no-sfx`. Check each against the motion craft's "Checking a clip".
+1. **Move clips.** For each move in the repertoire, keep its option scene (`pamo new … --move <move>` with the chosen pace, text and camera) as `brand/motion/<move>/scene.html` and render it from the project root: `pamo render brand/motion/<move>/scene.html --out brand/motion/<move>.mp4 --motion-blur 8 --no-sfx`. Check each against the motion craft's "Checking a clip".
 2. **`brand/motion.json`**, for scenes and the brand sheet:
 
 ```json
@@ -78,7 +78,7 @@ When the user confirms the interview's summary:
 ## Open
 ```
 
-Rules are yours to derive from the decisions (one type animation at a time, motion blur on finals, ...): show them in the closing summary and log them with `By: agent`. Every decision has its entry in `brand/decisions/`, as `interview` describes. Then re-run `pm sheet` if `brand/sheet/` exists, so the sheet shows the new motion.
+Rules are yours to derive from the decisions (one type animation at a time, motion blur on finals, ...): show them in the closing summary and log them with `By: agent`. Every decision has its entry in `brand/decisions/`, as `interview` describes. Then re-run `pamo sheet` if `brand/sheet/` exists, so the sheet shows the new motion.
 
 ## 5 · Close
 

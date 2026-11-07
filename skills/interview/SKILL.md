@@ -7,7 +7,7 @@ description: Find out what the user wants by interviewing them in rounds of numb
 
 Work a **design tree**: every decision branches into the decisions that hang off it. The calling skill brings the **question bank** (what to settle, its file in `brand/`, and the depth); this skill is how you ask. The mechanics come from Matt Pocock's `grilling`, adapted to choices people make with their eyes.
 
-`pm` below is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pm.mjs`). Run it from the user's project root, so `brand/...` paths resolve.
+`pamo` below is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`). Run it from the user's project root, so `brand/...` paths resolve.
 
 ## 1 · Prepare
 
@@ -50,8 +50,8 @@ The calling skill sets the depth (identity three to four rounds, most others one
 
 When a choice is about how something **looks** or **moves**, the user picks from a board, never from a description.
 
-**Build the options.** One scene per option, `brand/.interview/<topic>/<letter>/scene.html` (what `pm new <letter> --dir brand/.interview/<topic>` creates), all in the same format.
-- **Form** (typefaces, palette, shape, layout): a still scene; `pm new a --dir brand/.interview/<topic> --still` starts one (1600×900, 3 s, reads `brand/tokens.json` when it exists, neutral stand-ins otherwise; `organicPath()` draws organic shapes). Board with `--t 1`; type and wordmark boards add `--cols 1` so text shows at real size.
+**Build the options.** One scene per option, `brand/.interview/<topic>/<letter>/scene.html` (what `pamo new <letter> --dir brand/.interview/<topic>` creates), all in the same format.
+- **Form** (typefaces, palette, shape, layout): a still scene; `pamo new a --dir brand/.interview/<topic> --still` starts one (1600×900, 3 s, reads `brand/tokens.json` when it exists, neutral stand-ins otherwise; `organicPath()` draws organic shapes). Board with `--t 1`; type and wordmark boards add `--cols 1` so text shows at real size.
 - **Motion** (pace, camera, moves, text behavior, how color enters): a moving scene; board with `--clip <seconds>` at the length the calling skill gives (writes `.mp4`).
 - Load fonts with an `@font-face` or a Google Fonts `<link>`, then `await document.fonts.load('<weight> <size>px <family>')` for every face before `await s.start()`; otherwise the still renders in a fallback face.
 
@@ -62,7 +62,7 @@ When a choice is about how something **looks** or **moves**, the user picks from
 
 **Use the brand's own words.** Take copy from the brand folder and the user's material. Where none exists, write filler of the right kind and length in the brand's voice. Facts stay real: never invent hours, prices, addresses, names or claims.
 
-**Board.** `pm board brand/.interview/<topic>/a/scene.html … --t 1 --labels "A · <name>: <specifics>|B · ..." --out brand/.interview/<topic>.png` (labels split on `|`). Two to four options; three sit in one row unless `--cols` says otherwise. Labels are short, in the user's language, with the defining specifics (font names, the core hex codes); anything longer goes in the question. One option is your recommendation.
+**Board.** `pamo board brand/.interview/<topic>/a/scene.html … --t 1 --labels "A · <name>: <specifics>|B · ..." --out brand/.interview/<topic>.png` (labels split on `|`). Two to four options; three sit in one row unless `--cols` says otherwise. Labels are short, in the user's language, with the defining specifics (font names, the core hex codes); anything longer goes in the question. One option is your recommendation.
 
 **Check it before showing.** Read the board yourself and rebuild any option that fails:
 - the options read as different at a glance;

@@ -5,8 +5,8 @@
   "type": "module",
   "description": "Frame-exact video renderer for HTML scenes built with Paper Shaders. The engine behind the paper-motion skills.",
   "bin": {
-    "pm": "./bin/pm.mjs",
-    "paper-motion": "./bin/pm.mjs"
+    "pamo": "./bin/pamo.mjs",
+    "paper-motion": "./bin/pamo.mjs"
   },
   "engines": {
     "node": ">=18.17"

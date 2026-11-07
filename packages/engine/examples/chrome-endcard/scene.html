@@ -59,7 +59,7 @@ let seed = 7;
 s.sfx(0.3, 'whoosh', { dur: 1.5, from: 260, to: 900, peak: 0.55, gain: 0.32, body: 0.5, seed: seed++ });
 s.sfx(0.55, 'thud', { freq: 48, gain: 0.3, decay: 0.7 });
 s.sfx(2.3, 'paper', { dur: 0.6, gain: 0.04 });
-keySounds(s, CMD, TIMES, { seed: 3, enter: ENTER }); // synthesized; pass { bank } to use real keystrokes (pm keys)
+keySounds(s, CMD, TIMES, { seed: 3, enter: ENTER }); // synthesized; pass { bank } to use real keystrokes (pamo keys)
 s.sound({ lowpass: 2400, gain: 1 });
 
 await s.start();

@@ -53,7 +53,7 @@ paper-motion/
 │   ├── sound-kit/
 │   ├── shader-set/
 │   └── make-video/        the production skill (was skills/paper-motion)
-├── packages/engine/       @paper-motion/engine, the `pm` CLI (ADR 0002)
+├── packages/engine/       @paper-motion/engine, the `pamo` CLI (ADR 0002)
 ├── examples/paper-motion-brand/   our own brand folder: example and test fixture
 ├── docs/                  spec, ADRs, per-skill docs pages
 ├── GLOSSARY.md
@@ -94,13 +94,13 @@ A skill only writes its own rows. `decisions/` is shared and append-only.
 Every skill reads `brand/` first, offers the two starts, and ends by updating its files, logging decisions, and naming
 the next skill (the router's logic, inlined).
 
-### `paper-motion` (router)
+### `paper-motion` (router) · built
 Reads which brand files exist, tells the user where they are ("identity and visual system done"), and proposes the next
 step on the main flow: identity → visual-system → brand-sheet → motion-style → sound-kit → shader-set → make-video.
 Lets the user enter anywhere. Holds no state of its own.
 
 ### `interview` (model-invoked, called by the others) · built
-The mechanics only: design tree, frontier, rounds, recommended answers, "decide for me", and option boards (`pm board`
+The mechanics only: design tree, frontier, rounds, recommended answers, "decide for me", and option boards (`pamo board`
 renders 2–6 options as one lettered still or clip). Each calling skill brings its own question bank and depth.
 
 ### `identity` · built
@@ -148,19 +148,19 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 ## Engine additions
 
 - **Moves library** · built: `paper-motion/moves` (cut, crossfade, wipe, push, maskReveal, scanReveal, zoomThrough,
-  typeOn, wordRise, blurIn, trackIn, drift; `PACE`, `MOVES`), and `pm new --move` for a demo in the brand's look.
-- **Wordmarks** · built: `pm wordmark <text> --family … --css|--file …` renders the name, cropped to the ink, as a
-  transparent PNG. **Still template** · built: `pm new <name> --still`; `organicPath()` for organic shapes.
-- **Option boards** · built: `pm board a.html b.html … [--t s | --clip s] --labels "A · x,B · y"` composes 2–6
+  typeOn, wordRise, blurIn, trackIn, drift; `PACE`, `MOVES`), and `pamo new --move` for a demo in the brand's look.
+- **Wordmarks** · built: `pamo wordmark <text> --family … --css|--file …` renders the name, cropped to the ink, as a
+  transparent PNG. **Still template** · built: `pamo new <name> --still`; `organicPath()` for organic shapes.
+- **Option boards** · built: `pamo board a.html b.html … [--t s | --clip s] --labels "A · x,B · y"` composes 2–6
   options into one lettered still (.png) or clip (.mp4), for `interview`.
-- **Brand sheet page** · built: `pm sheet` copies a template to `brand/sheet/` that reads the brand folder and plays live
+- **Brand sheet page** · built: `pamo sheet` copies a template to `brand/sheet/` that reads the brand folder and plays live
   (shaders via `live()`), and exports PNG and PDF; `--serve` for live viewing. Reads `motion.json`,
   `sound/sounds.json` and `shader-set/set.json` when the later skills write them.
-- **Sound** · built: sound palettes in the move demo (`--sound`), `pm board --sequence` (options heard in turn,
-  levelled), `pm keys` (keystroke banks), `pm sound-samples`, `render --loudness`.
-- **Shader sets** · built: `pm shader-set build|boards|render` from `brand/shader-set/set.json` (entries as shader
+- **Sound** · built: sound palettes in the move demo (`--sound`), `pamo board --sequence` (options heard in turn,
+  levelled), `pamo keys` (keystroke banks), `pamo sound-samples`, `render --loudness`.
+- **Shader sets** · built: `pamo shader-set build|boards|render` from `brand/shader-set/set.json` (entries as shader
   props, wordmark or material images, a periodic `motion`, or the user's own loops).
-- **Brand in scenes** · built: `paper-motion/brand` (`loadBrand()`), `pm new --piece --format 16:9|9:16|1:1`.
+- **Brand in scenes** · built: `paper-motion/brand` (`loadBrand()`), `pamo new --piece --format 16:9|9:16|1:1`.
 - Already in place: scenes as pure functions of time, Paper shaders, synthesized SFX, motion blur, loudness pass.
 
 ## Validation

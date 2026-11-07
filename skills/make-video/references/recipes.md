@@ -41,7 +41,7 @@ A piece that plays forever in a feed.
 |---|---|---|
 | Field | whole loop | A shader-set entry with `loop` crossfade (diffuse fields) or a periodic `motion`. |
 | Line | 1–5 s | One line of the brand's voice enters with its text behavior, holds, leaves before the end. |
-| Seam | last 0.5 s | Everything returns to the first frame's state; check frames 0 and last with `pm still`. |
+| Seam | last 0.5 s | Everything returns to the first frame's state; check frames 0 and last with `pamo still`. |
 
 1:1 and 9:16 first. No call to action on screen; it goes in the caption.
 

@@ -39,7 +39,7 @@ normalizes peaks to -2 dBFS and soft-clips.
 Typing should sound like a person on a real keyboard:
 
 1. **Real keystrokes.** Split a recording of real typing into single hits once:
-   `pm keys <recording> --out brand/sound/keys` (any audio or video file; it finds each hit and marks the heaviest
+   `pamo keys <recording> --out brand/sound/keys` (any audio or video file; it finds each hit and marks the heaviest
    as space/enter). Use only recordings the user made or that carry a clear license (CC0) when the result will be
    published. Without a bank, `key` synthesizes a keystroke (`style` creamy, thock or clack) as a fallback.
 2. **Human rhythm, shared with the picture.** `typingTimes(text, { start, cps, seed })` from `paper-motion/moves`

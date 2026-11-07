@@ -1,4 +1,4 @@
-// Mounts entries of a brand's shader set (brand/shader-set/set.json). Copied here by `pm shader-set build`.
+// Mounts entries of a brand's shader set (brand/shader-set/set.json). Copied here by `pamo shader-set build`.
 // One entry → a loop in the set's format; several → a review board (4 columns, numbered).
 import { scene } from 'paper-motion';
 
