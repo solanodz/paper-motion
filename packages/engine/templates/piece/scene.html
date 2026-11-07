@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>untitled piece</title>
+<!-- A piece wired to the brand folder: look, moves, sound and material come from /brand (serve from the project root). -->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="group" class="abs" style="display:flex;flex-direction:column"><div id="title"></div><div id="line"></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { wordRise, blurIn, typeOn, typingTimes, keySounds } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const B = await loadBrand();
+const W = 1920, H = 1080, SHORT = Math.min(W, H), M = Math.round(SHORT * 0.08);   // `pm new --format` sets W and H
+const s = scene({ width: W, height: H, fps: 30, duration: 8, background: B.color('ground') });
+
+// Material: the brand's first shader-set entry, or a slow field from its ramp.
+const first = B.set.entries.find((e) => e.shader && !e.image);
+if (first) B.shader(s, '#bg', first.id);
+else if (B.ramp.length >= 2) s.shader('#bg', 'MeshGradient', { colors: B.ramp.slice(0, 4), distortion: 0.6, swirl: 0.2, speed: 0.2 });
+
+const title = B.style(document.querySelector('#title'), 'display', { short: SHORT });
+const line = B.style(document.querySelector('#line'), 'title', { short: SHORT });
+// title and line stack from the bottom margin; the title shrinks to fit the frame's width in any format
+Object.assign(document.querySelector('#group').style, { left: `${M}px`, right: `${M}px`, bottom: `${M}px`, gap: `${Math.round(SHORT * 0.03)}px` });
+Object.assign(title.style, { whiteSpace: 'nowrap' });
+title.textContent = B.name;
+line.textContent = (B.identity['In one line'] ?? '').split('\n')[0] || B.name;
+await document.fonts.ready;
+const fit = (W - M * 2) / title.scrollWidth;
+if (fit < 1) title.style.fontSize = `${parseFloat(title.style.fontSize) * fit}px`;
+if (H > W) line.style.fontSize = `${parseFloat(line.style.fontSize) * 0.8}px`;
+
+const P = B.pace, T1 = 0.6, T2 = T1 + P.enter * 2;
+s.update((t) => {
+  wordRise(title, t, { start: T1, each: P.stagger, duration: P.enter * 1.6 });
+  blurIn(line, t, { start: T2, duration: P.enter * 1.6 });
+});
+B.cue(s, 'land', T1);
+B.cue(s, 'text', T2);
+B.sound(s);
+
+await s.start();
+</script>
+</body>
+</html>

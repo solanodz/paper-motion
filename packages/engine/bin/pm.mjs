@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // The repo's production skill, when the engine runs from a paper-motion checkout (for `shaders --md`).
-const REPO_SKILL = path.resolve(ENGINE, '..', '..', 'skills', 'paper-motion');
+const REPO_SKILL = path.resolve(ENGINE, '..', '..', 'skills', 'make-video');
 
 const HELP = `paper-motion — minimal, creative-directed video from code + Paper Shaders
 
@@ -15,7 +15,8 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
 
   setup                              install engine deps, check ffmpeg + browser
   doctor                             only check the environment
-  new <name> [--dir works] [--size 1920x1080] [--fps 30] [--duration 10] [--from <example> | --still |
+  new <name> [--dir works] [--format 16:9|9:16|1:1 | --size 1920x1080] [--fps 30] [--duration 10]
+             [--from <example> | --piece (wired to brand/) | --still |
              --move <wipe|push|…> [--pace calm|medium|fast] [--text typing|rise|blur|track|plain] [--camera still|drift|travel]
              [--sound none|soft|crisp|airy|ambient]]
                                      create works/<name>/scene.html (+ brief.md)
@@ -160,12 +161,15 @@ async function main() {
       if (!name) { console.error('Usage: new <name>'); process.exit(1); }
       const dest = path.resolve(args.dir ?? 'works', name);
       if (fs.existsSync(dest)) { console.error(`Already exists: ${dest}`); process.exit(1); }
-      const src = args.from ? path.join(ENGINE, 'examples', args.from) : path.join(ENGINE, 'templates', args.still ? 'still' : args.move ? 'move-demo' : 'blank');
+      const src = args.from ? path.join(ENGINE, 'examples', args.from) : path.join(ENGINE, 'templates', args.still ? 'still' : args.move ? 'move-demo' : args.piece ? 'piece' : 'blank');
       if (!fs.existsSync(src)) { console.error(`No example "${args.from}". Run: examples`); process.exit(1); }
       fs.cpSync(src, dest, { recursive: true });
       const scene = path.join(dest, 'scene.html');
       let html = fs.readFileSync(scene, 'utf8');
-      if (args.size) { const [w, h] = String(args.size).split('x').map(Number); html = html.replace(/width:\s*\d+/, `width: ${w}`).replace(/height:\s*\d+/, `height: ${h}`); }
+      const FORMATS = { '16:9': '1920x1080', '9:16': '1080x1920', '1:1': '1080x1080', '4:5': '1080x1350' };
+      const size = args.size ?? (args.format ? FORMATS[String(args.format)] : null);
+      if (args.format && !FORMATS[String(args.format)]) { console.error(`Unknown --format ${args.format}: use ${Object.keys(FORMATS).join(', ')}`); process.exit(1); }
+      if (size) { const [w, h] = String(size).split('x').map(Number); html = html.replace(/const W = \d+, H = \d+/, `const W = ${w}, H = ${h}`).replace(/width:\s*\d+/, `width: ${w}`).replace(/height:\s*\d+/, `height: ${h}`); }
       if (args.fps) html = html.replace(/fps:\s*\d+/, `fps: ${Number(args.fps)}`);
       if (args.duration) html = html.replace(/duration:\s*[\d.]+/, `duration: ${Number(args.duration)}`);
       html = html.replace(/<title>[^<]*<\/title>/, `<title>${name}</title>`);

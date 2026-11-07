@@ -6,6 +6,14 @@ to infer from one sentence or a few still images. So the intake is the longest
 part of the job. Building starts only after the brief is written down and
 approved.
 
+## With a brand folder
+
+When `brand/` exists, the brand is already decided: its look (`tokens.json`, VISUAL.md), motion (`motion.json`),
+sound (`sound.json`) and material (`shader-set/`). Say what you take from it in two lines and **do not ask Rounds 3
+and 4 again**; ask only what this piece changes ("this one is louder", "a different background"). The intake is
+then usually two rounds: purpose and references for this piece, then content, recipe and format. Copy that states
+facts comes only from IDENTITY.md's Facts or the user's words.
+
 ## Rules
 
 1. **Rounds, not a wall.** Ask 4–6 questions per round in the user's language,
@@ -56,7 +64,8 @@ know and ask them to confirm.
 
 ### Round 2 · content and structure
 - Exact text: all of it, part of it, or none? Must it be read, or is it texture?
-- Duration and format (9:16, 4:5, 1:1, 16:9). Loop or not.
+- Recipe (see `recipes.md`: launch, explainer, social loop, end card, README loop) or a structure of their own.
+- Format: 16:9, 9:16 or 1:1, one per piece; another format is another piece. Duration, loop or not.
 - Pace: fast cuts (a change every 0.3–1 s), medium (1–3 s), or long shots
   (4 s+)? Sync it to music, a voice-over, or nothing?
 - Structure: one continuous shot or camera move, a sequence of cuts, or
@@ -121,20 +130,20 @@ Three words. One sentence of intent.
 ## Content
 Exact text / none · must be read? · hero moment.
 
-## Format
-Aspect · duration · fps · loop · deliverables · safe areas.
+## Recipe and format
+Recipe · aspect (16:9 / 9:16 / 1:1) · duration · fps · loop · safe areas.
 
 ## Structure and pace
 Continuous / cuts / chapters · pace (cut every N s) · sync (music/VO/none) · opening · ending.
 
 ## Look
-Palette · background · type (family, weights, sizes) · composition · texture · 2D/3D.
+From the brand (say "brand") · what this piece changes · composition · which shader-set entries.
 
 ## Motion
-Movement character · easing · transitions · camera · motion blur.
+From the brand's motion.json · what this piece changes · motion blur.
 
 ## Sound
-Music / sfx (character) / VO / silent.
+From the brand's sound.json · music (the user's file) or sound design only · loudness.
 
 ## Done when
 The user's own words.

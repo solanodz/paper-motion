@@ -52,7 +52,7 @@ paper-motion/
 │   ├── motion-style/
 │   ├── sound-kit/
 │   ├── shader-set/
-│   └── make-video/        today's skills/paper-motion, renamed
+│   └── make-video/        the production skill (was skills/paper-motion)
 ├── packages/engine/       @paper-motion/engine, the `pm` CLI (ADR 0002)
 ├── examples/paper-motion-brand/   our own brand folder: example and test fixture
 ├── docs/                  spec, ADRs, per-skill docs pages
@@ -139,7 +139,7 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 - One shared format per brand (size, duration, base color), like `works/shader-set` (29 loops, 1920×1080, 6 s).
 - **Writes:** `shader-set/`.
 
-### `make-video`
+### `make-video` · built
 - Today's skill, renamed: brief → style frames → test shot → full piece → final render, with the piece intake.
 - New: starts from a **recipe** (launch, explainer 30–45 s, social loop, end card, README loop), asks the **format**
   (16:9, 9:16, 1:1) and makes that one piece. The look, moves, sound and material come from `brand/`.
@@ -160,6 +160,7 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
   levelled), `pm keys` (keystroke banks), `pm sound-samples`, `render --loudness`.
 - **Shader sets** · built: `pm shader-set build|boards|render` from `brand/shader-set/set.json` (entries as shader
   props, wordmark or material images, a periodic `motion`, or the user's own loops).
+- **Brand in scenes** · built: `paper-motion/brand` (`loadBrand()`), `pm new --piece --format 16:9|9:16|1:1`.
 - Already in place: scenes as pure functions of time, Paper shaders, synthesized SFX, motion blur, loudness pass.
 
 ## Validation

@@ -34,15 +34,15 @@ Requirements: Node ≥ 18, ffmpeg, Google Chrome (or `npx playwright-core instal
 **Claude Code** — copy or symlink the skill folder:
 ```bash
 git clone <this-repo> paper-motion
-ln -s "$PWD/paper-motion/skills/paper-motion" ~/.claude/skills/paper-motion
+for d in paper-motion/skills/*/; do ln -s "$PWD/$d" ~/.claude/skills/; done
 node paper-motion/packages/engine/bin/pm.mjs setup
 ```
 
 **Any agent with skills support** (Codex, Cursor, Gemini CLI, OpenCode…) — put
-`skills/paper-motion` in that agent's skills folder, or use the cross-agent
+the folders in `skills/` in that agent's skills folder, or use the cross-agent
 installer: `npx skills add <owner>/<repo>`.
 
-**Any agent at all** — open this repo (or copy `skills/paper-motion` into your
+**Any agent at all** — open this repo (or copy `skills/` into your
 project) and keep `AGENTS.md`; it tells the agent to read the skill.
 
 ## Use
@@ -68,7 +68,7 @@ node packages/engine/bin/pm.mjs shaders
 ## Layout
 
 ```
-skills/paper-motion/
+skills/make-video/
   SKILL.md              the workflow the agent follows
   references/           craft guide, scene API, shader catalog, rendering, Paper canvas
 packages/engine/        @paper-motion/engine: CLI, runtime, preview server, renderer

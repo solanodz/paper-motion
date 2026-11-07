@@ -7,7 +7,8 @@ the engine that renders them (`packages/engine`, published as
 `GLOSSARY.md`; hard decisions are in `docs/adr/`.
 
 When the user asks for a video, loop, motion piece, animated poster or any
-"moving artwork": read `skills/paper-motion/SKILL.md` and follow it. The engine
+"moving artwork": read `skills/make-video/SKILL.md` and follow it; for a brand (identity, look,
+motion, sound, material), the skills in `skills/` each own one part. The engine
 CLI is `node packages/engine/bin/pm.mjs`.
 
 Works with any agent that can read files, run shell commands and look at images

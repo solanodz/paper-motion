@@ -103,6 +103,15 @@ letters.forEach((el, i) => { el.style.opacity = stagger(t, i, { start: 1, each: 
 - **Video**: `<video src="clip.mp4" data-pm-sync data-pm-offset="0" muted>` follows `t`.
 - **Images** for shaders: `loadImage(url)` returns a cached `HTMLImageElement`.
 
+## Brand
+
+`import { loadBrand } from 'paper-motion/brand'` → `const B = await loadBrand()` reads `/brand/*` (serve from the
+project root) and loads its fonts. Then: `B.color('ground')`, `B.ramp`, `B.font('display')`,
+`B.type('title', short)`, `B.style(el, 'display', { short, color })`, `B.wordmark.onDark`, `B.pace` (`{ enter, hold,
+stagger }`), `B.shader(s, el, '<set entry id>')`, `B.cue(s, 'transition' | 'land' | 'text', t)`, `B.keys` (for
+`keySounds`), `B.sound(s)` (low-pass and bed), `B.loudness`, `B.identity` (IDENTITY.md sections), `B.name`.
+`pm new <name> --dir brand/pieces --format 9:16 --piece` starts a scene already wired to it.
+
 ## Moves
 
 `import { wipe, push, maskReveal, scanReveal, zoomThrough, crossfade, cut, typeOn, wordRise, blurIn, trackIn, drift, PACE, MOVES } from 'paper-motion/moves'`

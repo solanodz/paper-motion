@@ -13,24 +13,12 @@ If you can't, you're not ready to design.
 
 Then subtract. Every element must serve the idea. A second idea is a second piece.
 
-## Motion craft (what makes it look like After Effects, not like code)
+## Motion craft
 
-- **Motion blur on every final** (`render --motion-blur 8`). Crisp frames of
-  moving things look generated.
-- **Curves, not tweens:** `ease.smooth`/`ease.snappy` for moves, `spring()` for
-  things that land (overshoot, settle). Stagger by 60–120 ms. Add anticipation
-  to big moves.
-- **One continuous camera:** prefer a single world the camera travels through
-  (pan, push, tilt into 3D, orbit) over sections that fade in and out like
-  slides. Always keep a slow drift; a dead-still camera looks rendered.
-- **Text from masks:** words slide up from behind a mask line, or wipe; avoid
-  typewriter cursors.
-- **Big type, few elements:** on 9:16, body type is ≥ 60 px and labels ≥ 18 px.
-  Drop the HUD (rulers, status pills, frame counters) unless it *is* the idea.
-- **Texture that lives:** `s.grain()` and a subtle vignette over everything; the
-  paper or ground has depth (shadow, perspective).
-- **Make a short test shot first** (6–10 s, final quality) and get it approved
-  before building a long piece.
+How things move belongs to the brand: follow `brand/motion.json` and MOTION.md, use its repertoire from
+`paper-motion/moves`, and read the `motion-style` skill's craft guide for anything the brand leaves open. Two rules
+always apply: **motion blur on every final** (`render --motion-blur 8`), and **a short test shot at final quality
+before the full piece**.
 
 ## Structure over time (long pieces)
 
@@ -73,42 +61,11 @@ Then subtract. Every element must serve the idea. A second idea is a second piec
   accidental, text colliding with busy texture.
 - Scale contrast is drama: something very large next to something very small.
 
-## Color
+## Color, type and motion
 
-- 2–4 colors with **roles**: ground, figure, accent. The accent appears once.
-- Pick a value structure first (dark ground + light figure, or the inverse),
-  then hue. If it works in grayscale it will work in color.
-- Muted, slightly impure colors (`#e9dccb` not `#ffffff`, `#0e0e0e` not
-  `#000000`) feel material; pure primaries feel digital — use them on purpose.
-- Gradients: add grain (`grainOverlay`, `grainMixer`, or PaperTexture) to fight
-  banding and give them tooth. Render `--format hevc` (10-bit) if banding persists.
-- Interpolate colors with `mix()` / `keys()` (OKLab) — never through gray mud.
-
-## Type
-
-- Type is optional. If it's there, it's said once and quietly.
-- One family, ≤ 2 weights, ≤ 3 sizes. Tracking: wide for small caps/mono labels
-  (0.15–0.4 em), tight or default for large display.
-- Legibility over texture: `mix-blend-mode: difference` keeps light type legible
-  across light and dark fields; or place type in a margin, not over the busy part.
-- Prefer system or local fonts for reliable renders (Helvetica Neue, Iowan Old
-  Style, SF Mono, Georgia…). For web fonts, put files in the work folder.
-- Animate type with intention: blur→focus, letter stagger, tracking change,
-  mask reveal. Not bounce. Never more than one type animation at a time.
-
-## Motion
-
-- **Tempo** is the first motion decision: contemplative (8–20 s gestures),
-  measured (2–4 s), or punctual (< 1 s cuts). Keep one tempo per piece.
-- **Easing vocabulary**: pick 1–2 curves and reuse them. `inOutSine/inOutCubic`
-  for breathing and drift; `outExpo/outQuart` for arrivals that settle;
-  `inCubic` for exits. Linear only for continuous drift (rotation, scroll).
-- Shader `speed` is usually too fast at default for contemplative work —
-  0.1–0.4 is typical. Drive *params* over time (scale, distortion, colors,
-  offsets) for the dramaturgy; let `speed` provide the life underneath.
-- Loops: use periodic functions with period = duration / n (`osc(t, D)`), and
-  `{ loop: seconds }` for diffuse fields. Verify first vs last frame stills.
-- Structure the timeline in beats in `brief.md` (0 s …, 3 s …) and stick to it.
+They belong to the brand: `tokens.json` and VISUAL.md for color and type (craft in the `visual-system` skill),
+`motion.json` for motion (craft in `motion-style`). Use the brand's roles: ground most, figure for type, the accent
+once. If a piece has no brand folder, decide them in its intake with those skills' guides.
 
 ## Material notes (Paper shaders)
 
