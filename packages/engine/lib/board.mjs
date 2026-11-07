@@ -7,9 +7,9 @@ import { launch } from './browser.mjs';
 
 const BOARD_W = 1920, GAP = 16, PAD = 40, LABEL_H = 64;
 
-/** Grid for n options: 2–3 in a row, 4 as 2×2, 5–6 as 3×2 (never an empty cell for 3). */
-export function layout(n, aspect) {
-  const cols = n <= 3 ? n : n === 4 ? 2 : 3;
+/** Grid for n options: 2–3 in a row, 4 as 2×2, 5–6 as 3×2 (never an empty cell for 3); `cols` overrides. */
+export function layout(n, aspect, colsOverride) {
+  const cols = colsOverride ? Math.max(1, Math.min(n, colsOverride)) : n <= 3 ? n : n === 4 ? 2 : 3;
   const rows = Math.ceil(n / cols);
   const cw = Math.floor((BOARD_W - PAD * 2 - GAP * (cols - 1)) / cols / 2) * 2;
   const ch = Math.floor(cw / aspect / 2) * 2;
@@ -28,9 +28,9 @@ async function labelsPng(L, labels, file) {
     const page = await browser.newPage({ viewport: { width: L.W, height: L.H } });
     const items = L.cells.map((c, i) => {
       const [letter, ...rest] = labels[i].split(' · ');
-      return `<div style="position:absolute;left:${c.x}px;top:${c.y - LABEL_H}px;height:${LABEL_H}px;display:flex;align-items:center;gap:14px;font:500 26px ui-monospace,Menlo,monospace;color:#fff">
-        <span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1.5px solid #fff;border-radius:6px">${letter}</span>
-        <span style="color:#9a9a9a">${rest.join(' · ')}</span></div>`;
+      return `<div style="position:absolute;left:${c.x}px;top:${c.y - LABEL_H}px;height:${LABEL_H}px;width:${L.cw}px;overflow:hidden;display:flex;align-items:center;gap:14px;font:500 26px ui-monospace,Menlo,monospace;color:#fff">
+        <span style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1.5px solid #fff;border-radius:6px">${letter}</span>
+        <span style="color:#9a9a9a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${rest.join(' · ')}</span></div>`;
     }).join('');
     await page.setContent(`<html><body style="margin:0;background:transparent">${items}</body></html>`);
     await page.screenshot({ path: file, omitBackground: true });
@@ -52,8 +52,8 @@ function ffmpeg(args) {
  * @param {string} out       .png for stills, .mp4 for clips
  * @param {number} duration  clip length in seconds (bounds the looped label layer)
  */
-export async function composeBoard({ inputs, labels, aspect, out, tmp, duration }) {
-  const L = layout(inputs.length, aspect);
+export async function composeBoard({ inputs, labels, aspect, out, tmp, duration, cols }) {
+  const L = layout(inputs.length, aspect, cols);
   const lab = path.join(tmp, 'labels.png');
   await labelsPng(L, labels, lab);
   const clip = out.endsWith('.mp4');

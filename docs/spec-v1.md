@@ -103,7 +103,7 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 - **Import:** a website URL, a brand manual (PDF), an existing deck or doc.
 - **Writes:** `IDENTITY.md`.
 
-### `visual-system`
+### `visual-system` · built
 - **Guided:** 1–2 rounds. Option boards of type pairings set in the brand's own words, palettes shown on those
   pairings, shape language; then the wordmark from the chosen typeface (with chrome / flat variants as later options).
 - **Import:** font names or files, hex codes, `tokens.json` from Figma or Paper, a site to sample.
@@ -143,6 +143,8 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 
 - **Moves library:** named, reusable moves with demo clips (wipe, push, masked reveal, dive into a frame, terminal
   typing, cut on the beat, …), callable from scenes.
+- **Wordmarks** · built: `pm wordmark <text> --family … --css|--file …` renders the name, cropped to the ink, as a
+  transparent PNG. **Still template** · built: `pm new <name> --still`; `organicPath()` for organic shapes.
 - **Option boards** · built: `pm board a.html b.html … [--t s | --clip s] --labels "A · x,B · y"` composes 2–6
   options into one lettered still (.png) or clip (.mp4), for `interview`.
 - **Brand sheet page:** a page template that reads `brand/` and plays live.

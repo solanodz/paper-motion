@@ -514,3 +514,56 @@ export function split(el, by = 'chars') {
   }
   return out;
 }
+
+/* ------------------------------------------------------------------ */
+/* Shapes                                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * SVG path `d` for a hand-cut rounded rectangle: the "organic" shape language.
+ * Deterministic for a given seed, so a shape keeps its edges across frames and renders.
+ * @param {number} w,h          size in px
+ * @param {object} [o]
+ * @param {number} [o.radius]   corner radius in px (default 24)
+ * @param {number} [o.wobble]   edge irregularity in px (default 0.6% of the short side; keep it low)
+ * @param {number} [o.seed]     changes the irregularity, not its amount
+ */
+export function organicPath(w, h, { radius = 24, wobble, seed = 1 } = {}) {
+  const r = Math.min(radius, w / 2, h / 2);
+  const amp = wobble ?? Math.min(w, h) * 0.006;
+  const per = 2 * (w + h - 4 * r) + 2 * Math.PI * r;
+  const n = Math.max(16, Math.round(per / 40));
+  const pt = (d) => {
+    // walk the rounded-rect perimeter clockwise from the top-left corner's end
+    const segs = [[w - 2 * r, 'top'], [Math.PI * r / 2, 'tr'], [h - 2 * r, 'right'], [Math.PI * r / 2, 'br'], [w - 2 * r, 'bottom'], [Math.PI * r / 2, 'bl'], [h - 2 * r, 'left'], [Math.PI * r / 2, 'tl']];
+    for (const [len, k] of segs) {
+      if (d > len) { d -= len; continue; }
+      const a = r ? d / r : 0;
+      switch (k) {
+        case 'top': return [r + d, 0, 0, -1];
+        case 'tr': return [w - r + r * Math.sin(a), r - r * Math.cos(a), Math.sin(a), -Math.cos(a)];
+        case 'right': return [w, r + d, 1, 0];
+        case 'br': return [w - r + r * Math.cos(a), h - r + r * Math.sin(a), Math.cos(a), Math.sin(a)];
+        case 'bottom': return [w - r - d, h, 0, 1];
+        case 'bl': return [r - r * Math.sin(a), h - r + r * Math.cos(a), -Math.sin(a), Math.cos(a)];
+        case 'left': return [0, h - r - d, -1, 0];
+        default: return [r - r * Math.cos(a), r - r * Math.sin(a), -Math.cos(a), -Math.sin(a)];
+      }
+    }
+    return [r, 0, 0, -1];
+  };
+  const P = Array.from({ length: n }, (_, i) => {
+    const [x, y, nx, ny] = pt((i / n) * per);
+    const o = amp * (noise(i * 0.55, seed * 7.13) * 2 - 1);
+    return [x + nx * o, y + ny * o];
+  });
+  // closed Catmull-Rom through the points, as cubic Béziers
+  let d = `M${P[0][0].toFixed(2)},${P[0][1].toFixed(2)}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = P[(i - 1 + n) % n], p1 = P[i], p2 = P[(i + 1) % n], p3 = P[(i + 2) % n];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += `C${c1[0].toFixed(2)},${c1[1].toFixed(2)} ${c2[0].toFixed(2)},${c2[1].toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`;
+  }
+  return d + 'Z';
+}

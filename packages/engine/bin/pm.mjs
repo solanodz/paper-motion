@@ -11,17 +11,18 @@ const REPO_SKILL = path.resolve(ENGINE, '..', '..', 'skills', 'paper-motion');
 
 const HELP = `paper-motion — minimal, art-directed video from code + Paper Shaders
 
-Usage: node ${path.relative(process.cwd(), fileURLToPath(import.meta.url)) || 'pm.mjs'} <command> [options]
+Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages/engine/bin/pm.mjs in the repo)
 
   setup                              install engine deps, check ffmpeg + browser
   doctor                             only check the environment
-  new <name> [--dir works] [--size 1920x1080] [--fps 30] [--duration 10] [--from <example>]
+  new <name> [--dir works] [--size 1920x1080] [--fps 30] [--duration 10] [--from <example> | --still]
                                      create works/<name>/scene.html (+ brief.md)
   examples                           list bundled example scenes
   preview <scene.html> [--port 4317] [--no-open]
                                      live-reloading preview with a scrubber
-  still <scene.html> [--t 0,2.5,5 | --count 6] [--out dir] [--dpr 1] [--motion-blur 8]
-                                     PNG stills + contact-sheet.jpg (for critique)
+  still <scene.html> [--t 0,2.5,5 | --count 6] [--out dir | --out file.png] [--dpr 1] [--motion-blur 8]
+                                     PNG stills + contact-sheet.jpg (for critique);
+                                     with one --t and --out file.png, writes just that file
   render <scene.html> [--out file] [--format mp4|hevc|prores|webm|gif|png]
          [--from s] [--to s] [--fps n] [--crf n] [--dpr 1|2] [--workers n] [--audio file]
          [--gif-width 720] [--gif-fps 24] [--no-sfx] [--motion-blur 8] [--shutter 180]
@@ -29,9 +30,15 @@ Usage: node ${path.relative(process.cwd(), fileURLToPath(import.meta.url)) || 'p
                                      (sound effects declared with s.sfx() are mixed in)
   sfx <scene.html> [--out file.wav] [--from s] [--to s]
                                      export only the synthesized sound effects
-  board <a.html> <b.html> [...] [--t 2 | --clip 5] [--labels "A · calm,B · loud"] [--out board.png]
+  board <a.html> <b.html> [...] [--t 2 | --clip 5] [--labels "A · calm|B · loud"] [--cols n] [--out board.png]
                                      option board for interviews: 2–6 options side by side,
-                                     lettered A, B, C…; a still (.png) or short clips (.mp4)
+                                     lettered A, B, C…; a still (.png) or short clips (.mp4).
+                                     Labels split on | (or on commas when there is no |).
+                                     --cols 1 stacks options full width (judge type at real size)
+  wordmark <text> --family <name> [--css <url> | --file <font>] [--weight 400] [--tracking -0.02em]
+         [--color #fff] [--size 400] [--pad 0] [--out wordmark.png]
+                                     the name set in its typeface, as a transparent PNG
+                                     cropped to the ink (--pad adds margin, × size)
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
 `;
@@ -41,7 +48,8 @@ function parse(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a.startsWith('--')) {
-      const [k, v] = a.slice(2).split('=');
+      const eq = a.indexOf('=');
+      const k = eq < 0 ? a.slice(2) : a.slice(2, eq), v = eq < 0 ? undefined : a.slice(eq + 1);
       if (v !== undefined) out[k] = v;
       else if (argv[i + 1] && !argv[i + 1].startsWith('--')) out[k] = argv[++i];
       else out[k] = true;
@@ -134,7 +142,7 @@ async function main() {
       if (!name) { console.error('Usage: new <name>'); process.exit(1); }
       const dest = path.resolve(args.dir ?? 'works', name);
       if (fs.existsSync(dest)) { console.error(`Already exists: ${dest}`); process.exit(1); }
-      const src = args.from ? path.join(ENGINE, 'examples', args.from) : path.join(ENGINE, 'templates', 'blank');
+      const src = args.from ? path.join(ENGINE, 'examples', args.from) : path.join(ENGINE, 'templates', args.still ? 'still' : 'blank');
       if (!fs.existsSync(src)) { console.error(`No example "${args.from}". Run: examples`); process.exit(1); }
       fs.cpSync(src, dest, { recursive: true });
       const scene = path.join(dest, 'scene.html');
@@ -174,8 +182,12 @@ async function main() {
       if (!file) { console.error('Usage: still <scene.html> [--t 0,1.5] [--count 6]'); process.exit(1); }
       const { renderStills } = await import('../lib/render.mjs');
       const times = args.t !== undefined ? String(args.t).split(',').map(Number) : null;
-      const outDir = path.resolve(args.out ?? path.join(workDir(file), 'stills'));
+      const toFile = typeof args.out === 'string' && /\.png$/i.test(args.out);
+      if (toFile && times?.length !== 1) { console.error('still: --out file.png needs exactly one --t'); process.exit(1); }
+      const os = await import('node:os');
+      const outDir = toFile ? fs.mkdtempSync(path.join(os.tmpdir(), 'pm-still-')) : path.resolve(args.out ?? path.join(workDir(file), 'stills'));
       const r = await withServer(file, (url) => renderStills({ url: url('?render'), times, count: args.count ? Number(args.count) : undefined, outDir, dpr: Number(args.dpr ?? 1), sheet: !args['no-sheet'], motionBlur: args['motion-blur'] ? Number(args['motion-blur'] === true ? 8 : args['motion-blur']) : 1, shutter: args.shutter ? Number(args.shutter) : 180 }));
+      if (toFile) { const dest = path.resolve(args.out); fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.copyFileSync(r.files[0], dest); fs.rmSync(outDir, { recursive: true, force: true }); r.files = [dest]; }
       for (const f of r.files) console.log(path.relative(process.cwd(), f));
       if (r.sheet) console.log(`contact sheet: ${path.relative(process.cwd(), r.sheet)}`);
       break;
@@ -242,7 +254,8 @@ async function main() {
       const t = Number(args.t ?? 2);
       const out = path.resolve(args.out ?? (clip ? 'board.mp4' : 'board.png'));
       const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-board-'));
-      const given = args.labels ? String(args.labels).split(',').map((x) => x.trim()) : [];
+      const raw = args.labels ? String(args.labels) : '';
+      const given = raw ? raw.split(raw.includes('|') ? '|' : ',').map((x) => x.trim()) : [];
       const labels = files.map((_, i) => given[i] ?? String.fromCharCode(65 + i));
       const inputs = [];
       try {
@@ -259,9 +272,23 @@ async function main() {
         }
         const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', inputs[0]], { encoding: 'utf8' });
         const [w, h] = probe.stdout.trim().split(',').map(Number);
-        const r = await composeBoard({ inputs, labels, aspect: w / h, out, tmp, duration: clip ?? undefined });
+        const r = await composeBoard({ inputs, labels, aspect: w / h, out, tmp, duration: clip ?? undefined, cols: args.cols ? Number(args.cols) : undefined });
         console.log(`\r✓ ${path.relative(process.cwd(), r.out)} — ${files.length} options, ${r.W}×${r.H}`);
       } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+      break;
+    }
+
+    case 'wordmark': {
+      await ensureDeps();
+      const text = args._[1];
+      if (!text || !args.family) { console.error('Usage: wordmark <text> --family <name> [--css <url> | --file <font>] [--weight 400] [--tracking 0em] [--color #fff] [--out wordmark.png]'); process.exit(1); }
+      const { renderWordmark } = await import('../lib/wordmark.mjs');
+      const r = await renderWordmark({
+        text: String(text), family: String(args.family), css: args.css, file: args.file ? path.resolve(args.file) : undefined,
+        weight: Number(args.weight ?? 400), tracking: args.tracking ?? '0em', color: args.color ?? '#ffffff',
+        size: Number(args.size ?? 400), pad: Number(args.pad ?? 0), out: path.resolve(args.out ?? 'wordmark.png'),
+      });
+      console.log(`✓ ${path.relative(process.cwd(), r.out)} — ${r.width}×${r.height}`);
       break;
     }
 

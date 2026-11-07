@@ -103,6 +103,13 @@ letters.forEach((el, i) => { el.style.opacity = stagger(t, i, { start: 1, each: 
 - **Video**: `<video src="clip.mp4" data-pm-sync data-pm-offset="0" muted>` follows `t`.
 - **Images** for shaders: `loadImage(url)` returns a cached `HTMLImageElement`.
 
+## Shapes and stills
+
+- `organicPath(w, h, { radius, wobble, seed })` returns an SVG path `d` for a hand-cut rounded rectangle (the
+  "organic" shape language). Deterministic per seed; keep `wobble` low.
+- `pm new <name> --still` starts a still scene (1600×900, 3 s) that reads `brand/tokens.json` when it exists.
+- `pm still scene.html --t 1 --out frame.png` writes a single frame to a file.
+
 ## 3D camera (CSS)
 
 For After Effects-style 3D layers, give a container `perspective` and a child

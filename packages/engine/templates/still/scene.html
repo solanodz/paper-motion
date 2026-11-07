@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>untitled still</title>
+<!-- A still: an option for a board, a style frame, a sheet section. Fonts come from brand/tokens.json when it exists. -->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <svg id="panel" class="abs" style="left:880px;top:140px" width="600" height="620"><path /></svg>
+  <div id="title" class="abs" style="left:120px;top:260px;white-space:pre"></div>
+  <div id="line" class="abs" style="left:124px;top:520px;max-width:640px"></div>
+</main>
+<script type="module">
+import { scene, organicPath } from 'paper-motion';
+
+// Read the brand if there is one; neutral stand-ins otherwise (system sans, greys).
+const tokens = await fetch('/brand/tokens.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+const C = tokens?.colors ?? {};
+const col = (role, fallback) => C[role]?.hex ?? fallback;
+const font = (key, fallback) => (tokens?.fonts?.[key]?.family ? `'${tokens.fonts[key].family}'` : fallback);
+// Stylesheets must finish loading before fonts.load() can find their faces.
+await Promise.all(Object.values(tokens?.fonts ?? {}).filter((f) => f?.css).map((f) => new Promise((res) => {
+  const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: f.css, onload: res, onerror: res });
+  document.head.append(l);
+})));
+
+const s = scene({ width: 1600, height: 900, fps: 30, duration: 3, background: col('ground', '#f2f2f2') });
+
+const title = document.querySelector('#title'), line = document.querySelector('#line');
+Object.assign(title.style, { font: `${tokens?.type?.display?.weight ?? 600} 200px ${font('display', 'system-ui, sans-serif')}`, letterSpacing: tokens?.type?.display?.tracking ?? '-0.02em', color: col('figure', '#1a1a1a'), lineHeight: '0.95' });
+Object.assign(line.style, { font: `400 34px/1.35 ${font('text', 'system-ui, sans-serif')}`, color: col('figure', '#1a1a1a') });
+title.textContent = tokens?.wordmark?.text ?? 'brand';
+line.textContent = 'one line in the brand’s own words.';
+
+// Shapes follow the brand's shape language: organic → organicPath, soft → rounded, hard → square.
+const shape = tokens?.shape?.language ?? 'soft';
+const path = document.querySelector('#panel path');
+const d = shape === 'organic' ? organicPath(600, 620, { radius: tokens?.shape?.radius ?? 24, seed: 3 })
+  : `M0,0 H600 V620 H0 Z`;
+path.setAttribute('d', d);
+path.setAttribute('fill', col('surface', '#d9d9d9'));
+if (shape === 'soft') document.querySelector('#panel').style.borderRadius = `${tokens?.shape?.radius ?? 24}px`;
+
+// Wait for every face before the first frame, or the still renders in a fallback font.
+await Promise.all([title, line].map((el) => { const c = getComputedStyle(el); return document.fonts.load(`${c.fontWeight} ${c.fontSize} ${c.fontFamily}`); }));
+await s.start();
+</script>
+</body>
+</html>
