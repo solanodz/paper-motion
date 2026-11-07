@@ -75,7 +75,7 @@ Lives at `brand/` in the user's project.
 | `tokens.json` | visual-system | the same as data: font files and families, colors with roles, type scale, spacing |
 | `MOTION.md` | motion-style | pace, camera, chosen moves, terminal/typing rules, do and don't |
 | `SOUND.md` | sound-kit | sound palette, music stance, loudness target |
-| `shader-set/` | shader-set | `set.json` (`[{ id, video }]`, one format) and the rendered loops |
+| `shader-set/` | shader-set | `set.json` (format + entries: shader props or files), `SET.md`, shots, boards, loops |
 | `motion.json` | motion-style | pace, camera, text behavior, color, ending, the move repertoire |
 | `motion/` | motion-style | each repertoire move as a scene and a clip |
 | `sound.json` | sound-kit | palette, cues per gesture, keys, music, loudness |
@@ -133,7 +133,7 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
   music stance (bring your own / none).
 - **Writes:** `SOUND.md`; any music lands in `assets/`. **Owns:** sound design and loudness.
 
-### `shader-set`
+### `shader-set` · built
 - Three sources, any mix: the user's own loops and images; agent-made from the visual system; hand-tuned in Paper
   (recommended, read back with `get_jsx`).
 - One shared format per brand (size, duration, base color), like `works/shader-set` (29 loops, 1920×1080, 6 s).
@@ -158,6 +158,8 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
   `sound/sounds.json` and `shader-set/set.json` when the later skills write them.
 - **Sound** · built: sound palettes in the move demo (`--sound`), `pm board --sequence` (options heard in turn,
   levelled), `pm keys` (keystroke banks), `pm sound-samples`, `render --loudness`.
+- **Shader sets** · built: `pm shader-set build|boards|render` from `brand/shader-set/set.json` (entries as shader
+  props, wordmark or material images, a periodic `motion`, or the user's own loops).
 - Already in place: scenes as pure functions of time, Paper shaders, synthesized SFX, motion blur, loudness pass.
 
 ## Validation

@@ -52,6 +52,11 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
                                      then s.sfx(t, 'key', { bank: 'brand/sound/keys' })
   sound-samples [--brand brand]       renders each cue of brand/sound.json (and a typing sample) to
                                      brand/sound/*.wav + sounds.json, for the brand sheet
+  shader-set <build|boards|render> [--brand brand] [--only 3,7 | ids] [--t 2] [--motion-blur 4]
+                                     the brand's shader set from brand/shader-set/set.json:
+                                     build writes one scene per entry and review boards;
+                                     boards renders them to PNG (12 per board, numbered);
+                                     render writes each loop to renders/ and records it in set.json
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
 `;
@@ -406,6 +411,42 @@ async function main() {
       fs.writeFileSync(path.join(outDir, 'sounds.json'), JSON.stringify(list, null, 1) + '\n');
       console.log(`✓ ${list.length} samples → ${path.relative(process.cwd(), outDir)}/sounds.json`);
       break;
+    }
+
+    case 'shader-set': {
+      await ensureDeps();
+      const sub = args._[1];
+      const dir = path.join(path.resolve(args.brand ?? 'brand'), 'shader-set');
+      const { buildSet, writeSet, shotName } = await import('../lib/shaderset.mjs');
+      const built = buildSet(dir);
+      if (sub === 'build') { console.log(`✓ ${built.shots.length} shots, ${built.boards.length} boards in ${path.relative(process.cwd(), dir)}`); break; }
+      if (sub === 'boards') {
+        const { renderStills } = await import('../lib/render.mjs');
+        const os = await import('node:os');
+        for (const b of built.boards) {
+          const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-set-'));
+          const r = await withServer(b, (url) => renderStills({ url: url('?render'), times: [Number(args.t ?? 2)], outDir: tmp, sheet: false }));
+          const png = b.replace(/\.html$/, '.png');
+          fs.copyFileSync(r.files[0], png); fs.rmSync(tmp, { recursive: true, force: true });
+          console.log(`✓ ${path.relative(process.cwd(), png)}`);
+        }
+        break;
+      }
+      if (sub === 'render') {
+        const { renderVideo } = await import('../lib/render.mjs');
+        const only = args.only ? String(args.only).split(',').map((x) => x.trim()) : null;
+        const pick = built.shots.filter(({ entry, index }) => !only || only.includes(String(index + 1)) || only.includes(entry.id));
+        fs.mkdirSync(path.join(dir, 'renders'), { recursive: true });
+        for (const { entry, index, file } of pick) {
+          const out = path.join(dir, 'renders', `${shotName(entry, index)}.mp4`);
+          await withServer(file, (url) => renderVideo({ url: url('?render'), out, sfx: false, crf: 16, motionBlur: Number(args['motion-blur'] ?? 4) }));
+          built.set.entries[index].video = `renders/${shotName(entry, index)}.mp4`;
+          writeSet(dir, built.set);
+          console.log(`✓ ${path.relative(process.cwd(), out)}`);
+        }
+        break;
+      }
+      console.error('Usage: shader-set <build|boards|render> [--brand brand] [--only 3,7]'); process.exit(1);
     }
 
     case 'shaders': {

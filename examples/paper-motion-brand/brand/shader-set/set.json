@@ -1,118 +1,628 @@
-[
- {
-  "id": "mesh-graphite",
-  "video": "renders/01-mesh-graphite.mp4"
+{
+ "format": {
+  "width": 1920,
+  "height": 1080,
+  "duration": 6,
+  "fps": 30
  },
- {
-  "id": "mesh-sage",
-  "video": "renders/02-mesh-sage.mp4"
- },
- {
-  "id": "grain-slate",
-  "video": "renders/03-grain-slate.mp4"
- },
- {
-  "id": "grain-clay",
-  "video": "renders/04-grain-clay.mp4"
- },
- {
-  "id": "perlin-sage",
-  "video": "renders/05-perlin-sage.mp4"
- },
- {
-  "id": "simplex-slate",
-  "video": "renders/06-simplex-slate.mp4"
- },
- {
-  "id": "neuro-slate",
-  "video": "renders/07-neuro-slate.mp4"
- },
- {
-  "id": "warp-ochre",
-  "video": "renders/08-warp-ochre.mp4"
- },
- {
-  "id": "swirl-paper",
-  "video": "renders/09-swirl-paper.mp4"
- },
- {
-  "id": "god-rays",
-  "video": "renders/10-god-rays.mp4"
- },
- {
-  "id": "dither-sphere",
-  "video": "renders/11-dither-sphere.mp4"
- },
- {
-  "id": "dither-warp-sage",
-  "video": "renders/12-dither-warp-sage.mp4"
- },
- {
-  "id": "voronoi-glass",
-  "video": "renders/13-voronoi-glass.mp4"
- },
- {
-  "id": "metaballs-muted",
-  "video": "renders/14-metaballs-muted.mp4"
- },
- {
-  "id": "smoke-ring",
-  "video": "renders/15-smoke-ring.mp4"
- },
- {
-  "id": "spiral-paper",
-  "video": "renders/16-spiral-paper.mp4"
- },
- {
-  "id": "dot-orbit",
-  "video": "renders/17-dot-orbit.mp4"
- },
- {
-  "id": "color-panels",
-  "video": "renders/18-color-panels.mp4"
- },
- {
-  "id": "pulsing-border",
-  "video": "renders/19-pulsing-border.mp4"
- },
- {
-  "id": "waves-paper",
-  "video": "renders/20-waves-paper.mp4"
- },
- {
-  "id": "liquid-metal",
-  "video": "renders/21-liquid-metal.mp4"
- },
- {
-  "id": "heatmap",
-  "video": "renders/22-heatmap.mp4"
- },
- {
-  "id": "gem-smoke",
-  "video": "renders/23-gem-smoke.mp4"
- },
- {
-  "id": "fluted-glass",
-  "video": "renders/24-fluted-glass.mp4"
- },
- {
-  "id": "water",
-  "video": "renders/25-water.mp4"
- },
- {
-  "id": "lens-distortion",
-  "video": "renders/26-lens-distortion.mp4"
- },
- {
-  "id": "halftone-dots",
-  "video": "renders/27-halftone-dots.mp4"
- },
- {
-  "id": "halftone-cmyk",
-  "video": "renders/28-halftone-cmyk.mp4"
- },
- {
-  "id": "image-dither",
-  "video": "renders/29-image-dither.mp4"
- }
-]
+ "entries": [
+  {
+   "id": "mesh-graphite",
+   "source": "agent",
+   "shader": "MeshGradient",
+   "props": {
+    "colors": [
+     "#050505",
+     "#3a3a3a",
+     "#cfcfcf",
+     "#121212"
+    ],
+    "distortion": 0.85,
+    "swirl": 0.35,
+    "speed": 0.45,
+    "grainMixer": 0.12,
+    "grainOverlay": 0.08
+   },
+   "loop": 1.5,
+   "video": "renders/01-mesh-graphite.mp4"
+  },
+  {
+   "id": "mesh-sage",
+   "source": "agent",
+   "shader": "MeshGradient",
+   "props": {
+    "colors": [
+     "#070806",
+     "#5E7457",
+     "#C8D5A8",
+     "#1c2219"
+    ],
+    "distortion": 0.8,
+    "swirl": 0.25,
+    "speed": 0.4,
+    "grainMixer": 0.12,
+    "grainOverlay": 0.08
+   },
+   "loop": 1.5,
+   "video": "renders/02-mesh-sage.mp4"
+  },
+  {
+   "id": "grain-slate",
+   "source": "agent",
+   "shader": "GrainGradient",
+   "props": {
+    "colorBack": "#000000",
+    "colors": [
+     "#5F7A86",
+     "#8EA3AD",
+     "#E6E6E6"
+    ],
+    "shape": "blob",
+    "softness": 0.6,
+    "intensity": 0.35,
+    "noise": 0.35,
+    "speed": 0.6
+   },
+   "loop": 1.5,
+   "video": "renders/03-grain-slate.mp4"
+  },
+  {
+   "id": "grain-clay",
+   "source": "agent",
+   "shader": "GrainGradient",
+   "props": {
+    "colorBack": "#000000",
+    "colors": [
+     "#3F2925",
+     "#B07D73",
+     "#EADBC8"
+    ],
+    "shape": "wave",
+    "softness": 0.8,
+    "intensity": 0.25,
+    "noise": 0.3,
+    "speed": 0.4
+   },
+   "loop": 1.5,
+   "video": "renders/04-grain-clay.mp4"
+  },
+  {
+   "id": "perlin-sage",
+   "source": "agent",
+   "shader": "PerlinNoise",
+   "props": {
+    "colorBack": "#000000",
+    "colorFront": "#C8D5A8",
+    "proportion": 0.42,
+    "softness": 0.35,
+    "octaveCount": 2,
+    "persistence": 0.6,
+    "lacunarity": 2,
+    "scale": 2.5,
+    "speed": 0.3
+   },
+   "loop": 1.5,
+   "video": "renders/05-perlin-sage.mp4"
+  },
+  {
+   "id": "simplex-slate",
+   "source": "agent",
+   "shader": "SimplexNoise",
+   "props": {
+    "colors": [
+     "#DCE3E3",
+     "#A9B8BE",
+     "#6F8794",
+     "#3E4E57",
+     "#1E272C"
+    ],
+    "stepsPerColor": 2,
+    "softness": 0.15,
+    "speed": 0.35
+   },
+   "loop": 1.5,
+   "video": "renders/06-simplex-slate.mp4"
+  },
+  {
+   "id": "neuro-slate",
+   "source": "agent",
+   "shader": "NeuroNoise",
+   "props": {
+    "colorFront": "#ffffff",
+    "colorMid": "#6F8794",
+    "colorBack": "#000000",
+    "brightness": 0.04,
+    "contrast": 0.32,
+    "speed": 0.5
+   },
+   "loop": 1.5,
+   "video": "renders/07-neuro-slate.mp4"
+  },
+  {
+   "id": "warp-ochre",
+   "source": "agent",
+   "shader": "Warp",
+   "props": {
+    "colors": [
+     "#0a0a0a",
+     "#C9A65A",
+     "#0a0a0a",
+     "#7A5A24"
+    ],
+    "proportion": 0.45,
+    "softness": 1,
+    "distortion": 0.25,
+    "swirl": 0.8,
+    "swirlIterations": 10,
+    "shapeScale": 0.1,
+    "shape": "checks",
+    "speed": 0.5
+   },
+   "loop": 1.5,
+   "video": "renders/08-warp-ochre.mp4"
+  },
+  {
+   "id": "swirl-paper",
+   "source": "agent",
+   "shader": "Swirl",
+   "props": {
+    "colorBack": "#000000",
+    "colors": [
+     "#E9E4D8",
+     "#8a8a8a",
+     "#1a1a1a"
+    ],
+    "bandCount": 5,
+    "twist": 0.25,
+    "center": 0.2,
+    "proportion": 0.5,
+    "softness": 0.1,
+    "noiseFrequency": 0.4,
+    "noise": 0.2,
+    "speed": 0.3
+   },
+   "video": "renders/09-swirl-paper.mp4"
+  },
+  {
+   "id": "god-rays",
+   "source": "agent",
+   "shader": "GodRays",
+   "props": {
+    "colorBack": "#000000",
+    "colorBloom": "#2a2a2a",
+    "colors": [
+     "#ffffff40",
+     "#C9A65A80",
+     "#ffffff",
+     "#8EA3AD"
+    ],
+    "density": 0.3,
+    "spotty": 0.3,
+    "midIntensity": 0.4,
+    "midSize": 0.2,
+    "intensity": 0.7,
+    "bloom": 0.35,
+    "speed": 0.5
+   },
+   "video": "renders/10-god-rays.mp4"
+  },
+  {
+   "id": "dither-sphere",
+   "source": "agent",
+   "shader": "Dithering",
+   "props": {
+    "colorBack": "#000000",
+    "colorFront": "#A3A3A3",
+    "shape": "sphere",
+    "type": "4x4",
+    "size": 2,
+    "scale": 0.6,
+    "speed": 1
+   },
+   "video": "renders/11-dither-sphere.mp4"
+  },
+  {
+   "id": "dither-warp-sage",
+   "source": "agent",
+   "shader": "Dithering",
+   "props": {
+    "colorBack": "#000000",
+    "colorFront": "#8FA67A",
+    "shape": "warp",
+    "type": "8x8",
+    "size": 3,
+    "scale": 1,
+    "speed": 0.6
+   },
+   "video": "renders/12-dither-warp-sage.mp4"
+  },
+  {
+   "id": "voronoi-glass",
+   "source": "agent",
+   "shader": "Voronoi",
+   "props": {
+    "colors": [
+     "#1c1c1c",
+     "#4a4a4a"
+    ],
+    "stepsPerColor": 2,
+    "colorGlow": "#ffffff",
+    "colorGap": "#000000",
+    "distortion": 0.4,
+    "gap": 0.03,
+    "glow": 0.45,
+    "speed": 0.4
+   },
+   "video": "renders/13-voronoi-glass.mp4"
+  },
+  {
+   "id": "metaballs-muted",
+   "source": "agent",
+   "shader": "Metaballs",
+   "props": {
+    "colorBack": "#000000",
+    "colors": [
+     "#E9E4D8",
+     "#8FA67A",
+     "#B07D73",
+     "#C9A65A",
+     "#8EA3AD"
+    ],
+    "count": 8,
+    "size": 0.7,
+    "speed": 0.6
+   },
+   "video": "renders/14-metaballs-muted.mp4"
+  },
+  {
+   "id": "smoke-ring",
+   "source": "agent",
+   "shader": "SmokeRing",
+   "props": {
+    "colorBack": "#000000",
+    "colors": [
+     "#ffffff"
+    ],
+    "noiseScale": 3,
+    "noiseIterations": 8,
+    "radius": 0.28,
+    "thickness": 0.6,
+    "innerShape": 0.7,
+    "speed": 0.5
+   },
+   "video": "renders/15-smoke-ring.mp4"
+  },
+  {
+   "id": "spiral-paper",
+   "source": "agent",
+   "shader": "Spiral",
+   "props": {
+    "colorBack": "#E9E4D8",
+    "colorFront": "#000000",
+    "scale": 6,
+    "density": 2.2,
+    "distortion": 0.1,
+    "strokeWidth": 0.45,
+    "strokeTaper": 0.5,
+    "strokeCap": 0,
+    "noise": 0.25,
+    "noiseFrequency": 0.4,
+    "softness": 0.05,
+    "speed": 0.6
+   },
+   "video": "renders/16-spiral-paper.mp4"
+  },
+  {
+   "id": "dot-orbit",
+   "source": "agent",
+   "shader": "DotOrbit",
+   "props": {
+    "colorBack": "#000000",
+    "colors": [
+     "#ffffff",
+     "#8EA3AD",
+     "#5F7A86",
+     "#2a2a2a"
+    ],
+    "size": 0.8,
+    "sizeRange": 0.3,
+    "spreading": 0.8,
+    "stepsPerColor": 3,
+    "speed": 1
+   },
+   "video": "renders/17-dot-orbit.mp4"
+  },
+  {
+   "id": "color-panels",
+   "source": "agent",
+   "shader": "ColorPanels",
+   "props": {
+    "colorBack": "#000000",
+    "colors": [
+     "#8FA67A",
+     "#B07D73",
+     "#8EA3AD",
+     "#C9A65A",
+     "#7E7594",
+     "#E9E4D8"
+    ],
+    "density": 3,
+    "length": 1.1,
+    "fadeIn": 1,
+    "fadeOut": 0.3,
+    "gradient": 0.3,
+    "speed": 0.4
+   },
+   "video": "renders/18-color-panels.mp4"
+  },
+  {
+   "id": "pulsing-border",
+   "source": "agent",
+   "shader": "PulsingBorder",
+   "props": {
+    "colorBack": "#000000",
+    "colors": [
+     "#E9E4D8",
+     "#8FA67A",
+     "#8EA3AD"
+    ],
+    "roundness": 0.08,
+    "thickness": 0.04,
+    "margin": 0.08,
+    "softness": 0.75,
+    "intensity": 0.2,
+    "bloom": 0.25,
+    "spots": 4,
+    "spotSize": 0.5,
+    "pulse": 0.25,
+    "smoke": 0.3,
+    "smokeSize": 0.6,
+    "speed": 0.8
+   },
+   "video": "renders/19-pulsing-border.mp4"
+  },
+  {
+   "id": "waves-paper",
+   "source": "agent",
+   "shader": "Waves",
+   "props": {
+    "colorFront": "#E9E4D8",
+    "colorBack": "#000000",
+    "shape": 1,
+    "frequency": 0.5,
+    "amplitude": 0.4,
+    "spacing": 1.4,
+    "proportion": 0.08,
+    "softness": 0.05,
+    "scale": 1
+   },
+   "motion": {
+    "param": "amplitude",
+    "from": 0.3,
+    "to": 0.6
+   },
+   "video": "renders/20-waves-paper.mp4"
+  },
+  {
+   "id": "liquid-metal",
+   "source": "agent",
+   "shader": "LiquidMetal",
+   "props": {
+    "fit": "contain",
+    "scale": 0.8,
+    "shape": "none",
+    "colorBack": "#000000",
+    "colorTint": "#ffffff",
+    "softness": 0.12,
+    "repetition": 5,
+    "shiftRed": 0.3,
+    "shiftBlue": 0.3,
+    "distortion": 0.14,
+    "contour": 0.6,
+    "angle": 20,
+    "speed": 1
+   },
+   "image": "wordmark",
+   "video": "renders/21-liquid-metal.mp4"
+  },
+  {
+   "id": "heatmap",
+   "source": "agent",
+   "shader": "Heatmap",
+   "props": {
+    "fit": "contain",
+    "scale": 0.8,
+    "colorBack": "#000000",
+    "colors": [
+     "#3E4E57",
+     "#6F8794",
+     "#A9B8BE",
+     "#E9E4D8",
+     "#C9A65A",
+     "#B07D73",
+     "#ffffff"
+    ],
+    "contour": 0.5,
+    "angle": 0,
+    "noise": 0.1,
+    "innerGlow": 0.5,
+    "outerGlow": 0.5,
+    "speed": 0.8
+   },
+   "image": "wordmark-dark",
+   "video": "renders/22-heatmap.mp4"
+  },
+  {
+   "id": "gem-smoke",
+   "source": "agent",
+   "shader": "GemSmoke",
+   "props": {
+    "fit": "contain",
+    "scale": 0.8,
+    "shape": "none",
+    "colorBack": "#000000",
+    "colorInner": "#141414",
+    "colors": [
+     "#8EA3AD",
+     "#E9E4D8"
+    ],
+    "outerGlow": 0.55,
+    "innerGlow": 1,
+    "innerDistortion": 0.8,
+    "outerDistortion": 0.6,
+    "size": 0.8,
+    "speed": 1
+   },
+   "image": "wordmark",
+   "video": "renders/23-gem-smoke.mp4"
+  },
+  {
+   "id": "fluted-glass",
+   "source": "agent",
+   "shader": "FlutedGlass",
+   "props": {
+    "fit": "cover",
+    "colorBack": "#00000000",
+    "colorShadow": "#000000",
+    "colorHighlight": "#ffffff",
+    "shadows": 0.25,
+    "size": 0.45,
+    "angle": 0,
+    "distortionShape": "prism",
+    "highlights": 0.12,
+    "shape": "lines",
+    "distortion": 0.5,
+    "blur": 0,
+    "edges": 0.25,
+    "grainOverlay": 0.05
+   },
+   "image": "assets/materials/material-a.png",
+   "motion": {
+    "param": "shift",
+    "from": -0.15,
+    "to": 0.15
+   },
+   "video": "renders/24-fluted-glass.mp4"
+  },
+  {
+   "id": "water",
+   "source": "agent",
+   "shader": "Water",
+   "props": {
+    "fit": "cover",
+    "scale": 1,
+    "colorBack": "#000000",
+    "colorHighlight": "#ffffff",
+    "highlights": 0.07,
+    "layering": 0.5,
+    "edges": 0.8,
+    "waves": 0.3,
+    "caustic": 0.12,
+    "size": 1,
+    "speed": 0.6
+   },
+   "image": "assets/materials/material-a.png",
+   "video": "renders/25-water.mp4"
+  },
+  {
+   "id": "lens-distortion",
+   "source": "agent",
+   "shader": "LensDistortion",
+   "props": {
+    "fit": "cover",
+    "spread": 0.6,
+    "bias": 1,
+    "angle": 0,
+    "perspective": 0.1,
+    "count": 35,
+    "dispersion": 1,
+    "dispersionColor": 0.6,
+    "focusCenter": 0.8,
+    "focusEdges": 1,
+    "swirl": 0.35
+   },
+   "image": "assets/materials/material-a.png",
+   "motion": {
+    "param": "swirl",
+    "from": 0.1,
+    "to": 0.6
+   },
+   "video": "renders/26-lens-distortion.mp4"
+  },
+  {
+   "id": "halftone-dots",
+   "source": "agent",
+   "shader": "HalftoneDots",
+   "props": {
+    "fit": "cover",
+    "colorBack": "#000000",
+    "colorFront": "#E9E4D8",
+    "size": 0.5,
+    "radius": 1.25,
+    "contrast": 0.45,
+    "originalColors": false,
+    "inverted": true,
+    "grainMixer": 0.15,
+    "grainOverlay": 0.1,
+    "grid": "hex",
+    "type": "gooey"
+   },
+   "image": "assets/materials/material-a.png",
+   "motion": {
+    "param": "size",
+    "from": 0.35,
+    "to": 0.6
+   },
+   "video": "renders/27-halftone-dots.mp4"
+  },
+  {
+   "id": "halftone-cmyk",
+   "source": "agent",
+   "shader": "HalftoneCmyk",
+   "props": {
+    "fit": "cover",
+    "colorBack": "#E9E4D8",
+    "colorC": "#8EA3AD",
+    "colorM": "#B07D73",
+    "colorY": "#C9A65A",
+    "colorK": "#141414",
+    "size": 0.2,
+    "contrast": 1,
+    "softness": 1,
+    "grainSize": 0.5,
+    "gridNoise": 0.2,
+    "type": "ink"
+   },
+   "image": "assets/materials/material-a.png",
+   "motion": {
+    "param": "size",
+    "from": 0.16,
+    "to": 0.26
+   },
+   "video": "renders/28-halftone-cmyk.mp4"
+  },
+  {
+   "id": "image-dither",
+   "source": "agent",
+   "shader": "ImageDithering",
+   "props": {
+    "fit": "cover",
+    "colorFront": "#E9E4D8",
+    "colorBack": "#000000",
+    "colorHighlight": "#ffffff",
+    "type": "8x8",
+    "size": 2,
+    "colorSteps": 2,
+    "originalColors": false,
+    "inverted": false
+   },
+   "image": "assets/materials/material-a.png",
+   "motion": {
+    "param": "size",
+    "from": 2,
+    "to": 4
+   },
+   "video": "renders/29-image-dither.mp4"
+  }
+ ]
+}

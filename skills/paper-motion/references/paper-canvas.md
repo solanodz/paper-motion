@@ -69,39 +69,15 @@ This replaces or strengthens **Gate A (style frames)** when Paper is connected.
 
 ## A personal shader library
 
-A library lets the user's taste carry across videos without spending Paper
-calls every time.
+The brand's shader set, including tuning shaders by hand in Paper, belongs to the `shader-set` skill
+(`references/paper-library.md` there). In a piece, read `brand/shader-set/set.json` and mount entries with
+`s.shader(el, entry.shader, entry.props)` (plus `entry.image` resolved against `brand/`).
 
-1. **Set up the page.** Create a `Shader library` page with one 640×360
-   artboard per slot, named for its role: `02 · MeshGradient — atmosphere`,
-   `05 · Water — image filter`, and so on.
-2. **The user fills it in.** In each slot they add a shader (`S`) and tune it.
-3. **Read and cache it.** Read each artboard with `get_jsx` (one call per slot)
-   and cache the result in the project as `library/shaders.json`, in this shape:
-   `{ id, swatch, shader, props, background }`. Drop the `frame` prop.
-4. **Use it in scenes.** Load it in a scene with
-   `const lib = await (await fetch('/library/shaders.json')).json()`, then call
-   `s.shader(el, item.shader, item.props)` with the entry you want, on its
-   `background`.
-5. **Show it at Gate A.** Render `library/preview/` as a contact sheet so the
-   user can pick from their own materials before you propose new ones.
-6. **Re-sync when they change it.** Only re-read when the user says they edited
-   the library.
-
-Notes:
-- **Cloning works:** `<x-paper-clone node-id="…">` inside `write_html` places a
-  copy of an existing shader node, with its props, in a new artboard. A clone
-  can sit inside a clipping frame (`overflow:hidden` with `border-radius` for
-  an arch or a circle) to make layouts from the user's library.
-- **Local images:** `<img src="paper-asset:///abs/path.png">` places a still
-  (from `still`) on the canvas, ready for the user to add an image filter.
-- **Creating does not:** a shader written as a tag (`<MeshGradient …>`) is
-  ignored. Shaders can only be created and tuned by the user in the app.
-- **Props are read-only over the MCP:** `update_styles` on a shader node is
-  accepted but leaves its props unchanged. To build shaders from the user's
-  instructions, do it in the engine (`library/shaders.json` + previews).
-- **Video export is paid:** `export` with `type: "video"` only works on paid
-  plans. The engine renders video regardless.
+Notes for the canvas:
+- **Cloning works:** `<x-paper-clone node-id="…">` inside `write_html` places a copy of an existing shader node.
+- **Local images:** `<img src="paper-asset:///abs/path.png">` places a still on the canvas.
+- **Creating does not:** shader tags are ignored and shader props are read-only over the MCP.
+- **Video export is paid** on Paper; the engine renders video regardless.
 
 ## Other uses
 

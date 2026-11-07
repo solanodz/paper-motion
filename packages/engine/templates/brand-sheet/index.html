@@ -81,7 +81,7 @@ const get = (p, json) => fetch(p).then((r) => (r.ok ? (json ? r.json() : r.text(
 const [tokens, identity, visual, motionMd, soundMd, motion, sounds, shaders] = await Promise.all([
   get('../tokens.json', true), get('../IDENTITY.md'), get('../VISUAL.md'), get('../MOTION.md'), get('../SOUND.md'),
   get('../motion.json', true), get('../sound/sounds.json', true), get('../shader-set/set.json', true),
-]);
+]).then((r) => { const set = r[7]; r[7] = (Array.isArray(set) ? set : set?.entries ?? []).filter((e) => e.video); return r; });
 
 // ── markdown: split by "## " into sections, render the small subset brand files use ──
 const sections = (md) => Object.fromEntries((md ?? '').split(/^## /m).slice(1).map((b) => { const i = b.indexOf('\n'); return [b.slice(0, i).trim(), b.slice(i + 1).trim()]; }));
