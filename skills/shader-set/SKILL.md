@@ -47,7 +47,7 @@ Call `interview` with this question bank, the file `brand/shader-set/SET.md`, an
 ```
 
 - **props** are the shader's React props exactly (`pamo shaders <Name>`), colors from the palette and ramp only.
-- **image**: `wordmark` (light ink, for LiquidMetal and GemSmoke), `wordmark-dark` (dark ink: Heatmap reads dark shapes on white), or a path in `brand/`.
+- **image**: `wordmark` (light ink, for LiquidMetal and GemSmoke), `wordmark-dark` (dark ink: Heatmap reads dark shapes on white), or a path in `brand/`. Filters (FlutedGlass, HalftoneDots, HalftoneCmyk, ImageDithering, LensDistortion) and logo shaders need one, and `build` skips them with a warning otherwise; Water and PaperTexture also work without one.
 - **loop** (seconds) crossfades the end into the start; only for diffuse fields, never crisp shapes.
 - **motion** animates one prop back and forth over the loop: what keeps static shaders (image filters, Waves, DotGrid) alive.
 - **Agent entries**: aim for 12–20 candidates across the chosen families. Each shader at default `speed` is usually too fast for calm brands (0.2–0.5 is typical). Set every color from `tokens.json`; never a hue the palette lacks.

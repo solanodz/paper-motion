@@ -31,7 +31,8 @@ recommendations, set `MOTION.md`'s rules, and check every clip.
 - A brand keeps a **repertoire** of one to three transitions (from the moves library) and uses them consistently;
   variety comes from content, not from new transitions every cut.
 - Match the transition to the pace: `cut` and `maskReveal` for fast, `wipe` and `push` for medium, `crossfade` and
-  `zoomThrough` for calm. `zoomThrough` (diving into a frame) is the move for "and now, inside".
+  `zoomThrough` for calm. `zoomThrough` (diving into a frame) is the move for "and now, inside"; over detailed content
+  (UI, small type) render it with less motion blur (`--motion-blur 4`) or a shorter move, or it smears.
 
 ## Text
 

@@ -2,7 +2,8 @@
 
 A recipe is a proven structure and timing for a kind of piece. It never carries a look: the look, moves, sound and
 material always come from the brand. Times below are for the brand's pace (`motion.json`): stretch them ×1.4 for a
-calm brand, compress ×0.75 for a fast one. Every recipe works in 16:9, 9:16 and 1:1; the notes say what changes.
+calm brand, compress ×0.75 for a fast one; when the user asks for a length, theirs wins and the beats scale to fit.
+Every recipe works in 16:9, 9:16 and 1:1; the notes say what changes.
 
 Beats name a gesture and the brand cue it carries (`B.cue(s, 'transition' | 'land' | 'text', t)`).
 
@@ -15,7 +16,7 @@ Something new exists; show it and make people want it.
 | Hook | 0–2 s | One striking image or line, already moving: the brand's strongest material from the shader set behind the boldest claim. No logo yet. |
 | Problem | 2–6 s | The situation the product changes, in the brand's words (IDENTITY.md's Audience). |
 | Reveal | 6–9 s | The product appears; a transition from the repertoire, the `land` cue. |
-| Proof | 9–20 s | Three moments that show it working, each its own mechanic (not one treatment three times). Facts only from IDENTITY.md's Facts. |
+| Proof | 9–20 s | Three moments that show it working with real material (the real UI, a real command and its output), each its own mechanic, never one treatment three times. Claims only from IDENTITY.md's Facts. |
 | Close | 20–26 s | The ending from `motion.json` (often the wordmark), the call to action. |
 
 9:16: one idea per screen, type ≥ 60 px for body, keep the bottom 20 % clear of UI.

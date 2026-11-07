@@ -16,7 +16,7 @@
 </main>
 <script type="module">
 import { scene, progress, ease } from 'paper-motion';
-import { wordRise, blurIn, typeOn, typingTimes, keySounds } from 'paper-motion/moves';
+import { wordRise, blurIn, trackIn, typeOn, typingTimes, keySounds } from 'paper-motion/moves';
 import { loadBrand } from 'paper-motion/brand';
 
 const B = await loadBrand();
@@ -40,13 +40,18 @@ const fit = (W - M * 2) / title.scrollWidth;
 if (fit < 1) title.style.fontSize = `${parseFloat(title.style.fontSize) * fit}px`;
 if (H > W) line.style.fontSize = `${parseFloat(line.style.fontSize) * 0.8}px`;
 
-const P = B.pace, T1 = 0.6, T2 = T1 + P.enter * 2;
+// Text behaves the way the brand's motion style says (motion.json: typing | rise | blur | track).
+const P = B.pace, T1 = 0.6, T2 = T1 + P.enter * 2, TEXT = B.motion?.text ?? 'rise';
+const lineText = line.textContent, times = typingTimes(lineText, { start: T2, cps: { calm: 14, medium: 22, fast: 32 }[B.motion?.pace ?? 'medium'], seed: 1 });
 s.update((t) => {
   wordRise(title, t, { start: T1, each: P.stagger, duration: P.enter * 1.6 });
-  blurIn(line, t, { start: T2, duration: P.enter * 1.6 });
+  if (TEXT === 'typing') typeOn(line, lineText, t, { times });
+  else if (TEXT === 'blur') blurIn(line, t, { start: T2, duration: P.enter * 1.6 });
+  else if (TEXT === 'track') trackIn(line, t, { start: T2, duration: P.enter * 2 });
+  else wordRise(line, t, { start: T2, each: P.stagger, duration: P.enter * 1.6 });
 });
 B.cue(s, 'land', T1);
-B.cue(s, 'text', T2);
+if (TEXT === 'typing') keySounds(s, lineText, times, B.keys); else B.cue(s, 'text', T2);
 B.sound(s);
 
 await s.start();

@@ -165,6 +165,7 @@ async function main() {
       const src = args.from ? path.join(ENGINE, 'examples', args.from) : path.join(ENGINE, 'templates', args.still ? 'still' : args.move ? 'move-demo' : args.piece ? 'piece' : 'blank');
       if (!fs.existsSync(src)) { console.error(`No example "${args.from}". Run: examples`); process.exit(1); }
       fs.cpSync(src, dest, { recursive: true });
+      if (args.still || args.move) fs.rmSync(path.join(dest, 'brief.md'), { force: true }); // options for a board need no brief
       const scene = path.join(dest, 'scene.html');
       let html = fs.readFileSync(scene, 'utf8');
       const FORMATS = { '16:9': '1920x1080', '9:16': '1080x1920', '1:1': '1080x1080', '4:5': '1080x1350' };
@@ -259,8 +260,17 @@ async function main() {
         else {
           const tmp = out.replace(/(\.[a-z0-9]+)$/i, '.norm$1');
           const codec = format === 'webm' ? ['-c:a', 'libopus', '-b:a', '192k'] : format === 'prores' ? ['-c:a', 'pcm_s16le'] : ['-c:a', 'aac', '-b:a', '320k'];
-          const n = spawnSync('ffmpeg', ['-y', '-v', 'error', '-i', out, '-c:v', 'copy', '-af', `loudnorm=I=${lufs}:TP=-1.5:LRA=11`, ...codec, '-ar', '48000', tmp]);
-          if (n.status === 0) { fs.renameSync(tmp, out); console.log(`  loudness → ${lufs} LUFS, peaks ≤ −1.5 dBFS`); } else console.error(`  loudness pass failed: ${n.stderr}`);
+          // EBU R128 loudnorm with a little extra peak headroom (AAC encoding of sharp transients can overshoot),
+          // then the file is measured and reported as it really is. Sparse sound design with no music or bed often
+          // lands a few LU under the target: that is the honest result, not something to crush.
+          const measure = (f) => { const e = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', f, '-vn', '-af', 'loudnorm=print_format=json', '-f', 'null', '-'], { encoding: 'utf8', maxBuffer: 1 << 26 }).stderr; const j = JSON.parse(e.slice(e.lastIndexOf('{'), e.lastIndexOf('}') + 1) || '{}'); return { I: Number(j.input_i), TP: Number(j.input_tp) }; };
+          const chain = `loudnorm=I=${lufs}:TP=-2:LRA=11`;
+          const n = spawnSync('ffmpeg', ['-y', '-v', 'error', '-i', out, '-c:v', 'copy', '-af', chain, ...codec, '-ar', '48000', tmp]);
+          if (n.status === 0) {
+            fs.renameSync(tmp, out);
+            const { I, TP: P } = measure(out);
+            console.log(`  loudness: ${I} LUFS integrated (target ${lufs}), true peak ${P} dBTP${Number(I) < lufs - 1 ? `\n  (sparse sound design stays under the target rather than being crushed; music or a bed brings it up)` : ''}`);
+          } else console.error(`  loudness pass failed: ${n.stderr}`);
         }
       }
       break;
@@ -313,7 +323,7 @@ async function main() {
         const r = sequence
           ? await (await import('../lib/board.mjs')).composeSequence({ inputs, labels, out, tmp, duration: clip })
           : await composeBoard({ inputs, labels, aspect: w / h, out, tmp, duration: clip ?? undefined, cols: args.cols ? Number(args.cols) : undefined });
-        console.log(`\r✓ ${path.relative(process.cwd(), r.out)} — ${files.length} options, ${r.W}×${r.H}`);
+        console.log(`\r✓ ${path.relative(process.cwd(), r.out)} — ${files.length} options${sequence ? `, played in turn, ${clip * files.length} s` : `, ${r.W}×${r.H}`}`);
       } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
       break;
     }
@@ -355,6 +365,7 @@ async function main() {
           const pg = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
           const errs = [];
           pg.on('pageerror', (e) => errs.push(e.message));
+          await pg.addInitScript(() => { window.__export = true; }); // live samples show their finished state in exports
           await pg.goto(url());
           await pg.waitForFunction(() => window.__sheetReady === true, null, { timeout: 60000 }).catch(() => { throw new Error(`sheet did not finish loading${errs.length ? `: ${errs[0]}` : ''}`); });
           // show every clip at a telling moment (60 % in), not its first second
@@ -424,6 +435,7 @@ async function main() {
       const dir = path.join(path.resolve(args.brand ?? 'brand'), 'shader-set');
       const { buildSet, writeSet, shotName } = await import('../lib/shaderset.mjs');
       const built = buildSet(dir);
+      for (const m of built.skipped) console.warn(`  skipped ${m}`);
       if (sub === 'build') { console.log(`✓ ${built.shots.length} shots, ${built.boards.length} boards in ${path.relative(process.cwd(), dir)}`); break; }
       if (sub === 'boards') {
         const { renderStills } = await import('../lib/render.mjs');

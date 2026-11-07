@@ -140,6 +140,8 @@ export const SHADERS = Object.keys(PaperReact).filter(
 );
 
 const imageCache = new Map();
+// A transparent pixel stands in for an image shader with no image (PaperTexture and Water also work standalone).
+const BLANK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 class ShaderLayer {
   /**
@@ -195,7 +197,7 @@ class ShaderLayer {
     const u = {};
     for (const [k, v] of Object.entries(props.uniforms)) {
       if (typeof v === 'string') {
-        const img = imageCache.get(v);
+        const img = imageCache.get(v) ?? (v === '' ? imageCache.get(BLANK) : undefined);
         if (!img) throw new Error(`paper-motion: image "${v}" not loaded yet; use await layer.load({...})`);
         u[k] = img;
       } else u[k] = v;
@@ -245,7 +247,7 @@ function resolvePropsSync(Comp, p) {
 async function loadUniforms(uniforms) {
   const out = {};
   await Promise.all(Object.entries(uniforms).map(async ([k, v]) => {
-    if (typeof v === 'string') out[k] = await loadImage(v || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+    if (typeof v === 'string') out[k] = await loadImage(v || BLANK);
     else if (v instanceof HTMLImageElement) { await v.decode(); minSize(v); out[k] = v; }
     else out[k] = v;
   }));

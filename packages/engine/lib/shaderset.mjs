@@ -44,7 +44,14 @@ export function buildSet(dir) {
   const set = readSet(dir);
   fs.copyFileSync(path.join(ENGINE, 'templates', 'shader-set', 'shot.js'), path.join(dir, 'shot.js'));
   for (const sub of ['shots', 'boards']) { fs.rmSync(path.join(dir, sub), { recursive: true, force: true }); fs.mkdirSync(path.join(dir, sub), { recursive: true }); }
-  const live = set.entries.map((e, i) => ({ e, i })).filter(({ e }) => e.shader || e.file);
+  // shaders that only filter an image need one; say which entry instead of failing inside a render
+  const NEEDS_IMAGE = ['ImageDithering', 'HalftoneDots', 'HalftoneCmyk', 'FlutedGlass', 'LensDistortion', 'LiquidMetal', 'GemSmoke', 'Heatmap'];
+  const skipped = [];
+  const live = set.entries.map((e, i) => ({ e, i })).filter(({ e, i }) => {
+    if (!e.shader && !e.file) { skipped.push(`${i + 1} · ${e.id}: no shader or file`); return false; }
+    if (NEEDS_IMAGE.includes(e.shader) && !e.image) { skipped.push(`${i + 1} · ${e.id}: ${e.shader} filters an image; give it "image" (wordmark, wordmark-dark or a path in brand/)`); return false; }
+    return true;
+  });
   const F = JSON.stringify(set.format);
   for (const { e, i } of live) fs.writeFileSync(path.join(dir, 'shots', `${shotName(e, i)}.html`), page(`shader set · ${e.id}`, `await mount([${JSON.stringify(e)}], ${F});`));
   const boards = [];
@@ -54,5 +61,5 @@ export function buildSet(dir) {
     fs.writeFileSync(f, page(`shader set · board ${k + 1}`, `await mount(${JSON.stringify(chunk.map((c) => c.e))}, ${F}, { board: true, numbers: ${JSON.stringify(chunk.map((c) => c.i + 1))} });`));
     boards.push(f);
   }
-  return { set, shots: live.map(({ e, i }) => ({ entry: e, index: i, file: path.join(dir, 'shots', `${shotName(e, i)}.html`) })), boards };
+  return { set, skipped, shots: live.map(({ e, i }) => ({ entry: e, index: i, file: path.join(dir, 'shots', `${shotName(e, i)}.html`) })), boards };
 }

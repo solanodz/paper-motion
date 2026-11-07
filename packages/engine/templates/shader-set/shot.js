@@ -38,7 +38,7 @@ export async function mount(entries, format, { board = false, numbers = [] } = {
     }
     if (board) {
       const lab = document.createElement('div');
-      Object.assign(lab.style, { position: 'absolute', left: `${(i % cols) * cw + 12}px`, top: `${Math.floor(i / cols) * ch + 10}px`, font: '500 15px ui-monospace, Menlo, monospace', color: '#fff', textShadow: '0 0 5px #000, 0 0 2px #000', zIndex: 2 });
+      Object.assign(lab.style, { position: 'absolute', left: `${(i % cols) * cw + 10}px`, top: `${Math.floor(i / cols) * ch + 10}px`, font: '500 15px ui-monospace, Menlo, monospace', color: '#fff', background: 'rgba(0,0,0,.62)', padding: '4px 8px', borderRadius: '5px', zIndex: 2 });
       lab.textContent = `${numbers[i] ?? i + 1} · ${e.id}`;
       stage.append(lab);
     }

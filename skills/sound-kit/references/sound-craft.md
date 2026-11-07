@@ -38,10 +38,15 @@ recommendations, set `SOUND.md`'s rules, and check every mix.
 ## Loudness
 
 - **−14 LUFS** for pieces that live in social feeds (Instagram, TikTok, X), **−16 LUFS** for web, README and
-  presentations; peaks at −1.5 dBFS. `pamo render … --loudness -14` applies it.
+  presentations; peaks at −1.5 dBFS. `pamo render … --loudness -14` applies it and reports what the file really
+  measures. Sparse sound design with no music or bed usually lands a few LU under the target (−20 to −24 LUFS):
+  that is honest, and better than crushing the transients; music or a quiet bed brings it up.
 
 ## Checking a mix
 
-- Every cue lands on its gesture (within a frame); nothing plays where nothing moves.
-- Nothing pierces: listen to the loudest key and the brightest whoosh at normal volume.
-- The repeated cues never sound identical twice.
+An agent can't listen, so it measures; the user listens.
+
+- Every cue lands on its gesture (within a frame); nothing plays where nothing moves. Check the cue times against the beats.
+- Nothing pierces: `pamo sfx scene.html --out mix.wav`, then `ffmpeg -i mix.wav -af "highpass=f=3000,astats" -f null -` (energy above 3 kHz stays low, keys aside) and `-af ebur128=peak=true` (true peak ≤ −1.5 dBFS after `--loudness`).
+- Repeated cues sit 6–10 dB under the main gestures and never repeat identically (different seeds).
+- Then ask the user to listen with headphones; their ear has the last word.

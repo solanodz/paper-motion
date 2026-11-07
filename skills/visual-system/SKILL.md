@@ -34,18 +34,18 @@ The usual shape: logo, type and shape; then palette; then wordmark.
 
 ## 4 · Show the whole system, then confirm
 
-Before the closing summary, derive what the rounds imply and log each item with `By: agent`: the type scale, radius and stroke, the ramp for gradients and shaders, the wordmark's clear space, and the few rules that keep the system consistent. Then build the **system board**, one still that shows all of it: the wordmark, the pairing at its real sizes, every palette color and every ramp tone in role, a shape in the chosen language.
+Before the closing summary, derive what the rounds imply and log each item with `By: agent`: the type scale, radius and stroke, the ramp for gradients and shaders, the wordmark's clear space, and the few rules that keep the system consistent. Write them as a **draft** `brand/tokens.json` and render the wordmark files (step 5.1), because the system board reads both. Then build the **system board**, one still that shows all of it: the wordmark, the pairing at its real sizes, every palette color and every ramp tone in role, a shape in the chosen language.
 
 ```
 pamo new system --dir brand/.interview --still     # then lay out the system
 pamo still brand/.interview/system/scene.html --t 1 --out brand/visual-board.png
 ```
 
-Show the board with interview's closing summary. A change reopens that branch; confirmation releases step 5.
+Show the board with interview's closing summary. A change reopens that branch (and updates the draft); confirmation releases step 5, which finalizes the files.
 
 ## 5 · Write
 
-1. **Wordmark files**, cropped to the ink: `pamo wordmark "<name>" --family <family> --css <url> --weight <w> --tracking <t> --color <dark ink> --out brand/assets/wordmark-on-light.png`, and again with the light ink to `wordmark-on-dark.png`. Look at both on their grounds.
+1. **Wordmark files** (already drafted for the board; re-render if the wordmark changed), cropped to the ink, at `--size 600` or more so they stay sharp on large frames: `pamo wordmark "<name>" --family <family> --css <url> --weight <w> --tracking <t> --color <dark ink> --out brand/assets/wordmark-on-light.png`, and again with the light ink to `wordmark-on-dark.png`. Look at both on their grounds.
 2. **`brand/tokens.json`** in the shape of [references/tokens.md](references/tokens.md).
 3. **`brand/VISUAL.md`**, the same system in words, with the reasons:
 

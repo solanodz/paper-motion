@@ -43,7 +43,9 @@ const section = (h) => (identity.split(new RegExp(`^## ${h}\\s*$`, 'm'))[1] ?? '
 const firstLine = (s) => s.split('\n').map((l) => l.replace(/^[-*]\s*/, '').trim()).find(Boolean) ?? '';
 const quoted = section('Voice').match(/[“"]([^”"]{4,90})[”"]/)?.[1];
 const name = tokens?.wordmark?.text ?? tokens?.brand ?? 'brand';
-const line = firstLine(section('In one line')) || quoted || firstLine(section('Offer') || section('Purpose')).split(/(?<=\.)\s/)[0] || name;
+// a short line reads in one beat: the voice sample, else the first clause of the one line, at most ~48 characters
+const clip = (t) => { if (!t) return ''; const c = t.split(/[,.;:—]/)[0].trim(); const u = c.length <= 48 ? c : c.slice(0, c.lastIndexOf(' ', 48)); return u; };
+const line = (quoted && quoted.length <= 56 ? quoted : '') || clip(firstLine(section('In one line'))) || clip(quoted) || clip(firstLine(section('Offer') || section('Purpose'))) || name;
 
 // Two frames that contrast enough for every move to read: ground, and figure (or a surface far from ground).
 const lum = (hex) => { const n = parseInt((hex ?? '#888').slice(1), 16); return ((n >> 16 & 255) * 0.299 + (n >> 8 & 255) * 0.587 + (n & 255) * 0.114) / 255; };
@@ -66,6 +68,8 @@ const mk = (i, kind) => {
     el.innerHTML = '<div><span class="ln"></span><span class="cur"></span></div>';
     Object.assign(el.firstChild.style, { font: `${T.title?.weight ?? 500} 80px/1.08 ${fam('display', 'system-ui, sans-serif')}`, letterSpacing: T.title?.tracking ?? '-0.01em', maxWidth: '1300px' });
     el.querySelector('.ln').textContent = line;
+    if (TEXT === 'track') el.firstChild.style.whiteSpace = 'nowrap'; // letters settle without reflowing lines
+    if (TEXT === 'typing') { el.firstChild.style.fontFamily = fam(tokens?.fonts?.mono ? 'mono' : 'text', 'ui-monospace, monospace'); el.firstChild.style.fontWeight = 400; } // typing reads in the brand's mono (or text face), never the display face
     el.querySelector('.cur').style.background = bInk; el.querySelector('.cur').style.opacity = 0;
   }
   world.append(el);
@@ -77,12 +81,12 @@ const P = M.PACE[PACE], trans = P.enter * 1.6, textDur = P.enter * 1.6;
 const beats = [];
 for (let t = 0.3, i = 0; t < DURATION; i++) {
   const kind = i % 2 ? 'line' : 'name';
-  const hold = kind === 'line' ? textDur + P.hold : P.hold * 0.7;
+  const hold = kind === 'line' ? textDur + P.hold * 0.55 : P.hold * 0.45; // a demo compresses holds so even calm shows its rhythm
   beats.push({ kind, start: t, end: t + hold, el: mk(i, kind) });
   t += hold + trans;
 }
 beats.forEach((b, i) => { b.el.style.opacity = i === 0 ? 1 : 0; });
-const cps = { calm: 18, medium: 28, fast: 42 }[PACE];
+const cps = { calm: 14, medium: 22, fast: 32 }[PACE]; // typing speed per pace (characters a second)
 
 s.update((t) => {
   // Every frame is derived from t alone: reset, then apply only the transition in progress (or last finished).
@@ -105,7 +109,7 @@ s.update((t) => {
   // the line appears as its frame lands
   for (const b of beats.filter((x) => x.kind === 'line')) {
     const el = b.el.querySelector('.ln'), start = b.start - (CAMERA === 'travel' ? 0 : trans * 0.3);
-    if (TEXT === 'typing') M.typeOn(el, line, t, { times: M.typingTimes(line, { start, cps: cps * 0.4, seed: beats.indexOf(b) + 1 }), cursor: t < b.end + trans ? b.el.querySelector('.cur') : null });
+    if (TEXT === 'typing') M.typeOn(el, line, t, { times: M.typingTimes(line, { start, cps, seed: beats.indexOf(b) + 1 }), cursor: t < b.end + trans ? b.el.querySelector('.cur') : null });
     else if (TEXT === 'rise') M.wordRise(el, t, { start, each: P.stagger, duration: textDur });
     else if (TEXT === 'blur') M.blurIn(el, t, { start, duration: textDur });
     else if (TEXT === 'track') M.trackIn(el, t, { start, duration: textDur * 1.2 });
@@ -126,7 +130,7 @@ if (PAL) {
     if (beats[i + 1]) { PAL.move(b.end); PAL.land(b.end + trans); }
     if (b.kind === 'line') {
       const start = b.start - (CAMERA === 'travel' ? 0 : trans * 0.3);
-      if (TEXT === 'typing') M.keySounds(s, line, M.typingTimes(line, { start, cps: cps * 0.4, seed: i + 1 }), { bank, seed: i + 1 });
+      if (TEXT === 'typing') M.keySounds(s, line, M.typingTimes(line, { start, cps, seed: i + 1 }), { bank, seed: i + 1 });
       else PAL.text(start);
     }
   });

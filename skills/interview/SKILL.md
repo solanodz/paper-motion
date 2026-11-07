@@ -92,7 +92,7 @@ Write each decision the moment it settles, in two places:
 
 Givens from other brand files are not re-logged: they already have their own entries.
 
-**"Decide for me."** When the user hands you a question, a round, or everything ("you choose", "the one you recommend", "whatever you think"), apply your recommendations, log each with `By: agent`, and carry on. Tell them every agent decision is in `brand/decisions/` to revisit any time.
+**"Decide for me."** When the user hands you a question, a round, or everything ("you choose", "the one you recommend", "whatever you think"), apply your recommendations and carry on. A whole delegated round gets one log file listing its decisions (`By: agent`), not one file each, so a user in a hurry isn't buried in notes. Tell them every agent decision is in `brand/decisions/` to revisit any time.
 
 ## 5 · Close
 

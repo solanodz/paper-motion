@@ -27,7 +27,8 @@ Scenes load it with `paper-motion/brand` (see "Writing a scene"). When a part is
 
 **Do not build anything until the brief is approved.** Call `interview` with the question bank in `references/intake.md` (it skips what the brand already settles) and write `brief.md` from its template.
 
-- **Recipe:** start from one in `references/recipes.md` (launch, explainer, social loop, end card, README loop) or the user's own structure. A recipe gives beats and timing, never a look.
+- **Recipe:** start from one in `references/recipes.md` (launch, explainer, social loop, end card, README loop) or the user's own structure. A recipe gives beats and timing, never a look. The user's length wins: scale the recipe's beats to it.
+- **Real material:** ask what is real and can be shown: the product's UI, a real command and its output, real numbers from the Facts. A piece that shows the product working beats any abstract illustration of it.
 - **Format:** 16:9 (1920×1080), 9:16 (1080×1920) or 1:1 (1080×1080). One piece, one format; another format is another piece, made after this one.
 - **Mirror back** after each round; get an explicit approval of `brief.md`.
 - When a gate is later rejected, ask what exactly was wrong (pace, type, composition, movement, transitions, sound, mood) before changing anything.
@@ -43,7 +44,7 @@ pamo new <name> --dir brand/pieces --format 9:16 --piece   # a scene already wir
 pamo still brand/pieces/<name>/scene.html --count 4        # stills + contact-sheet.jpg
 ```
 
-Pieces with several beats (a list, a song, more than 20 s): write a storyboard with one distinct visual idea per beat, each tied to what that beat says and with its own mechanic, and get it approved before building. Never run every beat through the same treatment.
+Every piece gets a storyboard before building: one central idea that carries the whole piece (a continuous camera through the product, a terminal that becomes the brand, a material that transforms), and one distinct mechanic per beat tied to what that beat says. A run of title cards joined by crossfades is a slideshow, not a piece: never run every beat through the same arrive-and-hold treatment. Get the storyboard approved before building.
 
 Look at every contact sheet yourself before showing it (`references/aesthetics.md` is the composition and critique guide). Show the sheets with one line each; let the user pick, mix or redirect.
 
@@ -74,7 +75,7 @@ pamo render brand/pieces/<name>/scene.html --format gif --gif-width 720
 pamo render brand/pieces/<name>/scene.html --audio track.wav --loudness -14         # with the user's music
 ```
 
-Check the first and last frame of a loop (`pamo still --t 0,<duration − 1/fps>`). Report the file path, size, duration and loudness.
+Renders land in `brand/pieces/<name>/renders/`. Check the first and last frame of a loop (`pamo still --t 0,<duration − 1/fps>`). Report the file path, size, duration and the loudness `render` measured.
 
 ## Writing a scene
 

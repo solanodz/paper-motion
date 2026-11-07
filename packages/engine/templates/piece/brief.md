@@ -17,20 +17,20 @@ Three words. One sentence of intent.
 ## Content
 Exact text / none · must be read? · hero moment.
 
-## Format
-Aspect · duration · fps · loop · deliverables · safe areas.
+## Recipe and format
+Recipe · aspect (16:9 / 9:16 / 1:1) · duration · fps · loop · safe areas.
 
 ## Structure and pace
 Continuous / cuts / chapters · pace (cut every N s) · sync (music/VO/none) · opening · ending.
 
 ## Look
-Palette · background · type (family, weights, sizes) · composition · texture · 2D/3D.
+From the brand (say "brand") · what this piece changes · composition · which shader-set entries.
 
 ## Motion
-Movement character · easing · transitions · camera · motion blur.
+From the brand's motion.json · what this piece changes · motion blur.
 
 ## Sound
-Music / sfx (character) / VO / silent.
+From the brand's sound.json · music (the user's file) or sound design only · loudness.
 
 ## Done when
 The user's own words.

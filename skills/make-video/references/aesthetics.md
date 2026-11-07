@@ -83,6 +83,11 @@ once. If a piece has no brand folder, decide them in its intake with those skill
 
 ## Critique checklist (run on every contact sheet)
 
+- Is there one idea, or a sequence of slides? Each beat has its own mechanic.
+- Scale contrast: something very large against something very small; type in a corner of an empty frame is a draft, not a composition.
+- The accent once per frame, on the one thing that matters.
+- The product, real, on screen: its UI, its command, its output.
+
 1. Does each frame read as the one idea? Would it work as a poster?
 2. Is there a clear focal point / hierarchy in every still?
 3. Edges: nothing cropped or tangent by accident; margins consistent.
