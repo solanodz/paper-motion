@@ -567,3 +567,21 @@ export function organicPath(w, h, { radius = 24, wobble, seed = 1 } = {}) {
   }
   return d + 'Z';
 }
+
+/* ------------------------------------------------------------------ */
+/* Live shaders (web pages, not scenes)                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Mount a Paper shader that plays in real time inside any web page (the brand sheet, a preview).
+ * Scenes use s.shader() instead, which is seeked frame by frame.
+ * @returns {Promise<ShaderMount>}
+ */
+export async function live(el, name, params = {}) {
+  const Comp = PaperReact[name];
+  if (!SHADERS.includes(name)) throw new Error(`paper-motion: unknown shader "${name}"`);
+  const props = await resolveProps(Comp, params);
+  const uniforms = await loadUniforms(props.uniforms);
+  if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+  return new ShaderMount(el, props.fragmentShader, uniforms, props.webGlContextAttributes ?? {}, props.speed ?? 1, props.frame ?? 0, 1.5, 1920 * 1080 * 2, props.mipmaps);
+}

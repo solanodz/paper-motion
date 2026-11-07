@@ -28,6 +28,8 @@ await Promise.all(Object.values(tokens?.fonts ?? {}).filter((f) => f?.css).map((
   const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: f.css, onload: res, onerror: res });
   document.head.append(l);
 })));
+// Fonts the brand ships as files load as @font-face from the brand folder.
+for (const f of Object.values(tokens?.fonts ?? {})) if (f?.file) document.head.append(Object.assign(document.createElement('style'), { textContent: `@font-face { font-family: '${f.family}'; src: url('/brand/${f.file}'); font-weight: 100 900; }` }));
 
 const s = scene({ width: 1600, height: 900, fps: 30, duration: 3, background: col('ground', '#f2f2f2') });
 

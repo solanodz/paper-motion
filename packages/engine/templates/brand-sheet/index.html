@@ -1,0 +1,214 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>brand sheet</title>
+<!--
+  The brand sheet: the whole brand on one page, built from the brand folder (one level up).
+  Reads ../tokens.json, ../IDENTITY.md, ../VISUAL.md, ../MOTION.md, ../SOUND.md and, when they exist,
+  ../motion.json, ../sound/sounds.json, ../shader-set/set.json. Sections without data are left out.
+  This copy belongs to the user: edit copy, order or layout freely; `pm sheet` re-exports it.
+-->
+<style>
+  :root { --ground: #f2f2f2; --figure: #1a1a1a; --muted: #6b6b6b; --surface: #e4e4e4; --accent: #1a1a1a; --line: rgba(0,0,0,.12);
+          --display: system-ui, sans-serif; --text: system-ui, sans-serif; --mono: ui-monospace, Menlo, monospace; --radius: 12px; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ground); color: var(--figure); font-family: var(--text); -webkit-font-smoothing: antialiased; }
+  .wrap { width: min(1440px, 100%); margin: 0 auto; padding: 0 64px; }
+  section { padding: 120px 0 140px; border-top: 1px solid var(--line); }
+  .kicker { font: 500 14px/20px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+  h2 { font-family: var(--display); font-weight: var(--display-weight, 500); letter-spacing: var(--display-tracking, -0.02em); font-size: 80px; line-height: .98; margin: 0 0 56px; }
+  h3 { font: 500 15px/20px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+  p, li { font-size: 20px; line-height: 1.5; max-width: 62ch; }
+  .md p:first-child { margin-top: 0; }
+  .grid { display: grid; gap: 48px 64px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .card { background: var(--surface); border-radius: var(--radius); padding: 32px; }
+
+  /* cover */
+  #cover { position: relative; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 56px 0 72px; border: 0; overflow: hidden; }
+  #cover .field { position: absolute; inset: 0; opacity: .55; }
+  #cover .top, #cover .bottom { position: relative; display: flex; justify-content: space-between; align-items: end; gap: 32px; }
+  #cover .top { font: 500 14px/20px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  #cover .mark { position: relative; }
+  #cover .mark img { display: block; width: min(80%, 1100px); height: auto; }
+  #cover .mark .wm { font-family: var(--display); font-size: clamp(96px, 14vw, 240px); line-height: .9; letter-spacing: var(--display-tracking, -0.02em); font-weight: var(--display-weight, 500); }
+  #cover .line { font-size: 28px; line-height: 1.3; max-width: 28ch; }
+  #cover .keys { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pill { font: 500 14px/1 var(--mono); padding: 10px 14px; border: 1px solid currentColor; border-radius: 999px; }
+
+  /* identity */
+  .sliders { display: grid; gap: 14px; }
+  .slider { display: grid; grid-template-columns: 1fr 220px 1fr; align-items: center; gap: 16px; font-size: 17px; }
+  .slider span:last-child { text-align: right; }
+  .track { position: relative; height: 2px; background: var(--line); }
+  .track i { position: absolute; top: -7px; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); transform: translateX(-50%); }
+  .voice { font-family: var(--display); font-size: 44px; line-height: 1.15; letter-spacing: var(--display-tracking, -0.01em); margin: 0; max-width: 24ch; }
+
+  /* visual */
+  .marks { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .marks div { border: 1px solid var(--line); border-radius: var(--radius); padding: 64px 48px; display: flex; align-items: center; justify-content: center; min-height: 260px; }
+  .marks img { max-width: 80%; max-height: 120px; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .swatch .chip { height: 180px; border-radius: var(--radius); border: 1px solid var(--line); }
+  .swatch b { display: block; font: 500 16px/22px var(--mono); margin-top: 14px; }
+  .swatch small { font: 400 14px/20px var(--mono); color: var(--muted); }
+  .ramp { display: flex; height: 64px; border-radius: var(--radius); overflow: hidden; margin-top: 24px; border: 1px solid var(--line); }
+  .ramp div { flex: 1; }
+  .spec { display: grid; grid-template-columns: 180px 1fr; gap: 24px; align-items: baseline; padding: 28px 0; border-bottom: 1px solid var(--line); }
+  .spec small { font: 400 14px/20px var(--mono); color: var(--muted); }
+
+  /* motion, sound, shaders */
+  .sample { font-family: var(--display); font-size: 56px; letter-spacing: var(--display-tracking, -0.01em); min-height: 72px; }
+  .sample .cur { display: inline-block; width: .5em; height: .9em; background: var(--figure); vertical-align: -0.1em; margin-left: 4px; }
+  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .clips figure { margin: 0; }
+  .clips video { width: 100%; display: block; border-radius: var(--radius); background: #000; aspect-ratio: 16/9; object-fit: cover; }
+  .clips figcaption { font: 400 14px/20px var(--mono); color: var(--muted); margin-top: 10px; }
+  .sounds { display: flex; gap: 12px; flex-wrap: wrap; }
+  .sounds button { font: 500 15px/1 var(--mono); color: var(--figure); background: var(--surface); border: 0; border-radius: 999px; padding: 14px 20px; cursor: pointer; }
+  footer { padding: 48px 0 64px; border-top: 1px solid var(--line); font: 400 14px/20px var(--mono); color: var(--muted); display: flex; justify-content: space-between; }
+  @media print { section, #cover { break-inside: avoid; } }
+  @media (max-width: 760px) { .wrap { padding: 0 20px; } h2 { font-size: 48px; } .slider { grid-template-columns: 1fr 120px 1fr; } .marks { grid-template-columns: 1fr; } .spec { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main id="sheet"></main>
+<script type="module">
+import { live, organicPath } from 'paper-motion';
+
+const get = (p, json) => fetch(p).then((r) => (r.ok ? (json ? r.json() : r.text()) : null)).catch(() => null);
+const [tokens, identity, visual, motionMd, soundMd, motion, sounds, shaders] = await Promise.all([
+  get('../tokens.json', true), get('../IDENTITY.md'), get('../VISUAL.md'), get('../MOTION.md'), get('../SOUND.md'),
+  get('../motion.json', true), get('../sound/sounds.json', true), get('../shader-set/set.json', true),
+]);
+
+// ── markdown: split by "## " into sections, render the small subset brand files use ──
+const sections = (md) => Object.fromEntries((md ?? '').split(/^## /m).slice(1).map((b) => { const i = b.indexOf('\n'); return [b.slice(0, i).trim(), b.slice(i + 1).trim()]; }));
+const inline = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>').replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+const md = (s) => (s ?? '').split(/\n{2,}/).map((blk) => {
+  const lines = blk.split('\n');
+  if (lines.every((l) => /^\s*[-*] /.test(l))) return `<ul>${lines.map((l) => `<li>${inline(l.replace(/^\s*[-*] /, ''))}</li>`).join('')}</ul>`;
+  return `<p>${inline(blk.replace(/\n/g, ' '))}</p>`;
+}).join('');
+const filled = (s) => s && s.trim() && s.trim() !== '—';
+const I = sections(identity), V = sections(visual), M = sections(motionMd), S = sections(soundMd);
+
+// ── brand tokens → CSS ──
+const C = tokens?.colors ?? {};
+const root = document.documentElement.style;
+for (const k of ['ground', 'figure', 'muted', 'surface', 'accent']) if (C[k]?.hex) root.setProperty(`--${k}`, C[k].hex);
+const fam = (k, fb) => (tokens?.fonts?.[k]?.family ? `'${tokens.fonts[k].family}', ${fb}` : fb);
+root.setProperty('--display', fam('display', 'system-ui, sans-serif'));
+root.setProperty('--text', fam('text', 'system-ui, sans-serif'));
+root.setProperty('--mono', fam('mono', 'ui-monospace, Menlo, monospace'));
+if (tokens?.type?.display) { root.setProperty('--display-weight', tokens.type.display.weight); root.setProperty('--display-tracking', tokens.type.display.tracking); }
+if (tokens?.shape?.radius !== undefined) root.setProperty('--radius', `${tokens.shape.radius}px`);
+root.setProperty('--line', `color-mix(in oklab, var(--figure) 14%, transparent)`);
+await Promise.all(Object.values(tokens?.fonts ?? {}).filter((f) => f?.css).map((f) => new Promise((res) => document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: f.css, onload: res, onerror: res })))));
+// Fonts the brand ships as files (licensed by the user, or bundled) load as @font-face from the brand folder.
+for (const f of Object.values(tokens?.fonts ?? {})) if (f?.file) document.head.append(Object.assign(document.createElement('style'), { textContent: `@font-face { font-family: '${f.family}'; src: url('../${f.file}'); font-weight: 100 900; }` }));
+
+const name = tokens?.brand ?? (identity?.match(/^# (.+?)(?: ·|$)/m)?.[1] ?? 'brand');
+document.title = `${name} · brand sheet`;
+const dark = tokens?.mode === 'dark';
+const wmFile = tokens?.wordmark?.files?.[dark ? 'onDark' : 'onLight'];
+const firstOf = (...keys) => keys.map((k) => I[k]).find(filled) ?? '';
+const keywords = (I.Keywords ?? '').split(/[,\n·]/).map((s) => s.replace(/^[-*]\s*/, '').trim()).filter(Boolean);
+const html = [];
+
+// ── cover ──
+html.push(`<section id="cover"><div class="field"></div><div class="wrap top"><span>${inline(name)} · brand sheet</span><span>${new Date().toISOString().slice(0, 10)}</span></div>
+  <div class="wrap mark">${wmFile ? `<img src="../${wmFile}" alt="${inline(name)}">` : `<div class="wm">${inline(tokens?.wordmark?.text ?? name)}</div>`}</div>
+  <div class="wrap bottom"><div class="line">${inline(firstOf('In one line').split('\n')[0])}</div><div class="keys">${keywords.map((k) => `<span class="pill">${inline(k)}</span>`).join('')}</div></div></section>`);
+
+// ── identity ──
+if (identity) {
+  const sliders = (I.Personality ?? '').split('\n').map((l) => l.match(/^[-*\s]*(.+?)\s+([●○]{3,})\s+(.+)$/)).filter(Boolean);
+  const voiceLine = (I.Voice ?? '').match(/[“"]([^”"]+)[”"]/)?.[1];
+  html.push(`<section><div class="wrap"><div class="kicker">01 · identity</div><h2>Who ${inline(name)} is</h2><div class="grid">
+    ${filled(firstOf('Offer', 'Purpose')) ? `<div><h3>offer</h3><div class="md">${md(firstOf('Offer', 'Purpose'))}</div></div>` : ''}
+    ${filled(I.Audience) ? `<div><h3>audience</h3><div class="md">${md(I.Audience)}</div></div>` : ''}
+    ${sliders.length ? `<div><h3>personality</h3><div class="sliders">${sliders.map(([, a, dots, b]) => `<div class="slider"><span>${inline(a)}</span><div class="track"><i style="left:${(dots.indexOf('●') / Math.max(1, dots.length - 1)) * 100}%"></i></div><span>${inline(b)}</span></div>`).join('')}</div></div>` : ''}
+    ${filled(I.Voice) ? `<div><h3>voice</h3>${voiceLine ? `<p class="voice">“${inline(voiceLine)}”</p>` : `<div class="md">${md(I.Voice)}</div>`}</div>` : ''}
+    ${filled(I.Not) ? `<div><h3>not</h3><div class="md">${md(I.Not)}</div></div>` : ''}
+    ${filled(I.References) ? `<div><h3>references</h3><div class="md">${md(I.References)}</div></div>` : ''}
+  </div></div></section>`);
+}
+
+// ── visual system ──
+if (tokens) {
+  const sw = Object.entries(C).map(([role, c]) => `<div class="swatch"><div class="chip" style="background:${c.hex}"></div><b>${role} · ${c.hex}</b><small>${inline(c.role ?? '')}</small></div>`).join('');
+  const T = tokens.type ?? {};
+  const specimen = (role, sample) => T[role] ? `<div class="spec"><small>${role}<br>${tokens.fonts?.[T[role].font]?.family ?? ''} ${T[role].weight} · ${T[role].size}px</small><div style="font-family:var(--${T[role].font === 'mono' ? 'mono' : T[role].font});font-weight:${T[role].weight};font-size:${Math.min(T[role].size, 160)}px;line-height:${T[role].lineHeight};letter-spacing:${T[role].tracking}">${sample}</div></div>` : '';
+  const short = (t, n) => (t.length <= n ? t : `${t.slice(0, t.lastIndexOf(' ', n))}…`);
+  const line1 = inline(short((firstOf('In one line') || name).split('\n')[0], 34));
+  const body = inline((firstOf('Offer', 'Purpose', 'Audience') || `${name}, set in its text face at body size, the way most of its words will be read.`).split('\n')[0].slice(0, 180));
+  const caption = inline(keywords.length ? keywords.join(' · ') : Object.keys(C).join(' · '));
+  const on = tokens.wordmark?.files ?? {};
+  html.push(`<section><div class="wrap"><div class="kicker">02 · visual system</div><h2>How ${inline(name)} looks</h2>
+    ${on.onLight || on.onDark ? `<h3>wordmark</h3><div class="marks">${on.onLight ? `<div style="background:${dark ? C.figure?.hex : C.ground?.hex}"><img src="../${on.onLight}"></div>` : ''}${on.onDark ? `<div style="background:${dark ? C.ground?.hex : C.figure?.hex}"><img src="../${on.onDark}"></div>` : ''}</div><br><br>` : ''}
+    <h3>palette</h3><div class="swatches">${sw}</div>
+    ${tokens.ramp?.length ? `<div class="ramp">${tokens.ramp.map((h) => `<div style="background:${h}"></div>`).join('')}</div>` : ''}
+    <br><br><h3>type</h3>${specimen('display', inline(tokens.wordmark?.text ?? name))}${specimen('title', line1)}${specimen('body', body)}${specimen('caption', caption)}
+    ${tokens.shape ? `<br><br><h3>shape · ${tokens.shape.language}</h3><svg width="420" height="260" style="display:block"><path id="shape" fill="var(--surface)" stroke="var(--figure)" stroke-width="${tokens.shape.stroke ?? 1}"/></svg>` : ''}
+    ${filled(V.Rules) ? `<br><br><h3>rules</h3><div class="md">${md(V.Rules)}</div>` : ''}
+  </div></section>`);
+}
+
+// ── motion ──
+if (motionMd || motion) {
+  html.push(`<section><div class="wrap"><div class="kicker">03 · motion</div><h2>How ${inline(name)} moves</h2>
+    <div class="sample" id="sample"></div><br>
+    <div class="grid">${Object.entries(M).filter(([k, v]) => filled(v) && k !== 'Open').map(([k, v]) => `<div><h3>${inline(k.toLowerCase())}</h3><div class="md">${md(v)}</div></div>`).join('')}</div>
+    ${motion?.moves?.length ? `<br><br><h3>moves</h3><div class="clips">${motion.moves.map((m) => `<figure><video src="../${m.video}" muted loop autoplay playsinline></video><figcaption>${inline(m.name)}</figcaption></figure>`).join('')}</div>` : ''}
+  </div></section>`);
+}
+
+// ── sound ──
+if (soundMd || sounds) {
+  html.push(`<section><div class="wrap"><div class="kicker">04 · sound</div><h2>How ${inline(name)} sounds</h2>
+    ${sounds?.length ? `<div class="sounds">${sounds.map((s, i) => `<button data-i="${i}">▶ ${inline(s.name)}</button>`).join('')}</div><br><br>` : ''}
+    <div class="grid">${Object.entries(S).filter(([k, v]) => filled(v) && k !== 'Open').map(([k, v]) => `<div><h3>${inline(k.toLowerCase())}</h3><div class="md">${md(v)}</div></div>`).join('')}</div>
+  </div></section>`);
+}
+
+// ── shader set ──
+if (shaders?.length) {
+  html.push(`<section><div class="wrap"><div class="kicker">05 · shader set</div><h2>${shaders.length} moving materials</h2>
+    <div class="clips">${shaders.map((s) => `<figure><video src="../shader-set/${s.video}" muted loop autoplay playsinline></video><figcaption>${inline(s.id)}</figcaption></figure>`).join('')}</div></div></section>`);
+}
+
+html.push(`<footer class="wrap"><span>${inline(name)}</span><span>made with paper-motion</span></footer>`);
+document.querySelector('#sheet').innerHTML = html.join('');
+
+// ── live parts ──
+const shapeEl = document.querySelector('#shape');
+if (shapeEl) {
+  const L = tokens.shape.language, r = tokens.shape.radius ?? 0;
+  shapeEl.setAttribute('d', L === 'organic' ? organicPath(400, 240, { radius: r, seed: 2 }) : `M${r},0 H${400 - r} Q400,0 400,${r} V${240 - r} Q400,240 ${400 - r},240 H${r} Q0,240 0,${240 - r} V${r} Q0,0 ${r},0 Z`);
+  shapeEl.setAttribute('transform', 'translate(10,10)');
+}
+const ramp = tokens?.ramp?.length >= 2 ? tokens.ramp : [C.ground?.hex, C.surface?.hex, C.accent?.hex].filter(Boolean);
+if (ramp.length >= 2) await live(document.querySelector('#cover .field'), 'MeshGradient', { colors: ramp.slice(0, 4), distortion: 0.6, swirl: 0.2, speed: 0.15, grainOverlay: 0.08 }).catch(() => {});
+const sample = document.querySelector('#sample');
+if (sample) {
+  const text = (firstOf('In one line') || name).split('\n')[0].replace(/[*`]/g, '');
+  const mode = motion?.text ?? (/typ/i.test(motionMd ?? '') ? 'typing' : 'reveal');
+  let t0 = performance.now();
+  const tick = (now) => {
+    const t = ((now - t0) / 1000) % (text.length / 18 + 3);
+    if (mode === 'typing') { const n = Math.min(text.length, Math.floor(t * 18)); sample.innerHTML = `${inline(text.slice(0, n))}<span class="cur" style="opacity:${n < text.length || Math.floor(t * 2) % 2 ? 1 : 0}"></span>`; }
+    else { const p = Math.min(1, t / 1.2); sample.textContent = text; sample.style.opacity = p; sample.style.transform = `translateY(${(1 - p) * 16}px)`; }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+document.querySelectorAll('.sounds button').forEach((b) => b.addEventListener('click', () => new Audio(`../sound/${sounds[b.dataset.i].file}`).play()));
+
+await Promise.all([...new Set(Object.values(tokens?.fonts ?? {}).filter(Boolean).map((f) => f.family))].map((f) => document.fonts.load(`400 32px '${f}'`).catch(() => {})));
+await document.fonts.ready;
+window.__sheetReady = true;
+</script>
+</body>
+</html>

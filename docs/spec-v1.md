@@ -75,7 +75,11 @@ Lives at `brand/` in the user's project.
 | `tokens.json` | visual-system | the same as data: font files and families, colors with roles, type scale, spacing |
 | `MOTION.md` | motion-style | pace, camera, chosen moves, terminal/typing rules, do and don't |
 | `SOUND.md` | sound-kit | sound palette, music stance, loudness target |
-| `shader-set/` | shader-set | `set.json` (entries in one format) and the rendered loops |
+| `shader-set/` | shader-set | `set.json` (`[{ id, video }]`, one format) and the rendered loops |
+| `motion.json` | motion-style | text behavior and move clips, for scenes and the sheet |
+| `sound/` | sound-kit | `sounds.json` and short samples, for the sheet |
+| `sheet/` | brand-sheet | `index.html` (the user's copy), `sheet.png`, `sheet.pdf` |
+| `visual-board.png` | visual-system | the system at a glance |
 | `decisions/` | every skill | one short note per decision: what, why, and whether the agent decided it |
 | `assets/` | import starts, visual-system | wordmark, logo, fonts, music, reference images |
 | `pieces/<name>/` | make-video | each piece's brief, scene and renders |
@@ -110,7 +114,7 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 - **Writes:** `VISUAL.md`, `tokens.json`, `assets/wordmark.*`.
 - **Owns:** typography and color craft.
 
-### `brand-sheet`
+### `brand-sheet` · built
 - Builds the brand sheet as an **animated** web page rendered by the engine: wordmark with its treatment, palette,
   type specimens, live terminal/typing demo, motion and sound principles, the shader set playing.
 - Exports PNG and PDF. If Paper is connected, also writes a static copy to a new Paper page.
@@ -147,7 +151,9 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
   transparent PNG. **Still template** · built: `pm new <name> --still`; `organicPath()` for organic shapes.
 - **Option boards** · built: `pm board a.html b.html … [--t s | --clip s] --labels "A · x,B · y"` composes 2–6
   options into one lettered still (.png) or clip (.mp4), for `interview`.
-- **Brand sheet page:** a page template that reads `brand/` and plays live.
+- **Brand sheet page** · built: `pm sheet` copies a template to `brand/sheet/` that reads the brand folder and plays live
+  (shaders via `live()`), and exports PNG and PDF; `--serve` for live viewing. Reads `motion.json`,
+  `sound/sounds.json` and `shader-set/set.json` when the later skills write them.
 - Already in place: scenes as pure functions of time, Paper shaders, synthesized SFX, motion blur, loudness pass.
 
 ## Validation

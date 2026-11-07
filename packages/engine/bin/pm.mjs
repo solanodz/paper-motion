@@ -39,6 +39,10 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
          [--color #fff] [--size 400] [--pad 0] [--out wordmark.png]
                                      the name set in its typeface, as a transparent PNG
                                      cropped to the ink (--pad adds margin, × size)
+  sheet [--brand brand] [--fresh] [--serve [--port 4317]] [--width 1440] [--no-pdf]
+                                     the brand sheet: copies the template to brand/sheet/ (once;
+                                     --fresh replaces it), then exports sheet.png and sheet.pdf,
+                                     or serves it live with --serve
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
 `;
@@ -289,6 +293,47 @@ async function main() {
         size: Number(args.size ?? 400), pad: Number(args.pad ?? 0), out: path.resolve(args.out ?? 'wordmark.png'),
       });
       console.log(`✓ ${path.relative(process.cwd(), r.out)} — ${r.width}×${r.height}`);
+      break;
+    }
+
+    case 'sheet': {
+      await ensureDeps();
+      const brandDir = path.resolve(args.brand ?? 'brand');
+      if (!fs.existsSync(brandDir)) { console.error(`No brand folder at ${path.relative(process.cwd(), brandDir) || '.'} (run from the project root, or pass --brand)`); process.exit(1); }
+      const sheetDir = path.join(brandDir, 'sheet');
+      const page = path.join(sheetDir, 'index.html');
+      if (args.fresh || !fs.existsSync(page)) {
+        fs.mkdirSync(sheetDir, { recursive: true });
+        fs.copyFileSync(path.join(ENGINE, 'templates', 'brand-sheet', 'index.html'), page);
+        console.log(`${args.fresh ? 'replaced' : 'created'} ${path.relative(process.cwd(), page)}`);
+      }
+      if (args.serve) {
+        await withServer(page, async (url) => { console.log(`brand sheet: ${url()}  (live reload on; Ctrl+C to stop)`); await new Promise(() => {}); }, { watch: true, port: Number(args.port ?? 4317) });
+        break;
+      }
+      const { launch } = await import('../lib/browser.mjs');
+      const width = Number(args.width ?? 1440);
+      await withServer(page, async (url) => {
+        const browser = await launch();
+        try {
+          const pg = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
+          const errs = [];
+          pg.on('pageerror', (e) => errs.push(e.message));
+          await pg.goto(url());
+          await pg.waitForFunction(() => window.__sheetReady === true, null, { timeout: 60000 }).catch(() => { throw new Error(`sheet did not finish loading${errs.length ? `: ${errs[0]}` : ''}`); });
+          await pg.waitForTimeout(1500); // let videos and the live shader draw a frame
+          const png = path.join(sheetDir, 'sheet.png');
+          await pg.screenshot({ path: png, fullPage: true });
+          console.log(`✓ ${path.relative(process.cwd(), png)}`);
+          if (!args['no-pdf']) {
+            const h = await pg.evaluate(() => document.documentElement.scrollHeight);
+            const pdf = path.join(sheetDir, 'sheet.pdf');
+            await pg.pdf({ path: pdf, width: `${width}px`, height: `${h}px`, printBackground: true, pageRanges: '1' });
+            console.log(`✓ ${path.relative(process.cwd(), pdf)}`);
+          }
+          if (errs.length) console.error(`page errors:\n  ${errs.join('\n  ')}`);
+        } finally { await browser.close(); }
+      });
       break;
     }
 
