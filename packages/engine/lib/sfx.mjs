@@ -3,6 +3,7 @@
 // Everything is generated from code (no samples) and seeded, so the same scene
 // always produces the same audio.
 import fs from 'node:fs';
+import { loadBank } from './keys.mjs';
 
 const SR = 48000;
 
@@ -18,13 +19,20 @@ function mulberry32(seed) {
 
 // RBJ biquad
 class Biquad {
-  constructor(type, freq, q = 0.707) {
+  constructor(type, freq, q = 0.707, gainDb = 0) {
     const w = (2 * Math.PI * Math.min(freq, SR * 0.45)) / SR, cos = Math.cos(w), alpha = Math.sin(w) / (2 * q);
+    const A = 10 ** (gainDb / 40);
     let b0, b1, b2, a0, a1, a2;
+    a0 = 1 + alpha; a1 = -2 * cos; a2 = 1 - alpha;
     if (type === 'lowpass') { b0 = (1 - cos) / 2; b1 = 1 - cos; b2 = b0; }
     else if (type === 'highpass') { b0 = (1 + cos) / 2; b1 = -(1 + cos); b2 = b0; }
+    else if (type === 'peak') { b0 = 1 + alpha * A; b1 = -2 * cos; b2 = 1 - alpha * A; a0 = 1 + alpha / A; a2 = 1 - alpha / A; }
+    else if (type === 'highshelf') {
+      const sq = 2 * Math.sqrt(A) * alpha;
+      b0 = A * ((A + 1) + (A - 1) * cos + sq); b1 = -2 * A * ((A - 1) + (A + 1) * cos); b2 = A * ((A + 1) + (A - 1) * cos - sq);
+      a0 = (A + 1) - (A - 1) * cos + sq; a1 = 2 * ((A - 1) - (A + 1) * cos); a2 = (A + 1) - (A - 1) * cos - sq;
+    }
     else { b0 = alpha; b1 = 0; b2 = -alpha; } // bandpass, 0 dB peak
-    a0 = 1 + alpha; a1 = -2 * cos; a2 = 1 - alpha;
     this.b = [b0 / a0, b1 / a0, b2 / a0]; this.a = [a1 / a0, a2 / a0];
     this.x1 = this.x2 = this.y1 = this.y2 = 0;
   }
@@ -114,30 +122,62 @@ const VOICES = {
   tick({ freq = 200, gain = 0.1, decay = 0.05 }) {
     return { len: decay * 6, fn: (i) => { const t = i / SR; return gain * smooth(t / 0.0015) * Math.exp(-t / decay) * Math.sin(TAU * freq * t); } };
   },
-  // A keystroke on a mechanical keyboard (press + release), low and "thocky".
-  // { gain=0.3, kind='letter'|'space'|'enter', vel=1 }. Every call varies slightly (seed).
-  key({ gain = 0.3, kind = 'letter', vel = 1 }, rnd) {
+  // A keystroke, modeled like a real one: the bottom-out impact excites a few inharmonic keycap/plate
+  // resonances plus a low case "thock"; a softer, higher upstroke follows; a hint of room around it.
+  // { gain=0.3, kind='letter'|'space'|'enter', vel=1, style='creamy'|'thock'|'clack' }. Seeded variation.
+  key({ gain = 0.3, kind = 'letter', vel = 1, style = 'creamy', bank }, rnd) {
+    if (bank) {
+      // Real keystrokes: pick a hit from the bank, vary level and pitch slightly so no two repeat exactly.
+      const pool = (kind === 'space' || kind === 'enter') ? bank.heavy : bank.letter;
+      const src = pool[Math.floor(rnd() * pool.length) % pool.length];
+      const rate = 0.98 + 0.04 * rnd(), g = gain * vel * (0.82 + 0.3 * rnd()) * (kind === 'enter' ? 1.15 : 1);
+      const len = src.length / rate / SR;
+      return { len, bright: true, fn: (i) => {
+        const p = i * rate, j = Math.floor(p), x = p - j;
+        const y0 = src[j - 1] ?? 0, y1 = src[j] ?? 0, y2 = src[j + 1] ?? 0, y3 = src[j + 2] ?? 0;
+        const soft = Math.min(1, i / (0.0035 * SR)); // a 3.5 ms rise rounds off the hardest edge of the click
+        return g * soft * (y1 + 0.5 * x * (y2 - y0 + x * (2 * y0 - 5 * y1 + 4 * y2 - y3 + x * (3 * (y1 - y2) + y3 - y0))));
+      } };
+    }
+    const S = {
+      thock:  { modes: [[620, 0.016, 1], [1040, 0.011, 0.7], [1580, 0.008, 0.45], [2350, 0.006, 0.25]], body: [170, 0.026, 1.1], burst: 0.0009, up: 0.32 },
+      creamy: { modes: [[780, 0.013, 1], [1290, 0.010, 0.75], [1960, 0.007, 0.5], [2900, 0.005, 0.3]], body: [210, 0.020, 0.8], burst: 0.0007, up: 0.4 },
+      clack:  { modes: [[1150, 0.010, 0.8], [1850, 0.008, 1], [2750, 0.006, 0.7], [3900, 0.004, 0.4]], body: [260, 0.014, 0.5], burst: 0.0005, up: 0.5 },
+    }[style] ?? null;
+    if (!S) throw new Error(`key style "${style}": use creamy, thock or clack`);
     const heavy = kind === 'space' || kind === 'enter';
-    const f1 = (heavy ? 190 : 270) * (0.88 + 0.24 * rnd()), d1 = (heavy ? 0.042 : 0.022) * (0.85 + 0.3 * rnd());
-    const rel = (heavy ? 0.12 : 0.075) + 0.04 * rnd(), relGain = 0.35 + 0.2 * rnd();
-    const clickF = 1500 + 700 * rnd(), g = gain * vel * (0.78 + 0.32 * rnd()) * (heavy ? 1.25 : 1);
-    const hit = (t, k, fMul) => {
-      if (t < 0) return 0;
-      const a = smooth(t / 0.0012);
-      const body = Math.sin(TAU * f1 * fMul * t) * Math.exp(-t / d1) + 0.45 * Math.sin(TAU * f1 * fMul * 2.63 * t) * Math.exp(-t / (d1 * 0.35));
-      const bottom = 0.6 * Math.sin(TAU * (heavy ? 95 : 125) * t) * Math.exp(-t / 0.018);
-      return k * a * (body * 0.7 + bottom);
+    const pitch = (heavy ? (kind === 'space' ? 0.72 : 0.84) : 1) * (0.93 + 0.14 * rnd());
+    const len = 0.26, N = Math.ceil(len * SR), buf = new Float32Array(N);
+    // one strike: noise burst + click into a bank of ringing band-passes (Q from the decay time)
+    const strike = (at, amp, fMul) => {
+      const bank = S.modes.map(([f, tau, g]) => {
+        const fr = f * pitch * fMul * (0.96 + 0.08 * rnd());
+        return { bq: new Biquad('bandpass', fr, Math.max(2, Math.PI * fr * tau * (heavy ? 1.3 : 1))), g: g * (0.8 + 0.4 * rnd()) };
+      });
+      const [bf, btau, bg] = S.body;
+      const body = new Biquad('bandpass', bf * pitch * (0.95 + 0.1 * rnd()), Math.PI * bf * btau * (heavy ? 1.5 : 1));
+      const hp = new Biquad('highpass', 400);
+      const i0 = Math.round(at * SR), burst = S.burst * (heavy ? 1.6 : 1);
+      for (let i = i0; i < N; i++) {
+        const t = (i - i0) / SR;
+        const ex = t < burst * 6 ? (rnd() * 2 - 1) * Math.exp(-t / burst) + (i === i0 ? 3 : 0) : 0;
+        let y = 0;
+        for (const m of bank) y += m.bq.process(ex) * m.g;
+        y += body.process(ex) * bg * 1.6;
+        y += hp.process(ex) * 0.12; // the contact "tick" itself
+        buf[i] += amp * y;
+      }
     };
-    const bp = new Biquad('bandpass', clickF, 1.1), lp = new Biquad('lowpass', 2600), bp2 = new Biquad('bandpass', clickF * 1.1, 1.1);
-    const rattle = kind === 'space' ? 0.009 + 0.004 * rnd() : -1;
-    return { len: rel + 0.12, fn: (i) => {
-      const t = i / SR;
-      let s = hit(t, 1, 1) + hit(t - rel, relGain, 1.12);
-      if (rattle > 0) s += hit(t - rattle, 0.3, 1.4);
-      const n = rnd() * 2 - 1;
-      const click = lp.process(bp.process(n * Math.exp(-t / 0.003))) * 2.6 + bp2.process(n * (t > rel ? Math.exp(-(t - rel) / 0.002) * 0.5 : 0)) * 1.2;
-      return g * (s + click);
-    } };
+    const pre = 0.004 + 0.008 * rnd();                // finger meets the cap
+    strike(0, 0.08, 1.35);
+    strike(pre, 1, 1);                                 // bottom-out
+    if (kind === 'space') strike(pre + 0.007 + 0.005 * rnd(), 0.35, 1.25); // stabilizer rattle
+    strike(pre + (heavy ? 0.11 : 0.075) + 0.035 * rnd(), S.up * (0.8 + 0.4 * rnd()), 1.18); // upstroke
+    // a little room: two early reflections
+    for (const [d, k] of [[0.0071, 0.16], [0.0133, 0.09]]) { const o = Math.round(d * SR); for (let i = N - 1; i >= o; i--) buf[i] += buf[i - o] * k; }
+    let peak = 1e-9; for (let i = 0; i < N; i++) peak = Math.max(peak, Math.abs(buf[i]));
+    const g = (gain * vel * (0.8 + 0.3 * rnd()) * (heavy ? 1.2 : 1)) / peak;
+    return { len, bright: true, fn: (i) => buf[i] * g };
   },
   // Air moving past: a pass-by whoosh. The band sweeps from→to→back while the level peaks at `peak`.
   // { dur=0.7, gain=0.2, from=320, to=1200, peak=0.6, body=0 (low weight under it, 0..1) }
@@ -192,18 +232,20 @@ export const SFX_TYPES = Object.keys(VOICES);
 export function synthesize(cues, { duration, lowpass = 2000, highpass = 30, gain = 1, peak = 0.8 } = {}) {
   const n = Math.ceil(duration * SR);
   const L = new Float32Array(n), R = new Float32Array(n);
+  // Voices marked `bright` (keys) go through their own, gentler low-pass: a keystroke's click lives at 1–4 kHz.
+  const BL = new Float32Array(n), BR = new Float32Array(n);
   cues.forEach((c, k) => {
     const voice = VOICES[c.type];
     if (!voice) throw new Error(`Unknown sfx type "${c.type}". Use: ${SFX_TYPES.join(', ')}`);
     const rnd = mulberry32((c.seed ?? k * 7919 + 13) >>> 0);
-    const v = voice(c, rnd);
+    const v = voice(typeof c.bank === 'string' ? { ...c, bank: loadBank(c.bank) } : c, rnd);
     const start = Math.round(c.t * SR), len = Math.ceil(v.len * SR);
     const pan = Math.max(-1, Math.min(1, c.pan ?? 0)), gl = Math.cos(((pan + 1) * Math.PI) / 4), gr = Math.sin(((pan + 1) * Math.PI) / 4);
     for (let i = 0; i < len; i++) {
       const j = start + i;
       if (j < 0) continue; if (j >= n) break;
       const s = v.fn(i);
-      L[j] += s * gl; R[j] += s * gr;
+      if (v.bright) { BL[j] += s * gl; BR[j] += s * gr; } else { L[j] += s * gl; R[j] += s * gr; }
     }
   });
   // Master: 24 dB/oct low-pass (no harsh highs), high-pass rumble, normalize, soft clip.
@@ -211,6 +253,11 @@ export function synthesize(cues, { duration, lowpass = 2000, highpass = 30, gain
     const f = [new Biquad('lowpass', lowpass), new Biquad('lowpass', lowpass), new Biquad('highpass', highpass)];
     for (let i = 0; i < n; i++) ch[i] = f[2].process(f[1].process(f[0].process(ch[i])));
   }
+  // Keys bus: open on top (no low-pass), a little less box (~450 Hz), more presence and air above 4 kHz.
+  [[BL, L], [BR, R]].forEach(([b, ch]) => {
+    const f = [new Biquad('highpass', 110), new Biquad('peak', 450, 1.0, -3.5), new Biquad('highshelf', 4200, 0.7, 3.5)];
+    for (let i = 0; i < n; i++) ch[i] += f[2].process(f[1].process(f[0].process(b[i])));
+  });
   let max = 1e-9;
   for (let i = 0; i < n; i++) max = Math.max(max, Math.abs(L[i]), Math.abs(R[i]));
   const k = (peak / max) * gain;

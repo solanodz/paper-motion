@@ -76,7 +76,8 @@ Lives at `brand/` in the user's project.
 | `MOTION.md` | motion-style | pace, camera, chosen moves, terminal/typing rules, do and don't |
 | `SOUND.md` | sound-kit | sound palette, music stance, loudness target |
 | `shader-set/` | shader-set | `set.json` (`[{ id, video }]`, one format) and the rendered loops |
-| `motion.json` | motion-style | text behavior and move clips, for scenes and the sheet |
+| `motion.json` | motion-style | pace, camera, text behavior, color, ending, the move repertoire |
+| `motion/` | motion-style | each repertoire move as a scene and a clip |
 | `sound/` | sound-kit | `sounds.json` and short samples, for the sheet |
 | `sheet/` | brand-sheet | `index.html` (the user's copy), `sheet.png`, `sheet.pdf` |
 | `visual-board.png` | visual-system | the system at a glance |
@@ -120,7 +121,7 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 - Exports PNG and PDF. If Paper is connected, also writes a static copy to a new Paper page.
 - Re-runnable whenever the brand changes. Reads everything, writes only `brand/sheet/`.
 
-### `motion-style`
+### `motion-style` · built
 - **Guided:** 1–2 rounds of option clips: pace (calm/fast), camera (still / continuous travel / cuts), moves from the
   engine's library, text behavior (typing, reveals), how color enters.
 - **Import:** reference videos with what the user likes in each, an existing motion guide.
@@ -145,8 +146,8 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 
 ## Engine additions
 
-- **Moves library:** named, reusable moves with demo clips (wipe, push, masked reveal, dive into a frame, terminal
-  typing, cut on the beat, …), callable from scenes.
+- **Moves library** · built: `paper-motion/moves` (cut, crossfade, wipe, push, maskReveal, scanReveal, zoomThrough,
+  typeOn, wordRise, blurIn, trackIn, drift; `PACE`, `MOVES`), and `pm new --move` for a demo in the brand's look.
 - **Wordmarks** · built: `pm wordmark <text> --family … --css|--file …` renders the name, cropped to the ink, as a
   transparent PNG. **Still template** · built: `pm new <name> --still`; `organicPath()` for organic shapes.
 - **Option boards** · built: `pm board a.html b.html … [--t s | --clip s] --labels "A · x,B · y"` composes 2–6

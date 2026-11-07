@@ -1,7 +1,7 @@
 # paper-motion · identity
 
 ## In one line
-paper-motion is art-directed video for people who use coding agents, made from a conversation.
+paper-motion makes creative-directed videos for people who use coding agents, from a conversation.
 
 ## Offer
 A pack of agent skills and a render engine. It takes someone from "I have a brand" to a brand sheet and their first videos: an interview finds the identity, the look and the motion, and the engine renders frame-exact video with Paper Shaders.
@@ -32,7 +32,7 @@ Not an "AI magic" tool: no sparkles, no glowing gradients, no promises. Not a te
 - Works with Claude Code, Codex, Cursor, Gemini CLI and other agents that read skills.
 
 ## Voice
-English, lowercase in product lines, short sentences, a dry confidence. "art-directed video from a conversation."
+English, lowercase in product lines, short sentences, a dry confidence. "creative-directed videos for people who use coding agents."
 
 ## Words
 use: piece, render, frame, brief, look, material

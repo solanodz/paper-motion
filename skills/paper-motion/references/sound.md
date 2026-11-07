@@ -26,10 +26,28 @@ use (never inside `s.update`). Cues are absolute scene times in seconds.
 | `knock` | low wooden knock | `freq` 140, `gain` 0.3, `decay` 0.16 |
 | `tick` | small dull tick | `freq` 200, `gain` 0.1, `decay` 0.05 |
 | `sweep` | pitch glide | `dur` 0.6, `from` 160, `to` 80, `gain` 0.08 |
+| `key` | a keystroke (press, upstroke) | `gain` 0.3, `kind` letter/space/enter, `style` creamy/thock/clack, `bank` (folder of real keystrokes) |
+| `whoosh` | air moving past (camera moves) | `dur` 0.7, `gain` 0.2, `from` 320, `to` 1200, `peak` 0.6, `body` 0 |
+| `flick` | something light landing | `gain` 0.12 |
 
-All voices take `pan` (-1..1) and `seed`. The master chain low-passes at
+All voices take `pan` (-1..1) and `seed`. Keys skip the master low-pass (see Typing). The master chain low-passes at
 `lowpass` (default 2000 Hz, 24 dB/oct), high-passes rumble at 30 Hz,
 normalizes peaks to -2 dBFS and soft-clips.
+
+## Typing
+
+Typing should sound like a person on a real keyboard:
+
+1. **Real keystrokes.** Split a recording of real typing into single hits once:
+   `pm keys <recording> --out brand/sound/keys` (any audio or video file; it finds each hit and marks the heaviest
+   as space/enter). Use only recordings the user made or that carry a clear license (CC0) when the result will be
+   published. Without a bank, `key` synthesizes a keystroke (`style` creamy, thock or clack) as a fallback.
+2. **Human rhythm, shared with the picture.** `typingTimes(text, { start, cps, seed })` from `paper-motion/moves`
+   gives each character's time (bursts inside words, a beat between them, more after punctuation). Feed the same
+   times to `typeOn(el, text, t, { times, cursor })` and `keySounds(s, text, times, { bank, enter })`, so every letter
+   lands on its keystroke.
+3. **Soft and open.** `keySounds` defaults to a quiet level (0.16). Keys run on their own bus, outside the master
+   low-pass, with a little less box (~450 Hz) and a gentle presence lift, so they stay crisp without getting loud.
 
 ## Craft
 

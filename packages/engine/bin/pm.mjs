@@ -9,13 +9,14 @@ const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // The repo's production skill, when the engine runs from a paper-motion checkout (for `shaders --md`).
 const REPO_SKILL = path.resolve(ENGINE, '..', '..', 'skills', 'paper-motion');
 
-const HELP = `paper-motion — minimal, art-directed video from code + Paper Shaders
+const HELP = `paper-motion — minimal, creative-directed video from code + Paper Shaders
 
 Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages/engine/bin/pm.mjs in the repo)
 
   setup                              install engine deps, check ffmpeg + browser
   doctor                             only check the environment
-  new <name> [--dir works] [--size 1920x1080] [--fps 30] [--duration 10] [--from <example> | --still]
+  new <name> [--dir works] [--size 1920x1080] [--fps 30] [--duration 10] [--from <example> | --still |
+             --move <wipe|push|…> [--pace calm|medium|fast] [--text typing|rise|blur|track|plain] [--camera still|drift|travel]]
                                      create works/<name>/scene.html (+ brief.md)
   examples                           list bundled example scenes
   preview <scene.html> [--port 4317] [--no-open]
@@ -43,6 +44,9 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
                                      the brand sheet: copies the template to brand/sheet/ (once;
                                      --fresh replaces it), then exports sheet.png and sheet.pdf,
                                      or serves it live with --serve
+  keys <recording> [--out brand/sound/keys] [--min-gap 0.055] [--sensitivity 1]
+                                     split a recording of real typing into single keystrokes;
+                                     then s.sfx(t, 'key', { bank: 'brand/sound/keys' })
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
 `;
@@ -146,7 +150,7 @@ async function main() {
       if (!name) { console.error('Usage: new <name>'); process.exit(1); }
       const dest = path.resolve(args.dir ?? 'works', name);
       if (fs.existsSync(dest)) { console.error(`Already exists: ${dest}`); process.exit(1); }
-      const src = args.from ? path.join(ENGINE, 'examples', args.from) : path.join(ENGINE, 'templates', args.still ? 'still' : 'blank');
+      const src = args.from ? path.join(ENGINE, 'examples', args.from) : path.join(ENGINE, 'templates', args.still ? 'still' : args.move ? 'move-demo' : 'blank');
       if (!fs.existsSync(src)) { console.error(`No example "${args.from}". Run: examples`); process.exit(1); }
       fs.cpSync(src, dest, { recursive: true });
       const scene = path.join(dest, 'scene.html');
@@ -155,6 +159,7 @@ async function main() {
       if (args.fps) html = html.replace(/fps:\s*\d+/, `fps: ${Number(args.fps)}`);
       if (args.duration) html = html.replace(/duration:\s*[\d.]+/, `duration: ${Number(args.duration)}`);
       html = html.replace(/<title>[^<]*<\/title>/, `<title>${name}</title>`);
+      if (args.move) for (const [k, v] of [['MOVE', args.move], ['PACE', args.pace], ['TEXT', args.text], ['CAMERA', args.camera]]) if (typeof v === 'string') html = html.replace(new RegExp(`const ${k} = '[^']*'`), `const ${k} = '${v}'`);
       fs.writeFileSync(scene, html);
       console.log(`Created ${path.relative(process.cwd(), dest)}/\n  scene.html  ← the piece (pure function of time)\n  brief.md    ← the creative direction, kept in sync with the user`);
       break;
@@ -334,6 +339,17 @@ async function main() {
           if (errs.length) console.error(`page errors:\n  ${errs.join('\n  ')}`);
         } finally { await browser.close(); }
       });
+      break;
+    }
+
+    case 'keys': {
+      const input = args._[1];
+      if (!input) { console.error('Usage: keys <recording> [--out brand/sound/keys]'); process.exit(1); }
+      const { extractKeys } = await import('../lib/keys.mjs');
+      const out = path.resolve(args.out ?? 'brand/sound/keys');
+      const { hits } = extractKeys(path.resolve(input), out, { minGap: Number(args['min-gap'] ?? 0.055), sensitivity: Number(args.sensitivity ?? 1) });
+      const heavy = hits.filter((h) => h.kind === 'heavy').length;
+      console.log(`✓ ${hits.length} keystrokes (${hits.length - heavy} letters, ${heavy} heavy) → ${path.relative(process.cwd(), out)}/keys.json`);
       break;
     }
 

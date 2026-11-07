@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>move demo</title>
+<style>
+  #stage { overflow: hidden; }
+  #world, .frame { position: absolute; inset: 0; }
+  .frame { display: flex; flex-direction: column; justify-content: center; padding: 0 140px; box-sizing: border-box; }
+  #name { white-space: nowrap; }
+  #line { max-width: 1200px; }
+  #cur { display: inline-block; width: 0.5em; height: 0.95em; vertical-align: -0.12em; margin-left: 4px; }
+  #scan { position: absolute; left: 0; right: 0; height: 2px; opacity: 0; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="world">
+    <div id="a" class="frame"><div id="name"></div></div>
+    <div id="b" class="frame"><div><span id="line"></span><span id="cur"></span></div><div id="cap" style="margin-top:28px"></div></div>
+    <div id="scan"></div>
+  </div>
+</main>
+<script type="module">
+import { scene } from 'paper-motion';
+import * as M from 'paper-motion/moves';
+
+// The four choices this demo shows. `pm new <name> --move … --pace … --text … --camera …` sets them.
+const MOVE = 'wipe';      // a transition from paper-motion/moves: cut crossfade wipe push maskReveal scanReveal zoomThrough
+const PACE = 'medium';    // calm | medium | fast
+const TEXT = 'rise';      // typing | rise | blur | track | plain
+const CAMERA = 'still';   // still | drift | travel
+
+const tokens = await fetch('/brand/tokens.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+const identity = await fetch('/brand/IDENTITY.md').then((r) => (r.ok ? r.text() : '')).catch(() => '');
+const C = tokens?.colors ?? {};
+const col = (role, fb) => C[role]?.hex ?? fb;
+const fam = (k, fb) => (tokens?.fonts?.[k]?.family ? `'${tokens.fonts[k].family}', ${fb}` : fb);
+await Promise.all(Object.values(tokens?.fonts ?? {}).filter((f) => f?.css).map((f) => new Promise((res) => document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: f.css, onload: res, onerror: res })))));
+for (const f of Object.values(tokens?.fonts ?? {})) if (f?.file) document.head.append(Object.assign(document.createElement('style'), { textContent: `@font-face { font-family: '${f.family}'; src: url('/brand/${f.file}'); font-weight: 100 900; }` }));
+
+const name = tokens?.wordmark?.text ?? tokens?.brand ?? 'brand';
+const oneLine = (identity.split(/^## In one line\s*$/m)[1] ?? '').split(/^## /m)[0].trim().split('\n')[0] || 'one line in the brand’s own words.';
+const keywords = ((identity.split(/^## Keywords\s*$/m)[1] ?? '').split(/^## /m)[0].trim().split('\n')[0] || '').replace(/^[-*]\s*/, '');
+
+const s = scene({ width: 1600, height: 900, fps: 30, duration: 5, background: col('ground', '#f2f2f2') });
+const $ = (id) => document.getElementById(id);
+const T = tokens?.type ?? {};
+Object.assign($('a').style, { background: col('ground', '#f2f2f2'), color: col('figure', '#1a1a1a') });
+Object.assign($('b').style, { background: col('surface', col('figure', '#1a1a1a')), color: col(C.surface ? 'figure' : 'ground', '#f2f2f2'), opacity: 0 });
+Object.assign($('name').style, { font: `${T.display?.weight ?? 600} 220px ${fam('display', 'system-ui, sans-serif')}`, letterSpacing: T.display?.tracking ?? '-0.02em', lineHeight: 0.95 });
+Object.assign($('line').parentElement.style, { font: `${T.title?.weight ?? 500} 76px/1.08 ${fam('display', 'system-ui, sans-serif')}`, letterSpacing: T.title?.tracking ?? '-0.01em' });
+Object.assign($('cap').style, { font: `${T.caption?.weight ?? 500} 24px ${fam(T.caption?.font === 'mono' ? 'mono' : 'text', 'ui-monospace, monospace')}`, letterSpacing: T.caption?.tracking ?? '0.02em', opacity: 0.7 });
+$('cur').style.background = $('b').style.color; $('cur').style.opacity = 0;
+$('scan').style.background = col('accent', '#888');
+$('name').textContent = name; $('line').textContent = oneLine; $('cap').textContent = keywords || `${MOVE} · ${PACE} · ${TEXT}`;
+
+const P = M.PACE[PACE];
+const T1 = 0.4 + P.hold * 0.5;                 // when the transition starts
+const T2 = T1 + P.enter * 1.6;                 // when it ends and the text behavior begins
+s.update((t) => {
+  const q = Math.min(1, Math.max(0, (t - T1) / (T2 - T1)));
+  const a = $('a'), b = $('b');
+  ({ cut: () => M.cut(a, b, t >= T1 ? 1 : 0), crossfade: () => M.crossfade(a, b, q), wipe: () => M.wipe(a, b, q),
+     push: () => M.push(a, b, q), maskReveal: () => M.maskReveal(a, b, q), scanReveal: () => M.scanReveal(a, b, q, { line: $('scan') }),
+     zoomThrough: () => M.zoomThrough(a, b, q) })[MOVE]?.();
+  const start = MOVE === 'cut' ? T1 : T2 - P.enter * 0.4;
+  if (TEXT === 'typing') M.typeOn($('line'), oneLine, t, { start, cps: PACE === 'fast' ? 50 : PACE === 'calm' ? 22 : 35, cursor: $('cur') });
+  else if (TEXT === 'rise') M.wordRise($('line'), t, { start, each: P.stagger });
+  else if (TEXT === 'blur') M.blurIn($('line'), t, { start, duration: P.enter * 1.6 });
+  else if (TEXT === 'track') M.trackIn($('line'), t, { start, duration: P.enter * 2 });
+  $('cap').style.opacity = 0.7 * Math.min(1, Math.max(0, (t - start - P.enter) / P.enter));
+  if (CAMERA === 'drift') M.drift($('world'), t, { amount: 0.05, duration: 5 });
+  if (CAMERA === 'travel') $('world').style.transform = `translateX(${40 - t * 16}px) scale(1.08)`;
+});
+
+await Promise.all(['name', 'line', 'cap'].map((id) => { const c = getComputedStyle(id === 'line' ? $(id).parentElement : $(id)); return document.fonts.load(`${c.fontWeight} ${c.fontSize} ${c.fontFamily}`); }));
+await s.start();
+</script>
+</body>
+</html>

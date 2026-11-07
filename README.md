@@ -1,6 +1,6 @@
 # paper-motion
 
-An agent skill for making **minimal, art-directed videos** — loops, animated
+An agent skill for making **minimal, creative-directed videos** — loops, animated
 posters, ambient pieces, title cards — with [Paper Shaders](https://shaders.paper.design)
 and your coding agent (Claude Code, Codex, Cursor, …).
 

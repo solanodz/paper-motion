@@ -13,3 +13,6 @@ library/
 examples/paper-motion-brand/brand/shader-set/renders
 examples/paper-motion-brand/brand/sheet/sheet.png
 examples/paper-motion-brand/brand/sheet/sheet.pdf
+
+# Interview option boards are throwaway
+**/brand/.interview/

@@ -103,6 +103,16 @@ letters.forEach((el, i) => { el.style.opacity = stagger(t, i, { start: 1, each: 
 - **Video**: `<video src="clip.mp4" data-pm-sync data-pm-offset="0" muted>` follows `t`.
 - **Images** for shaders: `loadImage(url)` returns a cached `HTMLImageElement`.
 
+## Moves
+
+`import { wipe, push, maskReveal, scanReveal, zoomThrough, crossfade, cut, typeOn, wordRise, blurIn, trackIn, drift, PACE, MOVES } from 'paper-motion/moves'`
+
+Named, reusable motion. Transitions take two layers and progress `p` (0 → 1): `wipe(a, b, p)`. Text and camera moves
+take scene time `t`: `typeOn(el, text, t, { start, cps, cursor })`, `wordRise(el, t, { start, each })`,
+`drift(world, t)`. `PACE.calm|medium|fast` gives `{ enter, hold, stagger }` in seconds. When the brand has a
+`brand/motion.json`, use its pace, text behavior and repertoire. `pm new <name> --move <move> --pace … --text …
+--camera …` writes a 5 s demo of one combination in the brand's look.
+
 ## Shapes and stills
 
 - `organicPath(w, h, { radius, wobble, seed })` returns an SVG path `d` for a hand-cut rounded rectangle (the

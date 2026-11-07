@@ -1,6 +1,6 @@
 ---
 name: paper-motion
-description: Make minimal, art-directed videos (digital art pieces, loops, title cards, ambient visuals, social clips) from code with Paper Shaders, rendered frame-exact to MP4/ProRes/WebM/GIF. Use when the user wants a video, loop, animated poster, motion piece, generative visual, or "something like a work of art that moves", even if they never say "shader" or "Paper". Style-agnostic: it starts with a structured interview (motion references, anti-references, pace, look, sound) and an approved brief, then style frames and a test shot, never assumptions.
+description: Make minimal, creative-directed videos (digital art pieces, loops, title cards, ambient visuals, social clips) from code with Paper Shaders, rendered frame-exact to MP4/ProRes/WebM/GIF. Use when the user wants a video, loop, animated poster, motion piece, generative visual, or "something like a work of art that moves", even if they never say "shader" or "Paper". Style-agnostic: it starts with a structured interview (motion references, anti-references, pace, look, sound) and an approved brief, then style frames and a test shot, never assumptions.
 ---
 
 # paper-motion

@@ -19,6 +19,7 @@ const MIME = {
 const IMPORT_MAP = {
   imports: {
     'paper-motion': '/__pm/runtime/index.js',
+    'paper-motion/moves': '/__pm/runtime/moves.js',
     '@paper-design/shaders': '/__pm/node_modules/@paper-design/shaders/dist/index.js',
     '@paper-design/shaders-react': '/__pm/node_modules/@paper-design/shaders-react/dist/index.js',
     react: '/__pm/runtime/react-shim.js',

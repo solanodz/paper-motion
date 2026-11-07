@@ -1,7 +1,7 @@
 # Agent instructions
 
 This repository is **paper-motion**: a pack of agent skills (in `skills/`) that
-takes a user from "I have a brand" to a brand sheet and art-directed videos, and
+takes a user from "I have a brand" to a brand sheet and creative-directed videos, and
 the engine that renders them (`packages/engine`, published as
 `@paper-motion/engine`). The plan is `docs/spec-v1.md`; the shared language is
 `GLOSSARY.md`; hard decisions are in `docs/adr/`.
