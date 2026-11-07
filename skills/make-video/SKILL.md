@@ -33,6 +33,8 @@ Scenes load it with `paper-motion/brand` (see "Writing a scene"). When a part is
 - **Mirror back** after each round; get an explicit approval of `brief.md`.
 - When a gate is later rejected, ask what exactly was wrong (pace, type, composition, movement, transitions, sound, mood) before changing anything.
 
+**Clarity first.** A piece is seen mostly by people who have never heard of the brand. Every piece says, in plain words and within its first third, **what the brand is** ("a sourdough bakery in Madrid", "the debut EP of an ambient producer"), taken from IDENTITY.md's In one line and Offer; a witty or poetic line may sit beside it, never replace it. Every piece ends on **one clear action**: where to go, when it comes out, where to listen or buy. Names that only insiders know (a neighbourhood, a track, an internal term) appear with their context ("Lavapiés, Madrid") or not at all. Write the *what* line and the action into `brief.md` before anything else.
+
 Guessing is the failure mode of this job. Keep asking until you could describe the piece second by second and the user would agree. Only an explicit "surprise me" skips ahead, and even then style frames come first.
 
 ## 3 · Gate A: style frames
@@ -46,7 +48,7 @@ pamo still brand/pieces/<name>/scene.html --count 4        # stills + contact-sh
 
 Every piece gets a storyboard before building: one central idea that carries the whole piece (a continuous camera through the product, a terminal that becomes the brand, a material that transforms), and one distinct mechanic per beat tied to what that beat says. A run of title cards joined by crossfades is a slideshow, not a piece: never run every beat through the same arrive-and-hold treatment. Get the storyboard approved before building.
 
-Look at every contact sheet yourself before showing it (`references/aesthetics.md` is the composition and critique guide). Show the sheets with one line each; let the user pick, mix or redirect.
+Look at every contact sheet yourself before showing it (`references/aesthetics.md` is the composition and critique guide), and run the **stranger test** first: someone who has never heard of this brand watches it once. Do they know what it is, and what to do next? If not, fix that before anything else. Show the sheets with one line each; let the user pick, mix or redirect.
 
 ## 4 · Gate B: test shot
 

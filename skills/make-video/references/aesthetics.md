@@ -83,6 +83,7 @@ once. If a piece has no brand folder, decide them in its intake with those skill
 
 ## Critique checklist (run on every contact sheet)
 
+- **The stranger test.** Someone who has never heard of the brand: by the end of the first third, do they know what it is (a bakery, an EP, a build tool)? At the end, do they know what to do (visit, listen, install)? Insider names carry their context or go.
 - Is there one idea, or a sequence of slides? Each beat has its own mechanic.
 - Scale contrast: something very large against something very small; type in a corner of an empty frame is a draft, not a composition.
 - The accent once per frame, on the one thing that matters.

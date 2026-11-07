@@ -128,7 +128,7 @@ Three words. One sentence of intent.
 - …
 
 ## Content
-Exact text / none · must be read? · hero moment.
+What the brand is, in plain words (on screen in the first third) · the one action at the end · exact text · hero moment.
 
 ## Recipe and format
 Recipe · aspect (16:9 / 9:16 / 1:1) · duration · fps · loop · safe areas.
