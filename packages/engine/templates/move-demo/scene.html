@@ -27,6 +27,7 @@ const MOVE = 'crossfade'; // transition between frames: cut crossfade wipe push 
 const PACE = 'medium';    // calm | medium | fast
 const TEXT = 'plain';     // how the line appears: typing | rise | blur | track | plain
 const CAMERA = 'still';   // still | drift | travel (travel moves the camera between frames and replaces MOVE)
+const SOUND = 'none';     // sound palette: none | soft | crisp | airy (subtle swells) | ambient (airy over a low bed)
 const DURATION = 7;
 
 const tokens = await fetch('/brand/tokens.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
@@ -104,12 +105,33 @@ s.update((t) => {
   // the line appears as its frame lands
   for (const b of beats.filter((x) => x.kind === 'line')) {
     const el = b.el.querySelector('.ln'), start = b.start - (CAMERA === 'travel' ? 0 : trans * 0.3);
-    if (TEXT === 'typing') M.typeOn(el, line, t, { start, cps, cursor: t < b.end + trans ? b.el.querySelector('.cur') : null });
+    if (TEXT === 'typing') M.typeOn(el, line, t, { times: M.typingTimes(line, { start, cps: cps * 0.4, seed: beats.indexOf(b) + 1 }), cursor: t < b.end + trans ? b.el.querySelector('.cur') : null });
     else if (TEXT === 'rise') M.wordRise(el, t, { start, each: P.stagger, duration: textDur });
     else if (TEXT === 'blur') M.blurIn(el, t, { start, duration: textDur });
     else if (TEXT === 'track') M.trackIn(el, t, { start, duration: textDur * 1.2 });
   }
 });
+
+// ── sound palette: one cue family per gesture (transition, landing, text), all low and soft ──
+const PAL = {
+  soft:  { lowpass: 1800, move: (t) => s.sfx(t, 'whoosh', { dur: Math.min(1.4, Math.max(0.4, trans * 1.4)), from: 220, to: 700, peak: 0.6, gain: 0.2, body: 0.4 }), land: (t) => s.sfx(t, 'thud', { freq: 55, gain: 0.22, decay: 0.45 }), text: (t) => s.sfx(t, 'paper', { dur: 0.5, gain: 0.035 }) },
+  crisp: { lowpass: 4200, move: (t) => { s.sfx(t, 'flick', { gain: 0.12 }); s.sfx(t + 0.02, 'tick', { freq: 320, gain: 0.07, decay: 0.03 }); }, land: (t) => s.sfx(t, 'knock', { freq: 160, gain: 0.16, decay: 0.08 }), text: (t) => s.sfx(t, 'tick', { freq: 260, gain: 0.05, decay: 0.04 }) },
+  airy:  { lowpass: 2000, move: (t) => s.sfx(t - 0.2, 'swell', { dur: Math.max(1.4, trans * 2.2), freq: 73.4, gain: 0.045 }), land: () => {}, text: (t) => s.sfx(t, 'paper', { dur: 0.6, gain: 0.025 }) },
+  ambient: { lowpass: 2000, bed: () => s.sfx(0, 'drone', { dur: DURATION, freq: 55, gain: 0.04, attack: 1.5, release: 1.5 }), move: (t) => s.sfx(t - 0.2, 'swell', { dur: Math.max(1.4, trans * 2.2), freq: 73.4, gain: 0.05 }), land: () => {}, text: (t) => s.sfx(t, 'paper', { dur: 0.6, gain: 0.03 }) },
+}[SOUND];
+if (PAL) {
+  PAL.bed?.();
+  const bank = await fetch('/brand/sound/keys/keys.json').then((r) => (r.ok ? 'brand/sound/keys' : null)).catch(() => null);
+  beats.forEach((b, i) => {
+    if (beats[i + 1]) { PAL.move(b.end); PAL.land(b.end + trans); }
+    if (b.kind === 'line') {
+      const start = b.start - (CAMERA === 'travel' ? 0 : trans * 0.3);
+      if (TEXT === 'typing') M.keySounds(s, line, M.typingTimes(line, { start, cps: cps * 0.4, seed: i + 1 }), { bank, seed: i + 1 });
+      else PAL.text(start);
+    }
+  });
+  s.sound({ lowpass: PAL.lowpass, gain: 1 });
+}
 
 await Promise.all([...document.querySelectorAll('.name, .frame > div')].map((el) => { const c = getComputedStyle(el); return document.fonts.load(`${c.fontWeight} ${c.fontSize} ${c.fontFamily}`); }));
 await s.start();

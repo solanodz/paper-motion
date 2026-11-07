@@ -4,10 +4,10 @@
 Sound design always; music optional and always the user's own.
 
 ## Palette
-Soft, low keys per character (at least 48 ms apart, enter heavier), clicks, low thuds, soft whooshes on camera moves.
+Airy: a subtle swell under each transition, starting just before the cut, and a faint paper touch when text lands. No bed: silence between gestures. Keys, soft and low, whenever the terminal types.
 
 ## Brightness
-Nothing bright: everything low-passed around 2.4 kHz. Natural, never synthetic-sounding beeps.
+Nothing bright: everything low-passed around 2 kHz; keys on their own open, quiet bus. Natural, never synthetic-sounding beeps.
 
 ## Loudness
 −16 LUFS integrated, peaks at −1.5 dBFS.

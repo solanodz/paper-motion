@@ -51,17 +51,13 @@ Typing should sound like a person on a real keyboard:
 
 ## Craft
 
-- Sound follows the picture's hierarchy: one bed (drone), one gesture sound
-  per visual gesture (pen while writing, thud on a stamp/highlight, knock when
-  a block rises). Silence between gestures matters.
-- Keep repetitive cues quiet and vary them (`seed`, `freq`, `pan`).
-- "Nothing sharp/high-pitched" → `s.sound({ lowpass: 1500–1800 })`.
-- Check balance numerically: `paper-motion sfx scene.html` exports the WAV;
-  `ffmpeg -i x.wav -af "highpass=f=2500,astats" -f null -` shows energy above 2.5 kHz.
+Sound craft (palettes, balance, typing sources, loudness) belongs to the `sound-kit` skill. When the brand has
+`brand/sound.json`, use its cues for each gesture, its `keys` for typing, its `lowpass` in `s.sound()`, and render
+with `--loudness <its loudness>`.
 
 ## CLI
 
 ```
-render <scene> [--no-sfx]          # sfx mixed by default (and with --audio, if given)
+render <scene> [--no-sfx] [--loudness -16]   # sfx mixed by default (and with --audio); one loudness pass
 sfx <scene> [--out file.wav]       # export only the effects
 ```

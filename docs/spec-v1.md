@@ -78,7 +78,8 @@ Lives at `brand/` in the user's project.
 | `shader-set/` | shader-set | `set.json` (`[{ id, video }]`, one format) and the rendered loops |
 | `motion.json` | motion-style | pace, camera, text behavior, color, ending, the move repertoire |
 | `motion/` | motion-style | each repertoire move as a scene and a clip |
-| `sound/` | sound-kit | `sounds.json` and short samples, for the sheet |
+| `sound.json` | sound-kit | palette, cues per gesture, keys, music, loudness |
+| `sound/` | sound-kit | keystroke bank (`keys/`), samples and `sounds.json`, for the sheet |
 | `sheet/` | brand-sheet | `index.html` (the user's copy), `sheet.png`, `sheet.pdf` |
 | `visual-board.png` | visual-system | the system at a glance |
 | `decisions/` | every skill | one short note per decision: what, why, and whether the agent decided it |
@@ -127,7 +128,7 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 - **Import:** reference videos with what the user likes in each, an existing motion guide.
 - **Writes:** `MOTION.md`. **Owns:** motion craft (today's `aesthetics.md` motion sections move here).
 
-### `sound-kit`
+### `sound-kit` · built
 - **Guided:** 1 round of short audio options: sound family (keys, clicks, thuds, whooshes, textures), brightness,
   music stance (bring your own / none).
 - **Writes:** `SOUND.md`; any music lands in `assets/`. **Owns:** sound design and loudness.
@@ -155,6 +156,8 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 - **Brand sheet page** · built: `pm sheet` copies a template to `brand/sheet/` that reads the brand folder and plays live
   (shaders via `live()`), and exports PNG and PDF; `--serve` for live viewing. Reads `motion.json`,
   `sound/sounds.json` and `shader-set/set.json` when the later skills write them.
+- **Sound** · built: sound palettes in the move demo (`--sound`), `pm board --sequence` (options heard in turn,
+  levelled), `pm keys` (keystroke banks), `pm sound-samples`, `render --loudness`.
 - Already in place: scenes as pure functions of time, Paper shaders, synthesized SFX, motion blur, loudness pass.
 
 ## Validation

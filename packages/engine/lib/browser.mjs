@@ -54,7 +54,8 @@ export async function openScene(browser, url, { dpr = 1 } = {}) {
   const errors = [];
   probe.on('pageerror', (e) => errors.push(e));
   probe.on('console', (m) => { if (m.type() === 'error' && !m.text().startsWith('Failed to load resource')) errors.push(new Error(m.text())); });
-  probe.on('response', (r) => { if (r.status() >= 400) errors.push(new Error(`${r.status()} ${r.url()}`)); });
+  // A missing script, style, font or image breaks a scene; a fetch() may probe optional files (brand data) and handles its own 404.
+  probe.on('response', (r) => { const k = r.request().resourceType(); if (r.status() >= 400 && k !== 'fetch' && k !== 'xhr') errors.push(new Error(`${r.status()} ${r.url()}`)); });
   await probe.goto(url);
   const config = await waitReady(probe, errors);
   await probe.close();

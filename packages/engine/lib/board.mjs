@@ -22,13 +22,13 @@ export function layout(n, aspect, colsOverride) {
 }
 
 /** Transparent PNG with each option's letter and caption above its cell. */
-async function labelsPng(L, labels, file) {
+async function labelsPng(L, labels, file, { backing = false } = {}) {
   const browser = await launch();
   try {
     const page = await browser.newPage({ viewport: { width: L.W, height: L.H } });
     const items = L.cells.map((c, i) => {
       const [letter, ...rest] = labels[i].split(' · ');
-      return `<div style="position:absolute;left:${c.x}px;top:${c.y - LABEL_H}px;height:${LABEL_H}px;width:${L.cw}px;overflow:hidden;display:flex;align-items:center;gap:14px;font:500 26px ui-monospace,Menlo,monospace;color:#fff">
+      return `<div style="position:absolute;left:${c.x}px;top:${c.y - LABEL_H}px;height:${LABEL_H}px;width:${L.cw}px;overflow:hidden;display:flex;align-items:center;gap:14px;${backing ? 'width:auto;max-width:' + L.cw + 'px;padding:0 18px 0 12px;border-radius:10px;background:rgba(0,0,0,.62);' : ''}font:500 26px ui-monospace,Menlo,monospace;color:#fff">
         <span style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1.5px solid #fff;border-radius:6px">${letter}</span>
         <span style="color:#9a9a9a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${rest.join(' · ')}</span></div>`;
     }).join('');
@@ -67,4 +67,29 @@ export async function composeBoard({ inputs, labels, aspect, out, tmp, duration,
   if (clip) await ffmpeg([...ins, '-loop', '1', '-i', lab, '-filter_complex', filter, '-map', '[out]', ...(duration ? ['-t', String(duration)] : []), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-an', out]);
   else await ffmpeg([...ins, '-i', lab, '-filter_complex', filter, '-map', '[out]', '-frames:v', '1', out]);
   return { out, ...L };
+}
+
+/**
+ * Clips one after another, each with its letter and caption burned in and its own sound,
+ * so sound choices are heard in turn: A, then B, then C.
+ */
+export async function composeSequence({ inputs, labels, out, tmp, duration }) {
+  const segs = [];
+  for (const [i, f] of inputs.entries()) {
+    const probe = await new Promise((res) => { const p = spawn('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', f]); let o = ''; p.stdout.on('data', (d) => (o += d)); p.on('close', () => res(o.trim())); });
+    const [w, h] = probe.split(',').map(Number);
+    const L = { W: w, H: h, cw: w - 80, cells: [{ x: 40, y: 40 + LABEL_H }] };
+    const lab = path.join(tmp, `seq-label-${i}.png`);
+    await labelsPng(L, [labels[i]], lab, { backing: true });
+    const seg = path.join(tmp, `seq-${i}.mp4`);
+    const hasAudio = await new Promise((res) => { const p = spawn('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index', '-of', 'csv=p=0', f]); let o = ''; p.stdout.on('data', (d) => (o += d)); p.on('close', () => res(!!o.trim())); });
+    // every segment carries a stereo track (silence when the option has no sound) so they concatenate cleanly
+    await ffmpeg(['-i', f, '-loop', '1', '-i', lab, '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo', '-filter_complex', '[0:v][1:v]overlay=0:0:format=auto[v]', '-map', '[v]', '-map', hasAudio ? '0:a' : '2:a', ...(hasAudio ? ['-af', 'loudnorm=I=-20:TP=-2:LRA=11'] : []), '-t', String(duration), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', seg]);
+    segs.push(seg);
+  }
+  const list = path.join(tmp, 'seq.txt');
+  fs.writeFileSync(list, segs.map((s) => `file '${s}'`).join('\n'));
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  await ffmpeg(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', out]);
+  return { out, W: 0, H: 0 };
 }

@@ -16,7 +16,8 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
   setup                              install engine deps, check ffmpeg + browser
   doctor                             only check the environment
   new <name> [--dir works] [--size 1920x1080] [--fps 30] [--duration 10] [--from <example> | --still |
-             --move <wipe|push|…> [--pace calm|medium|fast] [--text typing|rise|blur|track|plain] [--camera still|drift|travel]]
+             --move <wipe|push|…> [--pace calm|medium|fast] [--text typing|rise|blur|track|plain] [--camera still|drift|travel]
+             [--sound none|soft|crisp|airy|ambient]]
                                      create works/<name>/scene.html (+ brief.md)
   examples                           list bundled example scenes
   preview <scene.html> [--port 4317] [--no-open]
@@ -26,7 +27,7 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
                                      with one --t and --out file.png, writes just that file
   render <scene.html> [--out file] [--format mp4|hevc|prores|webm|gif|png]
          [--from s] [--to s] [--fps n] [--crf n] [--dpr 1|2] [--workers n] [--audio file]
-         [--gif-width 720] [--gif-fps 24] [--no-sfx] [--motion-blur 8] [--shutter 180]
+         [--gif-width 720] [--gif-fps 24] [--no-sfx] [--motion-blur 8] [--shutter 180] [--loudness -16]
                                      frame-exact render via headless Chromium + ffmpeg
                                      (sound effects declared with s.sfx() are mixed in)
   sfx <scene.html> [--out file.wav] [--from s] [--to s]
@@ -36,6 +37,8 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
                                      lettered A, B, C…; a still (.png) or short clips (.mp4).
                                      Labels split on | (or on commas when there is no |).
                                      --cols 1 stacks options full width (judge type at real size)
+                                     --sequence plays the clips one after another, with their sound
+                                     (for choices you hear: sound palettes, typing)
   wordmark <text> --family <name> [--css <url> | --file <font>] [--weight 400] [--tracking -0.02em]
          [--color #fff] [--size 400] [--pad 0] [--out wordmark.png]
                                      the name set in its typeface, as a transparent PNG
@@ -47,6 +50,8 @@ Usage: pm <command> [options]   (pm = npx @paper-motion/engine, or node packages
   keys <recording> [--out brand/sound/keys] [--min-gap 0.055] [--sensitivity 1]
                                      split a recording of real typing into single keystrokes;
                                      then s.sfx(t, 'key', { bank: 'brand/sound/keys' })
+  sound-samples [--brand brand]       renders each cue of brand/sound.json (and a typing sample) to
+                                     brand/sound/*.wav + sounds.json, for the brand sheet
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
 `;
@@ -159,7 +164,7 @@ async function main() {
       if (args.fps) html = html.replace(/fps:\s*\d+/, `fps: ${Number(args.fps)}`);
       if (args.duration) html = html.replace(/duration:\s*[\d.]+/, `duration: ${Number(args.duration)}`);
       html = html.replace(/<title>[^<]*<\/title>/, `<title>${name}</title>`);
-      if (args.move) for (const [k, v] of [['MOVE', args.move], ['PACE', args.pace], ['TEXT', args.text], ['CAMERA', args.camera]]) if (typeof v === 'string') html = html.replace(new RegExp(`const ${k} = '[^']*'`), `const ${k} = '${v}'`);
+      if (args.move) for (const [k, v] of [['MOVE', args.move], ['PACE', args.pace], ['TEXT', args.text], ['CAMERA', args.camera], ['SOUND', args.sound]]) if (typeof v === 'string') html = html.replace(new RegExp(`const ${k} = '[^']*'`), `const ${k} = '${v}'`);
       fs.writeFileSync(scene, html);
       console.log(`Created ${path.relative(process.cwd(), dest)}/\n  scene.html  ← the piece (pure function of time)\n  brief.md    ← the creative direction, kept in sync with the user`);
       break;
@@ -236,6 +241,18 @@ async function main() {
       }));
       process.stdout.write('\n');
       console.log(`✓ ${path.relative(process.cwd(), r.out)} — ${r.frames} frames @ ${r.fps}fps, ${r.config.width}×${r.config.height}, ${fmtTime(r.seconds)} (${r.workers} workers)`);
+      if (args.loudness !== undefined && ['mp4', 'hevc', 'prores', 'webm'].includes(format)) {
+        // one pass of EBU R128 loudness on the audio, video copied untouched
+        const lufs = Number(args.loudness === true ? -16 : args.loudness);
+        const has = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index', '-of', 'csv=p=0', out], { encoding: 'utf8' }).stdout.trim();
+        if (!has) console.log('  (no audio to normalize)');
+        else {
+          const tmp = out.replace(/(\.[a-z0-9]+)$/i, '.norm$1');
+          const codec = format === 'webm' ? ['-c:a', 'libopus', '-b:a', '192k'] : format === 'prores' ? ['-c:a', 'pcm_s16le'] : ['-c:a', 'aac', '-b:a', '320k'];
+          const n = spawnSync('ffmpeg', ['-y', '-v', 'error', '-i', out, '-c:v', 'copy', '-af', `loudnorm=I=${lufs}:TP=-1.5:LRA=11`, ...codec, '-ar', '48000', tmp]);
+          if (n.status === 0) { fs.renameSync(tmp, out); console.log(`  loudness → ${lufs} LUFS, peaks ≤ −1.5 dBFS`); } else console.error(`  loudness pass failed: ${n.stderr}`);
+        }
+      }
       break;
     }
 
@@ -260,6 +277,8 @@ async function main() {
       const { composeBoard } = await import('../lib/board.mjs');
       const os = await import('node:os');
       const clip = args.clip !== undefined ? Number(args.clip === true ? 5 : args.clip) : null;
+      const sequence = !!args.sequence;
+      if (sequence && !clip) { console.error('board: --sequence needs --clip <seconds>'); process.exit(1); }
       const t = Number(args.t ?? 2);
       const out = path.resolve(args.out ?? (clip ? 'board.mp4' : 'board.png'));
       const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-board-'));
@@ -272,7 +291,7 @@ async function main() {
           process.stdout.write(`\roption ${labels[i].split(' · ')[0]} · ${i + 1}/${files.length}   `);
           if (clip) {
             const o = path.join(tmp, `${i}.mp4`);
-            await withServer(file, (url) => renderVideo({ url: url('?render'), out: o, from: 0, to: clip, sfx: false, dpr: Number(args.dpr ?? 1) }));
+            await withServer(file, (url) => renderVideo({ url: url('?render'), out: o, from: 0, to: clip, sfx: sequence, dpr: Number(args.dpr ?? 1) }));
             inputs.push(o);
           } else {
             const r = await withServer(file, (url) => renderStills({ url: url('?render'), times: [t], outDir: path.join(tmp, String(i)), sheet: false, dpr: Number(args.dpr ?? 1) }));
@@ -281,7 +300,9 @@ async function main() {
         }
         const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', inputs[0]], { encoding: 'utf8' });
         const [w, h] = probe.stdout.trim().split(',').map(Number);
-        const r = await composeBoard({ inputs, labels, aspect: w / h, out, tmp, duration: clip ?? undefined, cols: args.cols ? Number(args.cols) : undefined });
+        const r = sequence
+          ? await (await import('../lib/board.mjs')).composeSequence({ inputs, labels, out, tmp, duration: clip })
+          : await composeBoard({ inputs, labels, aspect: w / h, out, tmp, duration: clip ?? undefined, cols: args.cols ? Number(args.cols) : undefined });
         console.log(`\r✓ ${path.relative(process.cwd(), r.out)} — ${files.length} options, ${r.W}×${r.H}`);
       } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
       break;
@@ -355,6 +376,35 @@ async function main() {
       const { hits } = extractKeys(path.resolve(input), out, { minGap: Number(args['min-gap'] ?? 0.055), sensitivity: Number(args.sensitivity ?? 1) });
       const heavy = hits.filter((h) => h.kind === 'heavy').length;
       console.log(`✓ ${hits.length} keystrokes (${hits.length - heavy} letters, ${heavy} heavy) → ${path.relative(process.cwd(), out)}/keys.json`);
+      break;
+    }
+
+    case 'sound-samples': {
+      const brandDir = path.resolve(args.brand ?? 'brand');
+      const cfgFile = path.join(brandDir, 'sound.json');
+      if (!fs.existsSync(cfgFile)) { console.error(`No ${path.relative(process.cwd(), cfgFile)} (run the sound-kit skill first)`); process.exit(1); }
+      const cfg = JSON.parse(fs.readFileSync(cfgFile, 'utf8'));
+      const { synthesize, writeWav } = await import('../lib/sfx.mjs');
+      const outDir = path.join(brandDir, 'sound');
+      fs.mkdirSync(outDir, { recursive: true });
+      const list = [];
+      const lowpass = cfg.lowpass ?? 2000;
+      for (const [name, cue] of Object.entries(cfg.cues ?? {})) {
+        if (!cue) continue;
+        const dur = (cue.dur ?? 0.8) + 0.6;
+        writeWav(path.join(outDir, `${name}.wav`), synthesize([{ t: 0.05, ...cue, ...(name === 'bed' ? { dur: Math.min(cue.dur ?? 6, 6) } : {}) }], { duration: name === 'bed' ? 6.2 : dur, lowpass, peak: 0.7 }));
+        list.push({ name, file: `${name}.wav` });
+      }
+      // a typing sample: one short line with human timing
+      const k = cfg.keys ?? {};
+      const line = 'make a video';
+      let t = 0.1; const cues = [];
+      [...line].forEach((ch, i) => { cues.push({ t, type: 'key', kind: ch === ' ' ? 'space' : 'letter', gain: k.gain ?? 0.16, seed: i + 1, ...(k.bank ? { bank: k.bank } : {}), ...(k.style ? { style: k.style } : {}) }); t += ch === ' ' ? 0.16 : 0.07 + ((i * 37) % 5) / 100; });
+      cues.push({ t: t + 0.3, type: 'key', kind: 'enter', gain: (k.gain ?? 0.16) * 1.1, seed: 99, ...(k.bank ? { bank: k.bank } : {}), ...(k.style ? { style: k.style } : {}) });
+      writeWav(path.join(outDir, 'typing.wav'), synthesize(cues, { duration: t + 0.8, lowpass, peak: 0.7 }));
+      list.push({ name: 'typing', file: 'typing.wav' });
+      fs.writeFileSync(path.join(outDir, 'sounds.json'), JSON.stringify(list, null, 1) + '\n');
+      console.log(`✓ ${list.length} samples → ${path.relative(process.cwd(), outDir)}/sounds.json`);
       break;
     }
 
