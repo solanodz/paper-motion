@@ -78,6 +78,7 @@ Lives at `brand/` in the user's project.
 | `decisions/` | every skill | one short note per decision: what, why, and whether the agent decided it |
 | `assets/` | import starts, visual-system | wordmark, logo, fonts, music, reference images |
 | `pieces/<name>/` | make-video | each piece's brief, scene and renders |
+| `.interview/` | interview | option boards shown during interviews (throwaway) |
 
 A skill only writes its own rows. `decisions/` is shared and append-only.
 
@@ -91,9 +92,9 @@ Reads which brand files exist, tells the user where they are ("identity and visu
 step on the main flow: identity → visual-system → brand-sheet → motion-style → sound-kit → shader-set → make-video.
 Lets the user enter anywhere. Holds no state of its own.
 
-### `interview` (model-invoked, called by the others)
-The mechanics only: design tree, frontier, rounds, recommended answers, "decide for me", and option boards (renders
-stills or clips through the engine, labels them A–D). Each calling skill brings its own question bank.
+### `interview` (model-invoked, called by the others) · built
+The mechanics only: design tree, frontier, rounds, recommended answers, "decide for me", and option boards (`pm board`
+renders 2–6 options as one lettered still or clip). Each calling skill brings its own question bank and depth.
 
 ### `identity`
 - **Guided:** 3–4 rounds. Purpose, audience, what it is and isn't, personality (pairs like calm/loud, warm/cold),
@@ -141,7 +142,8 @@ stills or clips through the engine, labels them A–D). Each calling skill bring
 
 - **Moves library:** named, reusable moves with demo clips (wipe, push, masked reveal, dive into a frame, terminal
   typing, cut on the beat, …), callable from scenes.
-- **Option boards:** render N labelled options as one still or one short clip, for `interview`.
+- **Option boards** · built: `pm board a.html b.html … [--t s | --clip s] --labels "A · x,B · y"` composes 2–6
+  options into one lettered still (.png) or clip (.mp4), for `interview`.
 - **Brand sheet page:** a page template that reads `brand/` and plays live.
 - Already in place: scenes as pure functions of time, Paper shaders, synthesized SFX, motion blur, loudness pass.
 

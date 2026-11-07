@@ -29,6 +29,9 @@ Usage: node ${path.relative(process.cwd(), fileURLToPath(import.meta.url)) || 'p
                                      (sound effects declared with s.sfx() are mixed in)
   sfx <scene.html> [--out file.wav] [--from s] [--to s]
                                      export only the synthesized sound effects
+  board <a.html> <b.html> [...] [--t 2 | --clip 5] [--labels "A · calm,B · loud"] [--out board.png]
+                                     option board for interviews: 2–6 options side by side,
+                                     lettered A, B, C…; a still (.png) or short clips (.mp4)
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
 `;
@@ -225,6 +228,40 @@ async function main() {
       fs.mkdirSync(path.dirname(out), { recursive: true });
       const r = await withServer(file, (url) => renderSfx({ url: url('?render'), out, from: args.from !== undefined ? Number(args.from) : 0, to: args.to !== undefined ? Number(args.to) : undefined }));
       console.log(r ? `✓ ${path.relative(process.cwd(), r.out)} — ${r.cues} cues` : 'This scene declares no sound effects (s.sfx).');
+      break;
+    }
+
+    case 'board': {
+      await ensureDeps();
+      const files = args._.slice(1);
+      if (files.length < 2 || files.length > 6) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]'); process.exit(1); }
+      const { renderStills, renderVideo } = await import('../lib/render.mjs');
+      const { composeBoard } = await import('../lib/board.mjs');
+      const os = await import('node:os');
+      const clip = args.clip !== undefined ? Number(args.clip === true ? 5 : args.clip) : null;
+      const t = Number(args.t ?? 2);
+      const out = path.resolve(args.out ?? (clip ? 'board.mp4' : 'board.png'));
+      const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-board-'));
+      const given = args.labels ? String(args.labels).split(',').map((x) => x.trim()) : [];
+      const labels = files.map((_, i) => given[i] ?? String.fromCharCode(65 + i));
+      const inputs = [];
+      try {
+        for (const [i, file] of files.entries()) {
+          process.stdout.write(`\roption ${labels[i].split(' · ')[0]} · ${i + 1}/${files.length}   `);
+          if (clip) {
+            const o = path.join(tmp, `${i}.mp4`);
+            await withServer(file, (url) => renderVideo({ url: url('?render'), out: o, from: 0, to: clip, sfx: false, dpr: Number(args.dpr ?? 1) }));
+            inputs.push(o);
+          } else {
+            const r = await withServer(file, (url) => renderStills({ url: url('?render'), times: [t], outDir: path.join(tmp, String(i)), sheet: false, dpr: Number(args.dpr ?? 1) }));
+            inputs.push(r.files[0]);
+          }
+        }
+        const probe = spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', inputs[0]], { encoding: 'utf8' });
+        const [w, h] = probe.stdout.trim().split(',').map(Number);
+        const r = await composeBoard({ inputs, labels, aspect: w / h, out, tmp, duration: clip ?? undefined });
+        console.log(`\r✓ ${path.relative(process.cwd(), r.out)} — ${files.length} options, ${r.W}×${r.H}`);
+      } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
       break;
     }
 
