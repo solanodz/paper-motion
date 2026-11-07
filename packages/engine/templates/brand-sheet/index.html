@@ -63,7 +63,7 @@
   .sample .cur { display: inline-block; width: .5em; height: .9em; background: var(--figure); vertical-align: -0.1em; margin-left: 4px; }
   .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
   .clips figure { margin: 0; }
-  .clips video { width: 100%; display: block; border-radius: var(--radius); background: #000; aspect-ratio: 16/9; object-fit: cover; }
+  .clips video { width: 100%; max-height: 520px; display: block; border-radius: var(--radius); background: #000; object-fit: contain; }
   .clips figcaption { font: 400 14px/20px var(--mono); color: var(--muted); margin-top: 10px; }
   .sounds { display: flex; gap: 12px; flex-wrap: wrap; }
   .sounds button { font: 500 15px/1 var(--mono); color: var(--figure); background: var(--surface); border: 0; border-radius: var(--pill-radius, 999px); padding: 14px 20px; cursor: pointer; }
@@ -125,10 +125,24 @@ const dark = tokens?.mode === 'dark';
 const wmFile = tokens?.wordmark?.files?.[dark ? 'onDark' : 'onLight'];
 const firstOf = (...keys) => keys.map((k) => I[k]).find(filled) ?? '';
 const keywords = (I.Keywords ?? '').split(/[,\n·]/).map((s) => s.replace(/^[-*]\s*/, '').trim()).filter(Boolean);
+// The sheet speaks the brand's language (IDENTITY.md · Voice names it) and follows its casing.
+const L10N = {
+  en: { identity: 'identity', visual: 'visual system', motion: 'motion', sound: 'sound', set: 'shader set', who: (n) => `Who ${n} is`, looks: (n) => `How ${n} looks`, moves: (n) => `How ${n} moves`, sounds: (n) => `How ${n} sounds`, materials: (k) => `${k} moving materials`,
+        offer: 'offer', audience: 'audience', personality: 'personality', voice: 'voice', not: 'not', references: 'references', wordmark: 'wordmark', palette: 'palette', type: 'type', shape: 'shape', rules: 'rules', movesL: 'moves', sheet: 'brand sheet', made: 'made with paper-motion' },
+  es: { identity: 'identidad', visual: 'sistema visual', motion: 'movimiento', sound: 'sonido', set: 'set de shaders', who: (n) => `Quién es ${n}`, looks: (n) => `Cómo se ve ${n}`, moves: (n) => `Cómo se mueve ${n}`, sounds: (n) => `Cómo suena ${n}`, materials: (k) => `${k} materiales en movimiento`,
+        offer: 'qué ofrece', audience: 'para quién', personality: 'personalidad', voice: 'voz', not: 'qué no es', references: 'referencias', wordmark: 'wordmark', palette: 'paleta', type: 'tipografía', shape: 'forma', rules: 'reglas', movesL: 'movimientos', sheet: 'página de identidad', made: 'hecho con paper-motion' },
+  pt: { identity: 'identidade', visual: 'sistema visual', motion: 'movimento', sound: 'som', set: 'shaders', who: (n) => `Quem é ${n}`, looks: (n) => `Como ${n} se vê`, moves: (n) => `Como ${n} se move`, sounds: (n) => `Como ${n} soa`, materials: (k) => `${k} materiais em movimento`,
+        offer: 'oferta', audience: 'público', personality: 'personalidade', voice: 'voz', not: 'o que não é', references: 'referências', wordmark: 'wordmark', palette: 'paleta', type: 'tipografia', shape: 'forma', rules: 'regras', movesL: 'movimentos', sheet: 'página de marca', made: 'feito com paper-motion' },
+};
+const voiceText = I.Voice ?? '';
+const lang = tokens?.language ?? (/\b(spanish|español|castellano)\b/i.test(voiceText) ? 'es' : /portugu/i.test(voiceText) ? 'pt' : 'en');
+const Tx = L10N[lang] ?? L10N.en;
+const lower = (tokens?.wordmark?.text ?? '') && tokens.wordmark.text === tokens.wordmark.text.toLowerCase();
+if (lower) document.head.append(Object.assign(document.createElement('style'), { textContent: 'h2, .kicker, h3, #cover .top { text-transform: lowercase; }' }));
 const html = [];
 
 // ── cover ──
-html.push(`<section id="cover"><div class="field"></div><div class="wrap top"><span>${inline(name)} · brand sheet</span><span>${new Date().toISOString().slice(0, 10)}</span></div>
+html.push(`<section id="cover"><div class="field"></div><div class="wrap top"><span>${inline(name)} · ${Tx.sheet}</span><span>${new Date().toISOString().slice(0, 10)}</span></div>
   <div class="wrap mark"><div class="wm" style="font-family:var(--${tokens?.wordmark?.font ?? 'display'});font-weight:${tokens?.wordmark?.weight ?? 'var(--display-weight, 500)'};letter-spacing:${tokens?.wordmark?.tracking ?? 'var(--display-tracking, -0.02em)'};margin-bottom:48px">${inline(tokens?.wordmark?.text ?? name)}</div></div>
   <div class="wrap bottom"><div class="line">${inline(firstOf('In one line').split('\n')[0])}</div><div class="keys">${keywords.map((k) => `<span class="pill">${inline(k)}</span>`).join('')}</div></div></section>`);
 
@@ -136,13 +150,13 @@ html.push(`<section id="cover"><div class="field"></div><div class="wrap top"><s
 if (identity) {
   const sliders = (I.Personality ?? '').split('\n').map((l) => l.match(/^[-*\s]*(.+?)\s+([●○]{3,})\s+(.+)$/)).filter(Boolean);
   const voiceLine = (I.Voice ?? '').match(/[“"]([^”"]+)[”"]/)?.[1];
-  html.push(`<section><div class="wrap"><div class="kicker">01 · identity</div><h2>Who ${inline(name)} is</h2><div class="grid">
-    ${filled(firstOf('Offer', 'Purpose')) ? `<div><h3>offer</h3><div class="md">${md(firstOf('Offer', 'Purpose'))}</div></div>` : ''}
-    ${filled(I.Audience) ? `<div><h3>audience</h3><div class="md">${md(I.Audience)}</div></div>` : ''}
-    ${sliders.length ? `<div><h3>personality</h3><div class="sliders">${sliders.map(([, a, dots, b]) => `<div class="slider"><span>${inline(a)}</span><div class="track"><i style="left:${(dots.indexOf('●') / Math.max(1, dots.length - 1)) * 100}%"></i></div><span>${inline(b)}</span></div>`).join('')}</div></div>` : ''}
-    ${filled(I.Voice) ? `<div><h3>voice</h3>${voiceLine ? `<p class="voice">“${inline(voiceLine)}”</p>` : `<div class="md">${md(I.Voice)}</div>`}</div>` : ''}
-    ${filled(I.Not) ? `<div><h3>not</h3><div class="md">${md(I.Not)}</div></div>` : ''}
-    ${filled(I.References) ? `<div><h3>references</h3><div class="md">${md(I.References)}</div></div>` : ''}
+  html.push(`<section><div class="wrap"><div class="kicker">01 · ${Tx.identity}</div><h2>${Tx.who(inline(name))}</h2><div class="grid">
+    ${filled(firstOf('Offer', 'Purpose')) ? `<div><h3>${Tx.offer}</h3><div class="md">${md(firstOf('Offer', 'Purpose'))}</div></div>` : ''}
+    ${filled(I.Audience) ? `<div><h3>${Tx.audience}</h3><div class="md">${md(I.Audience)}</div></div>` : ''}
+    ${sliders.length ? `<div><h3>${Tx.personality}</h3><div class="sliders">${sliders.map(([, a, dots, b]) => `<div class="slider"><span>${inline(a)}</span><div class="track"><i style="left:${(((dots.match(/●/g) ?? []).length > 1 ? dots.lastIndexOf('●') : dots.indexOf('●')) / Math.max(1, dots.length - 1)) * 100}%"></i></div><span>${inline(b)}</span></div>`).join('')}</div></div>` : ''}
+    ${filled(I.Voice) ? `<div><h3>${Tx.voice}</h3>${voiceLine ? `<p class="voice">“${inline(voiceLine)}”</p>` : `<div class="md">${md(I.Voice)}</div>`}</div>` : ''}
+    ${filled(I.Not) ? `<div><h3>${Tx.not}</h3><div class="md">${md(I.Not)}</div></div>` : ''}
+    ${filled(I.References) ? `<div><h3>${Tx.references}</h3><div class="md">${md(I.References)}</div></div>` : ''}
   </div></div></section>`);
 }
 
@@ -156,28 +170,28 @@ if (tokens) {
   const body = inline(short((firstOf('Offer', 'Purpose', 'Audience') || `${name}, set in its text face at body size, the way most of its words will be read.`).split('\n')[0], 180));
   const caption = inline(keywords.length ? keywords.join(' · ') : Object.keys(C).join(' · '));
   const on = tokens.wordmark?.files ?? {};
-  html.push(`<section><div class="wrap"><div class="kicker">02 · visual system</div><h2>How ${inline(name)} looks</h2>
-    ${on.onLight || on.onDark ? `<h3>wordmark</h3><div class="marks">${on.onLight ? `<div style="background:${dark ? C.figure?.hex : C.ground?.hex}"><img src="../${on.onLight}"></div>` : ''}${on.onDark ? `<div style="background:${dark ? C.ground?.hex : C.figure?.hex}"><img src="../${on.onDark}"></div>` : ''}</div><br><br>` : ''}
-    <h3>palette</h3><div class="swatches">${sw}</div>
+  html.push(`<section><div class="wrap"><div class="kicker">02 · ${Tx.visual}</div><h2>${Tx.looks(inline(name))}</h2>
+    ${on.onLight || on.onDark ? `<h3>${Tx.wordmark}</h3><div class="marks">${on.onLight ? `<div style="background:${dark ? C.figure?.hex : C.ground?.hex}"><img src="../${on.onLight}"></div>` : ''}${on.onDark ? `<div style="background:${dark ? C.ground?.hex : C.figure?.hex}"><img src="../${on.onDark}"></div>` : ''}</div><br><br>` : ''}
+    <h3>${Tx.palette}</h3><div class="swatches">${sw}</div>
     ${tokens.ramp?.length ? `<div class="ramp">${tokens.ramp.map((h) => `<div style="background:${h}"></div>`).join('')}</div>` : ''}
-    <br><br><h3>type</h3>${specimen('display', inline(tokens.wordmark?.text ?? name))}${specimen('title', line1)}${specimen('body', body)}${specimen('caption', caption)}
-    ${tokens.shape ? `<br><br><h3>shape · ${tokens.shape.language}</h3><svg width="420" height="260" style="display:block"><path id="shape" fill="var(--surface)" stroke="var(--figure)" stroke-width="${tokens.shape.stroke ?? 1}"/></svg>` : ''}
-    ${filled(V.Rules) ? `<br><br><h3>rules</h3><div class="md">${md(V.Rules)}</div>` : ''}
+    <br><br><h3>${Tx.type}</h3>${specimen('display', inline(tokens.wordmark?.text ?? name))}${specimen('title', line1)}${specimen('body', body)}${specimen('caption', caption)}
+    ${tokens.shape ? `<br><br><h3>${Tx.shape} · ${tokens.shape.language}</h3><svg width="420" height="260" style="display:block"><path id="shape" fill="var(--surface)" stroke="var(--figure)" stroke-width="${tokens.shape.stroke ?? 1}"/></svg>` : ''}
+    ${filled(V.Rules) ? `<br><br><h3>${Tx.rules}</h3><div class="md">${md(V.Rules)}</div>` : ''}
   </div></section>`);
 }
 
 // ── motion ──
 if (motionMd || motion) {
-  html.push(`<section><div class="wrap"><div class="kicker">03 · motion</div><h2>How ${inline(name)} moves</h2>
+  html.push(`<section><div class="wrap"><div class="kicker">03 · ${Tx.motion}</div><h2>${Tx.moves(inline(name))}</h2>
     <div class="sample" id="sample"></div><br>
     <div class="grid">${Object.entries(M).filter(([k, v]) => filled(v) && k !== 'Open').map(([k, v]) => `<div><h3>${inline(k.toLowerCase())}</h3><div class="md">${md(v)}</div></div>`).join('')}</div>
-    ${motion?.moves?.length ? `<br><br><h3>moves</h3><div class="clips">${motion.moves.map((m) => `<figure><video src="../${m.video}" muted loop autoplay playsinline></video><figcaption>${inline(m.name)}</figcaption></figure>`).join('')}</div>` : ''}
+    ${motion?.moves?.length ? `<br><br><h3>${Tx.movesL}</h3><div class="clips">${motion.moves.map((m) => `<figure><video src="../${m.video}" muted loop autoplay playsinline></video><figcaption>${inline(m.name)}</figcaption></figure>`).join('')}</div>` : ''}
   </div></section>`);
 }
 
 // ── sound ──
 if (soundMd || sounds) {
-  html.push(`<section><div class="wrap"><div class="kicker">04 · sound</div><h2>How ${inline(name)} sounds</h2>
+  html.push(`<section><div class="wrap"><div class="kicker">04 · ${Tx.sound}</div><h2>${Tx.sounds(inline(name))}</h2>
     ${sounds?.length ? `<div class="sounds">${sounds.map((s, i) => `<button data-i="${i}">▶ ${inline(s.name)}</button>`).join('')}</div><br><br>` : ''}
     <div class="grid">${Object.entries(S).filter(([k, v]) => filled(v) && k !== 'Open').map(([k, v]) => `<div><h3>${inline(k.toLowerCase())}</h3><div class="md">${md(v)}</div></div>`).join('')}</div>
   </div></section>`);
@@ -185,11 +199,11 @@ if (soundMd || sounds) {
 
 // ── shader set ──
 if (shaders?.length) {
-  html.push(`<section><div class="wrap"><div class="kicker">05 · shader set</div><h2>${shaders.length} moving materials</h2>
+  html.push(`<section><div class="wrap"><div class="kicker">05 · ${Tx.set}</div><h2>${Tx.materials(shaders.length)}</h2>
     <div class="clips">${shaders.map((s) => `<figure><video src="../shader-set/${s.video}" muted loop autoplay playsinline></video><figcaption>${inline(s.id)}</figcaption></figure>`).join('')}</div></div></section>`);
 }
 
-html.push(`<footer class="wrap"><span>${inline(name)}</span><span>made with paper-motion</span></footer>`);
+html.push(`<footer class="wrap"><span>${inline(name)}</span><span>${Tx.made}</span></footer>`);
 document.querySelector('#sheet').innerHTML = html.join('');
 
 // ── live parts ──

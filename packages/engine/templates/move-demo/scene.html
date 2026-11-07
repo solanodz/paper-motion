@@ -45,13 +45,17 @@ const quoted = section('Voice').match(/[“"]([^”"]{4,90})[”"]/)?.[1];
 const name = tokens?.wordmark?.text ?? tokens?.brand ?? 'brand';
 // a short line reads in one beat: the voice sample, else the first clause of the one line, at most ~48 characters
 const clip = (t) => { if (!t) return ''; const c = t.split(/[,.;:—]/)[0].trim(); const u = c.length <= 48 ? c : c.slice(0, c.lastIndexOf(' ', 48)); return u; };
-const line = (quoted && quoted.length <= 56 ? quoted : '') || clip(firstLine(section('In one line'))) || clip(quoted) || clip(firstLine(section('Offer') || section('Purpose'))) || name;
+// the brand speaking (its voice sample) comes first: it is in the brand's own language
+const line = (quoted && quoted.length <= 64 ? quoted : '') || clip(firstLine(section('In one line'))) || clip(quoted) || clip(firstLine(section('Offer') || section('Purpose'))) || name;
 
 // Two frames that contrast enough for every move to read: ground, and figure (or a surface far from ground).
 const lum = (hex) => { const n = parseInt((hex ?? '#888').slice(1), 16); return ((n >> 16 & 255) * 0.299 + (n >> 8 & 255) * 0.587 + (n & 255) * 0.114) / 255; };
 const ground = col('ground', '#f2f2f2'), figure = col('figure', '#1a1a1a'), surface = C.surface?.hex;
-const bBg = surface && Math.abs(lum(surface) - lum(ground)) > 0.25 ? surface : figure;
-const bInk = bBg === figure ? ground : figure;
+// the second frame contrasts enough for moves to read, without flashing: a nearby tone of the brand first
+// (surface, the ramp's steps, muted), the figure color only as a last resort
+const near = [surface, tokens?.ramp?.[1], tokens?.ramp?.[2], C.muted?.hex].filter(Boolean).find((c) => Math.abs(lum(c) - lum(ground)) >= 0.07);
+const bBg = near ?? figure;
+const bInk = Math.abs(lum(figure) - lum(bBg)) > Math.abs(lum(ground) - lum(bBg)) ? figure : ground;
 
 const T = tokens?.type ?? {};
 const s = scene({ width: 1600, height: 900, fps: 30, duration: DURATION, background: ground });
@@ -62,7 +66,7 @@ const mk = (i, kind) => {
   el.style.background = kind === 'name' ? ground : bBg; el.style.color = kind === 'name' ? figure : bInk;
   if (kind === 'name') {
     el.innerHTML = '<div class="name"></div>';
-    Object.assign(el.firstChild.style, { font: `${T.display?.weight ?? 600} 220px ${fam('display', 'system-ui, sans-serif')}`, letterSpacing: T.display?.tracking ?? '-0.02em', lineHeight: 0.95 });
+    Object.assign(el.firstChild.style, { font: `${tokens?.wordmark?.weight ?? T.display?.weight ?? 600} 220px ${fam(tokens?.wordmark?.font ?? 'display', 'system-ui, sans-serif')}`, letterSpacing: tokens?.wordmark?.tracking ?? T.display?.tracking ?? '-0.02em', lineHeight: 0.95 });
     el.firstChild.textContent = name;
   } else {
     el.innerHTML = '<div><span class="ln"></span><span class="cur"></span></div>';
@@ -137,6 +141,15 @@ if (PAL) {
   s.sound({ lowpass: PAL.lowpass, gain: 1 });
 }
 
+// track sets the line on one row: shrink it to fit the frame at its widest (start) spacing
+if (TEXT === 'track') for (const b of beats.filter((x) => x.kind === 'line')) {
+  const box = b.el.firstChild, ln = b.el.querySelector('.ln');
+  await document.fonts.ready;
+  ln.style.letterSpacing = '0.4em';
+  const fit = (1600 - 280) / box.scrollWidth;
+  if (fit < 1) box.style.fontSize = `${parseFloat(getComputedStyle(box).fontSize) * fit}px`;
+  ln.style.letterSpacing = '';
+}
 await Promise.all([...document.querySelectorAll('.name, .frame > div')].map((el) => { const c = getComputedStyle(el); return document.fonts.load(`${c.fontWeight} ${c.fontSize} ${c.fontFamily}`); }));
 await s.start();
 </script>

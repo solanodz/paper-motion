@@ -28,7 +28,7 @@ Scenes load it with `paper-motion/brand` (see "Writing a scene"). When a part is
 **Do not build anything until the brief is approved.** Call `interview` with the question bank in `references/intake.md` (it skips what the brand already settles) and write `brief.md` from its template.
 
 - **Recipe:** start from one in `references/recipes.md` (launch, explainer, social loop, end card, README loop) or the user's own structure. A recipe gives beats and timing, never a look. The user's length wins: scale the recipe's beats to it.
-- **Real material:** ask what is real and can be shown: the product's UI, a real command and its output, real numbers from the Facts. A piece that shows the product working beats any abstract illustration of it.
+- **Real material:** ask what is real and can be shown, and use what `brand/assets/` already holds: photos of the product or place, the product's UI, a real command and its output, the music, the cover art, real numbers from the Facts. A piece that shows the real thing beats any abstract illustration of it; run photos through image shaders (HalftoneDots, ImageDithering, PaperTexture, FlutedGlass) to make them the brand's.
 - **Format:** 16:9 (1920×1080), 9:16 (1080×1920) or 1:1 (1080×1080). One piece, one format; another format is another piece, made after this one.
 - **Mirror back** after each round; get an explicit approval of `brief.md`.
 - When a gate is later rejected, ask what exactly was wrong (pace, type, composition, movement, transitions, sound, mood) before changing anything.
@@ -53,7 +53,7 @@ Look at every contact sheet yourself before showing it (`references/aesthetics.m
 Render the most important 3–8 seconds at final quality, with the brand's moves and sound:
 
 ```bash
-pamo render brand/pieces/<name>/scene.html --to 6 --motion-blur 6 --dpr 2
+pamo render brand/pieces/<name>/scene.html --to 6 --motion-blur 6 --dpr 2 --out brand/pieces/<name>/renders/test-shot.mp4
 ```
 
 Get an explicit OK on pace, movement, look and sound.
@@ -69,7 +69,7 @@ Change one or two things per round and say what changed. Keep what the user like
 ## 6 · Gate D: render the final
 
 ```bash
-pamo render brand/pieces/<name>/scene.html --motion-blur 8 --dpr 2 --loudness -16   # the brand's loudness
+pamo render brand/pieces/<name>/scene.html --motion-blur 8 --dpr 2 --loudness <sound.json's loudness>
 pamo render brand/pieces/<name>/scene.html --format prores                          # master for editing
 pamo render brand/pieces/<name>/scene.html --format gif --gif-width 720
 pamo render brand/pieces/<name>/scene.html --audio track.wav --loudness -14         # with the user's music

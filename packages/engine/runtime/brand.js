@@ -46,7 +46,7 @@ export async function loadBrand(root = '/brand') {
     },
     wordmark: { text: wm.text ?? tokens?.brand, onLight: wm.files?.onLight && `${root}/${wm.files.onLight}`, onDark: wm.files?.onDark && `${root}/${wm.files.onDark}` },
     /** Timing for the brand's pace: { enter, hold, stagger } in seconds. */
-    pace: PACE[motion?.pace ?? 'medium'],
+    pace: { ...PACE[motion?.pace ?? 'medium'], ...(motion?.timing ?? {}) },
     /** Mount a shader-set entry by id on an element (or selector). Returns the layer. */
     shader: (s, el, id, options = {}) => {
       const e = set.entries.find((x) => x.id === id);

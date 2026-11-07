@@ -35,6 +35,8 @@ const bg = s.shader('#bg', 'MeshGradient', { colors: [...], distortion: 0.8, spe
 bg.set({ swirl: 0.4 });                // sync param change (call inside s.update)
 await bg.load({ image: 'next.jpg' });  // param changes that need loading
 bg.time = 3.2;                         // override shader time (s) for this frame only
+// seamless crisp shapes (no crossfade ghosting): run the shader's time forward and back over the loop
+// s.update((t) => { bg.time = (1 - Math.cos(2 * Math.PI * t / s.duration)) * 2; });
 ```
 
 - `name`: any Paper shader component name (`references/shaders.md`).

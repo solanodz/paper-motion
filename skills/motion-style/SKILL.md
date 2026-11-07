@@ -55,6 +55,7 @@ When the user confirms the interview's summary:
   "text": "typing",
   "color": "event",
   "ending": "wordmark",
+  "timing": null,
   "moves": [{ "name": "wipe", "use": "between sections", "video": "motion/wipe.mp4" }]
 }
 ```

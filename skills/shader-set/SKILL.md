@@ -24,8 +24,8 @@ Call `interview` with this question bank, the file `brand/shader-set/SET.md`, an
   - **Paper** (recommended): the user tunes each shader by hand on the canvas and you read the values back. Follow [references/paper-library.md](references/paper-library.md); say the call cost on the free plan first.
   - **Agent**: you write entries from the visual system (step 3).
   - **Their own**: loops (mp4/mov) or images they bring. Loops go to `brand/assets/loops/` and play covering the frame; images go to `brand/assets/materials/` and feed image filters (Water, FlutedGlass, HalftoneDots, ImageDithering, LensDistortion).
-- **Format** (a question): size and loop length shared by every entry; recommend 1920×1080 and 6 s unless the brand lives in vertical feeds (1080×1920).
-- **Families** (a question, several allowed): fields (gradients, noise, grain), graphic (dithering, dots, waves, spirals), logo (LiquidMetal, Heatmap, GemSmoke on the wordmark), image filters (on the brand's material). Recommend from the identity; respect the anti-references.
+- **Format** (a question): size and loop length shared by every entry: 1920×1080, 1080×1920 or 1080×1080; recommend from where people meet the brand (entries re-render natively in any format, so this sets the previews).
+- **Families** (a question, several allowed): fields (gradients, noise, grain), graphic (dithering, dots, waves, spirals), logo (LiquidMetal, Heatmap, GemSmoke on the wordmark), image filters (on the brand's material). Recommend from the identity; respect the anti-references. **When the brand has real material** (photos in `brand/assets/`), put it first: image filters on its own photos are what make a set unmistakably this brand. Abstract fields are atmosphere, never the identity; a blob of the brand's colors reads as a lava lamp, not as bread.
 
 **Round 2**
 - **Keep or drop** (numbered boards): build the candidates (step 3), show the boards, and let the user keep entries by number ("keep 1, 4, 7–9") or ask for changes on any ("5 but slower").
@@ -48,7 +48,7 @@ Call `interview` with this question bank, the file `brand/shader-set/SET.md`, an
 
 - **props** are the shader's React props exactly (`pamo shaders <Name>`), colors from the palette and ramp only.
 - **image**: `wordmark` (light ink, for LiquidMetal and GemSmoke), `wordmark-dark` (dark ink: Heatmap reads dark shapes on white), or a path in `brand/`. Filters (FlutedGlass, HalftoneDots, HalftoneCmyk, ImageDithering, LensDistortion) and logo shaders need one, and `build` skips them with a warning otherwise; Water and PaperTexture also work without one.
-- **loop** (seconds) crossfades the end into the start; only for diffuse fields, never crisp shapes.
+- **loop** (seconds) crossfades the end into the start; only for diffuse fields. Crisp shapes (a GrainGradient blob or sphere, Metaballs, SmokeRing, logo shaders) ghost during the crossfade: leave `loop` off, and in a piece make them seamless by driving `layer.time` forward and back (see make-video's scene API).
 - **motion** animates one prop back and forth over the loop: what keeps static shaders (image filters, Waves, DotGrid) alive.
 - **Agent entries**: aim for 12–20 candidates across the chosen families. Each shader at default `speed` is usually too fast for calm brands (0.2–0.5 is typical). Set every color from `tokens.json`; never a hue the palette lacks.
 

@@ -28,7 +28,7 @@ Call `interview` with this question bank, the file `brand/VISUAL.md`, and a dept
 - **Type pairing** (board, three options, `--cols 1`): display + text face in one layout with the brand's name as a title, its line as a subtitle and a short paragraph, at the sizes of the type scale. The options span the space the identity allows, never three cousins. Labels name both families.
 - **Shape language** (board): soft, hard, organic. Same layout and words in each; open dimensions in neutral stand-ins.
 - **Palette** (board, three options, after type): each palette shown on the chosen pairing in the same layout, every color in its role and in proportion: ground most, figure, accent once. Labels carry the core hex codes; the question lists them all. Include a light and a dark ground among the options unless the identity settles it.
-- **Wordmark** (board, after palette, `--cols 1`): the name, cased as the voice says, in the display face, in three tunings of weight and tracking, each on the chosen palette's ground and on its reverse. Render each with `pamo wordmark` and place the PNGs in the option scenes.
+- **Wordmark** (board, after palette, `--cols 1`): the name, cased as the voice says, in the display face, in three tunings that differ at a glance (a weight jump of 200 or more, open vs tight tracking, a casing change), each on the chosen palette's ground and on its reverse. Render each with `pamo wordmark` and place the PNGs in the option scenes.
 
 The usual shape: logo, type and shape; then palette; then wordmark.
 

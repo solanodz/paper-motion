@@ -129,9 +129,12 @@ export function typeOn(el, text, t, { start = 0, cps = 35, times = null, cursor 
 
 const words = (el) => {
   if (!el._pmWords) {
-    const txt = el.textContent;
+    // keep <br> line breaks: split each text run into words, leave the breaks where they were
+    const parts = [...el.childNodes].flatMap((n) => (n.nodeName === 'BR' ? ['\n'] : (n.textContent ?? '').split(/(\s+)/)));
     el.textContent = '';
-    el._pmWords = txt.split(/(\s+)/).map((w) => {
+    el._pmWords = parts.map((w) => {
+      if (w === '\n') { el.append(document.createElement('br')); return null; }
+      if (!w) return null;
       if (/^\s+$/.test(w)) { el.append(w); return null; }
       const outer = Object.assign(document.createElement('span'), { style: 'display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:0.08em;margin-bottom:-0.08em' });
       const inner = Object.assign(document.createElement('span'), { textContent: w, style: 'display:inline-block' });

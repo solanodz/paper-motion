@@ -19,7 +19,9 @@ Something new exists; show it and make people want it.
 | Proof | 9–20 s | Three moments that show it working with real material (the real UI, a real command and its output), each its own mechanic, never one treatment three times. Claims only from IDENTITY.md's Facts. |
 | Close | 20–26 s | The ending from `motion.json` (often the wordmark), the call to action. |
 
-9:16: one idea per screen, type ≥ 60 px for body, keep the bottom 20 % clear of UI.
+9:16: one idea per screen, body type large enough for a phone (≈ 48–64 px unless the brand's rules want it small), keep the bottom 20 % clear of UI.
+
+For brands without a product to demo (a musician, a place, a person), "proof" is the work itself: the music under the picture, the cover art, the place, the date. Fewer beats, held longer, suit calm brands: a 15 s launch at a calm pace is three beats, not five.
 
 ## Explainer (30–45 s)
 

@@ -531,8 +531,10 @@ export function split(el, by = 'chars') {
  * @param {number} [o.seed]     changes the irregularity, not its amount
  */
 export function organicPath(w, h, { radius = 24, wobble, seed = 1 } = {}) {
+  const amp = wobble ?? Math.min(w, h) * 0.014;
+  // draw on a box inset by the wobble, so the shape never leaves w×h (and never gets clipped flat)
+  const W0 = w, H0 = h; w -= amp * 2; h -= amp * 2;
   const r = Math.min(radius, w / 2, h / 2);
-  const amp = wobble ?? Math.min(w, h) * 0.006;
   const per = 2 * (w + h - 4 * r) + 2 * Math.PI * r;
   const n = Math.max(16, Math.round(per / 40));
   const pt = (d) => {
@@ -557,8 +559,9 @@ export function organicPath(w, h, { radius = 24, wobble, seed = 1 } = {}) {
   const P = Array.from({ length: n }, (_, i) => {
     const [x, y, nx, ny] = pt((i / n) * per);
     const o = amp * (noise(i * 0.55, seed * 7.13) * 2 - 1);
-    return [x + nx * o, y + ny * o];
+    return [x + nx * o + amp, y + ny * o + amp];
   });
+  void W0; void H0;
   // closed Catmull-Rom through the points, as cubic Béziers
   let d = `M${P[0][0].toFixed(2)},${P[0][1].toFixed(2)}`;
   for (let i = 0; i < n; i++) {

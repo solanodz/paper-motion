@@ -177,7 +177,7 @@ async function main() {
       html = html.replace(/<title>[^<]*<\/title>/, `<title>${name}</title>`);
       if (args.move) for (const [k, v] of [['MOVE', args.move], ['PACE', args.pace], ['TEXT', args.text], ['CAMERA', args.camera], ['SOUND', args.sound]]) if (typeof v === 'string') html = html.replace(new RegExp(`const ${k} = '[^']*'`), `const ${k} = '${v}'`);
       fs.writeFileSync(scene, html);
-      console.log(`Created ${path.relative(process.cwd(), dest)}/\n  scene.html  ← the piece (pure function of time)\n  brief.md    ← the creative direction, kept in sync with the user`);
+      console.log(`Created ${path.relative(process.cwd(), dest)}/\n  scene.html  ← ${args.still || args.move ? 'an option for a board' : 'the piece (pure function of time)'}${fs.existsSync(path.join(dest, 'brief.md')) ? '\n  brief.md    ← the creative direction, kept in sync with the user' : ''}`);
       break;
     }
 
@@ -268,8 +268,17 @@ async function main() {
           const n = spawnSync('ffmpeg', ['-y', '-v', 'error', '-i', out, '-c:v', 'copy', '-af', chain, ...codec, '-ar', '48000', tmp]);
           if (n.status === 0) {
             fs.renameSync(tmp, out);
-            const { I, TP: P } = measure(out);
-            console.log(`  loudness: ${I} LUFS integrated (target ${lufs}), true peak ${P} dBTP${Number(I) < lufs - 1 ? `\n  (sparse sound design stays under the target rather than being crushed; music or a bed brings it up)` : ''}`);
+            let { I, TP: P } = measure(out);
+            // loudnorm's dynamic mode drifts on short or sparse audio; one plain gain step brings it to the target,
+            // downward always, upward only as far as the -1.5 dBTP ceiling allows
+            let fix = lufs - I;
+            if (fix > 0) fix = Math.min(fix, -1.5 - P);
+            if (Math.abs(fix) > 0.3) {
+              const t2 = out.replace(/(\.[a-z0-9]+)$/i, '.trim$1');
+              const g = spawnSync('ffmpeg', ['-y', '-v', 'error', '-i', out, '-c:v', 'copy', '-af', `volume=${fix.toFixed(2)}dB`, ...codec, '-ar', '48000', t2]);
+              if (g.status === 0) { fs.renameSync(t2, out); ({ I, TP: P } = measure(out)); }
+            }
+            console.log(`  loudness: ${I} LUFS integrated (target ${lufs}), true peak ${P} dBTP${Number(I) < lufs - 1 ? `\n  (under the target: sparse sound design is kept rather than crushed; music or a quiet bed brings it up)` : ''}`);
           } else console.error(`  loudness pass failed: ${n.stderr}`);
         }
       }
@@ -410,14 +419,21 @@ async function main() {
       fs.mkdirSync(outDir, { recursive: true });
       const list = [];
       const lowpass = cfg.lowpass ?? 2000;
+      // samples keep the brand's balance: each is scaled by its cue's gain against the loudest cue,
+      // so a "very quiet" bed plays very quiet on the sheet too
+      const gains = Object.values(cfg.cues ?? {}).filter(Boolean).map((c) => c.gain ?? 0.2);
+      const top = Math.max(...gains, 1e-6);
       for (const [name, cue] of Object.entries(cfg.cues ?? {})) {
         if (!cue) continue;
         const dur = (cue.dur ?? 0.8) + 0.6;
-        writeWav(path.join(outDir, `${name}.wav`), synthesize([{ t: 0.05, ...cue, ...(name === 'bed' ? { dur: Math.min(cue.dur ?? 6, 6) } : {}) }], { duration: name === 'bed' ? 6.2 : dur, lowpass, peak: 0.7 }));
+        writeWav(path.join(outDir, `${name}.wav`), synthesize([{ t: 0.05, ...cue, ...(name === 'bed' ? { dur: Math.min(cue.dur ?? 6, 6) } : {}) }], { duration: name === 'bed' ? 6.2 : dur, lowpass, peak: 0.7 * Math.max(0.08, (cue.gain ?? 0.2) / top) }));
         list.push({ name, file: `${name}.wav` });
       }
-      // a typing sample: one short line with human timing
+      // a typing sample only when the brand types (motion.json text: typing, or keys configured)
+      const motionCfg = fs.existsSync(path.join(brandDir, 'motion.json')) ? JSON.parse(fs.readFileSync(path.join(brandDir, 'motion.json'), 'utf8')) : {};
       const k = cfg.keys ?? {};
+      const types = motionCfg.text === 'typing' || !!(k && (k.bank || k.style));
+      if (!types) { fs.writeFileSync(path.join(outDir, 'sounds.json'), JSON.stringify(list, null, 1) + '\n'); console.log(`✓ ${list.length} samples → ${path.relative(process.cwd(), outDir)}/sounds.json`); break; }
       const line = 'make a video';
       let t = 0.1; const cues = [];
       [...line].forEach((ch, i) => { cues.push({ t, type: 'key', kind: ch === ' ' ? 'space' : 'letter', gain: k.gain ?? 0.16, seed: i + 1, ...(k.bank ? { bank: k.bank } : {}), ...(k.style ? { style: k.style } : {}) }); t += ch === ' ' ? 0.16 : 0.07 + ((i * 37) % 5) / 100; });
@@ -473,6 +489,7 @@ async function main() {
       const n = (dir, re) => (has(dir) ? fs.readdirSync(path.join(B, dir)).filter((f) => re.test(f)).length : 0);
       let setN = 0, setR = 0;
       if (has('shader-set/set.json')) { const j = JSON.parse(fs.readFileSync(path.join(B, 'shader-set/set.json'), 'utf8')); const e = Array.isArray(j) ? j : j.entries ?? []; setN = e.length; setR = e.filter((x) => x.video).length; }
+      const piecesDone = has('pieces') ? fs.readdirSync(path.join(B, 'pieces')).filter((p) => fs.existsSync(path.join(B, 'pieces', p, 'renders')) && fs.readdirSync(path.join(B, 'pieces', p, 'renders')).some((f) => f.endsWith('.mp4') && !/test/.test(f))).length : 0;
       const steps = [
         ['identity', filled('IDENTITY.md'), 'IDENTITY.md'],
         ['visual-system', has('tokens.json') && filled('VISUAL.md'), 'VISUAL.md + tokens.json' + (has('assets/wordmark-on-light.png') || has('assets/wordmark-on-dark.png') ? ' + wordmark' : '')],
@@ -480,7 +497,7 @@ async function main() {
         ['motion-style', has('motion.json'), 'MOTION.md + motion.json' + (n('motion', /\.mp4$/) ? ` + ${n('motion', /\.mp4$/)} move clips` : '')],
         ['sound-kit', has('sound.json'), 'SOUND.md + sound.json' + (has('sound/keys/keys.json') ? ' + keystroke bank' : '')],
         ['shader-set', setN > 0, `shader-set: ${setN} entries, ${setR} rendered`],
-        ['make-video', n('pieces', /^[^.]/) > 0, `pieces: ${n('pieces', /^[^.]/)}`],
+        ['make-video', piecesDone > 0, `pieces: ${piecesDone} rendered${n('pieces', /^[^.]/) > piecesDone ? `, ${n('pieces', /^[^.]/) - piecesDone} in progress` : ''}`],
       ];
       if (!fs.existsSync(B)) { console.log(`No brand folder at ${path.relative(process.cwd(), B) || '.'} yet. Start with: identity`); break; }
       for (const [skill, done, what] of steps) console.log(`${done ? '✓' : '·'} ${skill.padEnd(14)} ${done ? what : ''}`);

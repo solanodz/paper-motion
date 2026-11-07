@@ -30,7 +30,7 @@ Call the `interview` skill with the question bank below, the file `brand/IDENTIT
 - Who it is for: the people, in their own situation ("neighbours on their way to work"), never a demographic alone.
 - Where people meet it: Instagram, TikTok, a website, a shop window, a pitch deck; and so which formats its pieces need (16:9, 9:16, 1:1).
 - What its videos are for: launches, everyday social posts, explaining the product, atmosphere.
-- Optional: anything they already have (site, logo, photos, menu). On an import start, ask in the last round only for what later skills will need and the material lacks (a logo file, product shots).
+- **Real material** (always asked, the user may decline): photos of the product, the place, the people or the work; screenshots or a screen recording of the product; a logo; a menu; the music. It goes to `brand/assets/` and becomes the brand's most specific material later (image filters in the shader set, footage in pieces); abstract shaders alone make every brand look alike. On an import start, ask only for what the material lacks.
 
 **Round 2 · character**
 - **Personality** as pairs, each answered with a side or "in between": calm ↔ loud, warm ↔ cool, playful ↔ serious, crafted ↔ technical, classic ↔ new, intimate ↔ grand. Recommend a position for each; the user can accept the whole set at once.
@@ -48,18 +48,19 @@ Call the `interview` skill with the question bank below, the file `brand/IDENTIT
 
 ## 4 · Write `brand/IDENTITY.md`
 
-Use exactly these sections, in this order, so every later skill finds what it needs in the same place. Leave a section empty until it is asked, and `—` when the user parked it; both are listed under `## Open`. **Facts** holds only what the material or the user stated: later skills take factual copy from here and nowhere else.
+Use exactly these sections, in this order, so every later skill finds what it needs in the same place. Leave a section empty until it is asked, and `—` when the user parked it; both are listed under `## Open`. **Facts** holds only what the material or the user stated: later skills take factual copy from here and nowhere else. The file is in English, but **In one line**, **Facts** and the voice sample are written in the brand's own language, because pieces and the brand sheet put them on screen.
 
 ```md
 # <Brand> · identity
 
 ## In one line
+<in the brand's own language, the language of its videos>
 ## Offer
 ## Audience
 ## Where people meet it
 ## What the videos are for
 ## Personality
-<one line per pair: "calm ●○○○○ loud">
+<one line per pair, a single ● marking the position: "calm ○●○○○ loud">
 ## Not
 ## Facts
 <true claims later skills may use as copy: numbers, dates, places, names, license>

@@ -25,7 +25,7 @@ Tell the user in two or three lines what their brand already has, then propose t
 | 4 | `motion-style` | pace, camera, text behavior, transitions, color, endings | `MOTION.md`, `motion.json`, move clips |
 | 5 | `sound-kit` | sound palette, typing, music, loudness | `SOUND.md`, `sound.json`, samples |
 | 6 | `shader-set` | the brand's moving material | `shader-set/` |
-| 7 | `make-video` | one piece, from brief to render | `pieces/<name>/` |
+| 7 | `make-video` | one piece, from brief to render | `brand/pieces/<name>/` |
 
 Every step runs an interview (`interview`) with options the user sees or hears, and logs each decision in `brand/decisions/`. Re-run `brand-sheet` after any step changes the brand.
 
