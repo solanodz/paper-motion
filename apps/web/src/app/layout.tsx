@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import { KitNavLink } from "@/components/kit-nav";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -16,9 +17,9 @@ export const metadata: Metadata = {
 };
 
 const NAV = [
+  { href: "/start", label: "Start" },
   { href: "/library", label: "Library" },
   { href: "/docs", label: "For agents" },
-  { href: "/llms.txt", label: "llms.txt" },
 ];
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -36,9 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                   {n.label}
                 </Link>
               ))}
-              <a href="https://github.com/solanodz/paper-motion" className="hidden transition-colors hover:text-figure sm:inline">
-                GitHub
-              </a>
+              <KitNavLink />
             </nav>
           </div>
         </header>

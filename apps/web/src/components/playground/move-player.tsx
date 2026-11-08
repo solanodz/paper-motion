@@ -31,8 +31,9 @@ export const MovePlayer = forwardRef<PlayerHandle, {
   playing: boolean;
   speed: number;
   remountKey: string;
+  theme?: Record<string, string> | null;
   onTime?: (t: number) => void;
-}>(function MovePlayer({ id, values, playing, speed, remountKey, onTime }, ref) {
+}>(function MovePlayer({ id, values, playing, speed, remountKey, theme, onTime }, ref) {
   const host = useRef<HTMLDivElement>(null);
   const state = useRef({ t: 0, updaters: [] as ((t: number) => void)[], mod: null as Demos | null, playing, speed, values, onTime });
   state.current.playing = playing;
@@ -56,6 +57,7 @@ export const MovePlayer = forwardRef<PlayerHandle, {
     const stage = document.createElement("div");
     stage.className = "pm-play";
     Object.assign(stage.style, { position: "absolute", left: "0", top: "0", width: `${W}px`, height: `${H}px`, transformOrigin: "0 0" });
+    for (const [k, v] of Object.entries(theme ?? {})) stage.style.setProperty(k, v);
     el.replaceChildren(stage);
     const st = state.current;
     st.updaters = [];
@@ -65,7 +67,9 @@ export const MovePlayer = forwardRef<PlayerHandle, {
       if (!alive) return;
       st.mod = mod;
       mod.setParams(st.values);
-      await Promise.all(["400 100px GSerif", "400 40px GMono", "500 40px GMono", "400 100px GPixel"].map((f) => document.fonts.load(f).catch(() => {})));
+      const themed = [theme?.["--pm-display"], theme?.["--pm-mono"]].filter(Boolean).map((f) => `400 100px ${f}`);
+      // wait a little for a kit font to arrive (its stylesheet loads in parallel), so text moves measure the real letters
+      await Promise.race([Promise.all(["400 100px GSerif", "400 40px GMono", "500 40px GMono", "400 100px GPixel", ...themed].map((f) => document.fonts.load(f).catch(() => {}))), new Promise((r) => setTimeout(r, 1500))]);
       if (!alive) return;
       mod.mount(id, stage, { update: (fn) => st.updaters.push(fn) });
       draw(); // first frame at full size: some text moves measure their letters here
@@ -80,7 +84,7 @@ export const MovePlayer = forwardRef<PlayerHandle, {
       raf = requestAnimationFrame(tick);
     });
     return () => { alive = false; cancelAnimationFrame(raf); ro.disconnect(); el.replaceChildren(); };
-  }, [id, remountKey]);
+  }, [id, remountKey, JSON.stringify(theme ?? null)]);
 
   // live params: redraw the current frame when paused
   useEffect(() => { if (!state.current.playing) draw(); }, [values]);

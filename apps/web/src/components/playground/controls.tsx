@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import FONTS from "@/data/google-fonts.json";
+import { IconChevron } from "@/components/icons";
 
 export type Param = {
   name: string; type: string; default?: unknown; options?: unknown[]; description?: string;
@@ -45,7 +46,7 @@ function Slider({ p, value, onChange }: { p: Param; value: number; onChange: (v:
 }
 
 /** A color with hex and alpha: #RRGGBB, or #RRGGBBAA once alpha is below 100 %. */
-function ColorField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function ColorField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const hex = /^#[0-9a-f]{6}/i.test(value) ? value.slice(0, 7) : "#000000";
   const alpha = value.length === 9 ? Math.round((parseInt(value.slice(7, 9), 16) / 255) * 100) : 100;
   const withAlpha = (h: string, a: number) => (a >= 100 ? h : `${h}${Math.round((a / 100) * 255).toString(16).padStart(2, "0")}`);
@@ -89,7 +90,7 @@ function ColorList({ value, onChange, max = 10 }: { value: string[]; onChange: (
 }
 
 const fonts = FONTS as [string, string, number[], number][];
-function FontPicker({ value, onChange, role }: { value: string; onChange: (v: string) => void; role: string }) {
+export function FontPicker({ value, onChange, role }: { value: string; onChange: (v: string) => void; role: string }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const list = useMemo(() => {
@@ -185,7 +186,7 @@ export function Controls({ params, values, set, reset, extra }: { params: Param[
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-faint">Parameters</span>
+        <span className="text-[13px] font-medium text-figure">Parameters</span>
         {anyChanged ? <button type="button" onClick={reset} className="font-mono text-[11px] text-faint hover:text-figure">reset all</button> : null}
       </div>
       {visible.length ? (
@@ -193,8 +194,8 @@ export function Controls({ params, values, set, reset, extra }: { params: Param[
           {main.map(row)}
           {rest.length ? (
             <div>
-              <button type="button" onClick={() => setAdv((a) => !a)} className="font-mono text-[11px] uppercase tracking-[0.08em] text-faint hover:text-muted">
-                {adv ? "–" : "+"} Advanced ({rest.length})
+              <button type="button" onClick={() => setAdv((a) => !a)} className="flex items-center gap-1.5 text-[12.5px] text-muted hover:text-figure">
+                <IconChevron size={12} className={`transition-transform ${adv ? "rotate-90" : ""}`} /> Advanced <span className="font-mono text-[11px] text-faint">{rest.length}</span>
               </button>
               {adv ? <div className="mt-4 flex flex-col gap-4">{rest.map(row)}</div> : null}
             </div>

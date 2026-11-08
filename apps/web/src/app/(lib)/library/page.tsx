@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { LibraryControls } from "@/components/library-controls";
 import { ResourceCard } from "@/components/resource-card";
 import { getIndex, TYPES } from "@/lib/registry";
+import { TYPE_ICONS } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Library" };
 
@@ -26,7 +27,7 @@ export default function LibraryPage() {
       {TYPES.filter((t) => items.some((i) => i.type === t.type)).map((t) => (
         <section key={t.type} data-section={t.type} className="pt-12">
           <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3">
-            <h2 className="text-[20px] font-medium">{t.title}</h2>
+            <h2 className="flex items-center gap-2.5 text-[20px] font-medium">{(() => { const I = TYPE_ICONS[t.type]; return <I size={18} className="text-paper" />; })()}{t.title}</h2>
             <p className="hidden text-[13px] text-muted md:block">{t.blurb}</p>
           </div>
           <div className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">

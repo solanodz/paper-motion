@@ -6,6 +6,9 @@ import { ShaderPreview } from "@/components/shader-preview";
 import { Controls, type Param } from "./controls";
 import { CodeView, copyText } from "./code-view";
 import { DURATION, MovePlayer, type PlayerHandle } from "./move-player";
+import { KitButton } from "@/components/kit-button";
+import { useKitTheme } from "@/lib/use-kit-theme";
+import { IconCollapse, IconExpand, IconPause, IconPlay, IconReplay } from "@/components/icons";
 
 type Values = Record<string, unknown>;
 export type PlaygroundResource = {
@@ -69,6 +72,9 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
   const [full, setFull] = useState(false);
   const [mobileTab, setMobileTab] = useState<"preview" | "code">("preview");
   const player = useRef<PlayerHandle>(null);
+  const theme = useKitTheme();
+  const [useTheme, setUseTheme] = useState(true);
+  const live = theme && useTheme ? theme : null;
   const isMove = MOVE_TYPES.includes(r.type);
   const key = `pm:v:${r.id}`;
 
@@ -103,7 +109,8 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
   };
 
   let stage: React.ReactNode = null;
-  if (isMove) stage = <MovePlayer ref={player} id={r.id} values={values} playing={playing} speed={speed} remountKey={remountKey} onTime={setTime} />;
+  const fontLinks = live?.links.map((href) => <link key={href} rel="stylesheet" href={href} />) ?? null;
+  if (isMove) stage = <MovePlayer ref={player} id={r.id} values={values} playing={playing} speed={speed} remountKey={remountKey} theme={live?.vars ?? null} onTime={setTime} />;
   else if (r.type === "background" && entry) {
     const props = { ...(entry.props as Values), speed: playing ? Number((entry.props as Values).speed ?? 1) * speed : 0 };
     stage = <ShaderPreview key={JSON.stringify((entry.props as Values).colors ?? "")} entry={{ ...(entry as { shader: string }), props }} className="h-full w-full" />;
@@ -113,10 +120,10 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
 
   const playback = isMove || r.type === "background" ? (
     <div className="flex items-center gap-3 font-mono text-[11.5px] text-muted">
-      <button type="button" onClick={() => setPlaying((p) => !p)} className="w-[58px] rounded border border-line py-1 hover:text-figure">{playing ? "pause" : "play"}</button>
+      <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"} className="flex h-8 w-8 items-center justify-center rounded-md border border-line text-figure hover:border-faint">{playing ? <IconPause size={14} /> : <IconPlay size={14} />}</button>
       {isMove ? (
         <>
-          <button type="button" onClick={() => { player.current?.seek(0); setPlaying(true); }} title="replay" className="rounded border border-line px-2 py-1 hover:text-figure">↺</button>
+          <button type="button" onClick={() => { player.current?.seek(0); setPlaying(true); }} aria-label="Replay" className="flex h-8 w-8 items-center justify-center rounded-md border border-line text-figure hover:border-faint"><IconReplay size={14} /></button>
           <input type="range" min={0} max={DURATION} step={0.01} value={time} onChange={(e) => { setPlaying(false); player.current?.seek(Number(e.target.value)); }} className="min-w-0 flex-1 accent-[#e9e4d8]" />
           <span className="w-10 text-right tabular-nums">{time.toFixed(1)}s</span>
         </>
@@ -132,6 +139,18 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
 
   return (
     <div className="mt-8">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-[13px] text-muted">{out.changed ? `${out.changed} setting${out.changed > 1 ? "s" : ""} tuned` : "Tune it, then add it to your kit"}</span>
+          {isMove && theme ? (
+            <button type="button" onClick={() => setUseTheme((u) => !u)} className={`flex items-center gap-2 truncate rounded-full border px-2.5 py-1 text-[12px] ${useTheme ? "border-paper text-paper" : "border-line text-muted"}`}>
+              <span className="h-2 w-2 rounded-full" style={{ background: theme.vars["--pm-a"] ?? "#e9e4d8" }} />
+              {useTheme ? `In your kit's look · ${theme.label}` : "Show in my kit's look"}
+            </button>
+          ) : null}
+        </div>
+        <KitButton id={r.id} type={r.type} title={r.title} values={diff} variant="solid" />
+      </div>
       {/* phone: Preview / Code tabs */}
       <div className="mb-3 flex gap-1 lg:hidden">
         {(["preview", "code"] as const).map((v) => (
@@ -144,8 +163,9 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
         <div className={`flex min-w-0 flex-col gap-4 ${mobileTab === "code" ? "max-lg:hidden" : ""}`}>
           <div className={full ? "fixed inset-0 z-[70] flex items-center justify-center bg-black p-4" : ""}>
             <div className={`relative w-full overflow-hidden ${full ? "aspect-video max-h-full max-w-[calc((100vh-2rem)*16/9)]" : "aspect-video rounded-xl border border-line bg-surface"}`}>
+              {fontLinks}
               {stage}
-              <button type="button" onClick={() => setFull((f) => !f)} className="absolute right-3 top-3 z-10 rounded-md border border-line bg-ground/80 px-2.5 py-1 font-mono text-[11px] text-figure backdrop-blur hover:border-faint">{full ? "exit ⤡" : "⤢"}</button>
+              <button type="button" onClick={() => setFull((f) => !f)} aria-label={full ? "Exit fullscreen" : "Fullscreen"} className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-line bg-ground/80 text-figure backdrop-blur hover:border-faint">{full ? <IconCollapse size={14} /> : <IconExpand size={14} />}</button>
             </div>
             {full ? (
               <>

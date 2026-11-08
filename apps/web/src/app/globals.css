@@ -64,3 +64,11 @@ body {
   border-right: 1px solid;
   border-bottom: 1px solid;
 }
+
+/* home doors */
+@keyframes door-cycle { 0%, 22% { opacity: 1; } 25%, 97% { opacity: 0; } 100% { opacity: 1; } }
+.door-cycle { animation: door-cycle 8s steps(1, end) infinite; opacity: 0; }
+.door-cycle:first-child { opacity: 1; }
+@keyframes door-drop { 0%, 100% { transform: translate(-50%, -10%) scale(1); } 50% { transform: translate(-50%, 10%) scale(1.25); } }
+.door-drop { top: 30%; animation: door-drop 4.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .door-cycle, .door-drop { animation: none; } }
