@@ -207,6 +207,8 @@ export function build({ dir = resolveRegistry().dir, out, site = SITE } = {}) {
   const { items, problems } = validate(dir);
   if (problems.length) { const e = new Error(`registry: ${problems.length} problem(s)\n  ${problems.join('\n  ')}`); e.problems = problems; throw e; }
   fs.mkdirSync(path.join(out, 'r'), { recursive: true });
+  // publish only the preview files that were rendered: a background plays live and may have none
+  for (const it of items) if (it.preview) { const have = Object.fromEntries(Object.entries(it.preview).filter(([, p]) => fs.existsSync(path.join(out, p)))); it.preview = Object.keys(have).length ? have : undefined; }
   const index = {
     name: 'paper-motion', site, schema: `${site}/schema.json`, count: items.length, types: TYPES.filter((t) => items.some((i) => i.type === t)),
     items: items.map(({ id, type, title, summary, tags, version, preview, related, when, mood, energy, role, colors, mode, motion, voice, duration, formats, params }) => ({ id, type, title, summary, tags, version, url: `${site}/r/${id}.json`, ...Object.fromEntries(Object.entries({ when, mood, energy, role, colors, mode, motion, voice, duration, formats, preview, related, params: params?.filter((p) => !p.hidden).map((p) => p.name) }).filter(([, v]) => v !== undefined)) })),

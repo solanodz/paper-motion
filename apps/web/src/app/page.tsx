@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
 import { IconAgent, IconArrow, IconCheck, IconGrid, IconKit, TYPE_ICONS } from "@/components/icons";
 import { ResourceCard } from "@/components/resource-card";
-import { getIndex, TYPES } from "@/lib/registry";
+import { ShaderPreview } from "@/components/shader-preview";
+import { getIndex, getResource, TYPES } from "@/lib/registry";
 
 const prompt = (site: string) => `Use ${site.replace(/^https?:\/\//, "")} to make a video for my brand. Read ${site}/llms.txt first, interview me, then propose options as board links I can open.`;
 const FEATURED = ["magic-move", "dive-in", "whip-pan", "mesh-sage", "sage-night", "instrument"];
@@ -66,7 +67,7 @@ export default function Home() {
               <div className="grid grid-cols-4 gap-2 p-3">
                 {["mesh-graphite", "neuro-slate", "dither-slate", "grain-slate"].map((id, i) => (
                   <div key={id} className="relative aspect-video overflow-hidden rounded-md border border-line bg-black">
-                    <img src={`/previews/${id}.jpg`} alt="" className="h-full w-full object-cover opacity-70" onError={undefined} />
+                    {(() => { const e = getResource(id)?.install.entry as { shader: string; props: Record<string, unknown>; background?: string } | undefined; return e ? <ShaderPreview entry={e} className="h-full w-full opacity-70" still /> : null; })()}
                     <span className="absolute left-1.5 top-1.5 rounded bg-ground/80 px-1.5 font-mono text-[10.5px] text-figure">{"ABCD"[i]}</span>
                   </div>
                 ))}
