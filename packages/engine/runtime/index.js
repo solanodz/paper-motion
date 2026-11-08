@@ -285,13 +285,27 @@ function syncAnimations(t) {
 // <video data-pm-sync data-pm-offset="0"> elements follow scene time.
 function syncMedia(t) {
   const out = [];
+  const W = window.innerWidth, H = window.innerHeight;
   for (const v of document.querySelectorAll('video[data-pm-sync]')) {
     v.pause();
+    // only what the camera sees: an off-screen clip is seeked when it comes into view. A wall of dozens of
+    // clips otherwise exhausts the hardware decoders and their seeks stop reporting back.
+    const r = v.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1 || r.right < 0 || r.bottom < 0 || r.left > W || r.top > H) continue;
     const target = t + Number(v.dataset.pmOffset ?? 0);
     const d = v.duration || Infinity;
-    const tt = v.loop && Number.isFinite(d) ? target % d : Math.min(target, d);
+    // wrap negative offsets too (a looping clip that starts mid-way), and never ask for a time outside [0, d]
+    const tt = v.loop && Number.isFinite(d) ? ((target % d) + d) % d : Math.max(0, Math.min(target, d));
     if (Math.abs(v.currentTime - tt) > 1e-4) {
-      out.push(new Promise((r) => { v.addEventListener('seeked', r, { once: true }); v.currentTime = tt; }));
+      // a seek that never reports back (decoder stall, error) must not hang the render: nudge it twice, then give up
+      out.push(new Promise((r) => {
+        const done = () => { clearTimeout(timer); v.removeEventListener('seeked', done); v.removeEventListener('error', done); r(); };
+        let tries = 0;
+        const retry = () => { if (++tries < 3) { v.currentTime = tt + tries * 1e-3; timer = setTimeout(retry, 1500); } else { console.warn(`paper-motion: seek timed out on ${v.currentSrc || v.src} at ${tt.toFixed(3)}s`); done(); } };
+        let timer = setTimeout(retry, 1500);
+        v.addEventListener('seeked', done); v.addEventListener('error', done);
+        v.currentTime = tt;
+      }));
     }
   }
   return out;
