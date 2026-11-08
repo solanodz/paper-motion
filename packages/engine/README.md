@@ -43,6 +43,4 @@ wordmarks and the brand sheet.
 
 ## License
 
-MIT. Paper Shaders are © Paper Design (Apache-2.0). The default keystrokes come from
-[Keyboard Soundpack #1](https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes) by
-unicaegames, CC0.
+MIT. Paper Shaders are © Paper Design (Apache-2.0).

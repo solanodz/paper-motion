@@ -1,6 +1,6 @@
 {
   "name": "paper-motion",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "Frame-exact video renderer for HTML scenes built with Paper Shaders: the engine behind the paper-motion agent skills.",
   "keywords": [
     "video",
@@ -35,12 +35,8 @@
     "templates/",
     "examples/",
     "!examples/**/renders/",
-    "assets/",
     "README.md"
   ],
-  "scripts": {
-    "prepack": "node scripts/fetch-keys.mjs --if-missing"
-  },
   "engines": {
     "node": ">=18.17"
   },

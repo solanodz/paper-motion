@@ -26,7 +26,7 @@ use (never inside `s.update`). Cues are absolute scene times in seconds.
 | `knock` | low wooden knock | `freq` 140, `gain` 0.3, `decay` 0.16 |
 | `tick` | small dull tick | `freq` 200, `gain` 0.1, `decay` 0.05 |
 | `sweep` | pitch glide | `dur` 0.6, `from` 160, `to` 80, `gain` 0.08 |
-| `key` | a keystroke (press, upstroke) | `gain` 0.3, `kind` letter/space/enter, `style` creamy/thock/clack, `bank` (folder of real keystrokes, or `'default'` for the bundled CC0 keys) |
+| `key` | a keystroke (press, upstroke) | `gain` 0.3, `kind` letter/space/enter, `style` creamy/thock/clack, `bank` (folder of real keystrokes) |
 | `whoosh` | air moving past (camera moves) | `dur` 0.7, `gain` 0.2, `from` 320, `to` 1200, `peak` 0.6, `body` 0 |
 | `flick` | something light landing | `gain` 0.12 |
 
@@ -41,7 +41,7 @@ Typing should sound like a person on a real keyboard:
 1. **Real keystrokes.** Split a recording of real typing into single hits once:
    `pamo keys <recording> --out brand/sound/keys` (any audio or video file; it finds each hit and marks the heaviest
    as space/enter). Use only recordings the user made or that carry a clear license (CC0) when the result will be
-   published. Without the user's own bank, `bank: 'default'` (or no `bank` and no `style`) plays the engine's bundled real keys, a CC0 pack; `style` creamy, thock or clack synthesizes them instead.
+   published. Without a bank, `key` synthesizes a keystroke (`style` creamy, thock or clack) as a fallback.
 2. **Human rhythm, shared with the picture.** `typingTimes(text, { start, cps, seed })` from `paper-motion/moves`
    gives each character's time (bursts inside words, a beat between them, more after punctuation). Feed the same
    times to `typeOn(el, text, t, { times, cursor })` and `keySounds(s, text, times, { bank, enter })`, so every letter

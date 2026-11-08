@@ -31,6 +31,3 @@ examples/paper-motion-brand/brand/sheet/sheet.pdf
 *.ogg
 **/brand/sound/sounds.json
 **/brand/sound/keys/
-
-# The default keystroke bank ships in the npm package only (built by packages/engine/scripts/fetch-keys.mjs)
-packages/engine/assets/keys/

@@ -32,7 +32,7 @@ pamo board brand/.interview/sound/a/scene.html … --clip 7 --sequence --labels 
 The demo carries the brand's motion, so only the sound changes; the board levels each option's loudness so the comparison is fair. Ask the user to listen with headphones or speakers.
 
 - **Palette** (sequence board): soft, crisp, airy (subtle swells); add ambient (airy over a low bed) only for brands that want constant atmosphere, and "none" when the identity leans silent.
-- **Typing** (only when `motion.json`'s text is typing, or pieces will show a terminal or chat): the source of keystrokes. A recording the user makes or owns (best: 20–30 s of their own keyboard, split with `pamo keys`), the engine's bundled bank of real keys (`"bank": "default"`: a CC0 pack, the default when the user has no recording), or synthesized keys. Published work needs a source the user can vouch for.
+- **Typing** (only when `motion.json`'s text is typing, or pieces will show a terminal or chat): the source of keystrokes. A recording the user makes or owns (best: 20–30 s of their own keyboard, split with `pamo keys`), a CC0 pack they approve downloading, or synthesized keys. Published work needs a source the user can vouch for.
 - **Music** (a question of fact): their own track, or sound design only.
 - **Loudness** (a question): −14 LUFS for social feeds, −16 for web and presentations; recommend from where people meet the brand.
 
@@ -58,7 +58,7 @@ When the user confirms the interview's summary:
 }
 ```
 
-   The cue values are the chosen palette's (they are in the demo scene's `PAL`); adjust them only from what the user said. `keys.bank` is `"default"` for the bundled CC0 keys, a folder for the user's own bank, or `null` when typing is synthesized (then `style` is `creamy`, `thock` or `clack`).
+   The cue values are the chosen palette's (they are in the demo scene's `PAL`); adjust them only from what the user said. `keys.bank` is `null` when typing is synthesized (then `style` is `creamy`, `thock` or `clack`).
 2. **Samples for the sheet:** `pamo sound-samples` renders each cue and a typing line to `brand/sound/*.wav` and `sounds.json`.
 3. **`brand/SOUND.md`**, the same in words:
 
