@@ -1,0 +1,164 @@
+{
+  "$schema": "../../schema.json",
+  "id": "spiral-paper",
+  "type": "background",
+  "title": "Spiral · paper",
+  "summary": "A single-colored animated spiral that morphs across a wide range of shapes - from crisp, thin-lined geometry to flowing whirlpool forms and wavy, abstract rings, in paper.",
+  "tags": [
+    "background",
+    "spiral",
+    "animated",
+    "light",
+    "paper"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#E9E4D8",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#000000",
+      "description": "foreground color",
+      "group": "main"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 6,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 6,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "density",
+      "type": "number",
+      "default": 2.2,
+      "description": "Spacing falloff simulating perspective, 0 = flat spiral",
+      "min": 0,
+      "max": 2.2,
+      "step": 0.011,
+      "group": "main"
+    },
+    {
+      "name": "distortion",
+      "type": "number",
+      "default": 0.1,
+      "description": "amount of organic distortion",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "strokeWidth",
+      "type": "number",
+      "default": 0.45,
+      "description": "Thickness of spiral curve",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "strokeTaper",
+      "type": "number",
+      "default": 0.5,
+      "description": "How much stroke loses width away from center, 0 = full visibility",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "strokeCap",
+      "type": "number",
+      "default": 0,
+      "description": "Extra stroke width at the center, needs strokeWidth ≠ 0.5",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "noise",
+      "type": "number",
+      "default": 0.25,
+      "description": "Noise distortion applied over the canvas, needs noiseFrequency > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "noiseFrequency",
+      "type": "number",
+      "default": 0.4,
+      "description": "Noise frequency, needs noise > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0.05,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.6,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Spiral",
+      "props": {
+        "colorBack": "#E9E4D8",
+        "colorFront": "#000000",
+        "scale": 6,
+        "density": 2.2,
+        "distortion": 0.1,
+        "strokeWidth": 0.45,
+        "strokeTaper": 0.5,
+        "strokeCap": 0,
+        "noise": 0.25,
+        "noiseFrequency": 0.4,
+        "softness": 0.05,
+        "speed": 0.6
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'spiral-paper');",
+  "notes": [
+    "Paper shader `Spiral` (animated)."
+  ],
+  "preview": {
+    "video": "previews/spiral-paper.webm",
+    "poster": "previews/spiral-paper.jpg"
+  }
+}

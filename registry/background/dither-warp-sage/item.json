@@ -1,0 +1,118 @@
+{
+  "$schema": "../../schema.json",
+  "id": "dither-warp-sage",
+  "type": "background",
+  "title": "Dithering · sage",
+  "summary": "Animated 2-color dithering over multiple pattern sources (noise, warp, dots, waves, ripple, swirl, sphere), in sage.",
+  "tags": [
+    "background",
+    "dithering",
+    "animated",
+    "dark",
+    "sage"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#8FA67A",
+      "description": "foreground color",
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "warp",
+      "options": [
+        "simplex",
+        "warp",
+        "dots",
+        "wave",
+        "ripple",
+        "swirl",
+        "sphere"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "default": "8x8",
+      "options": [
+        "random",
+        "2x2",
+        "4x4",
+        "8x8"
+      ],
+      "description": "variant",
+      "group": "advanced"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 3,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 9,
+      "step": 0.045,
+      "group": "main"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 1,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.6,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Dithering",
+      "props": {
+        "colorBack": "#000000",
+        "colorFront": "#8FA67A",
+        "shape": "warp",
+        "type": "8x8",
+        "size": 3,
+        "scale": 1,
+        "speed": 0.6
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'dither-warp-sage');",
+  "notes": [
+    "Paper shader `Dithering` (animated)."
+  ],
+  "preview": {
+    "video": "previews/dither-warp-sage.webm",
+    "poster": "previews/dither-warp-sage.jpg"
+  }
+}

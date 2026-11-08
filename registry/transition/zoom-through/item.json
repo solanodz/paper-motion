@@ -1,0 +1,65 @@
+{
+  "$schema": "../../schema.json",
+  "id": "zoom-through",
+  "type": "transition",
+  "title": "Zoom through",
+  "summary": "The camera dives through A and lands on B.",
+  "tags": [
+    "transition",
+    "calm",
+    "camera",
+    "3d"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "zoomThrough",
+  "signature": "zoomThrough(a, b, p, { scale, origin, curve })",
+  "params": [
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 6,
+      "description": "how far the camera dives (scale at the end)",
+      "min": 1.5,
+      "max": 20,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "origin",
+      "type": "string",
+      "default": "50% 50%",
+      "description": "transform origin (CSS)",
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.inOutCubic",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/zoom-through.js",
+      "to": "moves/zoom-through.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { zoomThrough } from './moves/zoom-through.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nzoomThrough(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "The camera dives through A (scaling past the lens) and lands on B. `origin` is where the camera dives in (put it on the subject, e.g. '30% 50%'). B lands from slightly larger, so no edge shows.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/zoom-through.webm",
+    "poster": "previews/zoom-through.jpg"
+  }
+}

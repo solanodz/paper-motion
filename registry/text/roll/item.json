@@ -1,0 +1,83 @@
+{
+  "$schema": "../../schema.json",
+  "id": "roll",
+  "type": "text",
+  "title": "Roll",
+  "summary": "The last word rolls like a slot machine through a list of words.",
+  "tags": [
+    "text",
+    "kinetic",
+    "headline"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "roll",
+  "signature": "roll(el, list, t, { start, every, duration, curve, line })",
+  "params": [
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "every",
+      "type": "number",
+      "default": 0.9,
+      "description": "seconds between words",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 0.55,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.inOutQuart",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    },
+    {
+      "name": "line",
+      "type": "number",
+      "default": 1.3,
+      "description": "line height (em)",
+      "min": 1,
+      "max": 2,
+      "step": 0.05,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/roll.js",
+      "to": "moves/roll.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { roll } from './moves/roll.js';\n\ns.update((t) => roll(el, ['move.', 'faster.', 'yours.'], t, { start: 0.5 }));",
+  "notes": [
+    "The element rolls through `list` like a slot machine, one word every `every` seconds; its width follows."
+  ],
+  "preview": {
+    "video": "previews/roll.webm",
+    "poster": "previews/roll.jpg"
+  }
+}

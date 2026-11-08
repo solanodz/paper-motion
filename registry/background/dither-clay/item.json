@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schema.json",
+  "id": "dither-clay",
+  "type": "background",
+  "title": "Dithering · clay warp",
+  "summary": "Animated 2-color dithering over multiple pattern sources (noise, warp, dots, waves, ripple, swirl, sphere), in clay warp.",
+  "tags": [
+    "background",
+    "dithering",
+    "animated",
+    "dark",
+    "clay"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 1,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "warp",
+      "options": [
+        "simplex",
+        "warp",
+        "dots",
+        "wave",
+        "ripple",
+        "swirl",
+        "sphere"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "default": "4x4",
+      "options": [
+        "random",
+        "2x2",
+        "4x4",
+        "8x8"
+      ],
+      "description": "variant",
+      "group": "advanced"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 2.5,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 7.5,
+      "step": 0.0375,
+      "group": "main"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 1,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#00000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#B07D73",
+      "description": "foreground color",
+      "group": "main"
+    },
+    {
+      "name": "fit",
+      "type": "string",
+      "default": "contain",
+      "description": "How to fit the rendered shader into the canvas dimensions (0 = none, 1 = contain, 2 = cover)",
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Dithering",
+      "props": {
+        "speed": 1,
+        "shape": "warp",
+        "type": "4x4",
+        "size": 2.5,
+        "scale": 1,
+        "colorBack": "#00000000",
+        "colorFront": "#B07D73",
+        "fit": "contain"
+      },
+      "background": "#221A18"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'dither-clay');",
+  "notes": [
+    "Paper shader `Dithering` (animated). Tuned by hand in Paper."
+  ],
+  "preview": {
+    "video": "previews/dither-clay.webm",
+    "poster": "previews/dither-clay.jpg"
+  }
+}

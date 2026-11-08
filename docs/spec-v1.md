@@ -7,7 +7,7 @@ hard-to-reverse decisions are in [docs/adr](./adr/).
 
 v1 is done when someone with no motion experience goes from "I have a brand" to "I have my brand sheet and my
 first piece", and a designer who already knows their brand can bring what they have and skip to the parts they need.
-Web app and MCP server are out of scope for v1.
+The web app is now in scope as paper-motion.app, a registry of resources agents install by name ([ADR 0003](./adr/0003-paper-motion-app-resource-registry.md)); an MCP server comes next.
 
 ## Who it is for
 
@@ -152,6 +152,9 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
   flipIn, roll, odometer, barReveal; camera: drift, shake, punch, orbit, rgbSplit, drawOn; component transitions:
   magicMove, whipPan, diveIn, flipLift, squashDrop, snapScroll, unfold, tileSwirl; `PACE`, `MOVES`), and
   `pamo new --move` for a demo in the brand's look.
+- **Resource registry** · built: `registry/<type>/<id>/item.json` (moves, backgrounds, palettes, font pairs,
+  recipes; schema in `registry/schema.json`), `pamo registry build` (registry.json, r/<id>.json, llms.txt),
+  `pamo registry previews` (clips and posters for the site), `pamo add | list | search`, and the site in `apps/web`.
 - **Wordmarks** · built: `pamo wordmark <text> --family … --css|--file …` renders the name, cropped to the ink, as a
   transparent PNG. **Still template** · built: `pamo new <name> --still`; `organicPath()` for organic shapes.
 - **Option boards** · built: `pamo board a.html b.html … [--t s | --clip s] --labels "A · x,B · y"` composes 2–6

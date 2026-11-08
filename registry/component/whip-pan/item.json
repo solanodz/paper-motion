@@ -1,0 +1,84 @@
+{
+  "$schema": "../../schema.json",
+  "id": "whip-pan",
+  "type": "component",
+  "title": "Whip pan",
+  "summary": "A winds up, whips out tilted and smeared under a light streak; B whips in, overshoots, its content trails.",
+  "tags": [
+    "component",
+    "energetic",
+    "motion-blur",
+    "ui"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "whipPan",
+  "signature": "whipPan(a, b, p, { duration, dir, tilt, travel })",
+  "params": [
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 0.9,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "dir",
+      "type": "enum",
+      "default": "left",
+      "description": "direction",
+      "options": [
+        "left",
+        "right"
+      ],
+      "control": "segmented",
+      "group": "main"
+    },
+    {
+      "name": "tilt",
+      "type": "number",
+      "default": 7,
+      "description": "tilt in degrees",
+      "min": 0,
+      "max": 30,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "travel",
+      "type": "number",
+      "default": 1.35,
+      "description": "travel distance in widths",
+      "min": 0.5,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/whip-pan.js",
+      "to": "moves/whip-pan.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { whipPan } from './moves/whip-pan.js';\n\n// A and B (two states of a card) stacked in one positioned slot; 1.1 s from 2.0 s:\ns.update((t) => whipPan(cardA, cardB, progress(t, 2.0, 3.1), { duration: 1.1 }));",
+  "notes": [
+    "A winds up, then whips out tilted and smeared; a light streak crosses at full speed; B whips in, overshoots and settles, its content trailing.",
+    "Stack A and B in one positioned slot (their parent); give the slot overflow:hidden to keep travel inside it.",
+    "Pass the real duration in seconds and call it through p = 1: that is when it hides the layers it made.",
+    "Render with --motion-blur 5."
+  ],
+  "preview": {
+    "video": "previews/whip-pan.webm",
+    "poster": "previews/whip-pan.jpg"
+  }
+}

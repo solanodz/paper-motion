@@ -1,0 +1,113 @@
+{
+  "$schema": "../../schema.json",
+  "id": "plum-gold",
+  "type": "palette",
+  "title": "Plum and gold",
+  "summary": "Dark palette: deep plum with antique gold; luxury, evening, editorial.",
+  "tags": [
+    "palette",
+    "dark",
+    "luxury",
+    "evening",
+    "editorial"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#1A1018",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#F1E6D8",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#9C8579",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#24171F",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#C9A35B",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#1A1018",
+        "#3B2234",
+        "#7A4B63",
+        "#C9A35B"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#1A1018",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#F1E6D8",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#9C8579",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#24171F",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#C9A35B",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#1A1018",
+        "#3B2234",
+        "#7A4B63",
+        "#C9A35B"
+      ],
+      "mode": "dark"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 15.1:1, muted on ground 5.3:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/plum-gold.webm",
+    "poster": "previews/plum-gold.jpg"
+  }
+}

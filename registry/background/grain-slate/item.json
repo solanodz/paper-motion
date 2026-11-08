@@ -1,0 +1,125 @@
+{
+  "$schema": "../../schema.json",
+  "id": "grain-slate",
+  "type": "background",
+  "title": "Grain Gradient · slate",
+  "summary": "Multi-color gradients with grainy, noise-textured distortion available in 7 animated abstract forms, in slate.",
+  "tags": [
+    "background",
+    "grain-gradient",
+    "animated",
+    "dark",
+    "slate"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#5F7A86",
+        "#8EA3AD",
+        "#E6E6E6"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 7,
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "blob",
+      "options": [
+        "wave",
+        "dots",
+        "truchet",
+        "corners",
+        "ripple",
+        "blob",
+        "sphere"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0.6,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "intensity",
+      "type": "number",
+      "default": 0.35,
+      "description": "intensity",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "noise",
+      "type": "number",
+      "default": 0.35,
+      "description": "Grainy noise overlay",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.6,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "GrainGradient",
+      "props": {
+        "colorBack": "#000000",
+        "colors": [
+          "#5F7A86",
+          "#8EA3AD",
+          "#E6E6E6"
+        ],
+        "shape": "blob",
+        "softness": 0.6,
+        "intensity": 0.35,
+        "noise": 0.35,
+        "speed": 0.6
+      },
+      "loop": 1.5
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'grain-slate');",
+  "notes": [
+    "Paper shader `GrainGradient` (animated)."
+  ],
+  "preview": {
+    "video": "previews/grain-slate.webm",
+    "poster": "previews/grain-slate.jpg"
+  }
+}

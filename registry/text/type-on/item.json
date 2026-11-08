@@ -1,0 +1,80 @@
+{
+  "$schema": "../../schema.json",
+  "id": "type-on",
+  "type": "text",
+  "title": "Type on",
+  "summary": "Text types itself, terminal style, with a block cursor.",
+  "tags": [
+    "text",
+    "terminal",
+    "tech"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "typeOn",
+  "signature": "typeOn(el, text, t, { start, cps, times, cursor, blink })",
+  "params": [
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "cps",
+      "type": "number",
+      "default": 35,
+      "description": "characters per second",
+      "min": 4,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "times",
+      "type": "object",
+      "default": null,
+      "description": "per-character times (from typingTimes)",
+      "hidden": true
+    },
+    {
+      "name": "cursor",
+      "type": "object",
+      "default": null,
+      "description": "cursor element",
+      "hidden": true
+    },
+    {
+      "name": "blink",
+      "type": "number",
+      "default": 2.2,
+      "description": "cursor blink rate (Hz)",
+      "min": 0,
+      "max": 6,
+      "step": 0.1,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/type-on.js",
+      "to": "moves/type-on.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { typeOn } from './moves/type-on.js';\n\ns.update((t) => typeOn(el, 'Your line here', t, { start: 0.5 }));",
+  "notes": [
+    "When each character of `text` appears, typed by a person: quick bursts inside words, a beat after spaces, longer after punctuation, the odd hesitation. Deterministic per seed. Use the same times for the text (typeOn's `times`) and the sound (keySounds), so every letter lands on its keystroke. @returns {number[]} times in seconds, one per character export function typingTimes(text, { start = 0, cps = 11, seed = 1 } = {}) { const r = rng(seed).next, base = 1 cps, out = []; let t = start; for (let i = 0; i < text.length; i++) { const prev = text[i - 1] ?? '', ch = text[i]; let k = 0.7 + 0.45 * r(); // inside a word: fast, uneven if (prev === ' ') k = 1.35 + 0.5 * r(); // starting a new word if (/[.,;:!?]/.test(prev)) k = 2.2 + 1.2 * r(); // after punctuation if (/[\\/\\-_@]/.test(ch) || /[\\/\\-_@]/.test(prev)) k *= 1.25; // symbols need a reach if (r() < 0.04) k *= 2.4; // a hesitation t += i === 0 ? 0 : base * k; out.push(t); } return out; } Schedules one keystroke sound per character at `times` (from typingTimes), plus an optional enter. export function keySounds(s, text, times, { bank, style, gain = 0.16, seed = 1, enter = null, pan = 0.04 } = {}) { [...text].forEach((ch, i) => s.sfx(times[i], 'key', { kind: ch === ' ' ? 'space' : 'letter', gain, seed: seed * 1000 + i, pan: ((i % 5) - 2) * pan, ...(bank ? { bank } : {}), ...(style ? { style } : {}) })); if (enter !== null) s.sfx(enter, 'key', { kind: 'enter', gain: gain * 1.1, seed: seed * 1000 + 999, ...(bank ? { bank } : {}), ...(style ? { style } : {}) }); } Types `text` from `start` at `cps` characters a second, or at explicit `times` (typingTimes); `cursor` (an element) is solid while typing, blinks at `blink` Hz after.",
+    "The file also exports typingTimes (human typing rhythm) and keySounds (one keystroke sound per letter)."
+  ],
+  "preview": {
+    "video": "previews/type-on.webm",
+    "poster": "previews/type-on.jpg"
+  }
+}

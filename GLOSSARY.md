@@ -56,6 +56,18 @@ _Avoid_: template, format
 A brand's own bank of moving material in one shared format, used in pieces. It can come from the user's own loops and images, be made by the agent, or be tuned by hand in Paper (the recommended way); Paper is never required.
 _Avoid_: library (when the brand's set is meant), backgrounds
 
+**Resource**:
+Anything in the registry an agent can install by name: a move, a background, a palette, a font pair or a recipe. Installed as code or brand files the user owns.
+_Avoid_: asset, component (for the whole family), template
+
+**Registry**:
+The catalog of resources, kept in `registry/` and published at paper-motion.app as `llms.txt`, `registry.json` and one JSON file per resource.
+_Avoid_: marketplace, store, library (when the registry is meant)
+
+**Playground**:
+A resource's page on paper-motion.app where its preview plays live and its params can be tuned, with the code for the current settings beside it.
+_Avoid_: editor, sandbox, configurator
+
 **Engine**:
 The renderer that turns a scene into frames and a video file. It is shipped and versioned apart from the skills.
 _Avoid_: runtime, renderer (in prose)

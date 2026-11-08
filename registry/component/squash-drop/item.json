@@ -1,0 +1,62 @@
+{
+  "$schema": "../../schema.json",
+  "id": "squash-drop",
+  "type": "component",
+  "title": "Squash drop",
+  "summary": "A squashes, launches up stretched; B falls in, squashes on impact, wobbles; its content follows through.",
+  "tags": [
+    "component",
+    "playful",
+    "physics",
+    "ui"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "squashDrop",
+  "signature": "squashDrop(a, b, p, { duration, height })",
+  "params": [
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 1.1,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "height",
+      "type": "number",
+      "default": 1.3,
+      "description": "launch height in heights",
+      "min": 0.5,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/squash-drop.js",
+      "to": "moves/squash-drop.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { squashDrop } from './moves/squash-drop.js';\n\n// A and B (two states of a card) stacked in one positioned slot; 1.1 s from 2.0 s:\ns.update((t) => squashDrop(cardA, cardB, progress(t, 2.0, 3.1), { duration: 1.1 }));",
+  "notes": [
+    "A squashes, then launches up stretched; B falls in stretched, squashes on impact and wobbles to rest while its content follows through.",
+    "Stack A and B in one positioned slot (their parent); give the slot overflow:hidden to keep travel inside it.",
+    "Pass the real duration in seconds and call it through p = 1: that is when it hides the layers it made.",
+    "Render with --motion-blur 5."
+  ],
+  "preview": {
+    "video": "previews/squash-drop.webm",
+    "poster": "previews/squash-drop.jpg"
+  }
+}

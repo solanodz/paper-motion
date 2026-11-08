@@ -1,0 +1,193 @@
+{
+  "$schema": "../../schema.json",
+  "id": "pulsing-border",
+  "type": "background",
+  "title": "Pulsing Border",
+  "summary": "Luminous trails of color merging into a glowing gradient contour.",
+  "tags": [
+    "background",
+    "pulsing-border",
+    "animated",
+    "dark"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#E9E4D8",
+        "#8FA67A",
+        "#8EA3AD"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 5,
+      "group": "main"
+    },
+    {
+      "name": "roundness",
+      "type": "number",
+      "default": 0.08,
+      "description": "Border radius",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "thickness",
+      "type": "number",
+      "default": 0.04,
+      "description": "Border base width",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "margin",
+      "type": "number",
+      "default": 0.08,
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0.75,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "intensity",
+      "type": "number",
+      "default": 0.2,
+      "description": "intensity",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "bloom",
+      "type": "number",
+      "default": 0.25,
+      "description": "Power of glow, 0 = normal blending, 1 = additive blending",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "spots",
+      "type": "number",
+      "default": 4,
+      "description": "Number of spots added for each color",
+      "min": 1,
+      "max": 4,
+      "step": 0.015,
+      "group": "advanced"
+    },
+    {
+      "name": "spotSize",
+      "type": "number",
+      "default": 0.5,
+      "description": "Angular size of spots",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "pulse",
+      "type": "number",
+      "default": 0.25,
+      "description": "Optional pulsing animation intensity",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "smoke",
+      "type": "number",
+      "default": 0.3,
+      "description": "Optional noisy shape extending the border",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "smokeSize",
+      "type": "number",
+      "default": 0.6,
+      "description": "Size of the smoke effect, needs smoke > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.8,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "PulsingBorder",
+      "props": {
+        "colorBack": "#000000",
+        "colors": [
+          "#E9E4D8",
+          "#8FA67A",
+          "#8EA3AD"
+        ],
+        "roundness": 0.08,
+        "thickness": 0.04,
+        "margin": 0.08,
+        "softness": 0.75,
+        "intensity": 0.2,
+        "bloom": 0.25,
+        "spots": 4,
+        "spotSize": 0.5,
+        "pulse": 0.25,
+        "smoke": 0.3,
+        "smokeSize": 0.6,
+        "speed": 0.8
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'pulsing-border');",
+  "notes": [
+    "Paper shader `PulsingBorder` (animated)."
+  ],
+  "preview": {
+    "video": "previews/pulsing-border.webm",
+    "poster": "previews/pulsing-border.jpg"
+  }
+}

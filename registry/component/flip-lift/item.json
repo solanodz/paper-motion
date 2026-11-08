@@ -1,0 +1,72 @@
+{
+  "$schema": "../../schema.json",
+  "id": "flip-lift",
+  "type": "component",
+  "title": "Flip lift",
+  "summary": "A lifts toward the camera, flips with a wobble and a sheen, lands as B with an echo; B's parts pop in.",
+  "tags": [
+    "component",
+    "3d",
+    "spring",
+    "ui"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "flipLift",
+  "signature": "flipLift(a, b, p, { duration, lift, perspective })",
+  "params": [
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 1.2,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "lift",
+      "type": "number",
+      "default": 150,
+      "description": "lift toward the camera in px",
+      "min": 0,
+      "max": 400,
+      "step": 5,
+      "group": "main"
+    },
+    {
+      "name": "perspective",
+      "type": "number",
+      "default": 1800,
+      "description": "3D perspective in px",
+      "min": 400,
+      "max": 4000,
+      "step": 50,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/flip-lift.js",
+      "to": "moves/flip-lift.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { flipLift } from './moves/flip-lift.js';\n\n// A and B (two states of a card) stacked in one positioned slot; 1.1 s from 2.0 s:\ns.update((t) => flipLift(cardA, cardB, progress(t, 2.0, 3.1), { duration: 1.1 }));",
+  "notes": [
+    "A lifts toward the camera, flips with a wobble and a sheen across its face, and lands as B with an echo; B's parts pop in after.",
+    "Stack A and B in one positioned slot (their parent); give the slot overflow:hidden to keep travel inside it.",
+    "Pass the real duration in seconds and call it through p = 1: that is when it hides the layers it made.",
+    "Render with --motion-blur 5."
+  ],
+  "preview": {
+    "video": "previews/flip-lift.webm",
+    "poster": "previews/flip-lift.jpg"
+  }
+}

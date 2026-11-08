@@ -1,0 +1,73 @@
+{
+  "$schema": "../../schema.json",
+  "id": "draw-on",
+  "type": "camera",
+  "title": "Draw on",
+  "summary": "Lines and shapes draw themselves stroke by stroke.",
+  "tags": [
+    "camera",
+    "diagram",
+    "line"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "drawOn",
+  "signature": "drawOn(svg, t, { start, each, duration, curve })",
+  "params": [
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "each",
+      "type": "number",
+      "default": 0.12,
+      "description": "delay between items (s)",
+      "min": 0,
+      "max": 0.3,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 1.2,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.inOutCubic",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/draw-on.js",
+      "to": "moves/draw-on.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { drawOn } from './moves/draw-on.js';\n\ns.update((t) => drawOn(svg, t));",
+  "notes": [
+    "Every stroke in `svg` (paths, lines, circles, rects, polylines) draws itself, one after another."
+  ],
+  "preview": {
+    "video": "previews/draw-on.webm",
+    "poster": "previews/draw-on.jpg"
+  }
+}

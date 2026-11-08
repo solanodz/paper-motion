@@ -1,0 +1,119 @@
+{
+  "$schema": "../../schema.json",
+  "id": "gray-dither",
+  "type": "background",
+  "title": "Dithering · gray",
+  "summary": "Animated 2-color dithering over multiple pattern sources (noise, warp, dots, waves, ripple, swirl, sphere), in gray.",
+  "tags": [
+    "background",
+    "dithering",
+    "animated",
+    "dark",
+    "gray"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 1,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "simplex",
+      "options": [
+        "simplex",
+        "warp",
+        "dots",
+        "wave",
+        "ripple",
+        "swirl",
+        "sphere"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "default": "4x4",
+      "options": [
+        "random",
+        "2x2",
+        "4x4",
+        "8x8"
+      ],
+      "description": "variant",
+      "group": "advanced"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 2,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 6,
+      "step": 0.03,
+      "group": "main"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 0.6,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#00000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#393939",
+      "description": "foreground color",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Dithering",
+      "props": {
+        "speed": 1,
+        "shape": "simplex",
+        "type": "4x4",
+        "size": 2,
+        "scale": 0.6,
+        "colorBack": "#00000000",
+        "colorFront": "#393939"
+      },
+      "background": "#000000"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'gray-dither');",
+  "notes": [
+    "Paper shader `Dithering` (animated). Tuned by hand in Paper."
+  ],
+  "preview": {
+    "video": "previews/gray-dither.webm",
+    "poster": "previews/gray-dither.jpg"
+  }
+}

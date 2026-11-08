@@ -1,0 +1,65 @@
+{
+  "$schema": "../../schema.json",
+  "id": "drift",
+  "type": "camera",
+  "title": "Drift",
+  "summary": "A slow, constant push-in that keeps a still frame alive.",
+  "tags": [
+    "camera",
+    "calm",
+    "ambient"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "drift",
+  "signature": "drift(el, t, { amount, duration, origin })",
+  "params": [
+    {
+      "name": "amount",
+      "type": "number",
+      "default": 0.04,
+      "description": "strength",
+      "min": 0,
+      "max": 0.3,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 10,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 1,
+      "max": 20,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "origin",
+      "type": "string",
+      "default": "50% 50%",
+      "description": "transform origin (CSS)",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/drift.js",
+      "to": "moves/drift.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { drift } from './moves/drift.js';\n\ns.update((t) => drift(el, t));",
+  "notes": [
+    "A slow constant push-in over `duration` seconds (default: the whole scene)."
+  ],
+  "preview": {
+    "video": "previews/drift.webm",
+    "poster": "previews/drift.jpg"
+  }
+}

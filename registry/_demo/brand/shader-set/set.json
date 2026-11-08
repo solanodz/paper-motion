@@ -1,0 +1,29 @@
+{
+  "format": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 6,
+    "fps": 30
+  },
+  "entries": [
+    {
+      "id": "mesh-sage",
+      "source": "paper-motion.app",
+      "shader": "MeshGradient",
+      "props": {
+        "colors": [
+          "#070806",
+          "#5E7457",
+          "#C8D5A8",
+          "#1c2219"
+        ],
+        "distortion": 0.8,
+        "swirl": 0.25,
+        "speed": 0.4,
+        "grainMixer": 0.12,
+        "grainOverlay": 0.08
+      },
+      "loop": 1.5
+    }
+  ]
+}

@@ -21,6 +21,7 @@ const IMPORT_MAP = {
   imports: {
     'paper-motion': '/__pm/runtime/index.js',
     'paper-motion/moves': '/__pm/runtime/moves.js',
+    'paper-motion/kit': '/__pm/runtime/kit.js',
     'paper-motion/brand': '/__pm/runtime/brand.js',
     '@paper-design/shaders': '/__pm/node_modules/@paper-design/shaders/dist/index.js',
     '@paper-design/shaders-react': '/__pm/node_modules/@paper-design/shaders-react/dist/index.js',

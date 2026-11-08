@@ -1,0 +1,67 @@
+{
+  "$schema": "../../schema.json",
+  "id": "flash",
+  "type": "transition",
+  "title": "Flash",
+  "summary": "An overexposed white flash hides the cut from A to B.",
+  "tags": [
+    "transition",
+    "energetic",
+    "impact"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "flash",
+  "signature": "flash(a, b, p, { color, bloom, peak })",
+  "params": [
+    {
+      "name": "color",
+      "type": "color",
+      "default": "#fff",
+      "description": "color (CSS)",
+      "control": "color",
+      "group": "main"
+    },
+    {
+      "name": "bloom",
+      "type": "number",
+      "default": 18,
+      "description": "blur at the peak in px",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "peak",
+      "type": "number",
+      "default": 0.4,
+      "description": "where the flash peaks (0–1)",
+      "min": 0.1,
+      "max": 0.9,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/flash.js",
+      "to": "moves/flash.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { flash } from './moves/flash.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nflash(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "An overexposed white flash: A burns out, the cut happens at the peak, B comes back from the white.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/flash.webm",
+    "poster": "previews/flash.jpg"
+  }
+}

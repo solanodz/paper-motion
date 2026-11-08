@@ -1,0 +1,62 @@
+{
+  "$schema": "../../schema.json",
+  "id": "unfold",
+  "type": "component",
+  "title": "Unfold",
+  "summary": "A's items leave, A folds into a glowing line, B unfolds out of the line with overshoot, items rise from it.",
+  "tags": [
+    "component",
+    "reveal",
+    "line",
+    "ui"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "unfold",
+  "signature": "unfold(a, b, p, { duration, radius })",
+  "params": [
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 1.2,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "radius",
+      "type": "number",
+      "default": 14,
+      "description": "corner radius in px",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/unfold.js",
+      "to": "moves/unfold.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { unfold } from './moves/unfold.js';\n\n// A and B (two states of a card) stacked in one positioned slot; 1.1 s from 2.0 s:\ns.update((t) => unfold(cardA, cardB, progress(t, 2.0, 3.1), { duration: 1.1 }));",
+  "notes": [
+    "A's items leave, A folds into a glowing line, a glint runs along it, and B unfolds out of the line with overshoot as its items rise from it.",
+    "Stack A and B in one positioned slot (their parent); give the slot overflow:hidden to keep travel inside it.",
+    "Pass the real duration in seconds and call it through p = 1: that is when it hides the layers it made.",
+    "Render with --motion-blur 5."
+  ],
+  "preview": {
+    "video": "previews/unfold.webm",
+    "poster": "previews/unfold.jpg"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "../../schema.json",
+  "id": "slices",
+  "type": "transition",
+  "title": "Slices",
+  "summary": "B comes in as horizontal strips from alternating sides.",
+  "tags": [
+    "transition",
+    "graphic",
+    "energetic"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "slices",
+  "signature": "slices(a, b, p, { n, each, curve })",
+  "params": [
+    {
+      "name": "n",
+      "type": "number",
+      "default": 8,
+      "description": "number of strips",
+      "min": 2,
+      "max": 20,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "each",
+      "type": "number",
+      "default": 0.05,
+      "description": "delay between items (s)",
+      "min": 0,
+      "max": 0.3,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.outExpo",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/slices.js",
+      "to": "moves/slices.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { slices } from './moves/slices.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nslices(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "B comes in as `n` horizontal strips, alternating left and right, staggered top to bottom.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/slices.webm",
+    "poster": "previews/slices.jpg"
+  }
+}

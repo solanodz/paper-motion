@@ -1,0 +1,178 @@
+{
+  "$schema": "../../schema.json",
+  "id": "liquid-metal",
+  "type": "background",
+  "title": "Liquid Metal",
+  "summary": "Futuristic liquid metal material applied to uploaded logo or abstract shape.",
+  "tags": [
+    "background",
+    "liquid-metal",
+    "animated",
+    "dark",
+    "image"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "fit",
+      "type": "string",
+      "default": "contain",
+      "description": "How to fit the rendered shader into the canvas dimensions (0 = none, 1 = contain, 2 = cover)",
+      "group": "advanced"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 0.8,
+      "description": "zoom of the pattern",
+      "min": 0.1,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "none",
+      "options": [
+        "none",
+        "circle",
+        "daisy",
+        "diamond",
+        "metaballs"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorTint",
+      "type": "color",
+      "default": "#ffffff",
+      "description": "Overlay color in RGBA (color burn blending used)",
+      "group": "advanced"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0.12,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "repetition",
+      "type": "number",
+      "default": 5,
+      "description": "Density of pattern stripes",
+      "min": 1,
+      "max": 10,
+      "step": 0.045,
+      "group": "main"
+    },
+    {
+      "name": "shiftRed",
+      "type": "number",
+      "default": 0.3,
+      "description": "R-channel dispersion",
+      "min": -1,
+      "max": 1,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "shiftBlue",
+      "type": "number",
+      "default": 0.3,
+      "description": "B-channel dispersion",
+      "min": -1,
+      "max": 1,
+      "step": 0.01,
+      "group": "advanced"
+    },
+    {
+      "name": "distortion",
+      "type": "number",
+      "default": 0.14,
+      "description": "amount of organic distortion",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "contour",
+      "type": "number",
+      "default": 0.6,
+      "description": "Strength of the distortion on the shape edges",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "angle",
+      "type": "number",
+      "default": 20,
+      "description": "Direction of pattern animation in degrees",
+      "min": 0,
+      "max": 360,
+      "step": 1.8,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 1,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "LiquidMetal",
+      "props": {
+        "fit": "contain",
+        "scale": 0.8,
+        "shape": "none",
+        "colorBack": "#000000",
+        "colorTint": "#ffffff",
+        "softness": 0.12,
+        "repetition": 5,
+        "shiftRed": 0.3,
+        "shiftBlue": 0.3,
+        "distortion": 0.14,
+        "contour": 0.6,
+        "angle": 20,
+        "speed": 1
+      },
+      "image": "wordmark"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'liquid-metal');",
+  "notes": [
+    "Paper shader `LiquidMetal` (animated).",
+    "Needs the brand wordmark (brand/tokens.json wordmark files; `pamo wordmark` makes them)."
+  ],
+  "preview": {
+    "video": "previews/liquid-metal.webm",
+    "poster": "previews/liquid-metal.jpg"
+  }
+}

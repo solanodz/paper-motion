@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>end card</title>
+<!--
+  Recipe · end card (6 s). The last seconds of any piece, or a sting on its own.
+  Reveal 0–2 s (the wordmark arrives) · Line 2–3 s (what the brand is) · Action 3–5 s (typed) · Hold to the end.
+  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #mark { white-space: nowrap; }
+  #cur { display: inline-block; width: 0.55em; height: 1em; vertical-align: -0.15em; margin-left: 3px; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="group" class="abs" style="inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+    <div id="mark"></div><div id="line"></div><div id="cmdrow"><span id="cmd"></span><span id="cur"></span></div>
+  </div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { wordRise, blurIn, typeOn, typingTimes, keySounds } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                 // a shader-set id (pamo add mesh-sage), or null for the brand's first entry
+  line: null,                       // what the brand is, in plain words; null reads IDENTITY.md "In one line"
+  action: 'npx skills add your/brand', // a URL, a handle, a date or a command
+  format: [1920, 1080],             // 1920×1080, 1080×1920 or 1080×1080
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H);
+const s = scene({ width: W, height: H, fps: 30, duration: 6, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+
+const mark = B.style(document.querySelector('#mark'), 'display', { short: SHORT });
+const line = B.style(document.querySelector('#line'), 'body', { short: SHORT, color: 'muted' });
+const cmd = document.querySelector('#cmd'), cur = document.querySelector('#cur');
+Object.assign(document.querySelector('#cmdrow').style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.024}px`, color: B.color('figure'), marginTop: `${SHORT * 0.05}px` });
+Object.assign(line.style, { marginTop: `${SHORT * 0.025}px` });
+cur.style.background = B.color('figure');
+mark.textContent = B.name;
+line.textContent = CONFIG.line ?? ((B.identity['In one line'] ?? '').split('\n')[0] || '');
+await document.fonts.ready;
+const fit = (W * 0.84) / mark.scrollWidth;
+if (fit < 1) mark.style.fontSize = `${parseFloat(mark.style.fontSize) * fit}px`;
+
+const times = typingTimes(CONFIG.action, { start: 3.0, cps: 18, seed: 3 });
+s.update((t) => {
+  wordRise(mark, t, { start: 0.3, each: B.pace.stagger, duration: 0.9 });
+  blurIn(line, t, { start: 2.0, duration: 0.8 });
+  typeOn(cmd, CONFIG.action, t, { times, cursor: cur });
+  document.querySelector('#cmdrow').style.opacity = t >= 2.9 ? 1 : 0;
+});
+B.cue(s, 'land', 0.3); B.cue(s, 'text', 2.0); keySounds(s, CONFIG.action, times, B.keys); B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

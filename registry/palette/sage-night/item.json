@@ -1,0 +1,113 @@
+{
+  "$schema": "../../schema.json",
+  "id": "sage-night",
+  "type": "palette",
+  "title": "Sage night",
+  "summary": "Dark palette: charcoal with sage greens; quiet, natural, premium.",
+  "tags": [
+    "palette",
+    "dark",
+    "quiet",
+    "natural",
+    "premium"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#1E201C",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#E9EDCF",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#8FA67A",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#272A24",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#C8D5A8",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#1E201C",
+        "#2F3A2C",
+        "#5E7457",
+        "#A9B98A"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#1E201C",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#E9EDCF",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#8FA67A",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#272A24",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#C8D5A8",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#1E201C",
+        "#2F3A2C",
+        "#5E7457",
+        "#A9B98A"
+      ],
+      "mode": "dark"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 13.7:1, muted on ground 6.2:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/sage-night.webm",
+    "poster": "previews/sage-night.jpg"
+  }
+}

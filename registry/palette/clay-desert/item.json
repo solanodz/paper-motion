@@ -1,0 +1,113 @@
+{
+  "$schema": "../../schema.json",
+  "id": "clay-desert",
+  "type": "palette",
+  "title": "Clay desert",
+  "summary": "Light palette: sand and terracotta; warm, human, craft.",
+  "tags": [
+    "palette",
+    "light",
+    "warm",
+    "human",
+    "craft"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#EADBC8",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#2B1D19",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#7A4E45",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#E0CDB6",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#B07D73",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#EADBC8",
+        "#D3A79A",
+        "#B07D73",
+        "#3F2925"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#EADBC8",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#2B1D19",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#7A4E45",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#E0CDB6",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#B07D73",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#EADBC8",
+        "#D3A79A",
+        "#B07D73",
+        "#3F2925"
+      ],
+      "mode": "light"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 12.0:1, muted on ground 5.1:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/clay-desert.webm",
+    "poster": "previews/clay-desert.jpg"
+  }
+}

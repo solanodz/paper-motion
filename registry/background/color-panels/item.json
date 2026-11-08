@@ -1,0 +1,134 @@
+{
+  "$schema": "../../schema.json",
+  "id": "color-panels",
+  "type": "background",
+  "title": "Color Panels",
+  "summary": "Pseudo-3D semi-transparent panels rotating around a central axis.",
+  "tags": [
+    "background",
+    "color-panels",
+    "animated",
+    "dark"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#8FA67A",
+        "#B07D73",
+        "#8EA3AD",
+        "#C9A65A",
+        "#7E7594",
+        "#E9E4D8"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 7,
+      "group": "main"
+    },
+    {
+      "name": "density",
+      "type": "number",
+      "default": 3,
+      "description": "Angle between every 2 panels",
+      "min": 0.25,
+      "max": 7,
+      "step": 0.03375,
+      "group": "main"
+    },
+    {
+      "name": "length",
+      "type": "number",
+      "default": 1.1,
+      "description": "Panel length relative to total height",
+      "min": 0,
+      "max": 3,
+      "step": 0.015,
+      "group": "main"
+    },
+    {
+      "name": "fadeIn",
+      "type": "number",
+      "default": 1,
+      "description": "Transparency near central axis",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "fadeOut",
+      "type": "number",
+      "default": 0.3,
+      "description": "Transparency near viewer",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "gradient",
+      "type": "number",
+      "default": 0.3,
+      "description": "Color mixing within a panel, 0 = solid, 1 = gradient, needs 2+ colors",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.4,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "ColorPanels",
+      "props": {
+        "colorBack": "#000000",
+        "colors": [
+          "#8FA67A",
+          "#B07D73",
+          "#8EA3AD",
+          "#C9A65A",
+          "#7E7594",
+          "#E9E4D8"
+        ],
+        "density": 3,
+        "length": 1.1,
+        "fadeIn": 1,
+        "fadeOut": 0.3,
+        "gradient": 0.3,
+        "speed": 0.4
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'color-panels');",
+  "notes": [
+    "Paper shader `ColorPanels` (animated)."
+  ],
+  "preview": {
+    "video": "previews/color-panels.webm",
+    "poster": "previews/color-panels.jpg"
+  }
+}

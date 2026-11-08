@@ -1,0 +1,103 @@
+{
+  "$schema": "../../schema.json",
+  "id": "simplex-sage",
+  "type": "background",
+  "title": "Simplex Noise · sage stack",
+  "summary": "A multi-color gradient mapped into smooth, animated curves built as a combination of 2 Simplex noises, in sage stack.",
+  "tags": [
+    "background",
+    "simplex-noise",
+    "animated",
+    "light",
+    "sage"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.5,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 0.6,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "stepsPerColor",
+      "type": "number",
+      "default": 2,
+      "description": "Number of extra colors between base colors, 1 = N colors, 2 = 2×N, etc., needs 2+ colors",
+      "min": 1,
+      "max": 10,
+      "step": 0.045,
+      "group": "main"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#E4E4BD",
+        "#C8D5A8",
+        "#8FA67A",
+        "#5E7457",
+        "#2F3A2C"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "SimplexNoise",
+      "props": {
+        "speed": 0.5,
+        "scale": 0.6,
+        "stepsPerColor": 2,
+        "softness": 0,
+        "colors": [
+          "#E4E4BD",
+          "#C8D5A8",
+          "#8FA67A",
+          "#5E7457",
+          "#2F3A2C"
+        ]
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'simplex-sage');",
+  "notes": [
+    "Paper shader `SimplexNoise` (animated). Tuned by hand in Paper."
+  ],
+  "preview": {
+    "video": "previews/simplex-sage.webm",
+    "poster": "previews/simplex-sage.jpg"
+  }
+}

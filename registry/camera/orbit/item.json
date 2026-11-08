@@ -1,0 +1,106 @@
+{
+  "$schema": "../../schema.json",
+  "id": "orbit",
+  "type": "camera",
+  "title": "Orbit",
+  "summary": "A 3D camera moves around layers set at different depths.",
+  "tags": [
+    "camera",
+    "3d",
+    "depth"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "orbit",
+  "signature": "orbit(world, t, { start, duration, yaw, pitch, dolly, curve })",
+  "params": [
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 5,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 1,
+      "max": 20,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "yaw",
+      "type": "range",
+      "default": [
+        -20,
+        20
+      ],
+      "description": "yaw range [from, to] in degrees",
+      "control": "range",
+      "min": -60,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "pitch",
+      "type": "range",
+      "default": [
+        8,
+        -6
+      ],
+      "description": "pitch range [from, to] in degrees",
+      "control": "range",
+      "min": -60,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "dolly",
+      "type": "range",
+      "default": [
+        -200,
+        200
+      ],
+      "description": "dolly range [from, to] in px",
+      "control": "range",
+      "min": -1000,
+      "max": 1000,
+      "step": 10,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.inOutSine",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/orbit.js",
+      "to": "moves/orbit.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { orbit } from './moves/orbit.js';\n\ns.update((t) => orbit(world, t));",
+  "notes": [
+    "A 3D camera around a world whose children sit at different translateZ. Ranges are [from, to].",
+    "Children of world sit at different translateZ; the stage needs a perspective."
+  ],
+  "preview": {
+    "video": "previews/orbit.webm",
+    "poster": "previews/orbit.jpg"
+  }
+}

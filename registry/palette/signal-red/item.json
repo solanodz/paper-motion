@@ -1,0 +1,113 @@
+{
+  "$schema": "../../schema.json",
+  "id": "signal-red",
+  "type": "palette",
+  "title": "Signal red",
+  "summary": "Light palette: white and black with a hard red; bold, Swiss, urgent.",
+  "tags": [
+    "palette",
+    "light",
+    "bold",
+    "Swiss",
+    "urgent"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#F5F3EF",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#0E0E0E",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#6B6B6B",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#EAE7E1",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#E5322D",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#F5F3EF",
+        "#C9C6C0",
+        "#6B6B6B",
+        "#0E0E0E"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#F5F3EF",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#0E0E0E",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#6B6B6B",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#EAE7E1",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#E5322D",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#F5F3EF",
+        "#C9C6C0",
+        "#6B6B6B",
+        "#0E0E0E"
+      ],
+      "mode": "light"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 17.4:1, muted on ground 4.8:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/signal-red.webm",
+    "poster": "previews/signal-red.jpg"
+  }
+}

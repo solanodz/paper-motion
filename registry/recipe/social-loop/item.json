@@ -1,0 +1,100 @@
+{
+  "$schema": "../../schema.json",
+  "id": "social-loop",
+  "type": "recipe",
+  "title": "Social loop",
+  "summary": "A seamless 8 s loop for a feed: a living background, the brand and one line that comes and goes.",
+  "tags": [
+    "recipe",
+    "loop",
+    "social",
+    "9:16",
+    "4:5"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "line",
+      "type": "string",
+      "default": "One line in the brand’s voice.",
+      "description": "the line that comes and goes",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "what",
+      "type": "string",
+      "default": "",
+      "description": "name · what it is · where; empty builds it",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "main",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1080x1350",
+      "options": [
+        "1080x1350",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    },
+    {
+      "name": "text",
+      "type": "enum",
+      "default": "",
+      "options": [
+        "",
+        "rise",
+        "pop",
+        "blur"
+      ],
+      "description": "how the line enters; empty follows motion.json",
+      "group": "advanced",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/recipe/social-loop/scene.html",
+      "to": "pieces/social-loop/scene.html"
+    },
+    {
+      "from": "registry/recipe/social-loop/brief.md",
+      "to": "pieces/social-loop/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "npx paper-motion add social-loop --name my-piece\n# edit CONFIG in pieces/my-piece/scene.html, then:\nnpx paper-motion render pieces/my-piece/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work: pamo add sage-night instrument) and, for the background, a shader-set entry (pamo add mesh-sage).",
+    "Structure and timing only; the look always comes from the brand.",
+    "Uses these moves from the engine: word-rise, pop-in, blur-in."
+  ],
+  "related": [
+    "word-rise",
+    "pop-in",
+    "blur-in"
+  ],
+  "preview": {
+    "video": "previews/social-loop.webm",
+    "poster": "previews/social-loop.jpg"
+  }
+}

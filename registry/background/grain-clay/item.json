@@ -1,0 +1,125 @@
+{
+  "$schema": "../../schema.json",
+  "id": "grain-clay",
+  "type": "background",
+  "title": "Grain Gradient · clay",
+  "summary": "Multi-color gradients with grainy, noise-textured distortion available in 7 animated abstract forms, in clay.",
+  "tags": [
+    "background",
+    "grain-gradient",
+    "animated",
+    "dark",
+    "clay"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#3F2925",
+        "#B07D73",
+        "#EADBC8"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 7,
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "wave",
+      "options": [
+        "wave",
+        "dots",
+        "truchet",
+        "corners",
+        "ripple",
+        "blob",
+        "sphere"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0.8,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "intensity",
+      "type": "number",
+      "default": 0.25,
+      "description": "intensity",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "noise",
+      "type": "number",
+      "default": 0.3,
+      "description": "Grainy noise overlay",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.4,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "GrainGradient",
+      "props": {
+        "colorBack": "#000000",
+        "colors": [
+          "#3F2925",
+          "#B07D73",
+          "#EADBC8"
+        ],
+        "shape": "wave",
+        "softness": 0.8,
+        "intensity": 0.25,
+        "noise": 0.3,
+        "speed": 0.4
+      },
+      "loop": 1.5
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'grain-clay');",
+  "notes": [
+    "Paper shader `GrainGradient` (animated)."
+  ],
+  "preview": {
+    "video": "previews/grain-clay.webm",
+    "poster": "previews/grain-clay.jpg"
+  }
+}

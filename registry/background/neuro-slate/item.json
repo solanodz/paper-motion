@@ -1,0 +1,96 @@
+{
+  "$schema": "../../schema.json",
+  "id": "neuro-slate",
+  "type": "background",
+  "title": "Neuro Noise · slate",
+  "summary": "A glowing, web-like structure of fluid lines and soft intersections, in slate.",
+  "tags": [
+    "background",
+    "neuro-noise",
+    "animated",
+    "dark",
+    "slate"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#ffffff",
+      "description": "foreground color",
+      "group": "main"
+    },
+    {
+      "name": "colorMid",
+      "type": "color",
+      "default": "#6F8794",
+      "description": "Graphics main color in RGBA",
+      "group": "advanced"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "brightness",
+      "type": "number",
+      "default": 0.04,
+      "description": "Luminosity of the crossing points",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "contrast",
+      "type": "number",
+      "default": 0.32,
+      "description": "contrast",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.5,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "NeuroNoise",
+      "props": {
+        "colorFront": "#ffffff",
+        "colorMid": "#6F8794",
+        "colorBack": "#000000",
+        "brightness": 0.04,
+        "contrast": 0.32,
+        "speed": 0.5
+      },
+      "loop": 1.5
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'neuro-slate');",
+  "notes": [
+    "Paper shader `NeuroNoise` (animated)."
+  ],
+  "preview": {
+    "video": "previews/neuro-slate.webm",
+    "poster": "previews/neuro-slate.jpg"
+  }
+}

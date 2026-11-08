@@ -1,0 +1,81 @@
+{
+  "$schema": "../../schema.json",
+  "id": "glitch",
+  "type": "transition",
+  "title": "Glitch",
+  "summary": "A few frames of torn bands and RGB split, then B.",
+  "tags": [
+    "transition",
+    "digital",
+    "raw",
+    "energetic"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "glitch",
+  "signature": "glitch(a, b, p, { seed, steps, rgb, shift })",
+  "params": [
+    {
+      "name": "seed",
+      "type": "number",
+      "default": 1,
+      "description": "random seed; change it for a different variation",
+      "min": 1,
+      "max": 999,
+      "step": 1,
+      "group": "advanced"
+    },
+    {
+      "name": "steps",
+      "type": "number",
+      "default": 22,
+      "description": "glitch changes per transition",
+      "min": 4,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "rgb",
+      "type": "number",
+      "default": 16,
+      "description": "RGB split in px",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "shift",
+      "type": "number",
+      "default": 140,
+      "description": "band shift in px",
+      "min": 0,
+      "max": 400,
+      "step": 5,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/glitch.js",
+      "to": "moves/glitch.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { glitch } from './moves/glitch.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nglitch(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "A few frames of torn bands, jitter and RGB split; the bands show more of B until B holds.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index).",
+    "Only for a digital or raw identity."
+  ],
+  "preview": {
+    "video": "previews/glitch.webm",
+    "poster": "previews/glitch.jpg"
+  }
+}

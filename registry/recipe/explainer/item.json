@@ -1,0 +1,157 @@
+{
+  "$schema": "../../schema.json",
+  "id": "explainer",
+  "type": "recipe",
+  "title": "Explainer",
+  "summary": "How something works in three steps on one card that changes state, with a recap and a close, in 36 s.",
+  "tags": [
+    "recipe",
+    "explainer",
+    "steps",
+    "16:9"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "question",
+      "type": "string",
+      "default": "How does it work?",
+      "description": "what this answers",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "action",
+      "type": "string",
+      "default": "your.site",
+      "description": "the action at the end",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "main",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    },
+    {
+      "name": "step1Label",
+      "type": "string",
+      "default": "01",
+      "description": "step 1 label",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "step1Title",
+      "type": "string",
+      "default": "First",
+      "description": "step 1 title",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "step1Body",
+      "type": "string",
+      "default": "What happens first, in one line.",
+      "description": "step 1 line",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "step2Label",
+      "type": "string",
+      "default": "02",
+      "description": "step 2 label",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "step2Title",
+      "type": "string",
+      "default": "Then",
+      "description": "step 2 title",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "step2Body",
+      "type": "string",
+      "default": "The step that does the work.",
+      "description": "step 2 line",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "step3Label",
+      "type": "string",
+      "default": "03",
+      "description": "step 3 label",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "step3Title",
+      "type": "string",
+      "default": "Done",
+      "description": "step 3 title",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "step3Body",
+      "type": "string",
+      "default": "What you get at the end.",
+      "description": "step 3 line",
+      "group": "advanced",
+      "control": "text"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/recipe/explainer/scene.html",
+      "to": "pieces/explainer/scene.html"
+    },
+    {
+      "from": "registry/recipe/explainer/brief.md",
+      "to": "pieces/explainer/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "npx paper-motion add explainer --name my-piece\n# edit CONFIG in pieces/my-piece/scene.html, then:\nnpx paper-motion render pieces/my-piece/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work: pamo add sage-night instrument) and, for the background, a shader-set entry (pamo add mesh-sage).",
+    "Structure and timing only; the look always comes from the brand.",
+    "Uses these moves from the engine: push, magic-move, unfold, crossfade, word-rise, blur-in."
+  ],
+  "related": [
+    "push",
+    "magic-move",
+    "unfold"
+  ],
+  "preview": {
+    "video": "previews/explainer.webm",
+    "poster": "previews/explainer.jpg"
+  }
+}

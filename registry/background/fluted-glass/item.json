@@ -1,0 +1,188 @@
+{
+  "$schema": "../../schema.json",
+  "id": "fluted-glass",
+  "type": "background",
+  "title": "Fluted Glass · glass",
+  "summary": "Fluted glass image filter that transforms an image into streaked, ribbed distortions, giving a mix of clarity and obscurity, in glass.",
+  "tags": [
+    "background",
+    "fluted-glass",
+    "still",
+    "dark",
+    "image",
+    "glass"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "fit",
+      "type": "string",
+      "default": "cover",
+      "description": "How to fit the rendered shader into the canvas dimensions (0 = none, 1 = contain, 2 = cover)",
+      "group": "advanced"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#00000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorShadow",
+      "type": "color",
+      "default": "#000000",
+      "description": "Shadows color in RGBA, needs shadows > 0",
+      "group": "advanced"
+    },
+    {
+      "name": "colorHighlight",
+      "type": "color",
+      "default": "#ffffff",
+      "description": "Highlights color in RGBA, needs highlights > 0",
+      "group": "advanced"
+    },
+    {
+      "name": "shadows",
+      "type": "number",
+      "default": 0.25,
+      "description": "Color gradient added over image and background, following distortion shape, needs colorShadow alpha > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 0.45,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "angle",
+      "type": "number",
+      "default": 0,
+      "description": "Direction of the grid relative to the image in degrees",
+      "min": 0,
+      "max": 180,
+      "step": 0.9,
+      "group": "main"
+    },
+    {
+      "name": "distortionShape",
+      "type": "string",
+      "default": "prism",
+      "description": "Shape of distortion",
+      "group": "advanced"
+    },
+    {
+      "name": "highlights",
+      "type": "number",
+      "default": 0.12,
+      "description": "Thin strokes along distortion shape, useful for antialiasing on small grid",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "shape",
+      "type": "string",
+      "default": "lines",
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "distortion",
+      "type": "number",
+      "default": 0.5,
+      "description": "amount of organic distortion",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "blur",
+      "type": "number",
+      "default": 0,
+      "description": "One-directional blur over the image and extra blur around edges",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "edges",
+      "type": "number",
+      "default": 0.25,
+      "description": "Glass distortion and softness on the image edges",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "grainOverlay",
+      "type": "number",
+      "default": 0.05,
+      "description": "grain laid over the image",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "FlutedGlass",
+      "props": {
+        "fit": "cover",
+        "colorBack": "#00000000",
+        "colorShadow": "#000000",
+        "colorHighlight": "#ffffff",
+        "shadows": 0.25,
+        "size": 0.45,
+        "angle": 0,
+        "distortionShape": "prism",
+        "highlights": 0.12,
+        "shape": "lines",
+        "distortion": 0.5,
+        "blur": 0,
+        "edges": 0.25,
+        "grainOverlay": 0.05
+      },
+      "image": "assets/materials/material-a.jpg",
+      "motion": {
+        "param": "shift",
+        "from": -0.15,
+        "to": 0.15
+      }
+    }
+  },
+  "files": [
+    {
+      "from": "registry/_assets/materials/material-a.jpg",
+      "to": "brand/assets/materials/material-a.jpg"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'fluted-glass');",
+  "notes": [
+    "Paper shader `FlutedGlass` (still).",
+    "Uses an image (installed to brand/assets/materials/); swap `image` for your own picture or texture.",
+    "Breathes on `shift` from -0.15 to 0.15 so a still shader stays alive."
+  ],
+  "preview": {
+    "video": "previews/fluted-glass.webm",
+    "poster": "previews/fluted-glass.jpg"
+  }
+}

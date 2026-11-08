@@ -1,0 +1,71 @@
+{
+  "$schema": "../../schema.json",
+  "id": "readme-loop",
+  "type": "recipe",
+  "title": "README loop",
+  "summary": "A silent 6 s loop for a repo or a landing hero: wordmark, one line, the install command typing and erasing.",
+  "tags": [
+    "recipe",
+    "loop",
+    "readme",
+    "hero",
+    "silent"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "line",
+      "type": "string",
+      "default": "",
+      "description": "one plain line; empty reads IDENTITY.md",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "command",
+      "type": "string",
+      "default": "npx skills add your/repo",
+      "description": "the install command",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "main",
+      "control": "select"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/recipe/readme-loop/scene.html",
+      "to": "pieces/readme-loop/scene.html"
+    },
+    {
+      "from": "registry/recipe/readme-loop/brief.md",
+      "to": "pieces/readme-loop/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "npx paper-motion add readme-loop --name my-piece\n# edit CONFIG in pieces/my-piece/scene.html, then:\nnpx paper-motion render pieces/my-piece/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work: pamo add sage-night instrument) and, for the background, a shader-set entry (pamo add mesh-sage).",
+    "Structure and timing only; the look always comes from the brand.",
+    "Uses these moves from the engine: type-on."
+  ],
+  "related": [
+    "type-on"
+  ],
+  "preview": {
+    "video": "previews/readme-loop.webm",
+    "poster": "previews/readme-loop.jpg"
+  }
+}

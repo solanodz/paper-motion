@@ -1,0 +1,112 @@
+{
+  "$schema": "../../schema.json",
+  "id": "graphite",
+  "type": "palette",
+  "title": "Graphite",
+  "summary": "Dark palette: pure black and white with greys; brutalist, technical.",
+  "tags": [
+    "palette",
+    "dark",
+    "brutalist",
+    "technical"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#000000",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#FFFFFF",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#8A8A8A",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#0A0A0A",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#E9E4D8",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#000000",
+        "#2E2E2E",
+        "#5F7A86",
+        "#8EA3AD"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#000000",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#FFFFFF",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#8A8A8A",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#0A0A0A",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#E9E4D8",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#000000",
+        "#2E2E2E",
+        "#5F7A86",
+        "#8EA3AD"
+      ],
+      "mode": "dark"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 21.0:1, muted on ground 6.1:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/graphite.webm",
+    "poster": "previews/graphite.jpg"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "../../schema.json",
+  "id": "blur-in",
+  "type": "text",
+  "title": "Blur in",
+  "summary": "Text comes into focus from a blur.",
+  "tags": [
+    "text",
+    "calm",
+    "atmospheric"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "blurIn",
+  "signature": "blurIn(el, t, { start, duration, blur, curve })",
+  "params": [
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 0.8,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "blur",
+      "type": "number",
+      "default": 14,
+      "description": "blur strength in px",
+      "min": 0,
+      "max": 150,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.outCubic",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/blur-in.js",
+      "to": "moves/blur-in.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { blurIn } from './moves/blur-in.js';\n\ns.update((t) => blurIn(el, t, { start: 0.5 }));",
+  "notes": [
+    "Text comes into focus from a blur."
+  ],
+  "preview": {
+    "video": "previews/blur-in.webm",
+    "poster": "previews/blur-in.jpg"
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "../../schema.json",
+  "id": "metaballs-muted",
+  "type": "background",
+  "title": "Metaballs · muted",
+  "summary": "Up to 20 colored gooey balls moving around the center and merging into smooth organic shapes, in muted.",
+  "tags": [
+    "background",
+    "metaballs",
+    "animated",
+    "dark",
+    "muted"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#E9E4D8",
+        "#8FA67A",
+        "#B07D73",
+        "#C9A65A",
+        "#8EA3AD"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 8,
+      "group": "main"
+    },
+    {
+      "name": "count",
+      "type": "number",
+      "default": 8,
+      "description": "Number of balls, fractional values shrink the last ball",
+      "min": 1,
+      "max": 20,
+      "step": 0.095,
+      "group": "main"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 0.7,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.6,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Metaballs",
+      "props": {
+        "colorBack": "#000000",
+        "colors": [
+          "#E9E4D8",
+          "#8FA67A",
+          "#B07D73",
+          "#C9A65A",
+          "#8EA3AD"
+        ],
+        "count": 8,
+        "size": 0.7,
+        "speed": 0.6
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'metaballs-muted');",
+  "notes": [
+    "Paper shader `Metaballs` (animated)."
+  ],
+  "preview": {
+    "video": "previews/metaballs-muted.webm",
+    "poster": "previews/metaballs-muted.jpg"
+  }
+}

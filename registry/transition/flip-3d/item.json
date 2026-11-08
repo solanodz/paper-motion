@@ -1,0 +1,67 @@
+{
+  "$schema": "../../schema.json",
+  "id": "flip-3d",
+  "type": "transition",
+  "title": "Flip 3D",
+  "summary": "The frame flips over like a card and shows B on the back.",
+  "tags": [
+    "transition",
+    "3d",
+    "playful"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "flip3D",
+  "signature": "flip3D(a, b, p, { depth, perspective, curve })",
+  "params": [
+    {
+      "name": "depth",
+      "type": "number",
+      "default": 0.82,
+      "description": "how deep the camera dives",
+      "min": 2,
+      "max": 30,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "perspective",
+      "type": "number",
+      "default": 2400,
+      "description": "3D perspective in px",
+      "min": 400,
+      "max": 4000,
+      "step": 50,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.inOutCubic",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/flip-3d.js",
+      "to": "moves/flip-3d.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { flip3D } from './moves/flip-3d.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nflip3D(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "The frame flips over like a card (around Y) and B is on the back; it pulls back mid-flip.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/flip-3d.webm",
+    "poster": "previews/flip-3d.jpg"
+  }
+}

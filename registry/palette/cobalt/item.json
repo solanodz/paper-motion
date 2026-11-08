@@ -1,0 +1,113 @@
+{
+  "$schema": "../../schema.json",
+  "id": "cobalt",
+  "type": "palette",
+  "title": "Cobalt",
+  "summary": "Dark palette: ink blue with electric cobalt; product, software, confident.",
+  "tags": [
+    "palette",
+    "dark",
+    "product",
+    "software",
+    "confident"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#0A0F1F",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#EEF1F8",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#8590AE",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#121933",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#3D6BFF",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#0A0F1F",
+        "#1C2A55",
+        "#3D6BFF",
+        "#AFC2FF"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#0A0F1F",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#EEF1F8",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#8590AE",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#121933",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#3D6BFF",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#0A0F1F",
+        "#1C2A55",
+        "#3D6BFF",
+        "#AFC2FF"
+      ],
+      "mode": "dark"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 16.9:1, muted on ground 6.0:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/cobalt.webm",
+    "poster": "previews/cobalt.jpg"
+  }
+}

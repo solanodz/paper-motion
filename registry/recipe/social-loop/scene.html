@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>social loop</title>
+<!--
+  Recipe · social loop (8 s, seamless). A piece that plays forever in a feed.
+  Field: a shader-set entry the whole loop · What: name and what it is, small and steady · Line 1–5 s: one line
+  enters, holds, leaves · Seam: the last 0.5 s returns to the first frame. Check frame 0 and the last with pamo still.
+  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="what" class="abs"></div>
+  <div id="line" class="abs"></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { wordRise, popIn, blurIn } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                  // a shader-set id with `loop` or `motion` (pamo add grain-slate), or null
+  what: null,                        // "Name · what it is · where"; null builds it from the brand
+  line: 'One line in the brand’s voice.',
+  text: null,                        // rise | pop | blur; null follows motion.json
+  format: [1080, 1350],              // 1080×1350 (feed), 1080×1920 (stories), 1080×1080
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), M = Math.round(SHORT * 0.08), D = 8;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image && (e.loop || e.motion))?.id ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId, { loop: D });
+
+const what = B.style(document.querySelector('#what'), 'caption', { short: SHORT, color: 'figure' });
+const line = B.style(document.querySelector('#line'), 'title', { short: SHORT });
+Object.assign(what.style, { left: `${M}px`, top: `${M}px`, right: `${M}px` });
+Object.assign(line.style, { left: `${M}px`, right: `${M}px`, bottom: `${M}px` });
+what.textContent = CONFIG.what ?? [B.name, (B.identity['In one line'] ?? '').split(/[.\n]/)[0]].filter(Boolean).join(' · ');
+line.textContent = CONFIG.line;
+const TEXT = CONFIG.text ?? { typing: 'rise', blur: 'blur', track: 'rise' }[B.motion?.text] ?? 'rise';
+
+s.update((t) => {
+  if (TEXT === 'pop') popIn(line, t, { start: 1.0 });
+  else if (TEXT === 'blur') blurIn(line, t, { start: 1.0, duration: 0.9 });
+  else wordRise(line, t, { start: 1.0, each: B.pace.stagger, duration: 0.8 });
+  // leave before the seam: the loop closes on the same empty frame it opened with
+  const out = progress(t, 5.0, 5.6, ease.inCubic);
+  line.style.opacity = TEXT === 'blur' && t < 5 ? line.style.opacity : 1 - out;
+  line.style.translate = `0 ${-out * SHORT * 0.02}px`;
+});
+B.cue(s, 'text', 1.0); B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

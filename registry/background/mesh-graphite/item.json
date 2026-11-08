@@ -1,0 +1,113 @@
+{
+  "$schema": "../../schema.json",
+  "id": "mesh-graphite",
+  "type": "background",
+  "title": "Mesh Gradient · graphite",
+  "summary": "A flowing composition of color spots, moving along distinct trajectories and transformed by organic distortion, in graphite.",
+  "tags": [
+    "background",
+    "mesh-gradient",
+    "animated",
+    "dark",
+    "graphite"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#050505",
+        "#3a3a3a",
+        "#cfcfcf",
+        "#121212"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    },
+    {
+      "name": "distortion",
+      "type": "number",
+      "default": 0.85,
+      "description": "amount of organic distortion",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "swirl",
+      "type": "number",
+      "default": 0.35,
+      "description": "amount of swirl",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.45,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "grainMixer",
+      "type": "number",
+      "default": 0.12,
+      "description": "grain mixed into the colors",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "grainOverlay",
+      "type": "number",
+      "default": 0.08,
+      "description": "grain laid over the image",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "MeshGradient",
+      "props": {
+        "colors": [
+          "#050505",
+          "#3a3a3a",
+          "#cfcfcf",
+          "#121212"
+        ],
+        "distortion": 0.85,
+        "swirl": 0.35,
+        "speed": 0.45,
+        "grainMixer": 0.12,
+        "grainOverlay": 0.08
+      },
+      "loop": 1.5
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'mesh-graphite');",
+  "notes": [
+    "Paper shader `MeshGradient` (animated)."
+  ],
+  "preview": {
+    "video": "previews/mesh-graphite.webm",
+    "poster": "previews/mesh-graphite.jpg"
+  }
+}

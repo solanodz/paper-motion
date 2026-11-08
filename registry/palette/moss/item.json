@@ -1,0 +1,112 @@
+{
+  "$schema": "../../schema.json",
+  "id": "moss",
+  "type": "palette",
+  "title": "Moss",
+  "summary": "Dark palette: forest greens on near-black; outdoors, sustainable.",
+  "tags": [
+    "palette",
+    "dark",
+    "outdoors",
+    "sustainable"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#121510",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#E4EAD6",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#7F8F6A",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#1B1F18",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#A7C080",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#121510",
+        "#2A3324",
+        "#56664A",
+        "#A7C080"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#121510",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#E4EAD6",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#7F8F6A",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#1B1F18",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#A7C080",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#121510",
+        "#2A3324",
+        "#56664A",
+        "#A7C080"
+      ],
+      "mode": "dark"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 14.9:1, muted on ground 5.3:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/moss.webm",
+    "poster": "previews/moss.jpg"
+  }
+}

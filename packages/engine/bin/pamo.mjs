@@ -61,6 +61,18 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
   status [--brand brand]              what the brand folder has, and the next step on the main flow
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
+
+Resources (paper-motion.app: moves, backgrounds, palettes, font pairs, recipes)
+  add <id> [<id>...] [--set key=value ...] [--force] [--name piece] [--registry url|dir]
+                                     install resources into this project: moves to moves/,
+                                     backgrounds to brand/shader-set/set.json, palettes and fonts
+                                     into brand/tokens.json, recipes to pieces/<name>/;
+                                     --set writes your values in (id:key=value with several ids)
+  list [type] [--json]               every resource (types: component transition text camera
+                                     background palette font-pair recipe)
+  search <words> [--type t] [--json] find resources by name, tags or description
+  registry build [--out dir] [--site url]
+                                     validate registry/ and publish registry.json, r/<id>.json, llms.txt
 `;
 
 function parse(argv) {
@@ -524,6 +536,82 @@ async function main() {
         console.log(`wrote ${dest}`);
       } else if (args.json || name) console.log(JSON.stringify(list, null, 2));
       else for (const s of cat) console.log(`${s.name.padEnd(22)} ${s.animated ? 'anim ' : 'still'} ${s.usesImage ? 'img' : '   '}  ${s.description.split('. ')[0]}`);
+      break;
+    }
+
+    case 'add': {
+      const ids = args._.slice(1);
+      if (!ids.length) { console.error('Usage: add <id> [<id>...] [--force] [--name piece] [--registry url|dir]'); process.exit(1); }
+      const { add } = await import('../lib/registry.mjs');
+      const set = process.argv.flatMap((a, i, all) => (a === '--set' ? [all[i + 1]] : a.startsWith('--set=') ? [a.slice(6)] : [])).filter(Boolean);
+      const report = await add(ids.filter((x) => !set.includes(x)), { registry: args.registry, force: !!args.force, name: typeof args.name === 'string' ? args.name : undefined, set });
+      for (const r of report) {
+        console.log(`✓ ${r.id} (${r.type})${r.wrote.length ? ` → ${[...new Set(r.wrote)].join(', ')}` : ''}`);
+        for (const f of r.skipped) console.log(`  kept your ${f} (it differs; --force to replace)`);
+        for (const c of r.conflicts) console.log(`  kept your value at ${c} (--force to replace)`);
+      }
+      const last = report.filter((r) => ids.includes(r.id) && r.usage);
+      if (last.length === 1) console.log(`\nUsage:\n${last[0].usage.split('\n').map((l) => `  ${l}`).join('\n')}`);
+      break;
+    }
+
+    case 'list':
+    case 'search': {
+      const { search } = await import('../lib/registry.mjs');
+      const isList = cmd === 'list';
+      const items = await search(isList ? '' : args._.slice(1).join(' '), { type: isList ? args._[1] : args.type, registry: args.registry });
+      if (args.json) { console.log(JSON.stringify(items, null, 2)); break; }
+      let type = '';
+      for (const i of items) { if (i.type !== type) { type = i.type; console.log(`\n${type}`); } console.log(`  ${i.id.padEnd(16)} ${i.summary}`); }
+      if (!items.length) console.log('nothing found');
+      break;
+    }
+
+    case 'registry': {
+      const sub = args._[1];
+      if (sub === 'previews') {
+        // one clip (webm, 1280x720) and one poster (jpg) per code resource, from registry/_demo/index.html?demo=<id>
+        const { loadItems, resolveRegistry } = await import('../lib/registry.mjs');
+        const { renderVideo } = await import('../lib/render.mjs');
+        const os = await import('node:os');
+        const reg = resolveRegistry();
+        if (!reg.dir) { console.error('registry previews runs inside the paper-motion repo'); process.exit(1); }
+        const only = typeof args.only === 'string' ? args.only.split(',') : null;
+        const out = path.resolve(args.out ?? path.join(reg.dir, '..', 'apps', 'web', 'public', 'previews'));
+        fs.mkdirSync(out, { recursive: true });
+        const items = loadItems(reg.dir).filter((i) => ['component', 'transition', 'text', 'camera', 'recipe'].includes(i.type) && (!only || only.includes(i.id)));
+        const POSTER = { component: 1.5, transition: 1.4, text: 2.6, camera: 0.9, recipe: 2.5 };
+        const demo = path.join(reg.dir, '_demo', 'index.html');
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-previews-'));
+        try {
+          for (const [k, it] of items.entries()) {
+            process.stdout.write(`\r${k + 1}/${items.length} ${it.id.padEnd(16)}`);
+            const mp4 = path.join(tmp, `${it.id}.mp4`);
+            if (it.type === 'recipe') {
+              // a recipe renders whole, wired to the demo brand in registry/_demo/brand (served as /brand)
+              const here = process.cwd(), copy = path.join(reg.dir, '_demo', `.${it.id}.recipe.html`);
+              fs.copyFileSync(path.join(reg.dir, 'recipe', it.id, 'scene.html'), copy);
+              process.chdir(path.join(reg.dir, '_demo'));
+              try { await withServer(copy, (url) => renderVideo({ url: url('?render'), out: mp4, sfx: false, crf: 18, motionBlur: Number(args['motion-blur'] ?? 3) })); }
+              finally { process.chdir(here); fs.rmSync(copy, { force: true }); }
+            } else await withServer(demo, (url) => renderVideo({ url: url(`?render&demo=${it.id}`), out: mp4, from: 0, to: 5, sfx: false, crf: 16, motionBlur: Number(args['motion-blur'] ?? 4) }));
+            const vf = 'scale=1280:-2';
+            const a = spawnSync('ffmpeg', ['-v', 'error', '-y', '-i', mp4, '-vf', vf, '-c:v', 'libvpx-vp9', '-crf', '38', '-b:v', '0', '-row-mt', '1', '-an', path.join(out, `${it.id}.webm`)]);
+            const b = spawnSync('ffmpeg', ['-v', 'error', '-y', '-ss', String(POSTER[it.type] ?? 1.5), '-i', mp4, '-frames:v', '1', '-vf', vf, '-q:v', '4', path.join(out, `${it.id}.jpg`)]);
+            if (a.status || b.status) throw new Error(`ffmpeg failed for ${it.id}: ${a.stderr}${b.stderr}`);
+          }
+        } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+        const kb = Math.round(fs.readdirSync(out).reduce((n, f) => n + fs.statSync(path.join(out, f)).size, 0) / 1024);
+        console.log(`\r✓ ${items.length} previews → ${path.relative(process.cwd(), out)} (${kb} KB in all)`);
+        break;
+      }
+      if (sub !== 'build') { console.error('Usage: registry build [--out dir] [--site url] | registry previews [--only ids] [--motion-blur 4]'); process.exit(1); }
+      const { build, resolveRegistry, SITE } = await import('../lib/registry.mjs');
+      const reg = resolveRegistry();
+      if (!reg.dir) { console.error('registry build runs inside the paper-motion repo (no registry/ folder found)'); process.exit(1); }
+      const out = path.resolve(args.out ?? path.join(reg.dir, '..', 'apps', 'web', 'public'));
+      try { const r = build({ dir: reg.dir, out, site: typeof args.site === 'string' ? args.site.replace(/\/$/, '') : SITE }); console.log(`✓ ${r.count} resources → ${path.relative(process.cwd(), out) || '.'} (registry.json, r/, llms.txt, llms-full.txt)`); }
+      catch (e) { console.error(e.message); process.exit(1); }
       break;
     }
 

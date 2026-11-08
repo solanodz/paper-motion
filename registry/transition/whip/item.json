@@ -1,0 +1,70 @@
+{
+  "$schema": "../../schema.json",
+  "id": "whip",
+  "type": "transition",
+  "title": "Whip",
+  "summary": "A fast push with horizontal motion blur.",
+  "tags": [
+    "transition",
+    "fast",
+    "energetic",
+    "motion-blur"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "whip",
+  "signature": "whip(a, b, p, { dir, blur, curve })",
+  "params": [
+    {
+      "name": "dir",
+      "type": "enum",
+      "default": "left",
+      "description": "direction",
+      "options": [
+        "left",
+        "right"
+      ],
+      "control": "segmented",
+      "group": "main"
+    },
+    {
+      "name": "blur",
+      "type": "number",
+      "default": 70,
+      "description": "blur strength in px",
+      "min": 0,
+      "max": 150,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.inOutQuint",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/whip.js",
+      "to": "moves/whip.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { whip } from './moves/whip.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nwhip(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "B pushes A out very fast, with horizontal motion blur that follows the speed. `dir` is where A leaves to.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/whip.webm",
+    "poster": "previews/whip.jpg"
+  }
+}
