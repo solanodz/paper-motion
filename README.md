@@ -2,6 +2,8 @@
 
 **Creative-directed videos for people who use coding agents.**
 
+<p><img src="docs/images/paper-motion.webp" width="100%" alt="paper-motion's promo, made with paper-motion: a prompt in the terminal, the render, a wall of the brand's shader loops, a dive into one of them, and the install command"></p>
+
 A pack of agent skills that takes you from "I have a brand" to a brand sheet and your first videos, from a
 conversation with Claude Code, Codex, Cursor or any agent that reads skills. It finds out who your brand is, how it
 looks, moves and sounds, and then makes videos that stay on brand, rendered frame-exact with
