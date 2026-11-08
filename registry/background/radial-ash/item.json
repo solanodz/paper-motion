@@ -170,5 +170,22 @@
   "preview": {
     "video": "previews/radial-ash.webm",
     "poster": "previews/radial-ash.jpg"
-  }
+  },
+  "colors": [
+    "#e6e2ea",
+    "#7e7594",
+    "#bdb4cb",
+    "#ffffff"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "calm",
+    "minimal",
+    "warm"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light calm piece"
+  ]
 }

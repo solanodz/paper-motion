@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "mesh-gradient",
-    "animated",
+    "gentle",
     "dark",
     "graphite"
   ],
@@ -109,5 +109,22 @@
   "preview": {
     "video": "previews/mesh-graphite.webm",
     "poster": "previews/mesh-graphite.jpg"
-  }
+  },
+  "colors": [
+    "#050505",
+    "#3a3a3a",
+    "#cfcfcf",
+    "#121212"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "calm",
+    "luxury",
+    "warm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark calm piece"
+  ]
 }

@@ -110,5 +110,20 @@
   "preview": {
     "video": "previews/acid-night.webm",
     "poster": "previews/acid-night.jpg"
-  }
+  },
+  "colors": [
+    "#0b0b0a",
+    "#f4f4ee",
+    "#c8f04a"
+  ],
+  "mode": "dark",
+  "mood": [
+    "bold",
+    "raw",
+    "technical"
+  ],
+  "when": [
+    "a dark piece that should feel bold, raw, technical",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

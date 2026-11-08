@@ -109,5 +109,19 @@
   "preview": {
     "video": "previews/cobalt.webm",
     "poster": "previews/cobalt.jpg"
-  }
+  },
+  "colors": [
+    "#0a0f1f",
+    "#eef1f8",
+    "#3d6bff"
+  ],
+  "mode": "dark",
+  "mood": [
+    "technical",
+    "bold"
+  ],
+  "when": [
+    "a dark piece that should feel technical, bold",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

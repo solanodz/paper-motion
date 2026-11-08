@@ -22,7 +22,7 @@ If `VISUAL.md` exists, ask what should change and re-run only those branches.
 
 ## 3 · Interview
 
-Call `interview` with this question bank, the file `brand/VISUAL.md`, and a depth of up to three short rounds. Every visual question is an option board built from the brand's real name and words (IDENTITY.md's Facts, Voice, Offer), started from `pamo new <x> --dir brand/.interview/<topic> --still`.
+Call `interview` with this question bank, the file `brand/VISUAL.md`, and a depth of up to three short rounds. When the user can open a browser, type pairings and palettes come as live boards of registry resources (`pamo board --url --option <font-pair> … ` and `--option <palette>[:accent=…] …`, chosen by `mood`, `mode` and `voice`; see `make-video/references/boards.md`), tunable before choosing. Otherwise, or for the shape language and the wordmark, every visual question is an option board built from the brand's real name and words (IDENTITY.md's Facts, Voice, Offer), started from `pamo new <x> --dir brand/.interview/<topic> --still`.
 
 - **Logo** (a question of fact): does the brand already have one? If yes, it goes to `brand/assets/` and leads; the wordmark supports it. Ask for any other material that helps in the same question.
 - **Type pairing** (board, three options, `--cols 1`): display + text face in one layout with the brand's name as a title, its line as a subtitle and a short paragraph, at the sizes of the type scale. The options span the space the identity allows, never three cousins. Labels name both families.

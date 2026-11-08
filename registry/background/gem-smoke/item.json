@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "gem-smoke",
-    "animated",
+    "lively",
     "dark",
     "image"
   ],
@@ -167,5 +167,20 @@
   "preview": {
     "video": "previews/gem-smoke.webm",
     "poster": "previews/gem-smoke.jpg"
-  }
+  },
+  "colors": [
+    "#8ea3ad",
+    "#e9e4d8",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "luxury"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark luxury piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "image-dithering",
-    "still",
+    "gentle",
     "dark",
     "image"
   ],
@@ -125,5 +125,20 @@
   "preview": {
     "video": "previews/image-dither.webm",
     "poster": "previews/image-dither.jpg"
-  }
+  },
+  "colors": [
+    "#e9e4d8",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "technical",
+    "raw"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark technical piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

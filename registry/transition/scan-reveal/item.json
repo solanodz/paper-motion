@@ -49,5 +49,15 @@
   "preview": {
     "video": "previews/scan-reveal.webm",
     "poster": "previews/scan-reveal.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "raw"
+  ],
+  "energy": 3,
+  "role": "enter",
+  "when": [
+    "the brand is a terminal, a scanner, a process",
+    "drawing in UI or data"
+  ]
 }

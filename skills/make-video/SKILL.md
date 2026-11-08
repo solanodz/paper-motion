@@ -25,7 +25,7 @@ Scenes load it with `paper-motion/brand` (see "Writing a scene"). When a part is
 
 ## 2 · Intake: recipe, format, brief (mandatory)
 
-**Do not build anything until the brief is approved.** Call `interview` with the question bank in `references/intake.md` (it skips what the brand already settles) and write `brief.md` from its template.
+**Do not build anything until the brief is approved.** Call `interview` with the question bank in `references/intake.md` (it skips what the brand already settles) and write `brief.md` from its template. Visual decisions in the intake (palette, type, backgrounds, the moves to use, the recipe) go through **boards**: when the user can open a browser, a live board (`pamo board --url`, see `references/boards.md`), a link they open to compare the options in their own look, tune one and choose; otherwise a rendered board. You propose, they choose; never pick a look for them from a description.
 
 - **Named resources (paper-motion.app).** When the user names resources ("backgrounds mesh-sage and grain-slate, effects magic-move and whip-pan", "use paper-motion.app") or wants to browse, read https://paper-motion.app/llms.txt (or `pamo search <words>`, `pamo list <type>`), confirm the picks in the brief, then install them with `pamo add <id> [<id>…]`: moves land in `moves/` as editable code, backgrounds in `brand/shader-set/set.json`, palettes and font pairs in `brand/tokens.json`, recipes in `pieces/<id>/`. Adapt them through their params; never re-implement a move the registry has.
 - **Recipe:** start from one in `references/recipes.md` (launch, explainer, social loop, end card, README loop) or the user's own structure; `pamo add <recipe>` writes a working scene for it, wired to `brand/`. A recipe gives beats and timing, never a look. The user's length wins: scale the recipe's beats to it.
@@ -39,6 +39,8 @@ Scenes load it with `paper-motion/brand` (see "Writing a scene"). When a part is
 Guessing is the failure mode of this job. Keep asking until you could describe the piece second by second and the user would agree. Only an explicit "surprise me" skips ahead, and even then style frames come first.
 
 ## 3 · Gate A: style frames
+
+Before the frames, settle what they are made of with live boards when the brief left it open (a background, the repertoire of moves, the recipe): `references/boards.md`. The style frames themselves are renders of this piece, not boards.
 
 From the approved brief, make 2–3 stills of the key moments at final quality, in the brand's look:
 
@@ -148,6 +150,7 @@ Never default to them.
 ## References
 
 - `references/intake.md` — **read first**: the piece's question bank, vocabulary, brief template
+- `references/boards.md` — boards: live (paper-motion.app links the user opens) and rendered; how to build one, read the reply line, and choose options with the registry's metadata
 - `references/recipes.md` — beats and timing for launches, explainers, social loops, end cards, README loops
 - `references/aesthetics.md` — composition, restraint, material, critique checklist (type and color craft live in `visual-system`, motion craft in `motion-style`, sound craft in `sound-kit`)
 - `references/scene-api.md` — runtime API (scene, shader layers, timing, easing, noise, color, text)

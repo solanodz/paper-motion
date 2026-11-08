@@ -193,5 +193,22 @@
   "preview": {
     "video": "previews/radial-moss-night.webm",
     "poster": "previews/radial-moss-night.jpg"
-  }
+  },
+  "colors": [
+    "#1f231c",
+    "#5e7457",
+    "#a9b98a",
+    "#e9edcf"
+  ],
+  "mode": "dark",
+  "motion": "still",
+  "mood": [
+    "calm",
+    "minimal",
+    "warm"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a dark calm piece"
+  ]
 }

@@ -109,5 +109,19 @@
   "preview": {
     "video": "previews/lavender-ash.webm",
     "poster": "previews/lavender-ash.jpg"
-  }
+  },
+  "colors": [
+    "#ece9f0",
+    "#221f29",
+    "#7e7594"
+  ],
+  "mode": "light",
+  "mood": [
+    "calm",
+    "minimal"
+  ],
+  "when": [
+    "a light piece that should feel calm, minimal",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

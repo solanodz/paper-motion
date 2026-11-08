@@ -139,5 +139,15 @@
   "preview": {
     "video": "previews/dm.webm",
     "poster": "previews/dm.jpg"
-  }
+  },
+  "mood": [
+    "warm",
+    "luxury",
+    "calm"
+  ],
+  "voice": "serif",
+  "when": [
+    "the brand should sound warm, luxury, calm",
+    "a serif headline voice with a plain body face"
+  ]
 }

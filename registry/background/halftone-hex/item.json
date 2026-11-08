@@ -180,5 +180,21 @@
   "preview": {
     "video": "previews/halftone-hex.webm",
     "poster": "previews/halftone-hex.jpg"
-  }
+  },
+  "colors": [
+    "#e2ddb8",
+    "#2b2b2b"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "editorial",
+    "raw",
+    "playful"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light editorial piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

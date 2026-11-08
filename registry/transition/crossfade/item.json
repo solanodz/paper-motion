@@ -40,5 +40,15 @@
   "preview": {
     "video": "previews/crossfade.webm",
     "poster": "previews/crossfade.jpg"
-  }
+  },
+  "mood": [
+    "calm",
+    "minimal"
+  ],
+  "energy": 1,
+  "role": "swap",
+  "when": [
+    "two soft fields blend",
+    "nothing should call attention to the cut"
+  ]
 }

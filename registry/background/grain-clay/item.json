@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "grain-gradient",
-    "animated",
+    "gentle",
     "dark",
     "clay"
   ],
@@ -121,5 +121,22 @@
   "preview": {
     "video": "previews/grain-clay.webm",
     "poster": "previews/grain-clay.jpg"
-  }
+  },
+  "colors": [
+    "#3f2925",
+    "#b07d73",
+    "#eadbc8",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "calm",
+    "warm",
+    "editorial"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark calm piece"
+  ]
 }

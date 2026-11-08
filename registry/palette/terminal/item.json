@@ -109,5 +109,19 @@
   "preview": {
     "video": "previews/terminal.webm",
     "poster": "previews/terminal.jpg"
-  }
+  },
+  "colors": [
+    "#050805",
+    "#d7f5d0",
+    "#4be36a"
+  ],
+  "mode": "dark",
+  "mood": [
+    "technical",
+    "raw"
+  ],
+  "when": [
+    "a dark piece that should feel technical, raw",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

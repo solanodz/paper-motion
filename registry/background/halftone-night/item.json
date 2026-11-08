@@ -181,5 +181,21 @@
   "preview": {
     "video": "previews/halftone-night.webm",
     "poster": "previews/halftone-night.jpg"
-  }
+  },
+  "colors": [
+    "#1f1e1b",
+    "#d8d0b8"
+  ],
+  "mode": "dark",
+  "motion": "still",
+  "mood": [
+    "editorial",
+    "raw",
+    "playful"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a dark editorial piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

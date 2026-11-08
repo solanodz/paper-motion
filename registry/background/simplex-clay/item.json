@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "simplex-noise",
-    "animated",
+    "gentle",
     "light",
     "clay"
   ],
@@ -99,5 +99,22 @@
   "preview": {
     "video": "previews/simplex-clay.webm",
     "poster": "previews/simplex-clay.jpg"
-  }
+  },
+  "colors": [
+    "#eadbc8",
+    "#d3a79a",
+    "#b07d73",
+    "#7a4e45",
+    "#3f2925"
+  ],
+  "mode": "light",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "bold"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a light playful piece"
+  ]
 }

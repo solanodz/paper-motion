@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "dithering",
-    "animated",
+    "lively",
     "dark",
     "ochre"
   ],
@@ -115,5 +115,20 @@
   "preview": {
     "video": "previews/dither-ochre.webm",
     "poster": "previews/dither-ochre.jpg"
-  }
+  },
+  "colors": [
+    "#241e14",
+    "#c9a65a"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
 }

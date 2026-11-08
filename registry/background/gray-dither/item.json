@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "dithering",
-    "animated",
+    "lively",
     "dark",
     "gray"
   ],
@@ -115,5 +115,20 @@
   "preview": {
     "video": "previews/gray-dither.webm",
     "poster": "previews/gray-dither.jpg"
-  }
+  },
+  "colors": [
+    "#000000",
+    "#393939"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
 }

@@ -69,5 +69,16 @@
   "preview": {
     "video": "previews/blur-in.webm",
     "poster": "previews/blur-in.jpg"
-  }
+  },
+  "mood": [
+    "calm",
+    "luxury",
+    "warm"
+  ],
+  "energy": 1,
+  "role": "text",
+  "when": [
+    "atmospheric, soft brands",
+    "a line should appear rather than move"
+  ]
 }

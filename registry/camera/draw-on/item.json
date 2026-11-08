@@ -69,5 +69,16 @@
   "preview": {
     "video": "previews/draw-on.webm",
     "poster": "previews/draw-on.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "editorial",
+    "minimal"
+  ],
+  "energy": 2,
+  "role": "enter",
+  "when": [
+    "diagrams, schemas, maps",
+    "lines and shapes that explain"
+  ]
 }

@@ -153,5 +153,18 @@
   "preview": {
     "video": "previews/explainer.webm",
     "poster": "previews/explainer.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "calm",
+    "editorial"
+  ],
+  "duration": 36,
+  "formats": [
+    "16:9"
+  ],
+  "when": [
+    "how something works in steps",
+    "onboarding and docs"
+  ]
 }

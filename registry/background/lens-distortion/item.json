@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "lens-distortion",
-    "still",
+    "gentle",
     "image"
   ],
   "version": "1.0.0",
@@ -164,5 +164,19 @@
   "preview": {
     "video": "previews/lens-distortion.webm",
     "poster": "previews/lens-distortion.jpg"
-  }
+  },
+  "colors": [
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "raw",
+    "technical"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark raw piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

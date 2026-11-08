@@ -58,5 +58,16 @@
   "preview": {
     "video": "previews/squash-drop.webm",
     "poster": "previews/squash-drop.jpg"
-  }
+  },
+  "mood": [
+    "playful",
+    "warm",
+    "bold"
+  ],
+  "energy": 5,
+  "role": "swap",
+  "when": [
+    "cartoon physics suit the brand",
+    "fun, snappy swaps"
+  ]
 }

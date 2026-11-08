@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "pulsing-border",
-    "animated",
+    "lively",
     "dark"
   ],
   "version": "1.0.0",
@@ -189,5 +189,21 @@
   "preview": {
     "video": "previews/pulsing-border.webm",
     "poster": "previews/pulsing-border.jpg"
-  }
+  },
+  "colors": [
+    "#e9e4d8",
+    "#8fa67a",
+    "#8ea3ad",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "bold",
+    "technical"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark bold piece"
+  ]
 }

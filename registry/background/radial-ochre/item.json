@@ -170,5 +170,22 @@
   "preview": {
     "video": "previews/radial-ochre.webm",
     "poster": "previews/radial-ochre.jpg"
-  }
+  },
+  "colors": [
+    "#ede4c8",
+    "#b6893f",
+    "#e2c77a",
+    "#fffbea"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "calm",
+    "minimal",
+    "warm"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light calm piece"
+  ]
 }

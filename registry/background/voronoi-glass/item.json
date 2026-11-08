@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "voronoi",
-    "animated",
+    "gentle",
     "dark",
     "glass"
   ],
@@ -120,5 +120,19 @@
   "preview": {
     "video": "previews/voronoi-glass.webm",
     "poster": "previews/voronoi-glass.jpg"
-  }
+  },
+  "colors": [
+    "#1c1c1c",
+    "#4a4a4a"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "technical",
+    "playful"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark technical piece"
+  ]
 }

@@ -33,6 +33,11 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      (sound effects declared with s.sfx() are mixed in)
   sfx <scene.html> [--out file.wav] [--from s] [--to s]
                                      export only the synthesized sound effects
+  board --url --title "…" [--ask "…"] [--reply name] [--look palette,font]
+        --option id[:key=value,…] [--note "why"] … [--kit] [--site url]
+                                     a live board: a paper-motion.app link the user opens to see
+                                     2–4 options in their look, tune one and choose; with --kit each
+                                     option is a space-separated list of ids (a whole kit)
   board <a.html> <b.html> [...] [--t 2 | --clip 5] [--labels "A · calm|B · loud"] [--cols n] [--motion-blur 6] [--out board.png]
                                      option board for interviews: 2–6 options side by side,
                                      lettered A, B, C…; a still (.png) or short clips (.mp4).
@@ -70,7 +75,9 @@ Resources (paper-motion.app: moves, backgrounds, palettes, font pairs, recipes)
                                      --set writes your values in (id:key=value with several ids)
   list [type] [--json]               every resource (types: component transition text camera
                                      background palette font-pair recipe)
-  search <words> [--type t] [--json] find resources by name, tags or description
+  search <words> [--type t] [--mode light|dark] [--mood m] [--motion still|gentle|lively]
+         [--role r] [--energy 2-4] [--near "#hex,#hex"] [--json]
+                                     find resources by words, mood, mode, energy; --near sorts by color fit
   registry build [--out dir] [--site url]
                                      validate registry/ and publish registry.json, r/<id>.json, llms.txt
 `;
@@ -313,9 +320,40 @@ async function main() {
     }
 
     case 'board': {
+      if (args.url) {
+        // the live form: a paper-motion.app link the user opens to compare, tune and choose
+        const { encodeBoard, boardUrl } = await import('../lib/board.js');
+        const { getIndex, resolveRegistry, SITE, getItem } = await import('../lib/registry.mjs');
+        const { parseSet, setArgs } = await import('../lib/customize.mjs');
+        const reg = resolveRegistry(args.registry), { items } = await getIndex(reg), index = Object.fromEntries(items.map((i) => [i.id, i]));
+        const opts = process.argv.flatMap((a, i, all) => (a === '--option' ? [all[i + 1]] : a.startsWith('--option=') ? [a.slice(9)] : [])).filter(Boolean);
+        if (!opts.length || !args.title || args.help) { console.error('Usage: board --url --title "…" [--ask "…"] [--reply name] [--look palette,font] --option id[:key=value,…] [--note "why"] … [--kit] [--site url]\n  Prints a live board link. Values after the colon are your adjustments; the reply line the user pastes carries every non-default value.'); process.exit(args.help ? 0 : 1); }
+        const LABELS = ['A', 'B', 'C', 'D'];
+        const parseOne = async (spec) => {
+          const [id, kv] = spec.split(':'), it = index[id];
+          if (!it) throw new Error(`"${id}" is not in the registry (try pamo search)`);
+          if (!kv) return { id, values: {} };
+          const full = await getItem(id, reg), values = parseSet(full, kv.split(',').map((x) => x.trim()).filter(Boolean));
+          // keep only what differs from the defaults, so the link stays small and the reply line honest
+          const keep = Object.fromEntries(setArgs(full, values).map((a) => { const m = a.match(/^--set '?(\w+)=(.*?)'?$/); return [m[1], values[m[1]]]; }));
+          return { id, values: keep };
+        };
+        const notes = process.argv.flatMap((a, i, all) => (a === '--note' ? [all[i + 1]] : a.startsWith('--note=') ? [a.slice(7)] : []));
+        const options = [];
+        for (const [i, spec] of opts.entries()) {
+          if (args.kit) options.push({ label: LABELS[i], items: await Promise.all(spec.split(/\s+/).filter(Boolean).map(parseOne)), ...(notes[i] ? { note: notes[i] } : {}) });
+          else options.push({ label: LABELS[i], ...(await parseOne(spec)), ...(notes[i] ? { note: notes[i] } : {}) });
+        }
+        const look = {};
+        if (typeof args.look === 'string') for (const spec of args.look.split(',')) { const o = await parseOne(spec.trim()); const t = index[o.id]?.type; if (t === 'palette') look.palette = o; else if (t === 'font-pair') look.font = o; else throw new Error(`--look takes a palette and a font pair, not "${o.id}"`); }
+        const board = { v: 1, kind: args.kit ? 'kit' : 'resource', title: String(args.title), ...(args.ask ? { ask: String(args.ask) } : {}), ...(args.reply ? { reply: String(args.reply) } : {}), ...(Object.keys(look).length ? { look } : {}), options };
+        try { const frag = await encodeBoard(board, index); console.log(boardUrl(typeof args.site === 'string' ? args.site : SITE, frag)); }
+        catch (e) { console.error(e.message); process.exit(1); }
+        break;
+      }
       await ensureDeps();
       const files = args._.slice(1);
-      if (files.length < 2 || files.length > 6) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]'); process.exit(1); }
+      if (files.length < 2 || files.length > 6 || args.help) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]   (a rendered board)\n       board --url --title "…" --option id[:key=value,…] … [--look palette,font] [--kit]        (a live board link)'); process.exit(args.help ? 0 : 1); }
       const { renderStills, renderVideo } = await import('../lib/render.mjs');
       const { composeBoard } = await import('../lib/board.mjs');
       const os = await import('node:os');
@@ -541,7 +579,7 @@ async function main() {
 
     case 'add': {
       const ids = args._.slice(1);
-      if (!ids.length) { console.error('Usage: add <id> [<id>...] [--force] [--name piece] [--registry url|dir]'); process.exit(1); }
+      if (!ids.length || args.help) { console.error('Usage: add <id> [<id>...] [--set key=value ...] [--force] [--name piece] [--registry url|dir]\n  --set writes your values into the installed copy (with several ids: --set id:key=value). --registry picks where resources come from (default: the site).'); process.exit(args.help ? 0 : 1); }
       const { add } = await import('../lib/registry.mjs');
       const set = process.argv.flatMap((a, i, all) => (a === '--set' ? [all[i + 1]] : a.startsWith('--set=') ? [a.slice(6)] : [])).filter(Boolean);
       const report = await add(ids.filter((x) => !set.includes(x)), { registry: args.registry, force: !!args.force, name: typeof args.name === 'string' ? args.name : undefined, set });
@@ -559,10 +597,12 @@ async function main() {
     case 'search': {
       const { search } = await import('../lib/registry.mjs');
       const isList = cmd === 'list';
-      const items = await search(isList ? '' : args._.slice(1).join(' '), { type: isList ? args._[1] : args.type, registry: args.registry });
+      if (args.help) { console.log(isList ? 'Usage: list [type] [--json]' : 'Usage: search <words> [--type t] [--mode light|dark] [--mood m] [--motion still|gentle|lively] [--role r] [--energy 2-4] [--near "#hex,#hex"] [--json]\n  --near sorts by color fit: the mean distance from each resource color to the nearest of yours (lower is closer); pass your ground, figure and accent.'); break; }
+      const items = await search(isList ? '' : args._.slice(1).join(' '), { type: isList ? args._[1] : args.type, mode: args.mode, mood: args.mood, motion: args.motion, role: args.role, energy: args.energy, near: args.near, registry: args.registry });
       if (args.json) { console.log(JSON.stringify(items, null, 2)); break; }
       let type = '';
-      for (const i of items) { if (i.type !== type) { type = i.type; console.log(`\n${type}`); } console.log(`  ${i.id.padEnd(16)} ${i.summary}`); }
+      if (items.some((i) => i.fit !== undefined)) console.log('fit: mean distance to your nearest color, lower is closer');
+      for (const i of items) { if (i.type !== type) { type = i.type; console.log(`\n${type}`); } console.log(`  ${i.id.padEnd(18)} ${[i.mode, i.motion, i.role, i.energy !== undefined ? `energy ${i.energy}` : null, i.fit !== undefined ? `fit ${Math.round(i.fit)}` : null].filter(Boolean).join(' · ').padEnd(26)} ${i.summary}`); }
       if (!items.length) console.log('nothing found');
       break;
     }

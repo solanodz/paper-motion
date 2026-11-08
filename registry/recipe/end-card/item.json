@@ -81,5 +81,19 @@
   "preview": {
     "video": "previews/end-card.webm",
     "poster": "previews/end-card.jpg"
-  }
+  },
+  "mood": [
+    "minimal",
+    "editorial"
+  ],
+  "duration": 6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "when": [
+    "closing any piece",
+    "a sting with the name and the action"
+  ]
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "dithering",
-    "animated",
+    "lively",
     "light",
     "paper"
   ],
@@ -115,5 +115,20 @@
   "preview": {
     "video": "previews/dither-paper.webm",
     "poster": "previews/dither-paper.jpg"
-  }
+  },
+  "colors": [
+    "#ece6d6",
+    "#3a3833"
+  ],
+  "mode": "light",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a light technical piece"
+  ]
 }

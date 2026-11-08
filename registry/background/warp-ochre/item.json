@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "warp",
-    "animated",
+    "gentle",
     "dark",
     "ochre"
   ],
@@ -139,5 +139,20 @@
   "preview": {
     "video": "previews/warp-ochre.webm",
     "poster": "previews/warp-ochre.jpg"
-  }
+  },
+  "colors": [
+    "#0a0a0a",
+    "#c9a65a",
+    "#7a5a24"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "bold"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark playful piece"
+  ]
 }

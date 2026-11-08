@@ -77,5 +77,16 @@
   "preview": {
     "video": "previews/glitch.webm",
     "poster": "previews/glitch.jpg"
-  }
+  },
+  "mood": [
+    "raw",
+    "technical",
+    "bold"
+  ],
+  "energy": 5,
+  "role": "swap",
+  "when": [
+    "the identity is digital, broken, underground",
+    "a jolt on a drop"
+  ]
 }

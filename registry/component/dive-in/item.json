@@ -66,5 +66,15 @@
   "preview": {
     "video": "previews/dive-in.webm",
     "poster": "previews/dive-in.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "luxury"
+  ],
+  "energy": 4,
+  "role": "camera",
+  "when": [
+    "going into a detail of a card or UI",
+    "\"and now, inside\""
+  ]
 }

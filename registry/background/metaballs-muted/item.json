@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "metaballs",
-    "animated",
+    "lively",
     "dark",
     "muted"
   ],
@@ -96,5 +96,21 @@
   "preview": {
     "video": "previews/metaballs-muted.webm",
     "poster": "previews/metaballs-muted.jpg"
-  }
+  },
+  "colors": [
+    "#e9e4d8",
+    "#8fa67a",
+    "#b07d73",
+    "#c9a65a",
+    "#8ea3ad"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "playful"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark playful piece"
+  ]
 }

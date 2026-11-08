@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "simplex-noise",
-    "animated",
+    "gentle",
     "light",
     "sage"
   ],
@@ -99,5 +99,22 @@
   "preview": {
     "video": "previews/simplex-sage.webm",
     "poster": "previews/simplex-sage.jpg"
-  }
+  },
+  "colors": [
+    "#e4e4bd",
+    "#c8d5a8",
+    "#8fa67a",
+    "#5e7457",
+    "#2f3a2c"
+  ],
+  "mode": "light",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "bold"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a light playful piece"
+  ]
 }

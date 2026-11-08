@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "god-rays",
-    "animated",
+    "gentle",
     "dark"
   ],
   "version": "1.0.0",
@@ -145,5 +145,21 @@
   "preview": {
     "video": "previews/god-rays.webm",
     "poster": "previews/god-rays.jpg"
-  }
+  },
+  "colors": [
+    "#ffffff",
+    "#c9a65a",
+    "#8ea3ad",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "luxury",
+    "calm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark luxury piece"
+  ]
 }

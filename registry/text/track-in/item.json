@@ -79,5 +79,16 @@
   "preview": {
     "video": "previews/track-in.webm",
     "poster": "previews/track-in.jpg"
-  }
+  },
+  "mood": [
+    "luxury",
+    "editorial",
+    "minimal"
+  ],
+  "energy": 1,
+  "role": "text",
+  "when": [
+    "fashion, editorial, premium",
+    "a logotype settling into place"
+  ]
 }

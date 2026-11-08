@@ -81,5 +81,16 @@
   "preview": {
     "video": "previews/pop-in.webm",
     "poster": "previews/pop-in.jpg"
-  }
+  },
+  "mood": [
+    "playful",
+    "warm",
+    "bold"
+  ],
+  "energy": 4,
+  "role": "text",
+  "when": [
+    "friendly consumer brands",
+    "short punchy words"
+  ]
 }

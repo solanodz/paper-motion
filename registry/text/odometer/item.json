@@ -86,5 +86,16 @@
   "preview": {
     "video": "previews/odometer.webm",
     "poster": "previews/odometer.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "editorial",
+    "bold"
+  ],
+  "energy": 3,
+  "role": "text",
+  "when": [
+    "a big number is the message",
+    "stats, counts, prices"
+  ]
 }

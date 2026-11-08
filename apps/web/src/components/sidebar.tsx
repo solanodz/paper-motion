@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useKit } from "@/lib/kit";
-import { IconAgent, IconChevron, IconClose, IconGrid, IconKit, IconSearch, IconSpark, TYPE_ICONS } from "./icons";
+import { IconAgent, IconChevron, IconClose, IconGrid, IconKit, IconSearch, TYPE_ICONS } from "./icons";
 
 type Item = { id: string; title: string };
 type Section = { type: string; title: string; items: Item[] };
@@ -26,7 +26,6 @@ export function Sidebar({ sections }: { sections: Section[] }) {
   }, [sections, q]);
 
   const top = [
-    { href: "/start", label: "Start here", icon: IconSpark },
     { href: "/kit", label: "Your kit", icon: IconKit, badge: kit.items.length || null },
     { href: "/library", label: "All resources", icon: IconGrid },
     { href: "/docs", label: "For agents", icon: IconAgent },
@@ -36,7 +35,7 @@ export function Sidebar({ sections }: { sections: Section[] }) {
     <nav className="flex flex-col gap-7 pb-12 text-[13.5px]">
       <ul className="flex flex-col gap-0.5">
         {top.map((l) => {
-          const Icon = l.icon, on = path === l.href || (l.href === "/start" && path.startsWith("/start"));
+          const Icon = l.icon, on = path === l.href || (l.href === "/kit" && path.startsWith("/kit"));
           return (
             <li key={l.href}>
               <Link href={l.href} className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors ${on ? "bg-raised text-figure" : "text-muted hover:text-figure"}`}>

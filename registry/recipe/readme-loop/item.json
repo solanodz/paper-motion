@@ -67,5 +67,17 @@
   "preview": {
     "video": "previews/readme-loop.webm",
     "poster": "previews/readme-loop.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "minimal"
+  ],
+  "duration": 6,
+  "formats": [
+    "16:9"
+  ],
+  "when": [
+    "a repo or landing hero",
+    "a silent loop with the install command"
+  ]
 }

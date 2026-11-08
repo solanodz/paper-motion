@@ -108,5 +108,19 @@
   "preview": {
     "video": "previews/moss.webm",
     "poster": "previews/moss.jpg"
-  }
+  },
+  "colors": [
+    "#121510",
+    "#e4ead6",
+    "#a7c080"
+  ],
+  "mode": "dark",
+  "mood": [
+    "calm",
+    "raw"
+  ],
+  "when": [
+    "a dark piece that should feel calm, raw",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

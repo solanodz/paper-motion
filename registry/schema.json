@@ -242,6 +242,91 @@
           "type": "string"
         }
       }
+    },
+    "when": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 4,
+      "description": "'Use it when\u2026' phrases an agent reasons with, apart from the summary."
+    },
+    "mood": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "calm",
+          "bold",
+          "playful",
+          "technical",
+          "editorial",
+          "warm",
+          "minimal",
+          "luxury",
+          "raw"
+        ]
+      },
+      "description": "The feelings it suits."
+    },
+    "energy": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Moves: how much happens, 1 still to 5 violent."
+    },
+    "role": {
+      "enum": [
+        "enter",
+        "exit",
+        "swap",
+        "emphasis",
+        "camera",
+        "text"
+      ],
+      "description": "Moves: what it does in a sequence."
+    },
+    "colors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$"
+      },
+      "description": "Backgrounds and palettes: dominant colors, for matching a brand."
+    },
+    "mode": {
+      "enum": [
+        "light",
+        "dark"
+      ],
+      "description": "Backgrounds and palettes: which side of middle grey."
+    },
+    "motion": {
+      "enum": [
+        "still",
+        "gentle",
+        "lively"
+      ],
+      "description": "Backgrounds: how much it moves."
+    },
+    "voice": {
+      "enum": [
+        "serif",
+        "sans",
+        "display",
+        "mono"
+      ],
+      "description": "Font pairs: the headline's voice."
+    },
+    "duration": {
+      "type": "number",
+      "description": "Recipes: seconds."
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Recipes: formats it is designed for, e.g. 16:9."
     }
   }
 }

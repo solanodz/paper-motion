@@ -140,5 +140,14 @@
   "preview": {
     "video": "previews/unbounded.webm",
     "poster": "previews/unbounded.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "technical"
+  ],
+  "voice": "display",
+  "when": [
+    "the brand should sound bold, technical",
+    "a display headline voice with a plain body face"
+  ]
 }

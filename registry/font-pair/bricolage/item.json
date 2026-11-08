@@ -140,5 +140,15 @@
   "preview": {
     "video": "previews/bricolage.webm",
     "poster": "previews/bricolage.jpg"
-  }
+  },
+  "mood": [
+    "playful",
+    "bold",
+    "warm"
+  ],
+  "voice": "display",
+  "when": [
+    "the brand should sound playful, bold, warm",
+    "a display headline voice with a plain body face"
+  ]
 }

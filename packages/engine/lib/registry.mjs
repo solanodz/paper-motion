@@ -40,7 +40,8 @@ export function loadItems(dir) {
 function check(value, schema, at = '') {
   const errs = [];
   const t = Array.isArray(value) ? 'array' : value === null ? 'null' : typeof value;
-  if (schema.type && schema.type !== t && !(schema.type === 'number' && t === 'number')) return [`${at || '/'}: expected ${schema.type}, got ${t}`];
+  if (schema.type && schema.type !== t && !(schema.type === 'integer' && t === 'number' && Number.isInteger(value))) return [`${at || '/'}: expected ${schema.type}, got ${t}`];
+  if (schema.type === 'integer') { if (schema.minimum !== undefined && value < schema.minimum) errs.push(`${at}: below ${schema.minimum}`); if (schema.maximum !== undefined && value > schema.maximum) errs.push(`${at}: above ${schema.maximum}`); }
   if (schema.enum && !schema.enum.includes(value)) errs.push(`${at}: "${value}" is not one of ${schema.enum.join(', ')}`);
   if (t === 'string') {
     if (schema.pattern && !new RegExp(schema.pattern).test(value)) errs.push(`${at}: "${value}" does not match ${schema.pattern}`);
@@ -99,26 +100,70 @@ const summaryLine = (it, site) => `- [${it.title}](${site}/r/${it.id}.json): ${i
 export function llmsTxt(items, site, { full = false } = {}) {
   const head = `# paper-motion
 
-> A library of motion resources for AI agents: component transitions, transitions, text effects, camera moves,
-> backgrounds (Paper shaders), palettes, font pairs and video recipes. Pick resources by name, install them into a
-> project as editable code or brand files, adapt their parameters, and render the video with the paper-motion engine.
+> Motion resources for AI agents: component transitions, transitions, text effects, camera moves, backgrounds
+> (Paper shaders), palettes, font pairs and video recipes, each with a name. You pick them for the user's brand,
+> propose options as a **board** link they open in a browser, install what they choose as code they own, and render
+> the video with the paper-motion engine. Nothing here renders on a server: every preview plays in the user's browser.
 
-## How to use it (for agents)
+## The flow (for agents)
 
-1. **Set up.** Install the skills with \`npx skills add solanodz/paper-motion\` and the engine with
-   \`npx paper-motion setup\` (needs Node 18+, ffmpeg and Chrome). The CLI is \`npx paper-motion\` (alias \`pamo\`).
-2. **Pick resources by name.** The user may name them ("backgrounds mesh-sage and grain-slate, effects magic-move and
-   whip-pan"). Every resource is listed below; ${site}/registry.json is the index and ${site}/r/<id>.json is one resource
-   with its params, usage notes and file contents.
-3. **Install them.** Run \`npx paper-motion add <id> [<id>…]\` in the project root. Code resources (moves) are copied to
-   \`moves/<file>.js\`; backgrounds are added to \`brand/shader-set/set.json\`; palettes and font pairs are merged into
-   \`brand/tokens.json\`; recipes write a scene to \`pieces/<id>/\`. Without the CLI, write the files and entries from
-   r/<id>.json yourself; imports point at \`paper-motion\` and \`paper-motion/kit\`.
-4. **Adapt them.** Each resource lists its \`params\`: change them in the call (moves), in set.json (backgrounds) or in
-   tokens.json (palettes, fonts). The copied code is the user's to edit.
-5. **Make the video.** Follow the \`make-video\` skill: agree a brief with the user, build \`scene.html\` (a pure
-   function of time), check stills with \`npx paper-motion still\`, and render with
-   \`npx paper-motion render scene.html --motion-blur 5\`. Component transitions expect A and B stacked in one slot.
+1. **Set up.** \`npx skills add solanodz/paper-motion\` (the skills) and \`npx paper-motion setup\` (the engine: Node 18+,
+   ffmpeg, Chrome). The CLI is \`npx paper-motion\` (short: \`pamo\`). Every command answers \`--help\`.
+2. **Interview.** Follow the \`make-video\` skill. Without the skills, ask at least: what the brand is in one plain
+   line; what this video is for and where it plays (format: 16:9, 9:16, 1:1); its ground, text and accent colors or
+   "no brand yet"; three words for the feel and one thing it must never look like; the one action at the end.
+   Mirror it back before proposing anything.
+3. **Propose with boards.** For each visual decision (palette, type, background, moves, recipe) pick 2–4 options from
+   this registry and share a board link: \`pamo board --url --title … --option id … --look palette,font\` prints it
+   (format below). The user opens it, sees the options live in their look, may tune one, and pastes back one line:
+   \`paper-motion: B · mesh-sage --set speed=0.8 (bg-1)\`, or \`paper-motion: none of bg-1, calmer ones\`. The reply
+   carries every value that differs from the defaults, your pre-tuning included, so installing it reproduces what they saw.
+4. **Install the choices.** \`npx paper-motion add <id> [--set key=value …]\` in the project root, with exactly the
+   \`--set\` arguments from the reply. Moves go to \`moves/\`, backgrounds to \`brand/shader-set/set.json\`, palettes and
+   fonts to \`brand/tokens.json\`, recipes to \`pieces/<id>/\`. Their choices also accumulate in a kit at ${site}/kit,
+   whose prompt carries the whole \`pamo add\` command.
+5. **Make the video.** Build \`scene.html\` (a pure function of time), check stills with \`pamo still\`, render with
+   \`pamo render scene.html --motion-blur 5\`. The test shot and the final piece are real renders, not boards.
+
+## Choosing well: the metadata
+
+${site}/registry.json is the index; every item carries, beside id, type, title, summary, tags and the names of its
+\`params\` (ranges and defaults are in ${site}/r/<id>.json, fetch it before writing a \`--set\`):
+- \`when\`: 2–3 "use it when…" phrases.
+- \`mood\`: calm, bold, playful, technical, editorial, warm, minimal, luxury, raw.
+- Moves: \`energy\` 1 (still) to 5 (violent) and \`role\` (enter, exit, swap, emphasis, camera, text).
+- Backgrounds and palettes: \`colors\` (dominant hex) and \`mode\` (light, dark); backgrounds also \`motion\` (still, gentle, lively).
+- Font pairs: \`voice\` (serif, sans, display, mono). Recipes: \`duration\`, \`formats\`.
+
+\`pamo search\` filters by them: \`pamo search --type background --mode dark --near "#0a0f1f,#eef1f8,#3d6bff"\`
+sorts backgrounds by color fit (the mean distance from each of theirs to the nearest of yours; lower is closer; pass
+ground, figure and accent so resources with white type are not punished); \`pamo search --type component --mood calm
+--energy "<=3" --role swap\`.
+
+Worked example, four backgrounds for a dark cobalt brand: filter \`type=background\`, \`mode=dark\`; rank by nearest
+\`colors\` to the brand's ground, figure and accent; spread the \`motion\` as far as the catalog allows (a quiet one,
+a lively one); prefer
+\`mood\` overlapping the brand's words; tune one toward the accent (\`dither-slate:colorFront=#3d6bff\`); write a
+one-line \`--note\` for each; share the link.
+
+## The board link format
+
+\`${site}/b#<payload>\` where payload = base64url(deflate-raw(JSON)). The JSON:
+
+\`\`\`json
+{ "v": 1, "kind": "resource", "title": "Backgrounds for Kiln", "ask": "Which one feels like the product?",
+  "reply": "bg-1",
+  "look": { "palette": { "id": "cobalt", "values": {} }, "font": { "id": "geist", "values": {} } },
+  "options": [
+    { "label": "A", "id": "mesh-graphite", "values": {}, "note": "quiet, graphite" },
+    { "label": "B", "id": "neuro-slate", "values": {}, "note": "a technical web" },
+    { "label": "C", "id": "dither-slate", "values": { "colorFront": "#3d6bff" }, "note": "pixels in your accent" },
+    { "label": "D", "id": "grain-slate", "values": {} } ] }
+\`\`\`
+
+Rules: 2–4 options, labels A–D, one resource type per \`resource\` board; \`kind: "kit"\` makes each option
+\`{ "label", "items": [{ "id", "values" }], "note" }\` (a whole kit); \`values\` hold only what differs from the
+defaults; the JSON stays under 8 KB. \`pamo board --url\` builds and validates it for you.
 
 Resources by type (${items.length} in all):
 `;
@@ -164,7 +209,7 @@ export function build({ dir = resolveRegistry().dir, out, site = SITE } = {}) {
   fs.mkdirSync(path.join(out, 'r'), { recursive: true });
   const index = {
     name: 'paper-motion', site, schema: `${site}/schema.json`, count: items.length, types: TYPES.filter((t) => items.some((i) => i.type === t)),
-    items: items.map(({ id, type, title, summary, tags, version, preview, related }) => ({ id, type, title, summary, tags, version, url: `${site}/r/${id}.json`, ...(preview ? { preview } : {}), ...(related ? { related } : {}) })),
+    items: items.map(({ id, type, title, summary, tags, version, preview, related, when, mood, energy, role, colors, mode, motion, voice, duration, formats, params }) => ({ id, type, title, summary, tags, version, url: `${site}/r/${id}.json`, ...Object.fromEntries(Object.entries({ when, mood, energy, role, colors, mode, motion, voice, duration, formats, preview, related, params: params?.filter((p) => !p.hidden).map((p) => p.name) }).filter(([, v]) => v !== undefined)) })),
   };
   fs.writeFileSync(path.join(out, 'registry.json'), JSON.stringify(index, null, 2));
   fs.mkdirSync(path.join(out, 'files'), { recursive: true });
@@ -270,9 +315,28 @@ export async function add(ids, { cwd = process.cwd(), registry, force = false, n
   return report;
 }
 
+const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+/** Distance between two hex colors (0 = same, ~441 = black to white). */
+export const colorDistance = (a, b) => { const x = rgb(a), y = rgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); };
+/** How far a resource's colors sit from a brand's: the mean nearest distance (lower is closer). */
+export const colorFit = (item, brand) => {
+  if (!item.colors?.length || !brand.length) return null;
+  const mean = item.colors.reduce((s, c) => s + Math.min(...brand.map((b) => colorDistance(c, b))), 0) / item.colors.length;
+  // a resource that declares one or two colors is thin evidence of a match: nudge it behind real palettes
+  return mean + (item.colors.length < 3 ? 40 * (3 - item.colors.length) : 0);
+};
+
+/**
+ * Finds resources: free words over id/title/summary/tags/when, plus filters: type, mode (light|dark), mood,
+ * motion (still|gentle|lively), role, energy ("3", "2-4", "<=3"), near (hex colors: sorts by closeness).
+ */
 export async function search(query, opts = {}) {
   const { items } = await getIndex(resolveRegistry(opts.registry));
   const words = String(query ?? '').toLowerCase().split(/\s+/).filter(Boolean);
-  const hit = (i) => { const hay = [i.id, i.type, i.title, i.summary, ...(i.tags ?? [])].join(' ').toLowerCase(); return words.every((w) => hay.includes(w)); };
-  return items.filter((i) => (!opts.type || i.type === opts.type) && hit(i));
+  const hit = (i) => { const hay = [i.id, i.type, i.title, i.summary, ...(i.tags ?? []), ...(i.when ?? []), ...(i.mood ?? [])].join(' ').toLowerCase(); return words.every((w) => hay.includes(w)); };
+  const en = (v) => { if (!opts.energy) return true; const e = String(opts.energy), m = e.match(/^(\d)-(\d)$/); if (m) return v >= +m[1] && v <= +m[2]; if (e.startsWith('<=')) return v <= +e.slice(2); if (e.startsWith('>=')) return v >= +e.slice(2); return v === +e; };
+  const near = opts.near ? String(opts.near).split(',').map((c) => c.trim()).filter((c) => /^#[0-9a-f]{6}$/i.test(c)) : [];
+  let out = items.filter((i) => (!opts.type || i.type === opts.type) && (!opts.mode || i.mode === opts.mode) && (!opts.mood || (i.mood ?? []).includes(opts.mood)) && (!opts.motion || i.motion === opts.motion) && (!opts.role || i.role === opts.role) && (i.energy === undefined || en(i.energy)) && hit(i));
+  if (near.length) out = out.map((i) => ({ ...i, fit: colorFit(i, near) })).filter((i) => i.fit !== null).sort((a, b) => a.fit - b.fit);
+  return out;
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "liquid-metal",
-    "animated",
+    "lively",
     "dark",
     "image"
   ],
@@ -174,5 +174,19 @@
   "preview": {
     "video": "previews/liquid-metal.webm",
     "poster": "previews/liquid-metal.jpg"
-  }
+  },
+  "colors": [
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "luxury",
+    "bold"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark luxury piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

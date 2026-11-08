@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "color-panels",
-    "animated",
+    "gentle",
     "dark"
   ],
   "version": "1.0.0",
@@ -130,5 +130,22 @@
   "preview": {
     "video": "previews/color-panels.webm",
     "poster": "previews/color-panels.jpg"
-  }
+  },
+  "colors": [
+    "#8fa67a",
+    "#b07d73",
+    "#8ea3ad",
+    "#c9a65a",
+    "#7e7594"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "bold",
+    "technical"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark bold piece"
+  ]
 }

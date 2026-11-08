@@ -169,5 +169,19 @@
   "preview": {
     "video": "previews/launch.webm",
     "poster": "previews/launch.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "editorial"
+  ],
+  "duration": 24,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "when": [
+    "announcing something new",
+    "you have proof: facts, UI, a command"
+  ]
 }

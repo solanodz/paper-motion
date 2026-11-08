@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "waves",
-    "still",
+    "gentle",
     "dark",
     "paper"
   ],
@@ -133,5 +133,20 @@
   "preview": {
     "video": "previews/waves-paper.webm",
     "poster": "previews/waves-paper.jpg"
-  }
+  },
+  "colors": [
+    "#e9e4d8",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "minimal",
+    "editorial",
+    "calm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark minimal piece"
+  ]
 }

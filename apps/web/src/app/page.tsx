@@ -1,44 +1,16 @@
 import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
-import { IconAgent, IconArrow, IconBrand, IconGrid, IconKit, IconSpark, TYPE_ICONS } from "@/components/icons";
+import { IconAgent, IconArrow, IconCheck, IconGrid, IconKit, TYPE_ICONS } from "@/components/icons";
 import { ResourceCard } from "@/components/resource-card";
 import { getIndex, TYPES } from "@/lib/registry";
 
-const PROMPT = `Use paper-motion.app to make a launch video for my brand with my kit: npx paper-motion add sage-night instrument mesh-sage magic-move whip-pan launch. Read https://paper-motion.app/llms.txt first.`;
+const PROMPT = `Use paper-motion.app to make a video for my brand. Read https://paper-motion.app/llms.txt first, interview me, then propose options as board links I can open.`;
 const FEATURED = ["magic-move", "dive-in", "whip-pan", "mesh-sage", "sage-night", "instrument"];
 
-/** A door's little motion: what that path feels like, without words. */
-function DoorArt({ kind }: { kind: "zero" | "brand" | "browse" }) {
-  if (kind === "zero") {
-    const sw = [["#1E201C", "#8FA67A", "#E9EDCF"], ["#0A0F1F", "#3D6BFF", "#EEF1F8"], ["#EADBC8", "#B07D73", "#2B1D19"], ["#0B0B0A", "#C8F04A", "#F4F4EE"]];
-    return (
-      <div className="relative h-full w-full">
-        {sw.map((s, i) => (
-          <div key={i} className="door-cycle absolute inset-0 flex items-end gap-1.5 p-5" style={{ animationDelay: `${i * 2}s`, background: s[0] }}>
-            {s.map((c, j) => <span key={j} className="h-[46%] flex-1 rounded-sm" style={{ background: c, height: `${30 + j * 18}%` }} />)}
-            <span className="absolute left-5 top-4 font-serif text-[30px] leading-none tracking-[-0.03em]" style={{ color: s[2] }}>Aa</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  if (kind === "brand") {
-    return (
-      <div className="relative flex h-full w-full items-center justify-center bg-[#0e0e0e]">
-        {["#E9E4D8", "#B5462E", "#5F7A86"].map((c, i) => (
-          <span key={c} className="door-drop absolute h-16 w-16 rounded-full mix-blend-screen" style={{ background: c, animationDelay: `${i * -1.4}s`, left: `${30 + i * 14}%` }} />
-        ))}
-        <span className="relative font-mono text-[11px] text-ground mix-blend-difference">#E9E4D8 · #B5462E · #5F7A86</span>
-      </div>
-    );
-  }
-  return <video src="/previews/magic-move.webm" poster="/previews/magic-move.jpg" autoPlay muted loop playsInline className="h-full w-full object-cover" />;
-}
-
-const DOORS = [
-  { href: "/start", kind: "zero" as const, icon: IconSpark, title: "Start from zero", line: "No brand yet? Answer five visual questions and get a kit made for you: palette, type, backgrounds, motion and a video structure.", cta: "Take the quiz" },
-  { href: "/start/brand", kind: "brand" as const, icon: IconBrand, title: "I have a brand", line: "Bring your colors and fonts. Every preview turns into your brand, so you pick motion that already fits.", cta: "Bring my brand" },
-  { href: "/library", kind: "browse" as const, icon: IconGrid, title: "I know what I want", line: "Go straight to the library: tune any resource live and drop it in your kit.", cta: "Open the library" },
+const STEPS = [
+  { icon: IconAgent, t: "Your agent proposes", d: "It reads your brand, picks from the library and sends you a board: a link with 2 to 4 options." },
+  { icon: IconCheck, t: "You choose on the board", d: "The options play live, in your colors and fonts. Tune one if you like, pick it, paste one line back." },
+  { icon: IconKit, t: "It builds the video", d: "Every choice lands in your kit. The agent installs it as code you own and renders the piece with you." },
 ];
 
 export default function Home() {
@@ -55,64 +27,59 @@ export default function Home() {
             Motion your agent can use.
           </h1>
           <p className="mt-7 max-w-[54ch] text-[17px] leading-relaxed text-muted md:text-[19px]">
-            Pick a look, tune the motion, and hand your AI agent one prompt. It installs everything as code you own and renders
-            the whole video.
+            A library of backgrounds, transitions, text effects, palettes, fonts and video recipes, built for AI agents.
+            Yours proposes, you choose, it renders.
           </p>
 
-          <h2 className="mt-16 text-[15px] font-medium text-figure">Where are you starting from?</h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {DOORS.map((d, i) => {
-              const Icon = d.icon;
-              return (
-                <Link key={d.href} href={d.href} className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-faint">
-                  <div className="relative aspect-[16/9] overflow-hidden border-b border-line"><DoorArt kind={d.kind} /></div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-md border border-line text-paper"><Icon size={16} /></span>
-                      <span className="font-mono text-[11px] text-faint">0{i + 1}</span>
-                    </div>
-                    <h3 className="mt-4 font-serif text-[30px] leading-none tracking-[-0.02em]">{d.title}</h3>
-                    <p className="mt-3 flex-1 text-[14px] leading-relaxed text-muted">{d.line}</p>
-                    <span className="mt-5 flex items-center gap-2 text-[13.5px] font-medium text-figure">
-                      {d.cta} <IconArrow size={15} className="transition-transform group-hover:translate-x-1" />
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="corner-marks mt-12 max-w-[820px] rounded-xl border border-line bg-surface">
+            <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3">
+              <span className="flex items-center gap-2 text-[13.5px] font-medium"><IconAgent size={15} className="text-paper" /> Start here: say this to your agent</span>
+              <CopyButton text={PROMPT} label="Copy prompt" />
+            </div>
+            <p className="px-5 py-5 font-mono text-[14.5px] leading-relaxed text-figure md:text-[15.5px]">{PROMPT}</p>
+            <p className="border-t border-line px-5 py-3 text-[12.5px] text-muted">Works in Claude Code, Codex, Cursor and any agent that reads the web and runs commands.</p>
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center gap-5">
+            <Link href="/library" className="flex items-center gap-2 text-[14px] text-figure underline decoration-faint underline-offset-4 hover:decoration-figure"><IconGrid size={15} /> Browse the library yourself</Link>
+            <Link href="/docs" className="text-[14px] text-muted hover:text-figure">How agents use it →</Link>
           </div>
         </div>
       </section>
 
       <section className="border-b border-line">
-        <div className="mx-auto grid max-w-[1400px] gap-10 px-5 py-16 md:grid-cols-[1fr_1.1fr] md:px-8 md:py-20">
-          <div>
-            <div className="flex items-center gap-2 text-paper"><IconKit size={18} /><span className="text-[14px] font-medium">Every path ends in your kit</span></div>
-            <h2 className="mt-4 max-w-[16ch] font-serif text-[40px] leading-[1.02] tracking-[-0.02em] md:text-[54px]">One kit, one prompt, one video.</h2>
-            <p className="mt-5 max-w-[48ch] text-[15px] leading-relaxed text-muted">
-              Your kit holds a palette, a font pair, backgrounds, the moves you like and a video structure, each with your settings.
-              Copy it as one prompt; your agent installs it with <code className="font-mono text-[13.5px] text-figure">paper-motion add</code> and builds the piece with you.
-            </p>
-          </div>
-          <div className="corner-marks self-center rounded-xl border border-line bg-surface p-5">
-            <div className="flex flex-wrap gap-2">
-              {[["palette", "sage-night"], ["font-pair", "instrument"], ["background", "mesh-sage"], ["component", "magic-move"], ["component", "whip-pan"], ["recipe", "launch"]].map(([t, id]) => {
-                const Icon = TYPE_ICONS[t];
-                return <span key={id} className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 font-mono text-[12px] text-figure"><Icon size={13} className="text-paper" />{id}</span>;
-              })}
+        <div className="mx-auto max-w-[1400px] px-5 py-16 md:px-8 md:py-20">
+          <h2 className="font-serif text-[40px] leading-none tracking-[-0.02em] md:text-[54px]">How it works</h2>
+          <ol className="mt-10 grid gap-8 md:grid-cols-3">
+            {STEPS.map((s, i) => (
+              <li key={s.t} className="border-t border-line pt-5">
+                <div className="flex items-center justify-between"><s.icon size={18} className="text-paper" /><span className="font-pixel text-[22px] text-faint">0{i + 1}</span></div>
+                <h3 className="mt-4 text-[18px] font-medium">{s.t}</h3>
+                <p className="mt-2 text-[14px] leading-relaxed text-muted">{s.d}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-10 grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+            <div className="overflow-hidden rounded-xl border border-line bg-surface">
+              <div className="flex items-center gap-2 border-b border-line px-4 py-2.5 font-mono text-[11.5px] text-faint"><span className="h-2 w-2 rounded-full bg-paper" /> a board, as your agent would send it</div>
+              <div className="grid grid-cols-4 gap-2 p-3">
+                {["mesh-graphite", "neuro-slate", "dither-slate", "grain-slate"].map((id, i) => (
+                  <div key={id} className="relative aspect-video overflow-hidden rounded-md border border-line bg-black">
+                    <img src={`/previews/${id}.jpg`} alt="" className="h-full w-full object-cover opacity-70" onError={undefined} />
+                    <span className="absolute left-1.5 top-1.5 rounded bg-ground/80 px-1.5 font-mono text-[10.5px] text-figure">{"ABCD"[i]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="border-t border-line px-4 py-2.5 font-mono text-[12px] text-muted">paper-motion: C · dither-slate --set colorFront=#3d6bff</p>
             </div>
-            <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">
-              <span className="flex items-center gap-2 text-[13px] text-muted"><IconAgent size={15} /> For your agent</span>
-              <CopyButton text={PROMPT} label="Copy" />
-            </div>
-            <p className="mt-3 font-mono text-[13px] leading-relaxed text-figure">{PROMPT}</p>
+            <p className="max-w-[30ch] text-[14px] leading-relaxed text-muted">You open the link, pick one, paste the line. That is the whole handoff.</p>
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-[1400px] px-5 py-16 md:px-8 md:py-20">
         <div className="flex items-end justify-between gap-6">
-          <h2 className="font-serif text-[40px] leading-none tracking-[-0.02em] md:text-[54px]">A few to start with</h2>
+          <h2 className="font-serif text-[40px] leading-none tracking-[-0.02em] md:text-[54px]">In the library</h2>
           <Link href="/library" className="hidden items-center gap-2 text-[13.5px] text-muted hover:text-figure sm:flex">All {count} <IconArrow size={14} /></Link>
         </div>
         <div className="mt-10 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "perlin-noise",
-    "animated",
+    "gentle",
     "dark",
     "sage"
   ],
@@ -128,5 +128,19 @@
   "preview": {
     "video": "previews/perlin-sage.webm",
     "poster": "previews/perlin-sage.jpg"
-  }
+  },
+  "colors": [
+    "#c8d5a8",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "calm",
+    "technical"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark calm piece"
+  ]
 }

@@ -109,5 +109,19 @@
   "preview": {
     "video": "previews/slate-sea.webm",
     "poster": "previews/slate-sea.jpg"
-  }
+  },
+  "colors": [
+    "#1c2226",
+    "#e6ecee",
+    "#a9c7d3"
+  ],
+  "mode": "dark",
+  "mood": [
+    "calm",
+    "technical"
+  ],
+  "when": [
+    "a dark piece that should feel calm, technical",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

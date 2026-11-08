@@ -83,5 +83,16 @@
   "preview": {
     "video": "previews/cells.webm",
     "poster": "previews/cells.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "playful",
+    "bold"
+  ],
+  "energy": 4,
+  "role": "swap",
+  "when": [
+    "a grid-minded, graphic brand",
+    "a transition that reads as pixels or tiles"
+  ]
 }

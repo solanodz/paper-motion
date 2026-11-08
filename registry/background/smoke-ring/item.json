@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "smoke-ring",
-    "animated",
+    "gentle",
     "dark"
   ],
   "version": "1.0.0",
@@ -120,5 +120,19 @@
   "preview": {
     "video": "previews/smoke-ring.webm",
     "poster": "previews/smoke-ring.jpg"
-  }
+  },
+  "colors": [
+    "#ffffff",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "luxury",
+    "calm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark luxury piece"
+  ]
 }

@@ -109,5 +109,19 @@
   "preview": {
     "video": "previews/navy-bone.webm",
     "poster": "previews/navy-bone.jpg"
-  }
+  },
+  "colors": [
+    "#e9e3d3",
+    "#14213d",
+    "#c8553d"
+  ],
+  "mode": "light",
+  "mood": [
+    "editorial",
+    "luxury"
+  ],
+  "when": [
+    "a light piece that should feel editorial, luxury",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

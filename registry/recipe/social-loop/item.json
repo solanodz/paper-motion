@@ -96,5 +96,20 @@
   "preview": {
     "video": "previews/social-loop.webm",
     "poster": "previews/social-loop.jpg"
-  }
+  },
+  "mood": [
+    "calm",
+    "minimal",
+    "warm"
+  ],
+  "duration": 8,
+  "formats": [
+    "4:5",
+    "9:16",
+    "1:1"
+  ],
+  "when": [
+    "a feed post that plays forever",
+    "presence, not information"
+  ]
 }

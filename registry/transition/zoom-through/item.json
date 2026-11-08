@@ -61,5 +61,16 @@
   "preview": {
     "video": "previews/zoom-through.webm",
     "poster": "previews/zoom-through.jpg"
-  }
+  },
+  "mood": [
+    "calm",
+    "luxury",
+    "editorial"
+  ],
+  "energy": 3,
+  "role": "camera",
+  "when": [
+    "going \"inside\" a frame or a detail",
+    "one continuous camera instead of cuts"
+  ]
 }

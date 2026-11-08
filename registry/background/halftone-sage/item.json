@@ -181,5 +181,21 @@
   "preview": {
     "video": "previews/halftone-sage.webm",
     "poster": "previews/halftone-sage.jpg"
-  }
+  },
+  "colors": [
+    "#e4e4bd",
+    "#4e5e45"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "editorial",
+    "raw",
+    "playful"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light editorial piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

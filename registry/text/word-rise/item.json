@@ -69,5 +69,17 @@
   "preview": {
     "video": "previews/word-rise.webm",
     "poster": "previews/word-rise.jpg"
-  }
+  },
+  "mood": [
+    "calm",
+    "editorial",
+    "minimal",
+    "warm"
+  ],
+  "energy": 2,
+  "role": "text",
+  "when": [
+    "the neutral default for titles",
+    "words should arrive one by one with weight"
+  ]
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "mesh-gradient",
-    "animated",
+    "gentle",
     "dark",
     "sage"
   ],
@@ -109,5 +109,22 @@
   "preview": {
     "video": "previews/mesh-sage.webm",
     "poster": "previews/mesh-sage.jpg"
-  }
+  },
+  "colors": [
+    "#070806",
+    "#5e7457",
+    "#c8d5a8",
+    "#1c2219"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "calm",
+    "luxury",
+    "warm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark calm piece"
+  ]
 }

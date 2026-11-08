@@ -49,3 +49,4 @@ next-env.d.ts
 /public/files/
 /public/play/
 /src/lib/customize.mjs
+/src/lib/board.mjs

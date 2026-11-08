@@ -33,7 +33,7 @@ Every step runs an interview (`interview`) with options the user sees or hears, 
 
 - **"Just make a video."** Go to `make-video`. It reads whatever the brand folder has and settles the rest inside the piece's own intake with one question each; offer the missing brand steps once, don't force them.
 - **A designer with a brand already defined.** Every brand skill has an import start: fonts, hex codes, a brand manual, a website, a Figma or Paper file. Point them at the step whose decisions they already have, and the skill writes them down and asks only what is missing.
-- **"Use paper-motion.app" / resources by name.** The user names backgrounds, effects, palettes, fonts or a recipe from paper-motion.app. Go to `make-video`: it reads `llms.txt`, installs them with `pamo add` and builds the piece around them. With no brand folder yet, a palette and a font pair from the registry (`pamo add sage-night instrument`) are enough to start.
+- **"Use paper-motion.app".** The user wants a video from paper-motion.app, with or without naming resources. Go to `make-video`: it reads `https://paper-motion.app/llms.txt`, interviews, proposes options as **board** links the user opens to choose (`make-video/references/boards.md`), installs the choices with `pamo add` and builds the piece. With no brand folder yet, a palette and a font pair chosen on a board (`pamo add sage-night instrument`) are enough to start.
 - **Changing one thing.** Go straight to the skill that owns it (a new palette → `visual-system`, slower videos → `motion-style`); it re-runs only that branch.
 - **Paper Desktop.** Recommended for hand-tuning shaders (`shader-set`) and for style frames, never required. Mention the free plan's 100 calls a week before a session that uses it.
 

@@ -109,5 +109,19 @@
   "preview": {
     "video": "previews/ochre-sun.webm",
     "poster": "previews/ochre-sun.jpg"
-  }
+  },
+  "colors": [
+    "#f1e8c9",
+    "#2a2618",
+    "#b08a3e"
+  ],
+  "mode": "light",
+  "mood": [
+    "warm",
+    "playful"
+  ],
+  "when": [
+    "a light piece that should feel warm, playful",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

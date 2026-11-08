@@ -80,5 +80,15 @@
   "preview": {
     "video": "previews/whip-pan.webm",
     "poster": "previews/whip-pan.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "playful"
+  ],
+  "energy": 5,
+  "role": "swap",
+  "when": [
+    "energetic UI or card swaps",
+    "you want speed with a light streak"
+  ]
 }

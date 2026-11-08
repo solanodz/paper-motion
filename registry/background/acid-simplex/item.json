@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "simplex-noise",
-    "animated",
+    "gentle",
     "light",
     "acid"
   ],
@@ -99,5 +99,22 @@
   "preview": {
     "video": "previews/acid-simplex.webm",
     "poster": "previews/acid-simplex.jpg"
-  }
+  },
+  "colors": [
+    "#f7fa81",
+    "#7c9e25",
+    "#ffde66",
+    "#53c953",
+    "#97ffd7"
+  ],
+  "mode": "light",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "bold"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a light playful piece"
+  ]
 }

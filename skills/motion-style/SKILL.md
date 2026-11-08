@@ -22,7 +22,7 @@ If `MOTION.md` exists, ask what should change and re-run only those branches.
 
 ## 3 · Interview
 
-Call `interview` with this question bank, the file `brand/MOTION.md`, and a depth of two rounds. Every visual question is a clip board: build each option with
+Call `interview` with this question bank, the file `brand/MOTION.md`, and a depth of two rounds. When the user can open a browser, propose each question as a live board of registry moves in the brand's look (`pamo board --url --look <palette>,<font> --option <move>[:duration=…] …`; choose candidates by `mood`, `energy` and `role`, see `make-video/references/boards.md`), and read the `paper-motion:` reply as the answer. Otherwise every visual question is a clip board: build each option with
 
 ```
 pamo new <letter> --dir brand/.interview/<topic> --move <move> --pace <calm|medium|fast> --text <typing|rise|blur|track|plain> --camera <still|drift|travel>

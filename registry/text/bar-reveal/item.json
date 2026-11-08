@@ -67,5 +67,16 @@
   "preview": {
     "video": "previews/bar-reveal.webm",
     "poster": "previews/bar-reveal.jpg"
-  }
+  },
+  "mood": [
+    "editorial",
+    "bold",
+    "minimal"
+  ],
+  "energy": 3,
+  "role": "text",
+  "when": [
+    "lines of a manifesto",
+    "graphic, print-like reveals"
+  ]
 }

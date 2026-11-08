@@ -181,5 +181,21 @@
   "preview": {
     "video": "previews/halftone-ochre.webm",
     "poster": "previews/halftone-ochre.jpg"
-  }
+  },
+  "colors": [
+    "#efe6cc",
+    "#7a5a24"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "editorial",
+    "raw",
+    "playful"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light editorial piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

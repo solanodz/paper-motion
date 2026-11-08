@@ -85,10 +85,14 @@ A skill's entrance for someone starting from nothing: it runs an interview.
 A skill's entrance for someone who already decided: it takes what they bring (fonts, colors, a brand manual, a website, a Figma or Paper file), writes it to the brand folder and asks only for what is missing.
 _Avoid_: expert mode, skip
 
-**Option board**:
-A rendered set of labelled choices (A, B, C, D) shown during an interview: stills for questions of form, short clips for questions of motion.
-_Avoid_: mockup, moodboard
+**Board**:
+A set of labelled options (A, B, C, D) the agent shows the user to decide one thing: a palette, a background, a move, a recipe, or whole kits. It has two forms: a rendered board (a still or short clips, shown in the chat) and a live board (a paper-motion.app link where the options play in the user's look and can be tuned before choosing).
+_Avoid_: option board (the old name), mockup, moodboard, variants page
+
+**Kit**:
+The user's chosen resources with their settings: a look (palette, font pair), material (backgrounds), motion (moves) and a structure (recipe). Boards fill it; it becomes one prompt for the agent.
+_Avoid_: cart, selection, project
 
 **Interview**:
-The pack's way of finding out what the user wants: rounds of numbered questions, each with a recommended answer and, where the choice is visual, options the user can see.
+The pack's way of finding out what the user wants: rounds of numbered questions, each with a recommended answer and, where the choice is visual, a board.
 _Avoid_: questionnaire, form, intake (outside a piece)

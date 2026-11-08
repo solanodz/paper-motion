@@ -66,5 +66,15 @@
   "preview": {
     "video": "previews/whip.webm",
     "poster": "previews/whip.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "raw"
+  ],
+  "energy": 5,
+  "role": "swap",
+  "when": [
+    "fast, energetic cuts between scenes",
+    "music-driven pieces"
+  ]
 }

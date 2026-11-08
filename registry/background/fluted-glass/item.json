@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "fluted-glass",
-    "still",
+    "gentle",
     "dark",
     "image",
     "glass"
@@ -184,5 +184,19 @@
   "preview": {
     "video": "previews/fluted-glass.webm",
     "poster": "previews/fluted-glass.jpg"
-  }
+  },
+  "colors": [
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "luxury",
+    "editorial"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark luxury piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

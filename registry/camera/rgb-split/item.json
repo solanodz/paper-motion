@@ -76,5 +76,16 @@
   "preview": {
     "video": "previews/rgb-split.webm",
     "poster": "previews/rgb-split.jpg"
-  }
+  },
+  "mood": [
+    "raw",
+    "technical",
+    "bold"
+  ],
+  "energy": 4,
+  "role": "emphasis",
+  "when": [
+    "digital glitch accents on hits",
+    "gaming, music, underground"
+  ]
 }

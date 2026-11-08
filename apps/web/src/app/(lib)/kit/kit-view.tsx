@@ -39,9 +39,9 @@ export function KitView({ site }: { site: string }) {
       <div className="mt-10 rounded-xl border border-dashed border-line p-8 md:p-12">
         <IconKit size={28} className="text-paper" />
         <h2 className="mt-5 font-serif text-[36px] leading-none tracking-[-0.02em]">Your kit is empty.</h2>
-        <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted">A kit is what your agent builds your video from: a look, a material, some motion and a structure. Pick how you want to start.</p>
+        <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-muted">A kit is what your agent builds your video from: a look, a material, some motion and a structure. It fills up as you choose on the boards your agent sends you.</p>
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          {[{ href: "/start", icon: IconSpark, t: "Start from zero" }, { href: "/start/brand", icon: IconBrand, t: "I have a brand" }, { href: "/library", icon: IconGrid, t: "Browse the library" }].map((d) => (
+          {[{ href: "/", icon: IconSpark, t: "Ask your agent to propose" }, { href: "/kit/brand", icon: IconBrand, t: "Set your brand’s look" }, { href: "/library", icon: IconGrid, t: "Browse the library" }].map((d) => (
             <Link key={d.href} href={d.href} className="group flex items-center gap-3 rounded-lg border border-line bg-surface p-4 hover:border-faint">
               <d.icon size={17} className="text-paper" /><span className="flex-1 text-[14px]">{d.t}</span><IconArrow size={14} className="text-faint transition-transform group-hover:translate-x-1" />
             </Link>
@@ -80,7 +80,7 @@ export function KitView({ site }: { site: string }) {
           return (
             <section key={g.key}>
               <div className="mb-3 flex items-baseline justify-between">
-                <h2 className="text-[16px] font-medium">{g.title}</h2>
+                <h2 className="text-[16px] font-medium">{g.title}{g.key === "look" ? <Link href="/kit/brand" className="ml-3 text-[12.5px] font-normal text-muted underline decoration-faint underline-offset-4 hover:text-figure">set by hand</Link> : null}</h2>
                 {list.length ? <span className="flex items-center gap-1 text-[12px] text-paper"><IconCheck size={12} /> {list.length}</span> : null}
               </div>
               {list.length ? <ul className="flex flex-col gap-2">{list.map(row)}</ul> : (

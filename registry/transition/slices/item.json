@@ -63,5 +63,16 @@
   "preview": {
     "video": "previews/slices.webm",
     "poster": "previews/slices.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "raw",
+    "editorial"
+  ],
+  "energy": 4,
+  "role": "swap",
+  "when": [
+    "poster-like, loud cuts",
+    "brutalist layouts"
+  ]
 }

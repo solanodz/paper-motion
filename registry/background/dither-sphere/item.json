@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "dithering",
-    "animated",
+    "lively",
     "dark"
   ],
   "version": "1.0.0",
@@ -113,5 +113,20 @@
   "preview": {
     "video": "previews/dither-sphere.webm",
     "poster": "previews/dither-sphere.jpg"
-  }
+  },
+  "colors": [
+    "#a3a3a3",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
 }

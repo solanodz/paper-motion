@@ -141,5 +141,14 @@
   "preview": {
     "video": "previews/geist.webm",
     "poster": "previews/geist.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "minimal"
+  ],
+  "voice": "sans",
+  "when": [
+    "the brand should sound technical, minimal",
+    "a sans headline voice with a plain body face"
+  ]
 }

@@ -181,5 +181,21 @@
   "preview": {
     "video": "previews/halftone-clay.webm",
     "poster": "previews/halftone-clay.jpg"
-  }
+  },
+  "colors": [
+    "#eadbc8",
+    "#8a4f3d"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "editorial",
+    "raw",
+    "playful"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light editorial piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

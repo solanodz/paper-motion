@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { apply, code as codeFor, defaults as defaultsOf, MOVE_TYPES } from "@/lib/customize.mjs";
-import { ShaderPreview } from "@/components/shader-preview";
+import { code as codeFor, defaults as defaultsOf, MOVE_TYPES } from "@/lib/customize.mjs";
 import { Controls, type Param } from "./controls";
 import { CodeView, copyText } from "./code-view";
-import { DURATION, MovePlayer, type PlayerHandle } from "./move-player";
+import { DURATION, type PlayerHandle } from "./move-player";
+import { ResourceStage } from "./resource-stage";
+import { decodeBoard, replyLine } from "@/lib/board.mjs";
+import { buildTheme, loadResource, type Res, type Theme } from "@/lib/theme";
+import { IconAgent, IconCheck, IconCopy } from "@/components/icons";
+import { kit } from "@/lib/kit";
 import { KitButton } from "@/components/kit-button";
 import { useKitTheme } from "@/lib/use-kit-theme";
 import { IconCollapse, IconExpand, IconPause, IconPlay, IconReplay } from "@/components/icons";
@@ -20,46 +24,6 @@ export type PlaygroundResource = {
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const enc = (o: object) => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const dec = (s: string) => JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g, "+").replace(/_/g, "/")))));
-const REMOUNT = ["seed", "separator", "from", "to"];
-
-function PalettePreview({ entry }: { entry: { colors: Record<string, { hex: string }>; ramp: string[] } }) {
-  const c = entry.colors;
-  const ratio = (a: string, b: string) => {
-    const l = (h: string) => { const n = parseInt(h.slice(1, 7), 16); const v = [n >> 16 & 255, n >> 8 & 255, n & 255].map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
-    const [x, y] = [l(a), l(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05);
-  };
-  const fig = ratio(c.figure.hex, c.ground.hex), mut = ratio(c.muted.hex, c.ground.hex);
-  return (
-    <div className="flex h-full w-full flex-col" style={{ background: c.ground.hex }}>
-      <div className="flex flex-1 flex-col justify-center px-[6%]">
-        <div className="font-serif text-[clamp(40px,7vw,104px)] leading-none tracking-[-0.03em]" style={{ color: c.figure.hex }}>Every frame.</div>
-        <div className="mt-4 max-w-[46ch] text-[clamp(13px,1.4vw,18px)]" style={{ color: c.muted.hex }}>Secondary text sits in muted. The accent is for <span style={{ color: c.accent.hex }}>one moment</span>.</div>
-        <div className="mt-6 inline-flex w-fit rounded-lg px-4 py-3 font-mono text-[12px]" style={{ background: c.surface.hex, color: c.figure.hex }}>surface · a card or a panel</div>
-        <div className="mt-5 flex gap-3 font-mono text-[11px]">
-          <span style={{ color: fig < 7 ? "#ff6b4a" : c.muted.hex }}>figure {fig.toFixed(1)}:1{fig < 7 ? " · low" : ""}</span>
-          <span style={{ color: mut < 3 ? "#ff6b4a" : c.muted.hex }}>muted {mut.toFixed(1)}:1{mut < 3 ? " · low" : ""}</span>
-        </div>
-      </div>
-      <div className="flex h-[16%]">{(entry.ramp ?? []).map((h, i) => <div key={i} className="flex-1" style={{ background: h }} />)}</div>
-    </div>
-  );
-}
-
-function FontPreview({ entry }: { entry: { fonts: Record<string, { family: string; css?: string }>; type: { display: { weight: number; tracking: string } } } }) {
-  const f = entry.fonts;
-  const links = [...new Set(Object.values(f).map((x) => x.css).filter(Boolean) as string[])];
-  return (
-    <div className="flex h-full w-full flex-col justify-center bg-raised px-[6%]">
-      {links.map((href) => (
-        // eslint-disable-next-line @next/next/no-page-custom-font
-        <link key={href} rel="stylesheet" href={href} />
-      ))}
-      <div className="truncate leading-[0.95]" style={{ fontFamily: `'${f.display.family}'`, fontWeight: entry.type.display.weight, letterSpacing: entry.type.display.tracking, fontSize: "clamp(44px,8vw,120px)" }}>Make it move.</div>
-      <p className="mt-5 max-w-[52ch] text-muted" style={{ fontFamily: `'${f.text.family}'`, fontSize: "clamp(14px,1.5vw,20px)" }}>Body text for captions and lines that explain. Readable at a glance, in any format.</p>
-      <p className="mt-3 text-faint" style={{ fontFamily: `'${f.mono.family}'`, fontSize: "clamp(11px,1vw,14px)" }}>$ npx paper-motion add · {f.display.family} / {f.text.family} / {f.mono.family}</p>
-    </div>
-  );
-}
 
 /** A resource's playground, "Inspector" layout: stage + playback, parameters panel, code below. */
 export function Playground({ resource: r, site, backgrounds }: { resource: PlaygroundResource; site: string; backgrounds: string[] }) {
@@ -72,8 +36,24 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
   const [full, setFull] = useState(false);
   const [mobileTab, setMobileTab] = useState<"preview" | "code">("preview");
   const player = useRef<PlayerHandle>(null);
-  const theme = useKitTheme();
+  const kitLook = useKitTheme();
   const [useTheme, setUseTheme] = useState(true);
+  // opened from a board (?from=<fragment>&label=B): the board's look wins, and choosing yields the reply line
+  type Board = { title: string; kind: string; reply?: string; look?: { palette?: { id: string; values?: Values }; font?: { id: string; values?: Values } }; options: { label: string; id?: string }[] };
+  const [board, setBoard] = useState<{ b: Board; label: string } | null>(null);
+  const [boardRes, setBoardRes] = useState<Record<string, Res>>({});
+  const [reply, setReply] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    const q = new URLSearchParams(location.search), from = q.get("from"), label = q.get("label");
+    if (!from || !label) return;
+    decodeBoard(from).then((b: Board) => {
+      setBoard({ b, label });
+      for (const it of [b.look?.palette, b.look?.font]) if (it) loadResource(it.id).then((r) => setBoardRes((x) => ({ ...x, [it.id]: r })));
+    }).catch(() => {});
+  }, []);
+  const boardLook = useMemo(() => (board ? buildTheme(board.b.look?.palette, board.b.look?.font, boardRes) : null), [board, boardRes]);
+  const theme: Theme = boardLook ?? kitLook;
   const live = theme && useTheme ? theme : null;
   const isMove = MOVE_TYPES.includes(r.type);
   const key = `pm:v:${r.id}`;
@@ -99,8 +79,6 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
   const set = (k: string, v: unknown) => setValues((x) => ({ ...x, [k]: v }));
   const reset = () => setValues(defaults);
   const out = useMemo(() => codeFor(r, values, { showAll, site }) as { tabs: { key: string; label: string; code: string }[]; changed: number; agent: string }, [r, values, showAll, site]);
-  const entry = useMemo(() => (apply(r, values) as { install: { entry?: Record<string, unknown> } }).install.entry, [r, values]);
-  const remountKey = JSON.stringify(REMOUNT.map((k) => (r.type === "text" ? values[k] : null)));
   const share = async () => {
     const url = new URL(location.href);
     url.searchParams.delete("variant");
@@ -108,15 +86,14 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
     return copyText(url.toString());
   };
 
-  let stage: React.ReactNode = null;
-  const fontLinks = live?.links.map((href) => <link key={href} rel="stylesheet" href={href} />) ?? null;
-  if (isMove) stage = <MovePlayer ref={player} id={r.id} values={values} playing={playing} speed={speed} remountKey={remountKey} theme={live?.vars ?? null} onTime={setTime} />;
-  else if (r.type === "background" && entry) {
-    const props = { ...(entry.props as Values), speed: playing ? Number((entry.props as Values).speed ?? 1) * speed : 0 };
-    stage = <ShaderPreview key={JSON.stringify((entry.props as Values).colors ?? "")} entry={{ ...(entry as { shader: string }), props }} className="h-full w-full" />;
-  } else if (r.type === "palette" && entry) stage = <PalettePreview entry={entry as never} />;
-  else if (r.type === "font-pair" && entry) stage = <FontPreview entry={entry as never} />;
-  else if (r.preview?.video) stage = <video src={`/${r.preview.video}`} poster={r.preview.poster ? `/${r.preview.poster}` : undefined} autoPlay muted loop playsInline className="h-full w-full object-cover" />;
+  const stage = <ResourceStage ref={player} resource={r} values={values} theme={live} playing={playing} speed={speed} onTime={setTime} />;
+  const choose = async () => {
+    if (!board) return;
+    const line = replyLine(board.b, { label: board.label, setArgs: (out as { setArgs?: string[] }).setArgs ?? [] });
+    kit.add({ id: r.id, type: r.type, title: r.title, values: diff });
+    setReply(line);
+    setCopied(await copyText(line));
+  };
 
   const playback = isMove || r.type === "background" ? (
     <div className="flex items-center gap-3 font-mono text-[11.5px] text-muted">
@@ -139,6 +116,20 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
 
   return (
     <div className="mt-8">
+      {board ? (
+        <div className="mb-5 rounded-lg border border-paper/40 bg-surface px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[13px]">
+            <span className="flex items-center gap-2 text-muted"><IconAgent size={15} className="text-paper" /> Tuning option <b className="text-figure">{board.label}</b> of “{board.b.title}”. Adjust, then choose it.</span>
+            <a href={`/b#${new URLSearchParams(location.search).get("from")}`} className="text-muted underline decoration-faint underline-offset-4 hover:text-figure">Back to the board</a>
+          </div>
+          {reply ? (
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+              <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-[12.5px] text-figure">{reply}</code>
+              <button type="button" onClick={async () => setCopied(await copyText(reply))} className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 font-mono text-[11.5px] text-muted hover:text-figure">{copied ? <IconCheck size={12} /> : <IconCopy size={12} />}{copied ? "copied, paste it in the chat" : "copy"}</button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-[13px] text-muted">{out.changed ? `${out.changed} setting${out.changed > 1 ? "s" : ""} tuned` : "Tune it, then add it to your kit"}</span>
@@ -149,7 +140,9 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
             </button>
           ) : null}
         </div>
-        <KitButton id={r.id} type={r.type} title={r.title} values={diff} variant="solid" />
+        {board ? (
+          <button type="button" onClick={choose} className="flex items-center gap-2 rounded-md bg-paper px-3.5 py-2 text-[13px] font-medium text-ground hover:bg-figure"><IconCheck size={15} /> Choose {board.label}, like this</button>
+        ) : <KitButton id={r.id} type={r.type} title={r.title} values={diff} variant="solid" />}
       </div>
       {/* phone: Preview / Code tabs */}
       <div className="mb-3 flex gap-1 lg:hidden">
@@ -163,7 +156,6 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
         <div className={`flex min-w-0 flex-col gap-4 ${mobileTab === "code" ? "max-lg:hidden" : ""}`}>
           <div className={full ? "fixed inset-0 z-[70] flex items-center justify-center bg-black p-4" : ""}>
             <div className={`relative w-full overflow-hidden ${full ? "aspect-video max-h-full max-w-[calc((100vh-2rem)*16/9)]" : "aspect-video rounded-xl border border-line bg-surface"}`}>
-              {fontLinks}
               {stage}
               <button type="button" onClick={() => setFull((f) => !f)} aria-label={full ? "Exit fullscreen" : "Fullscreen"} className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-line bg-ground/80 text-figure backdrop-blur hover:border-faint">{full ? <IconCollapse size={14} /> : <IconExpand size={14} />}</button>
             </div>

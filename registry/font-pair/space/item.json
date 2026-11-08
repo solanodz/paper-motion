@@ -139,5 +139,14 @@
   "preview": {
     "video": "previews/space.webm",
     "poster": "previews/space.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "playful"
+  ],
+  "voice": "sans",
+  "when": [
+    "the brand should sound technical, playful",
+    "a sans headline voice with a plain body face"
+  ]
 }

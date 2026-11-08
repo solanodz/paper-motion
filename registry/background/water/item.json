@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "water",
-    "animated",
+    "lively",
     "dark",
     "image"
   ],
@@ -153,5 +153,19 @@
   "preview": {
     "video": "previews/water.webm",
     "poster": "previews/water.jpg"
-  }
+  },
+  "colors": [
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "calm",
+    "luxury"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark calm piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

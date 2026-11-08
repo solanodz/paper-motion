@@ -79,5 +79,16 @@
   "preview": {
     "video": "previews/roll.webm",
     "poster": "previews/roll.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "playful",
+    "editorial"
+  ],
+  "energy": 3,
+  "role": "text",
+  "when": [
+    "one headline with a changing last word",
+    "listing what the product does"
+  ]
 }

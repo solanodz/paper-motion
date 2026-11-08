@@ -57,5 +57,15 @@
   "preview": {
     "video": "previews/push.webm",
     "poster": "previews/push.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "technical"
+  ],
+  "energy": 3,
+  "role": "swap",
+  "when": [
+    "frames feel like a sequence of panels",
+    "a clear direction of travel helps the story"
+  ]
 }

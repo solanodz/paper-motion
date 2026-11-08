@@ -79,5 +79,15 @@
   "preview": {
     "video": "previews/flip-in.webm",
     "poster": "previews/flip-in.jpg"
-  }
+  },
+  "mood": [
+    "playful",
+    "technical"
+  ],
+  "energy": 3,
+  "role": "text",
+  "when": [
+    "letters as physical tiles",
+    "a departures-board feel"
+  ]
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "heatmap",
-    "animated",
+    "lively",
     "dark",
     "image"
   ],
@@ -154,5 +154,23 @@
   "preview": {
     "video": "previews/heatmap.webm",
     "poster": "previews/heatmap.jpg"
-  }
+  },
+  "colors": [
+    "#3e4e57",
+    "#6f8794",
+    "#a9b8be",
+    "#e9e4d8",
+    "#c9a65a"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "bold"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "dithering",
-    "animated",
+    "lively",
     "dark",
     "sage"
   ],
@@ -115,5 +115,20 @@
   "preview": {
     "video": "previews/dither-sage.webm",
     "poster": "previews/dither-sage.jpg"
-  }
+  },
+  "colors": [
+    "#1e201c",
+    "#8fa67a"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
 }

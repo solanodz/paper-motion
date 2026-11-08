@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "simplex-noise",
-    "animated",
+    "gentle",
     "light",
     "ochre"
   ],
@@ -99,5 +99,22 @@
   "preview": {
     "video": "previews/simplex-ochre.webm",
     "poster": "previews/simplex-ochre.jpg"
-  }
+  },
+  "colors": [
+    "#f1e8c9",
+    "#d8bc6e",
+    "#b08a3e",
+    "#6f7a3a",
+    "#3a3424"
+  ],
+  "mode": "light",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "bold"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a light playful piece"
+  ]
 }

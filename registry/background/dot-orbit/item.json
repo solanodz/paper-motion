@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "dot-orbit",
-    "animated",
+    "lively",
     "dark"
   ],
   "version": "1.0.0",
@@ -115,5 +115,22 @@
   "preview": {
     "video": "previews/dot-orbit.webm",
     "poster": "previews/dot-orbit.jpg"
-  }
+  },
+  "colors": [
+    "#ffffff",
+    "#8ea3ad",
+    "#5f7a86",
+    "#2a2a2a",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "playful"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
 }

@@ -170,5 +170,22 @@
   "preview": {
     "video": "previews/radial-slate.webm",
     "poster": "previews/radial-slate.jpg"
-  }
+  },
+  "colors": [
+    "#dde3e2",
+    "#5f7a86",
+    "#a9bdc3",
+    "#ffffff"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "calm",
+    "minimal",
+    "warm"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light calm piece"
+  ]
 }

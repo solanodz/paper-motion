@@ -33,5 +33,17 @@
   "preview": {
     "video": "previews/cut.webm",
     "poster": "previews/cut.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "minimal",
+    "editorial"
+  ],
+  "energy": 3,
+  "role": "swap",
+  "when": [
+    "the beat is the point",
+    "you want no transition at all",
+    "cutting between real material"
+  ]
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "dithering",
-    "animated",
+    "lively",
     "dark",
     "sage"
   ],
@@ -114,5 +114,20 @@
   "preview": {
     "video": "previews/dither-warp-sage.webm",
     "poster": "previews/dither-warp-sage.jpg"
-  }
+  },
+  "colors": [
+    "#8fa67a",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
 }

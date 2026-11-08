@@ -170,5 +170,22 @@
   "preview": {
     "video": "previews/green-radial.webm",
     "poster": "previews/green-radial.jpg"
-  }
+  },
+  "colors": [
+    "#e4e4bd",
+    "#5dc27e",
+    "#c8ee6c",
+    "#ffffff"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "calm",
+    "minimal",
+    "warm"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light calm piece"
+  ]
 }

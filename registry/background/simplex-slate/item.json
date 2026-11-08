@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "simplex-noise",
-    "animated",
+    "gentle",
     "light",
     "slate"
   ],
@@ -89,5 +89,22 @@
   "preview": {
     "video": "previews/simplex-slate.webm",
     "poster": "previews/simplex-slate.jpg"
-  }
+  },
+  "colors": [
+    "#dce3e3",
+    "#a9b8be",
+    "#6f8794",
+    "#3e4e57",
+    "#1e272c"
+  ],
+  "mode": "light",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "bold"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a light playful piece"
+  ]
 }

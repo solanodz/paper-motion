@@ -85,5 +85,16 @@
   "preview": {
     "video": "previews/scramble.webm",
     "poster": "previews/scramble.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "raw",
+    "playful"
+  ],
+  "energy": 3,
+  "role": "text",
+  "when": [
+    "hacker, data, cipher moods",
+    "numbers or codes resolving"
+  ]
 }

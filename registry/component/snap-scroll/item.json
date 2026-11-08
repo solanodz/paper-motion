@@ -79,5 +79,15 @@
   "preview": {
     "video": "previews/snap-scroll.webm",
     "poster": "previews/snap-scroll.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "minimal"
+  ],
+  "energy": 3,
+  "role": "swap",
+  "when": [
+    "lists, feeds, choosing one of many",
+    "app and product UI"
+  ]
 }

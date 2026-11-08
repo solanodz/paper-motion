@@ -109,5 +109,20 @@
   "preview": {
     "video": "previews/clay-desert.webm",
     "poster": "previews/clay-desert.jpg"
-  }
+  },
+  "colors": [
+    "#eadbc8",
+    "#2b1d19",
+    "#b07d73"
+  ],
+  "mode": "light",
+  "mood": [
+    "warm",
+    "playful",
+    "editorial"
+  ],
+  "when": [
+    "a light piece that should feel warm, playful, editorial",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

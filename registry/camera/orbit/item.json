@@ -102,5 +102,16 @@
   "preview": {
     "video": "previews/orbit.webm",
     "poster": "previews/orbit.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "luxury",
+    "editorial"
+  ],
+  "energy": 2,
+  "role": "camera",
+  "when": [
+    "layers at different depths",
+    "a slow 3D camera around a composition"
+  ]
 }

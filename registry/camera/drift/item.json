@@ -61,5 +61,16 @@
   "preview": {
     "video": "previews/drift.webm",
     "poster": "previews/drift.jpg"
-  }
+  },
+  "mood": [
+    "calm",
+    "luxury",
+    "minimal"
+  ],
+  "energy": 1,
+  "role": "camera",
+  "when": [
+    "a still frame must stay alive",
+    "end cards, posters, photos"
+  ]
 }

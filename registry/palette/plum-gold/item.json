@@ -109,5 +109,19 @@
   "preview": {
     "video": "previews/plum-gold.webm",
     "poster": "previews/plum-gold.jpg"
-  }
+  },
+  "colors": [
+    "#1a1018",
+    "#f1e6d8",
+    "#c9a35b"
+  ],
+  "mode": "dark",
+  "mood": [
+    "luxury",
+    "editorial"
+  ],
+  "when": [
+    "a dark piece that should feel luxury, editorial",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

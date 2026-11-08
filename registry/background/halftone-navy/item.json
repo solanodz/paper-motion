@@ -181,5 +181,21 @@
   "preview": {
     "video": "previews/halftone-navy.webm",
     "poster": "previews/halftone-navy.jpg"
-  }
+  },
+  "colors": [
+    "#e9e3d3",
+    "#2f3a4a"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "editorial",
+    "raw",
+    "playful"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light editorial piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

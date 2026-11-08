@@ -57,5 +57,16 @@
   "preview": {
     "video": "previews/mask-reveal.webm",
     "poster": "previews/mask-reveal.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "editorial",
+    "minimal"
+  ],
+  "energy": 3,
+  "role": "enter",
+  "when": [
+    "a hard graphic edge fits the brand",
+    "revealing a title or a frame on the beat"
+  ]
 }

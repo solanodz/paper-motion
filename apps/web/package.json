@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "registry": "node ../../packages/engine/bin/pamo.mjs registry build --out public && cp ../../packages/engine/lib/customize.mjs src/lib/customize.mjs",
+    "registry": "node ../../packages/engine/bin/pamo.mjs registry build --out public && cp ../../packages/engine/lib/customize.mjs src/lib/customize.mjs && cp ../../packages/engine/lib/board.js src/lib/board.mjs",
     "predev": "npm run registry",
     "dev": "next dev",
     "prebuild": "npm run registry",

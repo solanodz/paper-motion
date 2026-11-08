@@ -82,5 +82,15 @@
   "preview": {
     "video": "previews/punch.webm",
     "poster": "previews/punch.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "playful"
+  ],
+  "energy": 4,
+  "role": "emphasis",
+  "when": [
+    "a zoom-in on each hit",
+    "music videos, sports"
+  ]
 }

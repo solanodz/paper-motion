@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "neuro-noise",
-    "animated",
+    "gentle",
     "dark",
     "slate"
   ],
@@ -92,5 +92,19 @@
   "preview": {
     "video": "previews/neuro-slate.webm",
     "poster": "previews/neuro-slate.jpg"
-  }
+  },
+  "colors": [
+    "#ffffff",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "technical",
+    "luxury"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark technical piece"
+  ]
 }

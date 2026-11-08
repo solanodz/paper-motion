@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "halftone-dots",
-    "still",
+    "gentle",
     "dark",
     "image"
   ],
@@ -168,5 +168,21 @@
   "preview": {
     "video": "previews/halftone-dots.webm",
     "poster": "previews/halftone-dots.jpg"
-  }
+  },
+  "colors": [
+    "#e9e4d8",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "editorial",
+    "raw",
+    "playful"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark editorial piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

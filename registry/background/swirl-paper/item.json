@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "swirl",
-    "animated",
+    "gentle",
     "dark",
     "paper"
   ],
@@ -147,5 +147,21 @@
   "preview": {
     "video": "previews/swirl-paper.webm",
     "poster": "previews/swirl-paper.jpg"
-  }
+  },
+  "colors": [
+    "#e9e4d8",
+    "#8a8a8a",
+    "#1a1a1a",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "calm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark playful piece"
+  ]
 }

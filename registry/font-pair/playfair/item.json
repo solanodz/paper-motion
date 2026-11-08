@@ -140,5 +140,14 @@
   "preview": {
     "video": "previews/playfair.webm",
     "poster": "previews/playfair.jpg"
-  }
+  },
+  "mood": [
+    "luxury",
+    "editorial"
+  ],
+  "voice": "serif",
+  "when": [
+    "the brand should sound luxury, editorial",
+    "a serif headline voice with a plain body face"
+  ]
 }

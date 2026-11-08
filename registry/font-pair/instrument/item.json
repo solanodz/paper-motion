@@ -139,5 +139,15 @@
   "preview": {
     "video": "previews/instrument.webm",
     "poster": "previews/instrument.jpg"
-  }
+  },
+  "mood": [
+    "editorial",
+    "luxury",
+    "calm"
+  ],
+  "voice": "serif",
+  "when": [
+    "the brand should sound editorial, luxury, calm",
+    "a serif headline voice with a plain body face"
+  ]
 }

@@ -170,5 +170,22 @@
   "preview": {
     "video": "previews/radial-rose.webm",
     "poster": "previews/radial-rose.jpg"
-  }
+  },
+  "colors": [
+    "#e8dcd2",
+    "#b07d73",
+    "#d9b3a5",
+    "#fff6f0"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "calm",
+    "minimal",
+    "warm"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light calm piece"
+  ]
 }

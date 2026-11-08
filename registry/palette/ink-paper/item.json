@@ -108,5 +108,20 @@
   "preview": {
     "video": "previews/ink-paper.webm",
     "poster": "previews/ink-paper.jpg"
-  }
+  },
+  "colors": [
+    "#ece6d6",
+    "#141311",
+    "#b5462e"
+  ],
+  "mode": "light",
+  "mood": [
+    "editorial",
+    "calm",
+    "warm"
+  ],
+  "when": [
+    "a light piece that should feel editorial, calm, warm",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

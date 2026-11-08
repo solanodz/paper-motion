@@ -140,5 +140,15 @@
   "preview": {
     "video": "previews/syne.webm",
     "poster": "previews/syne.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "playful",
+    "raw"
+  ],
+  "voice": "display",
+  "when": [
+    "the brand should sound bold, playful, raw",
+    "a display headline voice with a plain body face"
+  ]
 }

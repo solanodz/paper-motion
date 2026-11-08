@@ -109,5 +109,20 @@
   "preview": {
     "video": "previews/mono-light.webm",
     "poster": "previews/mono-light.jpg"
-  }
+  },
+  "colors": [
+    "#ffffff",
+    "#111111",
+    "#111111"
+  ],
+  "mode": "light",
+  "mood": [
+    "minimal",
+    "technical",
+    "editorial"
+  ],
+  "when": [
+    "a light piece that should feel minimal, technical, editorial",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

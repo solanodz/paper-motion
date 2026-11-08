@@ -140,5 +140,15 @@
   "preview": {
     "video": "previews/inter-tight.webm",
     "poster": "previews/inter-tight.jpg"
-  }
+  },
+  "mood": [
+    "minimal",
+    "technical",
+    "calm"
+  ],
+  "voice": "sans",
+  "when": [
+    "the brand should sound minimal, technical, calm",
+    "a sans headline voice with a plain body face"
+  ]
 }

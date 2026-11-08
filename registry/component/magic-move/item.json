@@ -79,5 +79,18 @@
   "preview": {
     "video": "previews/magic-move.webm",
     "poster": "previews/magic-move.jpg"
-  }
+  },
+  "mood": [
+    "calm",
+    "technical",
+    "luxury",
+    "editorial"
+  ],
+  "energy": 3,
+  "role": "swap",
+  "when": [
+    "a UI card changes state and parts carry over",
+    "product and app videos",
+    "continuity matters more than impact"
+  ]
 }

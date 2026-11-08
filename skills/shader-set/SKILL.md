@@ -28,7 +28,7 @@ Call `interview` with this question bank, the file `brand/shader-set/SET.md`, an
 - **Families** (a question, several allowed): fields (gradients, noise, grain), graphic (dithering, dots, waves, spirals), logo (LiquidMetal, Heatmap, GemSmoke on the wordmark), image filters (on the brand's material). Recommend from the identity; respect the anti-references. **When the brand has real material** (photos in `brand/assets/`), put it first: image filters on its own photos are what make a set unmistakably this brand. Abstract fields are atmosphere, never the identity; a blob of the brand's colors reads as a lava lamp, not as bread.
 
 **Round 2**
-- **Keep or drop** (numbered boards): build the candidates (step 3), show the boards, and let the user keep entries by number ("keep 1, 4, 7–9") or ask for changes on any ("5 but slower").
+- **Keep or drop** (numbered boards): build the candidates (step 3), show the boards, and let the user keep entries by number ("keep 1, 4, 7–9") or ask for changes on any ("5 but slower"). For candidates that come from the registry, a live board shows up to four at a time in the brand's look, tunable (`pamo board --url --option <background>[:colors=…] …`, `make-video/references/boards.md`); pick them with `pamo search --type background --mode … --near "<ground>,<accent>"`.
 
 ## 3 · Write the entries
 

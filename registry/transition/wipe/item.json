@@ -61,5 +61,15 @@
   "preview": {
     "video": "previews/wipe.webm",
     "poster": "previews/wipe.jpg"
-  }
+  },
+  "mood": [
+    "calm",
+    "editorial"
+  ],
+  "energy": 2,
+  "role": "swap",
+  "when": [
+    "a soft, directional change between frames",
+    "the brand is quiet but not static"
+  ]
 }

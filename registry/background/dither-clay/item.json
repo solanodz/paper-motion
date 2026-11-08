@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "dithering",
-    "animated",
+    "lively",
     "dark",
     "clay"
   ],
@@ -123,5 +123,20 @@
   "preview": {
     "video": "previews/dither-clay.webm",
     "poster": "previews/dither-clay.jpg"
-  }
+  },
+  "colors": [
+    "#221a18",
+    "#b07d73"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
 }

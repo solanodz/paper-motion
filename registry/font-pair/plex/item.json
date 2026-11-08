@@ -140,5 +140,15 @@
   "preview": {
     "video": "previews/plex.webm",
     "poster": "previews/plex.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "editorial",
+    "calm"
+  ],
+  "voice": "serif",
+  "when": [
+    "the brand should sound technical, editorial, calm",
+    "a serif headline voice with a plain body face"
+  ]
 }

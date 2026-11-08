@@ -95,5 +95,15 @@
   "preview": {
     "video": "previews/shake.webm",
     "poster": "previews/shake.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "raw"
+  ],
+  "energy": 5,
+  "role": "emphasis",
+  "when": [
+    "hits on the beat",
+    "impact without changing the frame"
+  ]
 }

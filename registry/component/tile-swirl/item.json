@@ -79,5 +79,16 @@
   "preview": {
     "video": "previews/tile-swirl.webm",
     "poster": "previews/tile-swirl.jpg"
-  }
+  },
+  "mood": [
+    "playful",
+    "bold",
+    "technical"
+  ],
+  "energy": 5,
+  "role": "swap",
+  "when": [
+    "a dramatic swap with particles",
+    "launches, reveals, hero moments"
+  ]
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "grain-gradient",
-    "animated",
+    "lively",
     "dark",
     "slate"
   ],
@@ -121,5 +121,22 @@
   "preview": {
     "video": "previews/grain-slate.webm",
     "poster": "previews/grain-slate.jpg"
-  }
+  },
+  "colors": [
+    "#5f7a86",
+    "#8ea3ad",
+    "#e6e6e6",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "calm",
+    "warm",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark calm piece"
+  ]
 }

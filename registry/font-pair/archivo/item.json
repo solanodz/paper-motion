@@ -139,5 +139,14 @@
   "preview": {
     "video": "previews/archivo.webm",
     "poster": "previews/archivo.jpg"
-  }
+  },
+  "mood": [
+    "bold",
+    "raw"
+  ],
+  "voice": "display",
+  "when": [
+    "the brand should sound bold, raw",
+    "a display headline voice with a plain body face"
+  ]
 }

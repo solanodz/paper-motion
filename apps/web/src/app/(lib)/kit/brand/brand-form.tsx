@@ -50,17 +50,17 @@ export function BrandForm() {
       { id: "inter-tight", type: "font-pair", title: `${name || "My brand"} type`, values: { display, text, mono } },
     );
     kit.set({ name, items });
-    router.push("/library?type=component");
+    router.push("/kit");
   };
 
   return (
     <div className="mx-auto max-w-[1180px] px-5 pb-24 pt-12 md:px-8">
       <div className="mb-10 flex items-center justify-between">
         <span className="flex items-center gap-2 text-[13.5px] text-muted"><IconBrand size={16} className="text-paper" /> I have a brand</span>
-        <Link href="/start" className="text-[13px] text-muted hover:text-figure">No brand yet? Take the quiz →</Link>
+        <Link href="/kit" className="text-[13px] text-muted hover:text-figure">← Back to your kit</Link>
       </div>
       <h1 className="font-serif text-[40px] leading-[1.02] tracking-[-0.02em] md:text-[60px]">Bring your colors and fonts.</h1>
-      <p className="mt-3 max-w-[62ch] text-[16px] text-muted">Every live preview in the library switches to your brand, so you choose motion that already fits. Have a brand manual or a website? Your agent can read it later; start with the basics here.</p>
+      <p className="mt-3 max-w-[62ch] text-[16px] text-muted">Every live preview switches to your brand, the boards your agent sends included. Your agent can also set this from your brand folder; here you can see it and adjust it.</p>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className="flex flex-col gap-6">

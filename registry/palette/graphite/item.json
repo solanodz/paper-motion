@@ -108,5 +108,21 @@
   "preview": {
     "video": "previews/graphite.webm",
     "poster": "previews/graphite.jpg"
-  }
+  },
+  "colors": [
+    "#000000",
+    "#ffffff",
+    "#e9e4d8"
+  ],
+  "mode": "dark",
+  "mood": [
+    "bold",
+    "technical",
+    "minimal",
+    "raw"
+  ],
+  "when": [
+    "a dark piece that should feel bold, technical, minimal, raw",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
 }

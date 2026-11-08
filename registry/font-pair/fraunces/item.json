@@ -140,5 +140,15 @@
   "preview": {
     "video": "previews/fraunces.webm",
     "poster": "previews/fraunces.jpg"
-  }
+  },
+  "mood": [
+    "warm",
+    "playful",
+    "editorial"
+  ],
+  "voice": "serif",
+  "when": [
+    "the brand should sound warm, playful, editorial",
+    "a serif headline voice with a plain body face"
+  ]
 }

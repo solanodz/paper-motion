@@ -76,5 +76,16 @@
   "preview": {
     "video": "previews/type-on.webm",
     "poster": "previews/type-on.jpg"
-  }
+  },
+  "mood": [
+    "technical",
+    "raw",
+    "minimal"
+  ],
+  "energy": 2,
+  "role": "text",
+  "when": [
+    "the brand is a terminal, a chat or a process",
+    "showing a real command"
+  ]
 }

@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "spiral",
-    "animated",
+    "lively",
     "light",
     "paper"
   ],
@@ -160,5 +160,19 @@
   "preview": {
     "video": "previews/spiral-paper.webm",
     "poster": "previews/spiral-paper.jpg"
-  }
+  },
+  "colors": [
+    "#000000",
+    "#e9e4d8"
+  ],
+  "mode": "light",
+  "motion": "lively",
+  "mood": [
+    "playful",
+    "technical"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a light playful piece"
+  ]
 }

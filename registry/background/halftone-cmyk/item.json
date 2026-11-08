@@ -7,7 +7,7 @@
   "tags": [
     "background",
     "halftone-cmyk",
-    "still",
+    "gentle",
     "light",
     "image"
   ],
@@ -163,5 +163,19 @@
   "preview": {
     "video": "previews/halftone-cmyk.webm",
     "poster": "previews/halftone-cmyk.jpg"
-  }
+  },
+  "colors": [
+    "#e9e4d8"
+  ],
+  "mode": "light",
+  "motion": "gentle",
+  "mood": [
+    "editorial",
+    "raw"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a light editorial piece",
+    "you have a photo or a logo to run through it"
+  ]
 }

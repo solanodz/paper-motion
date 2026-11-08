@@ -63,5 +63,15 @@
   "preview": {
     "video": "previews/flip-3d.webm",
     "poster": "previews/flip-3d.jpg"
-  }
+  },
+  "mood": [
+    "playful",
+    "technical"
+  ],
+  "energy": 3,
+  "role": "swap",
+  "when": [
+    "cards, decks, two sides of one thing",
+    "a product with a front and a back"
+  ]
 }
