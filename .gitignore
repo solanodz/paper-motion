@@ -31,3 +31,4 @@ examples/paper-motion-brand/brand/sheet/sheet.pdf
 *.ogg
 **/brand/sound/sounds.json
 **/brand/sound/keys/
+.vercel

@@ -579,14 +579,15 @@ async function main() {
 
     case 'add': {
       const ids = args._.slice(1);
-      if (!ids.length || args.help) { console.error('Usage: add <id> [<id>...] [--set key=value ...] [--force] [--name piece] [--registry url|dir]\n  --set writes your values into the installed copy (with several ids: --set id:key=value). --registry picks where resources come from (default: the site).'); process.exit(args.help ? 0 : 1); }
+      if (!ids.length || args.help) { console.error('Usage: add <id> [<id>...] [--set key=value ...] [--force] [--name piece] [--brand "Name"] [--registry url|dir]\n  --set writes your values into the installed copy (with several ids: --set id:key=value). --force replaces values already in the project. --brand names the brand in brand/tokens.json; palettes, fonts and recipes also write brand/motion.json and brand/sound.json defaults when missing. --registry picks where resources come from (default: the site).'); process.exit(args.help ? 0 : 1); }
       const { add } = await import('../lib/registry.mjs');
       const set = process.argv.flatMap((a, i, all) => (a === '--set' ? [all[i + 1]] : a.startsWith('--set=') ? [a.slice(6)] : [])).filter(Boolean);
-      const report = await add(ids.filter((x) => !set.includes(x)), { registry: args.registry, force: !!args.force, name: typeof args.name === 'string' ? args.name : undefined, set });
+      const report = await add(ids.filter((x) => !set.includes(x)), { registry: args.registry, force: !!args.force, name: typeof args.name === 'string' ? args.name : undefined, brand: typeof args.brand === 'string' ? args.brand : undefined, set });
       for (const r of report) {
         console.log(`✓ ${r.id} (${r.type})${r.wrote.length ? ` → ${[...new Set(r.wrote)].join(', ')}` : ''}`);
         for (const f of r.skipped) console.log(`  kept your ${f} (it differs; --force to replace)`);
         for (const c of r.conflicts) console.log(`  kept your value at ${c} (--force to replace)`);
+        for (const n of r.notes.filter((x) => x.startsWith('the brand'))) console.log(`  ${n}`);
       }
       const last = report.filter((r) => ids.includes(r.id) && r.usage);
       if (last.length === 1) console.log(`\nUsage:\n${last[0].usage.split('\n').map((l) => `  ${l}`).join('\n')}`);
@@ -637,7 +638,7 @@ async function main() {
             } else await withServer(demo, (url) => renderVideo({ url: url(`?render&demo=${it.id}`), out: mp4, from: 0, to: 5, sfx: false, crf: 16, motionBlur: Number(args['motion-blur'] ?? 4) }));
             const vf = 'scale=1280:-2';
             const a = spawnSync('ffmpeg', ['-v', 'error', '-y', '-i', mp4, '-vf', vf, '-c:v', 'libvpx-vp9', '-crf', '38', '-b:v', '0', '-row-mt', '1', '-an', path.join(out, `${it.id}.webm`)]);
-            const b = spawnSync('ffmpeg', ['-v', 'error', '-y', '-ss', String(POSTER[it.type] ?? 1.5), '-i', mp4, '-frames:v', '1', '-vf', vf, '-q:v', '4', path.join(out, `${it.id}.jpg`)]);
+            const b = spawnSync('ffmpeg', ['-v', 'error', '-y', '-ss', String(it.preview?.at ?? POSTER[it.type] ?? 1.5), '-i', mp4, '-frames:v', '1', '-vf', vf, '-q:v', '4', path.join(out, `${it.id}.jpg`)]);
             if (a.status || b.status) throw new Error(`ffmpeg failed for ${it.id}: ${a.stderr}${b.stderr}`);
           }
         } finally { fs.rmSync(tmp, { recursive: true, force: true }); }

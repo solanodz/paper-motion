@@ -152,7 +152,8 @@
   ],
   "preview": {
     "video": "previews/explainer.webm",
-    "poster": "previews/explainer.jpg"
+    "poster": "previews/explainer.jpg",
+    "at": 6.0
   },
   "mood": [
     "technical",

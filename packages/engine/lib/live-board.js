@@ -1,6 +1,6 @@
 // A board: 2–4 labelled options the agent proposes, carried in a paper-motion.app link so the user can see them
 // live in their own look, tune one and choose. Nothing reaches a server: the payload travels in the URL fragment.
-//   https://paper-motion.app/b#<base64url(deflate-raw(JSON))>
+//   https://paper-motion.vercel.app/b#<base64url(deflate-raw(JSON))>
 // This module runs in Node (`pamo board --url`) and in the browser (the /b page), so it has no Node imports: it
 // picks zlib or CompressionStream at call time. Plain ESM; the site copies it next to customize.mjs.
 

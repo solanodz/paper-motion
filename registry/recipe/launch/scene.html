@@ -22,6 +22,7 @@
 <body>
 <main id="stage">
   <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
   <div id="f1" class="frame"><div class="center"><div id="hook"></div><div id="problem"></div></div></div>
   <div id="f2" class="frame"><div class="center"><div id="name"></div><div id="what"></div></div></div>
   <div id="f3" class="frame"><div id="slot" class="abs"></div></div>
@@ -34,6 +35,7 @@ import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
   background: null,                         // a shader-set id (pamo add mesh-sage), or null for the brand's first entry
+  backgroundOpacity: 0.55,                 // the shader behind the type; 1 for a field with no words over it
   hook: 'Something new is here.',           // the boldest claim, already moving
   problem: 'The situation it changes, in the brand’s words.',
   what: null,                               // what it is in plain words; null reads IDENTITY.md "In one line"
@@ -51,11 +53,14 @@ const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 24;
 const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;   // the material sits behind the type, never over it
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)';
 const $ = (id) => document.getElementById(id);
 
 const hook = B.style($('hook'), 'display', { short: SHORT }), problem = B.style($('problem'), 'title', { short: SHORT, color: 'muted' });
 const name = B.style($('name'), 'display', { short: SHORT }), what = B.style($('what'), 'title', { short: SHORT, color: 'muted' });
-const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'muted' });
+const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'figure' });
+Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.028}px`, letterSpacing: '0em' });
 problem.style.marginTop = what.style.marginTop = action.style.marginTop = `${SHORT * 0.03}px`;
 hook.textContent = CONFIG.hook; problem.textContent = CONFIG.problem;
 name.textContent = mark.textContent = B.name;
@@ -75,6 +80,7 @@ const cards = CONFIG.proof.map((p, i) => {
   B.style(c.children[1], 'title', { short: SHORT, color: light ? 'ground' : 'figure' }).textContent = p.title;
   B.style(c.children[2], 'body', { short: SHORT, color: light ? 'ground' : 'muted' }).textContent = p.body;
   c.children[1].style.marginTop = `${SHORT * 0.02}px`; c.children[2].style.marginTop = 'auto';
+  Object.assign(c.children[2].style, { fontSize: `${SHORT * 0.03}px`, lineHeight: 1.35, maxWidth: '26ch' });   // readable on a phone
   slot.append(c);
   return c;
 });

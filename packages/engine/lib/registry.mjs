@@ -9,7 +9,8 @@ import { apply as applyValues, parseSet } from './customize.mjs';
 
 const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = path.resolve(ENGINE, '..', '..');
-export const SITE = (process.env.PAPER_MOTION_SITE ?? 'https://paper-motion.app').replace(/\/$/, '');
+// until the paper-motion.app domain is connected, the live site is the vercel URL
+export const SITE = (process.env.PAPER_MOTION_SITE ?? 'https://paper-motion.vercel.app').replace(/\/$/, '');
 const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palette', 'font-pair', 'recipe'];
 const TYPE_TITLES = { component: 'Component transitions', transition: 'Transitions', text: 'Text effects', camera: 'Camera and energy', background: 'Backgrounds', palette: 'Palettes', 'font-pair': 'Font pairs', recipe: 'Recipes' };
 
@@ -121,7 +122,10 @@ export function llmsTxt(items, site, { full = false } = {}) {
 4. **Install the choices.** \`npx paper-motion add <id> [--set key=value …]\` in the project root, with exactly the
    \`--set\` arguments from the reply. Moves go to \`moves/\`, backgrounds to \`brand/shader-set/set.json\`, palettes and
    fonts to \`brand/tokens.json\`, recipes to \`pieces/<id>/\`. Their choices also accumulate in a kit at ${site}/kit,
-   whose prompt carries the whole \`pamo add\` command.
+   whose prompt carries the whole \`pamo add\` command. \`add\` never overwrites a value already in the project: when
+   the user re-chooses or re-tunes something you installed before, pass \`--force\`. A recipe also reads
+   \`brand/motion.json\` (pace) and \`brand/sound.json\` (cues; without it the piece is silent) and the brand's name
+   from \`tokens.json\` \`brand\`: write those from the interview before rendering.
 5. **Make the video.** Build \`scene.html\` (a pure function of time), check stills with \`pamo still\`, render with
    \`pamo render scene.html --motion-blur 5\`. The test shot and the final piece are real renders, not boards.
 
@@ -208,7 +212,7 @@ export function build({ dir = resolveRegistry().dir, out, site = SITE } = {}) {
   if (problems.length) { const e = new Error(`registry: ${problems.length} problem(s)\n  ${problems.join('\n  ')}`); e.problems = problems; throw e; }
   fs.mkdirSync(path.join(out, 'r'), { recursive: true });
   // publish only the preview files that were rendered: a background plays live and may have none
-  for (const it of items) if (it.preview) { const have = Object.fromEntries(Object.entries(it.preview).filter(([, p]) => fs.existsSync(path.join(out, p)))); it.preview = Object.keys(have).length ? have : undefined; }
+  for (const it of items) if (it.preview) { const have = Object.fromEntries(Object.entries(it.preview).filter(([, p]) => typeof p !== 'string' || fs.existsSync(path.join(out, p)))); it.preview = Object.values(have).some((p) => typeof p === 'string') ? have : undefined; }
   const index = {
     name: 'paper-motion', site, schema: `${site}/schema.json`, count: items.length, types: TYPES.filter((t) => items.some((i) => i.type === t)),
     items: items.map(({ id, type, title, summary, tags, version, preview, related, when, mood, energy, role, colors, mode, motion, voice, duration, formats, params }) => ({ id, type, title, summary, tags, version, url: `${site}/r/${id}.json`, ...Object.fromEntries(Object.entries({ when, mood, energy, role, colors, mode, motion, voice, duration, formats, preview, related, params: params?.filter((p) => !p.hidden).map((p) => p.name) }).filter(([, v]) => v !== undefined)) })),
@@ -267,8 +271,22 @@ function mergeInto(base, frag, force, at = '', conflicts = []) {
  * Installs resources into the project at `cwd`, resolving `requires.items` first. Returns a report per resource.
  * Never overwrites a changed file or a different brand value unless `force`.
  */
-export async function add(ids, { cwd = process.cwd(), registry, force = false, name, set = [] } = {}) {
+// what a recipe reads beside the tokens and the shader set; written once, when the project has none
+const MOTION_DEFAULT = { pace: 'medium', camera: 'still', text: 'rise', color: 'constant', ending: 'wordmark', timing: null, moves: [] };
+const SOUND_DEFAULT = { palette: 'soft', lowpass: 2400, cues: { transition: { type: 'sweep', dur: 0.7, gain: 0.07 }, land: { type: 'thud', gain: 0.09 }, text: { type: 'tick', freq: 900, gain: 0.04 }, bed: null }, keys: { bank: null, style: 'creamy', gain: 0.12 }, music: null, loudness: -14 };
+
+export async function add(ids, { cwd = process.cwd(), registry, force = false, name, brand, set = [] } = {}) {
   const reg = resolveRegistry(registry), done = new Map(), report = [];
+  const scaffold = (r) => {
+    // a brand folder a recipe can run on: its name, a pace and sound cues (silent pieces are the usual surprise)
+    const tokensFile = path.join(cwd, 'brand/tokens.json'), tokens = readJson(tokensFile, {});
+    if (brand && (force || !tokens.brand)) { tokens.brand = brand; writeJson(tokensFile, tokens); r.wrote.push('brand/tokens.json brand'); }
+    for (const [file, def] of [['brand/motion.json', MOTION_DEFAULT], ['brand/sound.json', SOUND_DEFAULT]]) {
+      const f = path.join(cwd, file);
+      if (!fs.existsSync(f)) { writeJson(f, def); r.wrote.push(`${file} (defaults)`); }
+    }
+    if (!tokens.brand && !brand) r.notes.push('the brand has no name yet: pamo add --brand "Name" (recipes show it as the wordmark)');
+  };
   const lockFile = path.join(cwd, 'paper-motion.json'), lock = readJson(lockFile, { registry: reg.url ?? 'local', items: {} });
   async function one(id) {
     if (done.has(id)) return;
@@ -309,6 +327,7 @@ export async function add(ids, { cwd = process.cwd(), registry, force = false, n
       r.conflicts.push(...mergeInto(tokens, it.install.entry ?? {}, force).map((k) => `brand/tokens.json ${k}`));
       writeJson(f, tokens); r.wrote.push('brand/tokens.json');
     }
+    if (kind === 'tokens' || kind === 'scene') scaffold(r);
     lock.items[it.id] = it.version;
     report.push(r);
   }

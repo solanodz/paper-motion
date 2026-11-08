@@ -27,6 +27,7 @@ import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
   background: null,                  // a shader-set id with `loop` or `motion` (pamo add grain-slate), or null
+  backgroundOpacity: 0.85,                 // the shader behind the type; 1 for a field with no words over it
   what: null,                        // "Name · what it is · where"; null builds it from the brand
   line: 'One line in the brand’s voice.',
   text: null,                        // rise | pop | blur; null follows motion.json
@@ -38,6 +39,7 @@ const [W, H] = CONFIG.format, SHORT = Math.min(W, H), M = Math.round(SHORT * 0.0
 const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image && (e.loop || e.motion))?.id ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 if (bgId) B.shader(s, '#bg', bgId, { loop: D });
+document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;   // the material sits behind the type, never over it
 
 const what = B.style(document.querySelector('#what'), 'caption', { short: SHORT, color: 'figure' });
 const line = B.style(document.querySelector('#line'), 'title', { short: SHORT });

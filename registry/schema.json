@@ -240,6 +240,10 @@
         },
         "poster": {
           "type": "string"
+        },
+        "at": {
+          "type": "number",
+          "description": "poster time in seconds (recipes: a held frame, not a transition)"
         }
       }
     },

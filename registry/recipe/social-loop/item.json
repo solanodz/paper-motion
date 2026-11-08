@@ -17,7 +17,7 @@
     {
       "name": "line",
       "type": "string",
-      "default": "One line in the brand’s voice.",
+      "default": "One line in the brand\u2019s voice.",
       "description": "the line that comes and goes",
       "group": "main",
       "control": "text"
@@ -26,7 +26,7 @@
       "name": "what",
       "type": "string",
       "default": "",
-      "description": "name · what it is · where; empty builds it",
+      "description": "name \u00b7 what it is \u00b7 where; empty builds it",
       "group": "main",
       "control": "text"
     },
@@ -95,7 +95,8 @@
   ],
   "preview": {
     "video": "previews/social-loop.webm",
-    "poster": "previews/social-loop.jpg"
+    "poster": "previews/social-loop.jpg",
+    "at": 3.5
   },
   "mood": [
     "calm",

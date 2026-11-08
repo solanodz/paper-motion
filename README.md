@@ -83,11 +83,11 @@ style frames. Recommended, never required; the free plan allows 100 calls a week
 
 ## Use paper-motion.app
 
-[paper-motion.app](https://paper-motion.app) is a library of named resources your agent can use: component transitions, transitions, text effects, camera moves, Paper shader backgrounds, palettes, font pairs and recipes. Tell your agent which ones you want:
+[paper-motion.app](https://paper-motion.vercel.app) is a library of named resources your agent can use: component transitions, transitions, text effects, camera moves, Paper shader backgrounds, palettes, font pairs and recipes. Tell your agent which ones you want:
 
 > Use paper-motion.app to make a video for my brand. Use the backgrounds mesh-sage and grain-slate, the effects magic-move and whip-pan, the palette sage-night and the font pair instrument.
 
-The agent reads `https://paper-motion.app/llms.txt` and installs each resource into your project as code you own:
+The agent reads `https://paper-motion.vercel.app/llms.txt` and installs each resource into your project as code you own:
 
 ```bash
 npx paper-motion add magic-move mesh-sage sage-night instrument launch
