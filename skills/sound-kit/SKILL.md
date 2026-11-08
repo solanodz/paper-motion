@@ -7,7 +7,7 @@ description: Decide how a brand sounds (sound palette, typing, music stance, lou
 
 Settle **how the brand sounds**: the family of cues its gestures make, how its typing sounds, whether music plays, and how loud pieces are. The user chooses by ear, from clips that play one after another. This skill owns sound craft: read [references/sound-craft.md](references/sound-craft.md) before building any option.
 
-`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root.
+`pamo` is shorthand for the paper-motion engine CLI: type it as `npx paper-motion` (the npm package `paper-motion`; the bare npm name `pamo` belongs to an unrelated package), or `node packages/engine/bin/pamo.mjs` inside the paper-motion repo itself, run from the user's project root.
 
 ## 1 · Read what exists
 

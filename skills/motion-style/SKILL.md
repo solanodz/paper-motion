@@ -7,7 +7,7 @@ description: Decide how a brand moves (pace, camera, text behavior, a repertoire
 
 Settle **how the brand moves** before any piece exists, so every video moves the same way: its pace, its camera, how its text appears, the one to three transitions it keeps, how color enters, and how pieces end. The user chooses from short clips set in the brand's own look. This skill owns motion craft: read [references/motion-craft.md](references/motion-craft.md) before building any option.
 
-`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root. The engine's moves live in `paper-motion/moves` (`MOVES` lists them all; `PACE` holds the timing per pace).
+`pamo` is shorthand for the paper-motion engine CLI: type it as `npx paper-motion` (the npm package `paper-motion`; the bare npm name `pamo` belongs to an unrelated package), or `node packages/engine/bin/pamo.mjs` inside the paper-motion repo itself, run from the user's project root. The engine's moves live in `paper-motion/moves` (`MOVES` lists them all; `PACE` holds the timing per pace).
 
 ## 1 · Read what exists
 

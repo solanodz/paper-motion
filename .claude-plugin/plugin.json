@@ -1,0 +1,10 @@
+{
+  "name": "paper-motion",
+  "version": "0.1.0",
+  "description": "Creative-directed videos for people who use coding agents: identity, visual system, brand sheet, motion, sound, shader set and videos, from a conversation.",
+  "author": { "name": "Solano de Zuasnabar" },
+  "homepage": "https://github.com/solanodz/paper-motion",
+  "repository": "https://github.com/solanodz/paper-motion",
+  "license": "MIT",
+  "keywords": ["video", "motion", "brand", "shaders", "paper"]
+}

@@ -5,6 +5,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { moduleDir } from './modules.mjs';
 
 const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -46,9 +47,13 @@ export function startServer({ root, port = 0, watch = false }) {
     if (p === '/favicon.ico') { res.writeHead(204).end(); return; }
     let file;
     if (p.startsWith('/__pm/runtime/')) file = path.join(ENGINE, 'runtime', p.slice('/__pm/runtime/'.length));
-    else if (p.startsWith('/__pm/node_modules/')) file = path.join(ENGINE, 'node_modules', p.slice('/__pm/node_modules/'.length));
-    else file = path.join(root, p);
-    const base = p.startsWith('/__pm/') ? ENGINE : root;
+    let base = p.startsWith('/__pm/') ? ENGINE : root;
+    if (p.startsWith('/__pm/node_modules/')) {
+      // '/__pm/node_modules/@scope/pkg/dist/x.js' → wherever npm put @scope/pkg
+      const rest = p.slice('/__pm/node_modules/'.length).split('/'), n = rest[0].startsWith('@') ? 2 : 1;
+      base = moduleDir(rest.slice(0, n).join('/')) ?? path.join(ENGINE, 'node_modules', ...rest.slice(0, n));
+      file = path.join(base, ...rest.slice(n));
+    } else if (!file) file = path.join(root, p);
     if (!path.resolve(file).startsWith(path.resolve(base))) { res.writeHead(403).end(); return; }
     fs.stat(file, (err, st) => {
       if (!err && st.isDirectory()) { file = path.join(file, 'index.html'); }

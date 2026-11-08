@@ -11,7 +11,7 @@ const REPO_SKILL = path.resolve(ENGINE, '..', '..', 'skills', 'make-video');
 
 const HELP = `paper-motion — minimal, creative-directed video from code + Paper Shaders
 
-Usage: pamo <command> [options]   (pamo = npx @paper-motion/engine, or node packages/engine/bin/pamo.mjs in the repo)
+Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/engine/bin/pamo.mjs in the repo)
 
   setup                              install engine deps, check ffmpeg + browser
   doctor                             only check the environment
@@ -82,7 +82,8 @@ const args = parse(process.argv.slice(2));
 const cmd = args._[0];
 
 async function depsReady() {
-  return fs.existsSync(path.join(ENGINE, 'node_modules/@paper-design/shaders-react')) && fs.existsSync(path.join(ENGINE, 'node_modules/playwright-core'));
+  const { moduleDir } = await import('../lib/modules.mjs');
+  return ['@paper-design/shaders', '@paper-design/shaders-react', 'playwright-core'].every((m) => moduleDir(m));
 }
 
 async function ensureDeps() {
@@ -154,6 +155,7 @@ async function main() {
         const first = fs.existsSync(brief) ? fs.readFileSync(brief, 'utf8').split('\n').find((l) => l.trim() && !l.startsWith('#')) : '';
         console.log(`${d.padEnd(22)} ${first ?? ''}`);
       }
+      console.log(`\nfolder: ${dir}\ncopy one: new <name> --from <example>`);
       break;
     }
 
@@ -488,7 +490,7 @@ async function main() {
       const filled = (f) => has(f) && fs.readFileSync(path.join(B, f), 'utf8').replace(/^#.*$/gm, '').replace(/^## Open[\s\S]*$/m, '').trim().length > 40;
       const n = (dir, re) => (has(dir) ? fs.readdirSync(path.join(B, dir)).filter((f) => re.test(f)).length : 0);
       let setN = 0, setR = 0;
-      if (has('shader-set/set.json')) { const j = JSON.parse(fs.readFileSync(path.join(B, 'shader-set/set.json'), 'utf8')); const e = Array.isArray(j) ? j : j.entries ?? []; setN = e.length; setR = e.filter((x) => x.video).length; }
+      if (has('shader-set/set.json')) { const j = JSON.parse(fs.readFileSync(path.join(B, 'shader-set/set.json'), 'utf8')); const e = Array.isArray(j) ? j : j.entries ?? []; setN = e.length; setR = e.filter((x) => x.video && fs.existsSync(path.join(B, 'shader-set', x.video))).length; }
       const piecesDone = has('pieces') ? fs.readdirSync(path.join(B, 'pieces')).filter((p) => fs.existsSync(path.join(B, 'pieces', p, 'renders')) && fs.readdirSync(path.join(B, 'pieces', p, 'renders')).some((f) => f.endsWith('.mp4') && !/test/.test(f))).length : 0;
       const steps = [
         ['identity', filled('IDENTITY.md'), 'IDENTITY.md'],
@@ -496,7 +498,7 @@ async function main() {
         ['brand-sheet', has('sheet/sheet.png'), 'sheet/sheet.png'],
         ['motion-style', has('motion.json'), 'MOTION.md + motion.json' + (n('motion', /\.mp4$/) ? ` + ${n('motion', /\.mp4$/)} move clips` : '')],
         ['sound-kit', has('sound.json'), 'SOUND.md + sound.json' + (has('sound/keys/keys.json') ? ' + keystroke bank' : '')],
-        ['shader-set', setN > 0, `shader-set: ${setN} entries, ${setR} rendered`],
+        ['shader-set', setN > 0, `shader-set: ${setN} entries, ${setR} rendered${setR < setN ? ' (render the rest: shader-set render)' : ''}`],
         ['make-video', piecesDone > 0, `pieces: ${piecesDone} rendered${n('pieces', /^[^.]/) > piecesDone ? `, ${n('pieces', /^[^.]/) - piecesDone} in progress` : ''}`],
       ];
       if (!fs.existsSync(B)) { console.log(`No brand folder at ${path.relative(process.cwd(), B) || '.'} yet. Start with: identity`); break; }
@@ -511,7 +513,7 @@ async function main() {
       await ensureDeps();
       const { buildCatalog, catalogMarkdown } = await import('../lib/catalog.mjs');
       const cat = await buildCatalog();
-      const version = JSON.parse(fs.readFileSync(path.join(ENGINE, 'node_modules/@paper-design/shaders-react/package.json'), 'utf8')).version;
+      const version = JSON.parse(fs.readFileSync(path.join((await import('../lib/modules.mjs')).moduleDir('@paper-design/shaders-react'), 'package.json'), 'utf8')).version;
       const name = args._[1];
       const list = name ? cat.filter((s) => s.name.toLowerCase() === name.toLowerCase()) : cat;
       if (args.md) {

@@ -7,7 +7,7 @@ description: Make one video (a piece) for a brand, from brief to final render, w
 
 You and the user make one piece of moving image together. You are the studio: you propose, render, look critically and refine. The user is the director. The medium: an HTML **scene** that is a pure function of time `t`; Paper Shaders give the material, DOM/SVG/CSS the type and geometry, and the engine renders every frame in headless Chromium and encodes it with ffmpeg, so output is exact and repeatable.
 
-`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root. First time on a machine: `pamo setup` (Node ≥ 18, ffmpeg, Chrome); if it fails, read `references/rendering.md` → Troubleshooting.
+`pamo` is shorthand for the paper-motion engine CLI: type it as `npx paper-motion` (the npm package `paper-motion`; the bare npm name `pamo` belongs to an unrelated package), or `node packages/engine/bin/pamo.mjs` inside the paper-motion repo itself, run from the user's project root. First time on a machine: `pamo setup` (Node ≥ 18, ffmpeg, Chrome); if it fails, read `references/rendering.md` → Troubleshooting.
 
 ## 1 · Read the brand
 
@@ -136,8 +136,8 @@ free-plan budget (100 calls a week) are in `references/paper-canvas.md`. Nothing
 
 ## Bundled examples
 
-`pamo examples` — deliberately different pieces shipped with the engine
-in `packages/engine/examples/`: `breath` (warm field), `signal` (dithered
+`pamo examples` — deliberately different pieces shipped with the engine;
+it prints the folder they live in (copy one with `pamo new <name> --from <example>`): `breath` (warm field), `signal` (dithered
 sphere), `install-loop` (terminal typing over a seamless shader loop) and
 `chrome-endcard` (LiquidMetal wordmark, mask wipe, sound cues). Read them to
 learn the API; start from one with `pamo new <name> --from breath` only

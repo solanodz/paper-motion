@@ -7,7 +7,7 @@ description: Build a brand's shader set, its bank of moving material (fields, pa
 
 Give the brand its own **moving material**: a bank of loops in one format that every piece draws from, so videos look like the brand even before type appears. Entries are data (a Paper shader and its props, or a file), so pieces re-render them natively at any size; the rendered loops are previews and footage.
 
-`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root. `pamo shaders` lists every Paper shader with its props and presets; `pamo shaders <Name>` shows one.
+`pamo` is shorthand for the paper-motion engine CLI: type it as `npx paper-motion` (the npm package `paper-motion`; the bare npm name `pamo` belongs to an unrelated package), or `node packages/engine/bin/pamo.mjs` inside the paper-motion repo itself, run from the user's project root. `pamo shaders` lists every Paper shader with its props and presets; `pamo shaders <Name>` shows one.
 
 ## 1 · Read what exists
 

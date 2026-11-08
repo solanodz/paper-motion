@@ -7,7 +7,7 @@ description: Build the brand sheet, one animated web page with the whole brand (
 
 Put the whole brand on **one page** that plays live: the wordmark over a field built from the brand's ramp, who the brand is, how it looks, how it moves, how it sounds, and its shader set running. The page reads the brand folder, so it is re-run, never rewritten, whenever the brand changes.
 
-`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root.
+`pamo` is shorthand for the paper-motion engine CLI: type it as `npx paper-motion` (the npm package `paper-motion`; the bare npm name `pamo` belongs to an unrelated package), or `node packages/engine/bin/pamo.mjs` inside the paper-motion repo itself, run from the user's project root.
 
 ## 1 · Check the brand folder
 

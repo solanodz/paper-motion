@@ -1,0 +1,11 @@
+{
+  "name": "paper-motion",
+  "owner": { "name": "Solano de Zuasnabar" },
+  "plugins": [
+    {
+      "name": "paper-motion",
+      "source": "./",
+      "description": "Creative-directed videos for people who use coding agents."
+    }
+  ]
+}

@@ -53,7 +53,7 @@ paper-motion/
 │   ├── sound-kit/
 │   ├── shader-set/
 │   └── make-video/        the production skill (was skills/paper-motion)
-├── packages/engine/       @paper-motion/engine, the `pamo` CLI (ADR 0002)
+├── packages/engine/       the `paper-motion` npm package, the `pamo` CLI (ADR 0002)
 ├── examples/paper-motion-brand/   our own brand folder: example and test fixture
 ├── docs/                  spec, ADRs, per-skill docs pages
 ├── GLOSSARY.md
@@ -192,5 +192,5 @@ Steps that don't share files can run in parallel sessions once 1–2 are done.
 - The exact list of v1 moves and v1 recipes.
 - How import start reads a PDF manual or a website (tools available per agent).
 - The brand sheet's section layout beyond the Paper version we built.
-- npm: the `@paper-motion` scope needs an npm organization created first (the name is free today, as is the unscoped
-  `paper-motion`); the GitHub repo `solanodz/paper-motion` does not exist yet.
+- Publishing: the engine ships as the unscoped npm package `paper-motion` (ADR 0002); the GitHub repo
+  `solanodz/paper-motion` does not exist yet.

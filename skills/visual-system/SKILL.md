@@ -7,7 +7,7 @@ description: Decide how a brand looks (typefaces, palette, shape language, wordm
 
 Turn the brand's character into **typefaces, a palette, a shape language and a wordmark**, chosen by the user from option boards. This skill owns type and color craft: read [references/type-and-color.md](references/type-and-color.md) before building any option.
 
-`pamo` is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`), run from the user's project root.
+`pamo` is shorthand for the paper-motion engine CLI: type it as `npx paper-motion` (the npm package `paper-motion`; the bare npm name `pamo` belongs to an unrelated package), or `node packages/engine/bin/pamo.mjs` inside the paper-motion repo itself, run from the user's project root.
 
 ## 1 · Read what exists
 

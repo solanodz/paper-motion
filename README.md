@@ -40,11 +40,23 @@ for what you want ("help me define my brand", "make a launch video") and the rig
 
 Requirements: Node ≥ 18, ffmpeg, Google Chrome (or `npx playwright-core install chromium`).
 
+Any agent (Claude Code, Codex, Cursor, Gemini CLI, OpenCode…):
+
 ```bash
 npx skills add solanodz/paper-motion
 ```
 
-The skills call the render engine, `@paper-motion/engine` (the `pamo` command). From a clone of this repository:
+Claude Code, as a plugin:
+
+```
+/plugin marketplace add solanodz/paper-motion
+/plugin install paper-motion@paper-motion
+```
+
+The skills call the render engine, the npm package [`paper-motion`](packages/engine), through `npx paper-motion`:
+nothing else to install. To check your machine first, run `npx paper-motion setup`.
+
+From a clone of this repository:
 
 ```bash
 git clone https://github.com/solanodz/paper-motion
@@ -77,7 +89,7 @@ sheet.
 ```
 skills/                 the pack: paper-motion (entry), interview, identity, visual-system, brand-sheet,
                         motion-style, sound-kit, shader-set, make-video
-packages/engine/        @paper-motion/engine: CLI, runtime, renderer, templates, examples
+packages/engine/        the `paper-motion` npm package: CLI, runtime, renderer, templates, examples
 examples/paper-motion-brand/   paper-motion's own brand folder, built with the pack
 docs/                   spec-v1.md, ADRs
 GLOSSARY.md             the shared language every skill uses

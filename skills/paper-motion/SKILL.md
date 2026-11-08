@@ -11,7 +11,7 @@ Before stating what a skill does or advising to skip one, read that skill's `SKI
 
 ## 1 · See where the brand stands
 
-Run `pamo status` from the project root (`pamo` is `npx @paper-motion/engine`; inside the paper-motion repo itself, `node packages/engine/bin/pamo.mjs`). It lists what `brand/` already has and the next step on the main flow. Read the files it marks as done before recommending anything; a file can exist and still have open items under `## Open`.
+Run `pamo status` from the project root (`pamo` is shorthand: type it as `npx paper-motion`, the engine's npm package, since the bare npm name `pamo` belongs to an unrelated package; inside the paper-motion repo itself, `node packages/engine/bin/pamo.mjs`). It lists what `brand/` already has and the next step on the main flow. Read the files it marks as done before recommending anything; a file can exist and still have open items under `## Open`.
 
 Tell the user in two or three lines what their brand already has, then propose the next step with one sentence on why.
 

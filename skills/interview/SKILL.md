@@ -7,7 +7,7 @@ description: Find out what the user wants by interviewing them in rounds of numb
 
 Work a **design tree**: every decision branches into the decisions that hang off it. The calling skill brings the **question bank** (what to settle, its file in `brand/`, and the depth); this skill is how you ask. The mechanics come from Matt Pocock's `grilling`, adapted to choices people make with their eyes.
 
-`pamo` below is the paper-motion engine CLI: `npx @paper-motion/engine` (inside the paper-motion repo itself: `node packages/engine/bin/pamo.mjs`). Run it from the user's project root, so `brand/...` paths resolve.
+`pamo` below is shorthand for the paper-motion engine CLI: type it as `npx paper-motion` (the npm package `paper-motion`; the bare npm name `pamo` belongs to an unrelated package), or `node packages/engine/bin/pamo.mjs` inside the paper-motion repo itself. Run it from the user's project root, so `brand/...` paths resolve.
 
 ## 1 · Prepare
 

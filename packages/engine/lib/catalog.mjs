@@ -3,6 +3,7 @@ import { register } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { moduleDir } from './modules.mjs';
 
 register('./react-hooks.mjs', import.meta.url);
 const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -11,7 +12,7 @@ const SIZING = ['fit', 'scale', 'rotation', 'originX', 'originY', 'offsetX', 'of
 const kebab = (s) => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
 function describe(name) {
-  const f = path.join(ENGINE, 'node_modules/@paper-design/shaders/dist/shaders', `${kebab(name)}.d.ts`);
+  const f = path.join(moduleDir('@paper-design/shaders') ?? path.join(ENGINE, 'node_modules/@paper-design/shaders'), 'dist/shaders', `${kebab(name)}.d.ts`);
   if (!fs.existsSync(f)) return '';
   const src = fs.readFileSync(f, 'utf8');
   const m = src.match(/\/\*\*([\s\S]*?)\*\//);

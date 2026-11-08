@@ -42,6 +42,8 @@ if (H > W) line.style.fontSize = `${parseFloat(line.style.fontSize) * 0.8}px`;
 
 // Text behaves the way the brand's motion style says (motion.json: typing | rise | blur | track).
 const P = B.pace, T1 = 0.6, T2 = T1 + P.enter * 2, TEXT = B.motion?.text ?? 'rise';
+// typed text is set in the brand's text face (a terminal types in its mono), a little smaller than a title
+if (TEXT === 'typing') Object.assign(line.style, { fontFamily: B.font('text'), fontSize: `${parseFloat(line.style.fontSize) * 0.55}px`, letterSpacing: '0em', lineHeight: 1.3 });
 const lineText = line.textContent, times = typingTimes(lineText, { start: T2, cps: { calm: 14, medium: 22, fast: 32 }[B.motion?.pace ?? 'medium'], seed: 1 });
 s.update((t) => {
   wordRise(title, t, { start: T1, each: P.stagger, duration: P.enter * 1.6 });
