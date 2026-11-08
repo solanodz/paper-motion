@@ -4,6 +4,8 @@
 // This module runs in Node (`pamo board --url`) and in the browser (the /b page), so it has no Node imports: it
 // picks zlib or CompressionStream at call time. Plain ESM; the site copies it next to customize.mjs.
 
+// (lib/board.mjs is the other kind of board: the rendered one, stills and clips composed by ffmpeg.)
+
 export const BOARD_VERSION = 1;
 export const MAX_PAYLOAD = 8 * 1024;
 const LABELS = ['A', 'B', 'C', 'D'];

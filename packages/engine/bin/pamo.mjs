@@ -322,7 +322,7 @@ async function main() {
     case 'board': {
       if (args.url) {
         // the live form: a paper-motion.app link the user opens to compare, tune and choose
-        const { encodeBoard, boardUrl } = await import('../lib/board.js');
+        const { encodeBoard, boardUrl } = await import('../lib/live-board.js');
         const { getIndex, resolveRegistry, SITE, getItem } = await import('../lib/registry.mjs');
         const { parseSet, setArgs } = await import('../lib/customize.mjs');
         const reg = resolveRegistry(args.registry), { items } = await getIndex(reg), index = Object.fromEntries(items.map((i) => [i.id, i]));
