@@ -33,6 +33,13 @@ recommendations, set `MOTION.md`'s rules, and check every clip.
 - Match the transition to the pace: `cut` and `maskReveal` for fast, `wipe` and `push` for medium, `crossfade` and
   `zoomThrough` for calm. `zoomThrough` (diving into a frame) is the move for "and now, inside"; over detailed content
   (UI, small type) render it with less motion blur (`--motion-blur 4`) or a shorter move, or it smears.
+- The louder transitions carry a character, so pick them on purpose: `whip` and `flash` for energetic brands, `cells` and
+  `slices` for graphic, grid-minded ones, `glitch` only for a digital or raw identity, `flip3D` and `iris` sparingly.
+- `shake`, `punch` and `rgbSplit` are hits: put them on the beat (or a sound cue), never on every beat.
+- When a component changes state (a card, a button, a panel), reach for the component transitions: `magicMove` when
+  A and B share parts, `diveIn` to go into a detail, `whipPan` for energy, `flipLift` / `unfold` for a reveal with
+  weight. They are built in layers (parts that become each other, springs, a secondary effect); a plain slide or fade
+  of a whole card reads as a template. Render them with `--motion-blur 5`.
 
 ## Text
 
