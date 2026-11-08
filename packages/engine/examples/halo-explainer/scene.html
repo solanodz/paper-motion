@@ -1,0 +1,372 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Halo · explainer v4</title>
+<!-- Halo explainer v4, in the approved motion language (the user's After Effects reference):
+     real 3D depth, an inertial spring camera that banks into its moves, morphs instead of appearances, kinetic words in
+     the scene, and secondary animation everywhere (rings, bursts, ticks, stars, flips, builds, counters).
+     Beats are keyed to Matilda's words (audio/words.json). Render from this folder: pamo render scene.html --fps 60 --motion-blur 4 [--audio voice.wav]. -->
+<style>
+  #stage { overflow: hidden; color: #1F2328; font-family: 'Inter', sans-serif; perspective: 1500px; perspective-origin: 50% 50%; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .sh { position: absolute; inset: 0; }
+  #sky { position: absolute; inset: 0; background: #F7F5F0; }
+  #cam { position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-style: preserve-3d; }
+  .layer { position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-style: preserve-3d; }
+  .k { font-family: 'Inter Tight', sans-serif; font-weight: 600; letter-spacing: -0.045em; white-space: nowrap; }
+  .ch { display: inline-block; }
+  .dot { position: absolute; border-radius: 50%; background: #EFA85A; }
+  .ring { position: absolute; border-radius: 50%; border: 2.5px solid #EFA85A; }
+  .ray { position: absolute; height: 4px; border-radius: 2px; background: #EFA85A; transform-origin: 0 50%; }
+  .tick { position: absolute; font-size: 22px; font-weight: 500; color: #6B7280; white-space: nowrap; }
+  .win { position: absolute; border: 2.5px solid #1F2328; border-radius: 6px; background: #FFFFFF; overflow: hidden; }
+  .win::before, .win::after { content: ''; position: absolute; background: #1F2328; }
+  .win::before { left: 50%; top: 0; width: 2px; height: 100%; transform: translateX(-1px); }
+  .win::after { top: 50%; left: 0; height: 2px; width: 100%; transform: translateY(-1px); }
+  .lab { position: absolute; font-size: 24px; font-weight: 500; color: #6B7280; white-space: nowrap; }
+  #flash { position: absolute; inset: 0; background: #F3C98E; opacity: 0; }
+  #hud { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="sky"></div>
+  <div id="cam">
+    <div id="far" class="layer"></div>
+    <div id="stars" class="layer"></div>
+    <div id="mid" class="layer">
+      <!-- A · the day chart -->
+      <div id="chart" class="abs" style="left:0;top:0">
+        <div id="area" class="abs" style="left:0;top:0;width:1920px;height:1080px;clip-path:path('M 160 860 C 520 860, 620 300, 860 300 C 1100 300, 1200 860, 1560 860 Z')"><div id="area-sh" class="sh"></div></div>
+        <svg class="abs" style="left:0;top:0;overflow:visible" width="2600" height="1200">
+          <line id="axis" x1="120" y1="860" x2="2500" y2="860" stroke="#1F2328" stroke-width="1.5"/>
+          <path id="prod" d="M 160 860 C 520 860, 620 300, 860 300 C 1100 300, 1200 860, 1560 860" fill="none" stroke="#E9A04F" stroke-width="3.5" stroke-linecap="round"/>
+          <path id="use" d="M 160 790 C 600 800, 900 830, 1150 800 C 1380 770, 1460 440, 1680 380" fill="none" stroke="#8E9AB5" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1 11"/>
+          <path id="flowpath" d="M 1040 560 C 1400 300, 1700 980, 2150 640" fill="none" stroke="none"/>
+          <rect id="batline" x="2080" y="380" width="250" height="400" rx="56" fill="#FFFFFF" stroke="#1F2328" stroke-width="3"/>
+        </svg>
+        <div id="bat" class="abs" style="left:2092px;top:392px;width:226px;height:376px;border-radius:46px;overflow:hidden"><div id="bat-sh" class="sh"></div></div>
+        <div id="bat-pct" class="lab" style="left:2150px;top:800px">0 %</div>
+        <div id="ticks" class="abs" style="left:0;top:0"></div>
+        <div id="flow" class="abs" style="left:0;top:0"></div>
+      </div>
+
+      <!-- B–E · the journey (lower world) -->
+      <div id="row" class="abs" style="left:0;top:0">
+        <svg class="abs" style="left:0;top:0;overflow:visible" width="7000" height="3600"><line id="ground" x1="200" y1="3230" x2="6600" y2="3230" stroke="#1F2328" stroke-width="1.5"/></svg>
+        <div id="beam" class="abs" style="left:930px;top:2978px;width:640px;height:48px;border-radius:24px;overflow:hidden;transform-origin:0 50%;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 18%,#000 100%)"><div id="beam-sh" class="sh"></div></div>
+        <div id="photons" class="abs" style="left:0;top:0"></div>
+        <div id="panelBox" class="abs" style="left:1480px;top:2760px;width:620px;height:430px;transform-style:preserve-3d"><svg id="panel" class="abs" style="left:0;top:0" width="620" height="430" viewBox="160 330 520 360"></svg></div>
+        <div id="spark" class="abs" style="left:1600px;top:3000px"></div>
+        <svg class="abs" style="left:0;top:0;overflow:visible" width="7000" height="3600"><path id="arc1" d="M 2000 3010 C 2250 2600, 2650 2600, 2930 2960" fill="none" stroke="none"/><path id="arc2" d="M 3170 3060 C 3500 2780, 3900 2800, 4200 3060" fill="none" stroke="none"/></svg>
+        <div id="stream" class="abs" style="left:0;top:0"></div>
+        <div id="halo2" class="abs" style="left:2900px;top:2760px;width:300px;height:470px;transform-style:preserve-3d">
+          <svg class="abs" style="left:0;top:0;overflow:visible" width="300" height="470">
+            <path id="handle" d="M 105 2 L 105 -46 Q 105 -64 123 -64 L 177 -64 Q 195 -64 195 -46 L 195 2" fill="none" stroke="#1F2328" stroke-width="4" stroke-linecap="round"/>
+            <rect x="1.5" y="1.5" width="297" height="467" rx="60" fill="#FFFFFF" stroke="#1F2328" stroke-width="3"/></svg>
+          <div id="fill2" class="abs" style="left:12px;top:12px;width:276px;height:446px;border-radius:50px;overflow:hidden"><div id="fill2-sh" class="sh"></div></div>
+        </div>
+        <div id="pct2" class="abs k" style="left:3240px;top:2860px;font-size:120px"></div>
+        <div id="suit" class="lab" style="left:3240px;top:3010px;font-size:28px;color:#3D434B">the size of a suitcase</div>
+        <div id="stream2" class="abs" style="left:0;top:0"></div>
+        <div id="moon" class="abs" style="left:3420px;top:2120px;width:240px;height:240px"><div id="moon-sh" class="sh"></div></div>
+        <div id="home" class="abs" style="left:4120px;top:2700px;width:520px;height:520px"></div>
+        <div id="hoods" class="abs" style="left:0;top:0"></div>
+      </div>
+
+      <!-- the opening sun (A) and the journey sun (B–F): one element that the film hands over -->
+      <div id="sun" class="abs" style="left:0;top:0;width:180px;height:180px">
+        <div class="abs" style="left:-90%;top:-90%;width:280%;height:280%"><div id="glow" class="sh"></div></div>
+        <div id="sun-sh" class="sh"></div>
+      </div>
+      <div id="fx" class="abs" style="left:0;top:0"></div>
+    </div>
+    <div id="near" class="layer"></div>
+    <div id="fore" class="layer"></div>
+  </div>
+  <div id="flash"></div>
+  <div id="hud">
+    <div id="wm" class="abs k" style="left:1060px;top:330px;font-size:250px;line-height:0.85;letter-spacing:-0.05em;opacity:0">Halo</div>
+    <div id="tag" class="abs k" style="left:1070px;top:600px;font-size:60px;font-weight:500;letter-spacing:-0.03em"></div>
+  </div>
+</main>
+<script type="module">
+import { scene, progress, ease, clamp, lerp } from 'paper-motion';
+import { loadBrand } from 'paper-motion/brand';
+
+const B = await loadBrand('./brand');
+const WORDS = await (await fetch('./audio/words.json')).json();
+const clean = (w) => w.toLowerCase().replace(/[^a-z0-9']/g, '');
+const W = (word, n = 1) => { let k = 0; for (const x of WORDS) if (clean(x.w) === word && ++k === n) return x.t; throw new Error(word); };
+const T = { your: W('your'), noon: W('noon'), but: W('but'), night: W('night'), halo: W('halo'), difference: W('difference'), one: W('one'), hits: W('hits'),
+  two: W('two'), flows: W('flows'), suitcase: W('suitcase'), three: W('three'), down: W('down'), home: W('home'), stored: W('stored'), lower: W('lower'), bills: W('bills'),
+  lights: W('lights'), blackout: W('blackout'), end: W('halo', 3), keep: W('keep'), dark: W('dark') };
+const CUT = T.one - 0.15; // the dive lands; we come out of the sun
+
+const FPS = 60, DUR = 36;
+const s = scene({ width: 1920, height: 1080, fps: 30, duration: DUR, background: B.color('ground') });
+const $ = (id) => document.getElementById(id);
+const mk = (cls, parent, css = {}) => { const d = Object.assign(document.createElement('div'), { className: cls }); Object.assign(d.style, css); parent.append(d); return d; };
+const use = (sel, id, extra = {}) => { const e = B.set.entries.find((x) => x.id === id); return s.shader(sel, e.shader, { ...e.props, ...extra }); };
+use('#area-sh', 'flow', { scale: 0.7 });
+use('#glow', 'sun-glow', { radius: 0.6 }); use('#sun-sh', 'sun-dither', { colorBack: 'rgba(0,0,0,0)', scale: 0.8 });
+use('#bat-sh', 'charge', { scale: 0.7 });
+use('#beam-sh', 'flow', { scale: 0.35, colorBack: '#FBEBD0' });
+use('#fill2-sh', 'charge');
+use('#moon-sh', 'night', { colorBack: 'rgba(0,0,0,0)', scale: 0.8 });
+const rnd = (i, k = 1) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
+const punch = (t, at, amt = 0.1, decay = 6, f = 15) => (t < at ? 0 : amt * Math.exp(-(t - at) * decay) * Math.cos((t - at) * f));
+
+// ---------- depth layers ----------
+$('far').style.transform = 'translateZ(-520px)'; $('stars').style.transform = 'translateZ(-260px)'; $('near').style.transform = 'translateZ(170px)'; $('fore').style.transform = 'translateZ(560px)';
+for (let i = 0; i < 26; i++) { const r = 60 + rnd(i) * 170; mk('dot', $('far'), { width: `${r}px`, height: `${r}px`, left: `${-600 + rnd(i, 2) * 7000}px`, top: `${-300 + (i % 2 ? rnd(i, 3) * 1500 : 2300 + rnd(i, 3) * 1300)}px`, opacity: 0.05 + rnd(i, 4) * 0.08, filter: 'blur(32px)', background: i % 3 ? '#F4C27F' : '#D3D9E5' }); }
+for (let i = 0; i < 10; i++) { const r = 40 + rnd(i, 9) * 70; mk('dot', $('fore'), { width: `${r}px`, height: `${r}px`, left: `${200 + rnd(i, 7) * 6000}px`, top: `${(i % 2 ? 100 : 2500) + rnd(i, 8) * 900}px`, opacity: 0.16, filter: 'blur(14px)' }); }
+const STARS = Array.from({ length: 40 }, (_, i) => { const r = 4 + rnd(i, 11) * 5; return mk('dot', $('stars'), { width: `${r}px`, height: `${r}px`, left: `${3300 + rnd(i, 12) * 3300}px`, top: `${1800 + rnd(i, 13) * 800}px`, background: '#9AA5BF', opacity: 0 }); });
+const STARS_A = Array.from({ length: 14 }, (_, i) => { const r = 4 + rnd(i, 21) * 5; return mk('dot', $('stars'), { width: `${r}px`, height: `${r}px`, left: `${1150 + rnd(i, 22) * 900}px`, top: `${80 + rnd(i, 23) * 260}px`, background: '#9AA5BF', opacity: 0 }); });
+
+// ---------- A · chart extras: hour ticks, rings, rays, particles ----------
+const prod = $('prod'), PL = prod.getTotalLength(), useP = $('use'), fp = $('flowpath'), FL = fp.getTotalLength();
+const TICKS = [[160, '6 am'], [510, '9 am'], [1210, '3 pm'], [1560, '6 pm'], [1680, '9 pm']].map(([x, l]) => { const d = mk('tick', $('ticks'), { left: `${x - 24}px`, top: '880px', opacity: 0 }); d.textContent = l; return { x, d }; });
+const ringSet = (parent, n) => Array.from({ length: n }, () => mk('ring', parent, { opacity: 0 }));
+const R_BIRTH = ringSet($('fx'), 3), R_NOON = ringSet($('fx'), 3), R_FULL = ringSet($('fx'), 3), R_LAND = ringSet($('fx'), 3), R_END = ringSet($('fx'), 3);
+const RAYS = Array.from({ length: 14 }, () => mk('ray', $('fx'), { opacity: 0 }));
+function rings(set, t, at, cx, cy, r0 = 100, r1 = 420, dur = 1.4) {
+  set.forEach((d, i) => { const a = at + i * 0.16, p = progress(t, a, a + dur, ease.outCubic); const r = lerp(r0, r1, p); Object.assign(d.style, { left: `${cx - r}px`, top: `${cy - r}px`, width: `${2 * r}px`, height: `${2 * r}px`, opacity: t < a ? 0 : (1 - p) * 0.7 }); });
+}
+function burst(t, at, cx, cy, r0 = 130, len = 120) {
+  RAYS.forEach((d, i) => { const ang = (i / RAYS.length) * 360 + 8, p = progress(t, at, at + 0.7, ease.outExpo), q = progress(t, at + 0.25, at + 0.9, ease.inCubic); const r = r0 + p * 40; Object.assign(d.style, { left: `${cx + Math.cos(ang * Math.PI / 180) * r}px`, top: `${cy + Math.sin(ang * Math.PI / 180) * r}px`, width: `${len * p * (1 - q)}px`, transform: `rotate(${ang}deg)`, opacity: t < at ? 0 : 1 - q }); });
+}
+const PARTS = Array.from({ length: 150 }, (_, i) => { const r = 10 + rnd(i, 5) * 22; return { d: mk('dot', $('flow'), { width: `${r}px`, height: `${r}px`, marginLeft: `${-r / 2}px`, marginTop: `${-r / 2}px`, opacity: 0 }), off: rnd(i, 6), jit: (rnd(i, 7) - 0.5) * 46 }; });
+
+// ---------- B · panel (flips in, cells pop in a wave, then light in a wave) ----------
+function panelSVG() {
+  const Q = [[222, 380], [604, 354], [632, 632], [198, 606]];
+  const A = [], b = [];
+  [[0, 0], [1, 0], [1, 1], [0, 1]].forEach(([u, v], i) => { const [x, y] = Q[i]; A.push([u, v, 1, 0, 0, 0, -u * x, -v * x]); b.push(x); A.push([0, 0, 0, u, v, 1, -u * y, -v * y]); b.push(y); });
+  const M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < 8; c++) { let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r; [M[c], M[p]] = [M[p], M[c]]; for (let r = 0; r < 8; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let q = c; q < 9; q++) M[r][q] -= f * M[c][q]; } }
+  const h = M.map((r, i) => r[8] / r[i]);
+  const P = (u, v) => { const w = h[6] * u + h[7] * v + 1; return [(h[0] * u + h[1] * v + h[2]) / w, (h[3] * u + h[4] * v + h[5]) / w]; };
+  const pts = (L) => L.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const shades = ['#B6C3D9', '#BFCADE', '#AEBBD3', '#C5CFE1'];
+  let svg = `<polygon points="${pts(Q)}" fill="#FFFFFF"/>`;
+  for (let i = 0; i < 12; i++) for (let j = 0; j < 6; j++) { const g = 0.006, u0 = i / 12 + g, u1 = (i + 1) / 12 - g, v0 = j / 6 + g * 1.6, v1 = (j + 1) / 6 - g * 1.6; const cx = (P(u0, v0)[0] + P(u1, v1)[0]) / 2, cy = (P(u0, v0)[1] + P(u1, v1)[1]) / 2; svg += `<polygon class="cell" data-i="${i}" data-j="${j}" data-base="${shades[(i * 3 + j) % 4]}" style="transform-origin:${cx}px ${cy}px" points="${pts([P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)])}" fill="${shades[(i * 3 + j) % 4]}"/>`; }
+  for (let i = 3; i < 12; i += 3) { const [a, c] = [P(i / 12, 0), P(i / 12, 1)]; svg += `<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" stroke="#1F2328" stroke-width="1.2" opacity="0.55"/>`; }
+  for (let j = 2; j < 6; j += 2) { const [a, c] = [P(0, j / 6), P(1, j / 6)]; svg += `<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" stroke="#1F2328" stroke-width="1.2" opacity="0.55"/>`; }
+  svg += `<polygon points="${pts(Q)}" fill="none" stroke="#1F2328" stroke-width="3" stroke-linejoin="round"/>`;
+  return svg;
+}
+$('panel').innerHTML = panelSVG();
+const CELLS = [...document.querySelectorAll('#panel .cell')];
+const PHOTONS = Array.from({ length: 36 }, (_, i) => ({ d: mk('dot', $('photons'), { width: '12px', height: '12px', marginLeft: '-6px', marginTop: '-6px', background: '#F2B66D', opacity: 0 }), off: rnd(i, 31), dy: (rnd(i, 32) - 0.5) * 30 }));
+const SPARK = Array.from({ length: 10 }, () => mk('ray', $('spark'), { opacity: 0, background: '#F2B66D' }));
+
+// ---------- C · streams ----------
+const arc1 = $('arc1'), A1 = arc1.getTotalLength(), arc2 = $('arc2'), A2 = arc2.getTotalLength();
+const STREAM = Array.from({ length: 120 }, (_, i) => { const r = 10 + rnd(i, 41) * 20; return { d: mk('dot', $('stream'), { width: `${r}px`, height: `${r}px`, marginLeft: `${-r / 2}px`, marginTop: `${-r / 2}px`, opacity: 0 }), off: rnd(i, 42), jit: (rnd(i, 43) - 0.5) * 40, z: (rnd(i, 44) - 0.5) * 260 }; });
+const STREAM2 = Array.from({ length: 90 }, (_, i) => { const r = 9 + rnd(i, 51) * 18; return { d: mk('dot', $('stream2'), { width: `${r}px`, height: `${r}px`, marginLeft: `${-r / 2}px`, marginTop: `${-r / 2}px`, opacity: 0 }), off: rnd(i, 52), jit: (rnd(i, 53) - 0.5) * 36, z: (rnd(i, 54) - 0.5) * 220 }; });
+function flowAlong(list, path, L, t, a, b, spread = 0.7) {
+  const pour = progress(t, a, b);
+  let lead = 0;
+  list.forEach((p) => { const u = pour * (1 + spread) - p.off * spread, v = clamp(u), vis = u > 0 && u < 1 && pour > 0 && pour < 1;
+    const pt = path.getPointAtLength(L * ease.inOutSine(v)); if (vis) lead = Math.max(lead, v);
+    Object.assign(p.d.style, { left: `${pt.x}px`, top: `${pt.y + Math.sin(v * Math.PI) * p.jit}px`, opacity: vis ? Math.sin(v * Math.PI) * 0.9 + 0.1 : 0, transform: `translateZ(${(p.z ?? 0) * Math.sin(v * Math.PI)}px) scale(${vis ? lerp(0.4, 1, Math.sin(v * Math.PI)) : 0})` }); });
+  return path.getPointAtLength(L * ease.inOutSine(clamp(pour * 1.25)));
+}
+
+// ---------- D · the home (builds itself) and the neighborhood ----------
+$('home').innerHTML = `
+  <svg class="abs" style="left:0;top:0;overflow:visible" width="520" height="520" viewBox="1150 390 520 520">
+    <rect id="chim" x="1240" y="470" width="54" height="120" fill="#FFFFFF" stroke="#1F2328" stroke-width="2.5"/>
+    <rect id="walls" x="1210" y="640" width="420" height="260" fill="#FFFFFF" stroke="#1F2328" stroke-width="2.5"/>
+    <g id="roof"><path d="M 1166 652 L 1420 452 L 1674 652 L 1660 668 L 1420 478 L 1180 668 Z" fill="#E3E8F1" stroke="#1F2328" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M 1200 640 L 1420 478 L 1640 640 Z" fill="#F2F4F8" stroke="#1F2328" stroke-width="2" stroke-linejoin="round"/><g id="roof-panels"></g></g>
+    <path id="door" d="M 1388 900 L 1388 790 Q 1388 768 1410 768 L 1450 768 Q 1472 768 1472 790 L 1472 900" fill="#F2F4F8" stroke="#1F2328" stroke-width="2.5"/>
+  </svg>
+  <div id="hw1" class="win" style="left:102px;top:310px;width:100px;height:100px"></div>
+  <div id="hw2" class="win" style="left:358px;top:310px;width:100px;height:100px"></div>`;
+{ const A = [1448, 512], Bp = [1596, 624], C = [1566, 640], D = [1418, 528]; let g = ''; const P = (u, v) => [A[0] + (Bp[0] - A[0]) * u + (D[0] - A[0]) * v, A[1] + (Bp[1] - A[1]) * u + (D[1] - A[1]) * v]; const sh = ['#B6C3D9', '#BFCADE', '#AEBBD3', '#C5CFE1'];
+  for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) { const q = [P(i / 6 + 0.01, j / 2 + 0.04), P((i + 1) / 6 - 0.01, j / 2 + 0.04), P((i + 1) / 6 - 0.01, (j + 1) / 2 - 0.04), P(i / 6 + 0.01, (j + 1) / 2 - 0.04)]; g += `<polygon points="${q.map((p) => p.join(',')).join(' ')}" fill="${sh[(i + j) % 4]}"/>`; }
+  $('roof-panels').innerHTML = g + `<polygon points="${[A, Bp, C, D].map((p) => p.join(',')).join(' ')}" fill="none" stroke="#1F2328" stroke-width="2"/>`; }
+const HOODS = [4820, 5300, 5780, 6260].map((x, i) => {
+  const h = mk('abs', $('hoods'), { left: `${x}px`, top: `${3230 - 250}px`, width: '300px', height: '250px', opacity: 0 });
+  h.innerHTML = `<svg class="abs" style="left:0;top:0;overflow:visible" width="300" height="250"><rect x="20" y="100" width="260" height="150" fill="#FFFFFF" stroke="#1F2328" stroke-width="2.2"/><path d="M 0 108 L 150 0 L 300 108" fill="#EEF1F6" stroke="#1F2328" stroke-width="2.2" stroke-linejoin="round"/></svg>`;
+  const w = [mk('win', h, { left: '58px', top: '140px', width: '60px', height: '60px' }), mk('win', h, { left: '182px', top: '140px', width: '60px', height: '60px' })];
+  return { h, w, x };
+});
+
+// ---------- kinetic words in the scene ----------
+const chars = (el, text) => { el.innerHTML = [...text].map((c) => `<span class="ch">${c === ' ' ? '&nbsp;' : c}</span>`).join(''); return [...el.children]; };
+function kword(text, x, y, size, css = {}) { const el = mk('abs k', $('near'), { left: `${x}px`, top: `${y}px`, fontSize: `${size}px`, ...css }); return { el, cs: chars(el, text) }; }
+function kin(w, t, at, { each = 0.035, dur = 0.7, dy = 60, rot = 8 } = {}) {
+  w.cs.forEach((c, i) => { const p = progress(t, at + i * each, at + i * each + dur, ease.outExpo); c.style.opacity = progress(t, at + i * each, at + i * each + dur * 0.4); c.style.transform = `translateY(${(1 - p) * dy}px) rotate(${(1 - p) * rot}deg) scale(${lerp(0.8, 1, p)})`; c.style.filter = p < 0.99 ? `blur(${(1 - p) * 14}px)` : 'none'; });
+}
+function kout(w, t, at, dur = 0.55) { const p = progress(t, at, at + dur, ease.inExpo); w.el.style.opacity = 1 - p; w.el.style.filter = p > 0.01 ? `blur(${p * 16}px)` : 'none'; w.el.style.translate = `0 ${-p * 50}px`; }
+const K = {
+  noon: kword('noon.', 1000, 150, 150), night: kword('night.', 1500, 210, 150, { color: '#7C88A6' }),
+  halo: kword('Halo', 1640, 120, 120), stores: kword('stores the difference.', 1644, 250, 64, { fontWeight: 500, color: '#3D434B', letterSpacing: '-0.03em' }),
+  n1: kword('1', 700, 2560, 260, { color: '#EFA85A' }), s1: kword('Sunlight hits your panels.', 880, 2640, 72),
+  n2: kword('2', 2260, 2400, 260, { color: '#EFA85A' }), s2: kword('The rest flows into Halo.', 2440, 2480, 72),
+  n3: kword('3', 3560, 2380, 260, { color: '#EFA85A' }), s3: kword('At night, your home runs on it.', 3740, 2460, 72),
+  bills: kword('Lower bills.', 4040, 2420, 130), lights: kword('Lights on, even in a blackout.', 4260, 2580, 76, { color: '#3D434B' }),
+};
+const tagCs = chars($('tag'), 'Keep the sun after dark.');
+const arrowBills = mk('abs', $('near'), { left: '4890px', top: '2440px' }); arrowBills.innerHTML = '<svg width="90" height="130" style="overflow:visible"><path id="arr" d="M 45 0 L 45 110 M 10 78 L 45 113 L 80 78" fill="none" stroke="#EFA85A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// ---------- the sun: where it is at every moment ----------
+const SUN_J = [760, 3000];
+function sunState(t) {
+  if (t < CUT) { // A: travels the day
+    let s0 = 0; if (t >= T.your - 0.2) s0 = t < T.noon ? 0.5 * ease.inOutCubic(progress(t, T.your - 0.2, T.noon)) : 0.5 + 0.5 * ease.inOutSine(progress(t, T.noon + 0.25, T.night + 0.15));
+    const p = prod.getPointAtLength(PL * s0), set = progress(t, T.night - 0.4, T.night + 0.6, ease.inOutCubic);
+    return { x: p.x, y: p.y - 70 * (1 - set * 0.3), size: 180, s: s0, op: 1 - 0.5 * progress(t, T.night - 0.3, T.night + 0.5) };
+  }
+  const night = nightAt(t), rise = progress(t, T.end - 0.8, T.end + 1.2, ease.inOutCubic);
+  return { x: SUN_J[0], y: SUN_J[1] + night * 260 - rise * 120, size: 280, s: 1, op: 1 - 0.65 * night };
+}
+const nightAt = (t) => progress(t, T.three - 0.5, T.three + 1.6, ease.inOutCubic) * (1 - progress(t, T.end - 0.9, T.end + 0.9, ease.inOutCubic));
+
+// ---------- the inertial camera ----------
+function target(t) {
+  if (t < CUT) {
+    const sun = sunState(t), pull = progress(t, T.night + 0.4, T.halo - 0.2, ease.inOutCubic), toHalo = progress(t, T.halo - 0.3, T.difference + 0.4, ease.inOutCubic), dive = progress(t, T.one - 1.2, CUT, ease.inExpo);
+    let x = lerp(sun.x, 900, pull), y = lerp(sun.y + 40, 600, pull); x = lerp(x, 1900, toHalo); y = lerp(y, 590, toHalo); x = lerp(x, 2205, dive); y = lerp(y, 580, dive);
+    let z = t < 1.0 ? 3.4 : lerp(2.2, 1.35, progress(t, 1.0, T.noon, ease.inOutCubic)); z = lerp(z, 1.15, progress(t, T.noon + 0.3, T.night, ease.inOutCubic)); z = lerp(z, 0.78, pull); z = lerp(z, 0.95, toHalo); z = lerp(z, 9.0, dive);
+    return [x, y, z, 0];
+  }
+  // B: out of the sun, then frame sun + panel, orbiting
+  const out = progress(t, CUT, CUT + 1.2, ease.outCubic);
+  let x = lerp(SUN_J[0], 1380, out), y = lerp(SUN_J[1], 2960, out), z = lerp(7, 1.0, out), yaw = lerp(14, -6, progress(t, CUT, T.two - 0.2, ease.inOutSine));
+  // C: follow the stream's head to Halo
+  const c = progress(t, T.two - 0.1, T.suitcase - 0.2, ease.inOutCubic);
+  x = lerp(x, 2950, c); y = lerp(y, 2930, c); z = lerp(z, 1.0, c); yaw = lerp(yaw, 6, c);
+  // D: look up at the sky as night falls, then down to the home
+  const up = progress(t, T.three - 0.5, T.three + 0.9, ease.inOutCubic) * (1 - progress(t, T.three + 1.2, T.home - 0.3, ease.inOutCubic));
+  const d = progress(t, T.three - 0.3, T.home, ease.inOutCubic);
+  x = lerp(x, 3820, d); y = lerp(y, 2950, d) - up * 520; yaw = lerp(yaw, -4, d);
+  // E: pull back to the neighborhood
+  const e = progress(t, T.lower - 0.4, T.lights + 0.6, ease.inOutCubic);
+  x = lerp(x, 4700, e); y = lerp(y, 2900, e); z = lerp(z, 0.55, e); yaw = lerp(yaw, 0, e);
+  // F: fly back to the sun for the end
+  const f = progress(t, T.end - 0.9, T.end + 1.1, ease.inOutExpo);
+  x = lerp(x, SUN_J[0] + 390, f); y = lerp(y, SUN_J[1] - 120, f); z = lerp(z, 1.6, f); yaw = lerp(yaw, 0, f);
+  return [x, y, z, yaw];
+}
+const steps = Math.ceil(DUR * FPS) + 2, cache = [];
+{ let [x, y, z, yw] = target(0), vx = 0, vy = 0, vz = 0, vw = 0; const k = 38, c = 11;
+  for (let i = 0; i < steps; i++) { const t = i / FPS, dt = 1 / FPS; const [tx, ty, tz, tw] = target(t);
+    if (Math.abs(t - CUT) < 0.5 / FPS) { x = tx; y = ty; z = tz; yw = tw; vx = vy = vz = vw = 0; } // the cut: the flash hides the jump
+    vx += ((tx - x) * k - vx * c) * dt; vy += ((ty - y) * k - vy * c) * dt; vz += ((tz - z) * k - vz * c) * dt; vw += ((tw - yw) * k - vw * c) * dt;
+    x += vx * dt; y += vy * dt; z += vz * dt; yw += vw * dt; cache.push([x, y, z, yw, vx, vy]); } }
+const camAt = (t) => { const f = clamp(t * FPS, 0, steps - 2), i = Math.floor(f), u = f - i; return cache[i].map((v, j) => lerp(v, cache[i + 1][j], u)); };
+
+// ---------- frame ----------
+const show = (el, on) => { el.style.display = on ? '' : 'none'; };
+s.update((t) => {
+  const [cx, cy, z, yawB, vx, vy] = camAt(t);
+  const bank = clamp(-vx / 260, -7, 7), tiltX = clamp(vy / 220, -6, 6), yaw = clamp(vx / 340, -9, 9) + yawB;
+  $('cam').style.transform = `translate(960px,540px) rotateZ(${bank + Math.sin(t * 0.6) * 0.18}deg) rotateX(${tiltX}deg) rotateY(${yaw}deg) scale(${z}) translate(${-cx}px,${-cy}px)`;
+  show($('chart'), t < CUT + 0.1); show($('row'), t > CUT - 0.1);
+  const night = nightAt(t);
+
+  // sky: dusk in A, night in D/E, day for the end
+  const duskA = progress(t, T.but, T.night + 0.6, ease.inOutCubic) * (1 - progress(t, T.halo - 0.4, T.halo + 0.6));
+  $('sky').style.background = `color-mix(in srgb, #E8EBF2 ${Math.max(duskA, night) * 100}%, #F7F5F0)`;
+  STARS_A.forEach((d, i) => { d.style.opacity = duskA * (0.35 + 0.5 * Math.abs(Math.sin(t * (1.3 + rnd(i, 24)) + i))); });
+  STARS.forEach((d, i) => { d.style.opacity = night * progress(t, T.three + i * 0.03, T.three + 0.6 + i * 0.03) * (0.3 + 0.6 * Math.abs(Math.sin(t * (1.1 + rnd(i, 14)) + i))); });
+
+  // the sun
+  const S = sunState(t);
+  Object.assign($('sun').style, { left: `${S.x - S.size / 2}px`, top: `${S.y - S.size / 2}px`, width: `${S.size}px`, height: `${S.size}px`, opacity: S.op });
+  $('sun').style.scale = lerp(0.2, 1, progress(t, 0.15, 1.0, ease.outBack)) + punch(t, T.noon, 0.12) + punch(t, CUT + 0.2, 0.06) + punch(t, T.hits, 0.06) + punch(t, T.end + 0.3, 0.08);
+
+  // ===== A =====
+  if (t < CUT + 0.1) {
+    prod.style.strokeDasharray = `${PL}`; prod.style.strokeDashoffset = `${PL * (1 - S.s)}`;
+    $('area-sh').style.clipPath = `circle(${1000 * progress(t, T.noon - 0.15, T.noon + 1.4, ease.outCubic)}px at ${prod.getPointAtLength(PL * 0.5).x}px 300px)`;
+    $('axis').style.strokeDasharray = '2400'; $('axis').style.strokeDashoffset = `${2400 * (1 - progress(t, 0.6, 2.4, ease.inOutCubic))}`;
+    useP.style.clipPath = `inset(0 ${100 - 100 * progress(t, T.but - 0.2, T.night + 0.35, ease.inOutCubic)}% 0 0)`;
+    TICKS.forEach(({ x, d }) => { const at = x < 900 ? (x <= 160 ? 1.2 : T.your + (T.noon - T.your) * 0.45) : x < 1600 ? (x < 1300 ? T.noon + 0.9 : T.night - 0.5) : T.night; const p = progress(t, at, at + 0.5, ease.outBack); d.style.opacity = progress(t, at, at + 0.3) * (1 - 0.6 * progress(t, T.halo - 0.3, T.halo + 0.3)); d.style.transform = `translateY(${(1 - p) * 16}px) scale(${lerp(0.7, 1, p)})`; });
+    rings(R_BIRTH, t, 0.25, S.x, S.y, 60, 360); rings(R_NOON, t, T.noon, 860, 230, 100, 520); burst(t, T.noon - 0.02, 860, 230);
+    kin(K.noon, t, T.noon - 0.25); kout(K.noon, t, T.but + 0.2);
+    kin(K.night, t, T.night - 0.3); kout(K.night, t, T.halo - 0.6);
+    kin(K.halo, t, T.halo - 0.1, { each: 0.05 }); kin(K.stores, t, T.halo + 0.35, { each: 0.022, dy: 40, rot: 4 }); kout(K.halo, t, T.one - 1.15, 0.5); kout(K.stores, t, T.one - 1.1, 0.5);
+    const bl = $('batline'), BLen = 2 * (250 + 400); bl.style.strokeDasharray = `${BLen}`; bl.style.strokeDashoffset = `${BLen * (1 - progress(t, T.halo - 0.2, T.halo + 0.9, ease.inOutCubic))}`;
+    bl.style.fillOpacity = progress(t, T.halo + 0.6, T.halo + 1.0);
+    const pour = progress(t, T.halo + 0.1, T.difference + 1.2);
+    PARTS.forEach((p) => { const u = pour * 1.7 - p.off * 0.7, v = clamp(u), vis = u > 0 && u < 1 && pour > 0; const pt = fp.getPointAtLength(FL * ease.inOutSine(v)); Object.assign(p.d.style, { left: `${pt.x}px`, top: `${pt.y + Math.sin(v * Math.PI) * p.jit}px`, opacity: vis ? Math.sin(v * Math.PI) * 0.9 + 0.1 : 0, scale: vis ? lerp(0.4, 1, Math.sin(v * Math.PI)) : 0 }); });
+    $('area').style.opacity = 1 - 0.55 * progress(t, T.halo + 0.1, T.difference + 0.8);
+    const fillA = progress(t, T.halo + 0.6, T.difference + 1.3, ease.inOutCubic);
+    $('bat').style.clipPath = `inset(${100 - 100 * fillA}% 0 0 0)`;
+    $('bat-pct').textContent = `${Math.round(100 * fillA)} %`; $('bat-pct').style.opacity = progress(t, T.halo + 0.6, T.halo + 0.9);
+    const full = T.difference + 1.3; rings(R_FULL, t, full, 2205, 580, 150, 520); $('bat').style.scale = 1 + punch(t, full, 0.06); $('batline').style.transformOrigin = '2205px 580px'; $('batline').style.scale = 1 + punch(t, full, 0.06);
+  }
+  // the flash that carries the dive into the sun
+  $('flash').style.opacity = progress(t, CUT - 0.35, CUT, ease.inCubic) * (1 - progress(t, CUT, CUT + 0.6, ease.outCubic));
+
+  // ===== B · sunlight hits your panels =====
+  if (t > CUT - 0.1) {
+    rings(R_LAND, t, CUT + 0.15, SUN_J[0], SUN_J[1], 140, 560);
+    kin(K.n1, t, T.one - 0.05, { dy: 120, rot: 14, dur: 0.9 }); kin(K.s1, t, T.one + 0.25, { each: 0.022, dy: 40, rot: 4 }); kout(K.n1, t, T.two - 0.5); kout(K.s1, t, T.two - 0.45);
+    const flip = progress(t, T.one + 0.2, T.one + 1.3, ease.outBack);
+    $('panelBox').style.transform = `rotateY(${(1 - flip) * -85}deg) rotateX(${(1 - flip) * 25}deg)`; $('panelBox').style.opacity = progress(t, T.one + 0.2, T.one + 0.5);
+    const hit = T.hits + 0.05;
+    CELLS.forEach((c) => { const i = +c.dataset.i, j = +c.dataset.j; const p = progress(t, T.one + 0.35 + (i + j) * 0.03, T.one + 0.75 + (i + j) * 0.03, ease.outBack); c.style.transform = `scale(${p})`;
+      const L = progress(t, hit + i * 0.045, hit + i * 0.045 + 0.35, ease.outCubic); c.setAttribute('fill', L > 0 ? `color-mix(in srgb, #F8DDB0 ${L * 72}%, ${c.dataset.base})` : c.dataset.base); });
+    $('panelBox').style.scale = 1 + punch(t, hit, 0.05);
+    $('beam').style.transform = `rotate(0.6deg) scaleX(${progress(t, T.hits - 0.5, hit, ease.outExpo)})`;
+    $('beam').style.opacity = 1 - 0.5 * progress(t, T.two, T.two + 1);
+    PHOTONS.forEach((p) => { const u = ((t - (T.hits - 0.5)) * 1.6 + p.off) % 1, on = t > T.hits - 0.5 && t < T.two + 0.4; Object.assign(p.d.style, { left: `${960 + u * 600}px`, top: `${3002 + p.dy * Math.sin(u * Math.PI)}px`, opacity: on ? Math.sin(u * Math.PI) : 0 }); });
+    SPARK.forEach((d, i) => { const ang = -70 + i * 14, p = progress(t, hit, hit + 0.5, ease.outExpo), q = progress(t, hit + 0.2, hit + 0.7); Object.assign(d.style, { width: `${70 * p * (1 - q)}px`, transform: `rotate(${ang + 180}deg)`, opacity: t < hit ? 0 : 1 - q }); });
+
+    // ===== C · the rest flows into Halo =====
+    kin(K.n2, t, T.two - 0.05, { dy: 120, rot: 14, dur: 0.9 }); kin(K.s2, t, T.two + 0.25, { each: 0.022, dy: 40, rot: 4 }); kout(K.n2, t, T.three - 0.5); kout(K.s2, t, T.three - 0.45);
+    const head = flowAlong(STREAM, arc1, A1, t, T.two + 0.1, T.flows + 1.6);
+    const f2 = progress(t, T.flows - 0.9, T.flows - 0.1, ease.outBack);
+    $('halo2').style.transform = `rotateY(${(1 - f2) * 80}deg) translateZ(${(1 - f2) * -200}px)`; $('halo2').style.opacity = progress(t, T.flows - 0.9, T.flows - 0.6);
+    const fill = progress(t, T.flows + 0.1, T.suitcase + 0.2, ease.inOutCubic) * (1 - 0.35 * progress(t, T.home, T.home + 3));
+    $('fill2').style.clipPath = `inset(${100 - 100 * fill}% 0 0 0)`; $('halo2').style.scale = 1 + punch(t, T.flows + 0.05, 0.05);
+    $('pct2').textContent = `${Math.round(62 * fill)}%`; $('pct2').style.opacity = progress(t, T.flows + 0.1, T.flows + 0.4) * (1 - progress(t, T.three + 0.6, T.three + 1.0));
+    $('pct2').style.transform = `translateY(${(1 - progress(t, T.flows + 0.1, T.flows + 0.6, ease.outExpo)) * 40}px)`;
+    const hd = $('handle'), HL = 260; hd.style.strokeDasharray = `${HL}`; hd.style.strokeDashoffset = `${HL * (1 - progress(t, T.suitcase - 0.6, T.suitcase, ease.outCubic) + progress(t, T.suitcase + 1.4, T.suitcase + 1.9, ease.inCubic))}`;
+    $('suit').style.opacity = progress(t, T.suitcase - 0.4, T.suitcase) * (1 - progress(t, T.suitcase + 1.5, T.suitcase + 1.9)); $('suit').style.translate = `${(1 - progress(t, T.suitcase - 0.4, T.suitcase + 0.2, ease.outExpo)) * -40}px 0`;
+
+    // ===== D · at night, your home runs on it =====
+    kin(K.n3, t, T.three - 0.05, { dy: 120, rot: 14, dur: 0.9 }); kin(K.s3, t, T.three + 0.25, { each: 0.02, dy: 40, rot: 4 }); kout(K.n3, t, T.lower - 0.55); kout(K.s3, t, T.lower - 0.5);
+    const mp = progress(t, T.three + 0.2, T.three + 1.4, ease.outCubic); $('moon').style.opacity = mp * night; $('moon').style.transform = `translateY(${(1 - mp) * 160}px)`;
+    const build = T.three + 1.0;
+    const walls = $('walls'), chim = $('chim'); [walls, chim].forEach((e, i) => { const L = e.getTotalLength ? 2 * (+e.getAttribute('width') + +e.getAttribute('height')) : 1000; e.style.strokeDasharray = `${L}`; e.style.strokeDashoffset = `${L * (1 - progress(t, build + i * 0.3, build + 0.7 + i * 0.3, ease.inOutCubic))}`; e.style.fillOpacity = progress(t, build + 0.5, build + 0.9); });
+    const rp = progress(t, build + 0.45, build + 1.1, ease.outBounce ?? ease.outBack); $('roof').style.transform = `translateY(${(1 - rp) * -260}px)`; $('roof').style.opacity = progress(t, build + 0.45, build + 0.6);
+    $('door').style.opacity = progress(t, build + 0.9, build + 1.2);
+    $('home').style.opacity = t > build ? 1 : 0;
+    flowAlong(STREAM2, arc2, A2, t, T.home - 1.3, T.home + 0.9, 0.6);
+    const lit = (i) => progress(t, T.home + 0.1 + i * 0.3, T.home + 0.6 + i * 0.3, ease.inOutCubic);
+    ['hw1', 'hw2'].forEach((id, i) => { const L = lit(i) * (0.5 + 0.5 * night); Object.assign($(id).style, { background: `color-mix(in srgb, #F5C887 ${L * 100}%, #FFFFFF)`, boxShadow: `0 0 ${80 * L}px rgba(245,200,135,${0.9 * L})`, scale: 1 + punch(t, T.home + 0.1 + i * 0.3, 0.14), opacity: progress(t, build + 0.7, build + 1.0) }); });
+
+    // ===== E · lower bills; lights on, even in a blackout =====
+    kin(K.bills, t, T.lower - 0.1, { each: 0.04 }); kout(K.bills, t, T.end - 0.9);
+    const ar = document.getElementById('arr'); ar.style.strokeDasharray = '260'; ar.style.strokeDashoffset = `${260 * (1 - progress(t, T.bills - 0.1, T.bills + 0.5, ease.outCubic))}`; arrowBills.style.opacity = 1 - progress(t, T.end - 0.9, T.end - 0.4);
+    kin(K.lights, t, T.lights - 0.1, { each: 0.018, dy: 40, rot: 4 }); kout(K.lights, t, T.end - 0.85);
+    HOODS.forEach((h, i) => { const a = T.lower + 0.2 + i * 0.15, p = progress(t, a, a + 0.7, ease.outBack); h.h.style.opacity = progress(t, a, a + 0.3) * (1 - progress(t, T.end - 0.9, T.end - 0.3)); h.h.style.transform = `translateY(${(1 - p) * 120}px)`;
+      const off = T.blackout - 0.2 + i * 0.22, flick = t > off && t < off + 0.25 ? (Math.sin((t - off) * 90) > 0 ? 1 : 0.2) : 1, on = (t < off ? 1 : t < off + 0.25 ? flick : 0) * night;
+      h.w.forEach((w) => Object.assign(w.style, { background: `color-mix(in srgb, #F5C887 ${on * 100}%, #E4E7EE)`, boxShadow: `0 0 ${40 * on}px rgba(245,200,135,${0.7 * on})` })); });
+    $('home').style.scale = 1 + punch(t, T.blackout + 0.7, 0.04);
+
+    // ===== F · the end: day returns; the name slides out of the sun =====
+    rings(R_END, t, T.end + 0.25, SUN_J[0], SUN_J[1] - 120, 160, 600);
+    $('row').style.opacity = 1 - progress(t, T.end - 0.3, T.end + 0.6, ease.inOutCubic);
+  }
+  const wp = progress(t, T.end + 0.15, T.end + 1.05, ease.outExpo);
+  $('wm').style.opacity = progress(t, T.end + 0.15, T.end + 0.55); $('wm').style.translate = `${(1 - wp) * -280}px 0`; $('wm').style.filter = wp < 0.99 ? `blur(${(1 - wp) * 16}px)` : 'none';
+  tagCs.forEach((c, i) => { const a = T.keep - 0.1 + i * 0.03, p = progress(t, a, a + 0.7, ease.outExpo); c.style.opacity = progress(t, a, a + 0.3); c.style.transform = `translateY(${(1 - p) * 40}px)`; c.style.filter = p < 0.99 ? `blur(${(1 - p) * 12}px)` : 'none'; });
+});
+
+// sound (gains from brand/sound.json; with the voice track the effects keep their own level)
+[0.2, T.night + 0.3, T.one - 1.2, CUT + 0.1, T.two, T.three - 0.4, T.lower - 0.4, T.end - 0.9].forEach((at) => B.cue(s, 'transition', at));
+[T.noon - 0.2, T.night - 0.2, T.halo, T.one, T.hits, T.two, T.flows, T.suitcase - 0.5, T.three, T.home + 0.1, T.lower, T.blackout - 0.2, T.end + 0.2].forEach((at) => B.cue(s, 'text', at));
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

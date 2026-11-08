@@ -226,10 +226,12 @@ export const SFX_TYPES = Object.keys(VOICES);
 
 /**
  * @param cues     [{ t, type, pan?, seed?, ...voiceOpts }]
- * @param options  { duration, lowpass=2000, highpass=30, gain=1, peak=0.8 }
+ * @param options  { duration, lowpass=2000, highpass=30, gain=1, peak=0.8, normalize=true }
+ *                  normalize: true scales the mix up or down to `peak`; false keeps the cues' own gains and only
+ *                  limits overs (used when the scene brings its own audio, so effects sit where their gains put them)
  * @returns { left: Float32Array, right: Float32Array, sampleRate }
  */
-export function synthesize(cues, { duration, lowpass = 2000, highpass = 30, gain = 1, peak = 0.8 } = {}) {
+export function synthesize(cues, { duration, lowpass = 2000, highpass = 30, gain = 1, peak = 0.8, normalize = true } = {}) {
   const n = Math.ceil(duration * SR);
   const L = new Float32Array(n), R = new Float32Array(n);
   // Voices marked `bright` (keys) go through their own, gentler low-pass: a keystroke's click lives at 1–4 kHz.
@@ -260,7 +262,7 @@ export function synthesize(cues, { duration, lowpass = 2000, highpass = 30, gain
   });
   let max = 1e-9;
   for (let i = 0; i < n; i++) max = Math.max(max, Math.abs(L[i]), Math.abs(R[i]));
-  const k = (peak / max) * gain;
+  const k = (normalize ? peak / max : Math.min(1, peak / max)) * gain;
   const fadeOut = Math.min(n, Math.round(0.05 * SR));
   for (let i = 0; i < n; i++) {
     const f = i > n - fadeOut ? (n - i) / fadeOut : 1;

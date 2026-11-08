@@ -1,0 +1,104 @@
+{
+  "format": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 6,
+    "fps": 30
+  },
+  "entries": [
+    {
+      "id": "sun-glow",
+      "source": "engine",
+      "shader": "StaticRadialGradient",
+      "props": {
+        "colorBack": "rgba(247,245,240,0)",
+        "colors": [
+          "#F5C887",
+          "#F9E0B9",
+          "#FBEFDD"
+        ],
+        "radius": 0.75,
+        "focalDistance": 0,
+        "falloff": 0.25,
+        "mixing": 0.6,
+        "distortion": 0,
+        "grainMixer": 0.08,
+        "grainOverlay": 0
+      }
+    },
+    {
+      "id": "sun-dither",
+      "source": "engine",
+      "shader": "Dithering",
+      "props": {
+        "colorBack": "#F7F5F0",
+        "colorFront": "#EAAE66",
+        "shape": "sphere",
+        "type": "4x4",
+        "size": 2.5,
+        "scale": 0.62,
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "day",
+      "source": "engine",
+      "shader": "MeshGradient",
+      "props": {
+        "colors": [
+          "#F7F5F0",
+          "#F8DDB0",
+          "#E7EBF3",
+          "#FBEBD0"
+        ],
+        "distortion": 0.7,
+        "swirl": 0.25,
+        "grainMixer": 0.1,
+        "grainOverlay": 0.06,
+        "speed": 0.18
+      }
+    },
+    {
+      "id": "flow",
+      "source": "engine",
+      "shader": "Dithering",
+      "props": {
+        "colorBack": "#F7F5F0",
+        "colorFront": "#F2B66D",
+        "shape": "warp",
+        "type": "4x4",
+        "size": 2,
+        "scale": 0.9,
+        "speed": 0.35
+      }
+    },
+    {
+      "id": "charge",
+      "source": "engine",
+      "shader": "Dithering",
+      "props": {
+        "colorBack": "#FBEBD0",
+        "colorFront": "#EAAE66",
+        "shape": "ripple",
+        "type": "8x8",
+        "size": 2,
+        "scale": 0.8,
+        "speed": 0.3
+      }
+    },
+    {
+      "id": "night",
+      "source": "engine",
+      "shader": "Dithering",
+      "props": {
+        "colorBack": "#EEF0F5",
+        "colorFront": "#9AA5BF",
+        "shape": "sphere",
+        "type": "4x4",
+        "size": 2.5,
+        "scale": 0.62,
+        "speed": 0.15
+      }
+    }
+  ]
+}

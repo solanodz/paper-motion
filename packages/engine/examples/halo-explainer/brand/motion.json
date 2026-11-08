@@ -1,0 +1,9 @@
+{
+  "pace": "medium",
+  "camera": "travel",
+  "text": "blur",
+  "color": "event",
+  "ending": "wordmark",
+  "timing": null,
+  "moves": ["pull-back reveal", "pop-in with blur", "whip", "iris through the sun"]
+}

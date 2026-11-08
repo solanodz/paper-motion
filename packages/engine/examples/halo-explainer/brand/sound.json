@@ -1,0 +1,33 @@
+{
+  "palette": "soft",
+  "lowpass": 2400,
+  "cues": {
+    "transition": {
+      "type": "swell",
+      "dur": 1.2,
+      "freq": 82.4,
+      "gain": 0.06
+    },
+    "land": null,
+    "text": {
+      "type": "tick",
+      "freq": 900,
+      "gain": 0.05
+    },
+    "bed": null
+  },
+  "keys": {
+    "bank": null,
+    "style": "creamy",
+    "gain": 0.12
+  },
+  "voice": {
+    "provider": "elevenlabs",
+    "gender": "female",
+    "language": "en",
+    "voice": "Matilda",
+    "id": "XrExE9yKIg1WjnnlVkGX"
+  },
+  "music": null,
+  "loudness": -16
+}

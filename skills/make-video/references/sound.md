@@ -55,6 +55,9 @@ Sound craft (palettes, balance, typing sources, loudness) belongs to the `sound-
 `brand/sound.json`, use its cues for each gesture, its `keys` for typing, its `lowpass` in `s.sound()`, and render
 with `--loudness <its loudness>`.
 
+With a voice-over or music file (`render --audio file`), effects keep their own gains instead of being normalized, so they
+sit under the voice: keep cue gains low (around 0.05) and listen to the mix before the final.
+
 ## CLI
 
 ```

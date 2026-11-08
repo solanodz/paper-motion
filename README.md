@@ -38,6 +38,14 @@ stay consistent from one to the next.
 Start with `/paper-motion`: it reads your brand folder and tells you where you are and what comes next. Or just ask
 for what you want ("help me define my brand", "make a launch video") and the right skill picks it up.
 
+## Examples
+
+Each example is a finished piece with its scene, brief and brand folder in [`packages/engine/examples`](packages/engine/examples). Copy one to start from its style: `pamo new my-video --from <example>`.
+
+**Explainer · Halo** (an invented home battery): a 36 s voice-over explainer in the smooth After Effects style, with 3D depth, an inertial camera, morphs and kinetic words. [Watch it with sound](https://github.com/solanodz/paper-motion/releases/tag/example-halo-explainer).
+
+<p><img src="docs/images/halo-explainer.webp" width="100%" alt="Halo explainer: a dithered sun draws its day over a chart, energy pours into a battery, a solar panel lights up, a home lights at night"></p>
+
 ## Install
 
 Requirements: Node ≥ 18, ffmpeg, Google Chrome (or `npx playwright-core install chromium`).

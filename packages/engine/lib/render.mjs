@@ -94,12 +94,12 @@ export async function renderSfx({ url, out, from = 0, to }) {
   } finally { await browser.close(); }
 }
 
-async function sfxFromPage(s, { from = 0, to, out }) {
+async function sfxFromPage(s, { from = 0, to, out, normalize = true }) {
   const { cues, audio } = await s.page.evaluate(() => ({ cues: window.__pm.cues ?? [], audio: window.__pm.audio ?? {} }));
   if (!cues.length) return null;
   const end = to ?? s.config.duration;
   const shifted = cues.filter((c) => c.t < end).map((c) => ({ ...c, t: c.t - from }));
-  writeWav(out, synthesize(shifted, { duration: end - from, ...audio }));
+  writeWav(out, synthesize(shifted, { duration: end - from, ...audio, normalize }));
   return { out, cues: cues.length };
 }
 
@@ -131,7 +131,7 @@ export async function renderVideo({ url, out, format = 'mp4', workers, dpr = 1, 
 
     let sfxWav = null;
     if (sfx && !fmt.gif && !fmt.seq) {
-      const r = await sfxFromPage(first, { from: f0 / fps, to: f1 / fps, out: path.join(tmp, 'sfx.wav') });
+      const r = await sfxFromPage(first, { from: f0 / fps, to: f1 / fps, out: path.join(tmp, 'sfx.wav'), normalize: !audio }); // with an external track, effects keep their own gains
       sfxWav = r?.out ?? null;
     }
 
