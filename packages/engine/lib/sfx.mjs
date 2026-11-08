@@ -3,7 +3,19 @@
 // Everything is generated from code (no samples) and seeded, so the same scene
 // always produces the same audio.
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadBank } from './keys.mjs';
+
+// The default keystroke bank: real keys from a CC0 pack, shipped in the npm package (assets/keys, built by
+// scripts/fetch-keys.mjs). `bank: 'default'` asks for it; a key with neither a bank nor a style gets it too.
+const DEFAULT_BANK = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../assets/keys');
+const hasDefault = () => fs.existsSync(path.join(DEFAULT_BANK, 'keys.json'));
+function resolveBank(c) {
+  if (c.type !== 'key') return c;
+  if (c.bank === 'default' || (c.bank == null && c.style == null)) return hasDefault() ? { ...c, bank: loadBank(DEFAULT_BANK) } : { ...c, bank: undefined };
+  return typeof c.bank === 'string' ? { ...c, bank: loadBank(c.bank) } : c;
+}
 
 const SR = 48000;
 
@@ -238,7 +250,7 @@ export function synthesize(cues, { duration, lowpass = 2000, highpass = 30, gain
     const voice = VOICES[c.type];
     if (!voice) throw new Error(`Unknown sfx type "${c.type}". Use: ${SFX_TYPES.join(', ')}`);
     const rnd = mulberry32((c.seed ?? k * 7919 + 13) >>> 0);
-    const v = voice(typeof c.bank === 'string' ? { ...c, bank: loadBank(c.bank) } : c, rnd);
+    const v = voice(resolveBank(c), rnd);
     const start = Math.round(c.t * SR), len = Math.ceil(v.len * SR);
     const pan = Math.max(-1, Math.min(1, c.pan ?? 0)), gl = Math.cos(((pan + 1) * Math.PI) / 4), gr = Math.sin(((pan + 1) * Math.PI) / 4);
     for (let i = 0; i < len; i++) {

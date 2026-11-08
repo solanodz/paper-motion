@@ -102,6 +102,8 @@ GLOSSARY.md             the shared language every skill uses
 - The interview mechanics follow Matt Pocock's [`grilling`](https://github.com/mattpocock/skills) skill: a design
   tree worked in rounds, with a recommended answer for every question.
 - Rendering material: [Paper Shaders](https://shaders.paper.design), Apache-2.0, © Paper. "Powered by Paper Shaders."
+- Default keystrokes: [Keyboard Soundpack #1](https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes)
+  by unicaegames, CC0. They ship inside the npm package only; your own recording replaces them (`pamo keys`).
 
 ## License
 

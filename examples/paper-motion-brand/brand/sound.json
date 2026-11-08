@@ -2,12 +2,25 @@
   "palette": "airy",
   "lowpass": 2000,
   "cues": {
-    "transition": { "type": "swell", "dur": 1.4, "freq": 73.4, "gain": 0.045 },
+    "transition": {
+      "type": "swell",
+      "dur": 1.4,
+      "freq": 73.4,
+      "gain": 0.045
+    },
     "land": null,
-    "text": { "type": "paper", "dur": 0.6, "gain": 0.025 },
+    "text": {
+      "type": "paper",
+      "dur": 0.6,
+      "gain": 0.025
+    },
     "bed": null
   },
-  "keys": { "bank": null, "style": "creamy", "gain": 0.16 },
+  "keys": {
+    "bank": "default",
+    "style": null,
+    "gain": 0.16
+  },
   "music": null,
   "loudness": -16
 }
