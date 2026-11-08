@@ -9,7 +9,7 @@ import { apply as applyValues, parseSet } from './customize.mjs';
 
 const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = path.resolve(ENGINE, '..', '..');
-export const SITE = 'https://paper-motion.app';
+export const SITE = (process.env.PAPER_MOTION_SITE ?? 'https://paper-motion.app').replace(/\/$/, '');
 const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palette', 'font-pair', 'recipe'];
 const TYPE_TITLES = { component: 'Component transitions', transition: 'Transitions', text: 'Text effects', camera: 'Camera and energy', background: 'Backgrounds', palette: 'Palettes', 'font-pair': 'Font pairs', recipe: 'Recipes' };
 

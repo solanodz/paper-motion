@@ -4,7 +4,7 @@ import { IconAgent, IconArrow, IconCheck, IconGrid, IconKit, TYPE_ICONS } from "
 import { ResourceCard } from "@/components/resource-card";
 import { getIndex, TYPES } from "@/lib/registry";
 
-const PROMPT = `Use paper-motion.app to make a video for my brand. Read https://paper-motion.app/llms.txt first, interview me, then propose options as board links I can open.`;
+const prompt = (site: string) => `Use ${site.replace(/^https?:\/\//, "")} to make a video for my brand. Read ${site}/llms.txt first, interview me, then propose options as board links I can open.`;
 const FEATURED = ["magic-move", "dive-in", "whip-pan", "mesh-sage", "sage-night", "instrument"];
 
 const STEPS = [
@@ -14,7 +14,8 @@ const STEPS = [
 ];
 
 export default function Home() {
-  const { items, count } = getIndex();
+  const { items, count, site } = getIndex();
+  const PROMPT = prompt(site);
   const featured = FEATURED.map((id) => items.find((i) => i.id === id)).filter((i) => i !== undefined);
   return (
     <>
