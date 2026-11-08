@@ -1,6 +1,6 @@
 ---
 name: identity
-description: Define who a brand is (offer, audience, personality, voice, references) and write it to brand/IDENTITY.md. Use when the user wants to define, shape or revisit their brand's identity, personality or voice, or starts paper-motion with no brand/IDENTITY.md yet.
+description: "Define who a brand is (offer, audience, personality, voice, references) and write it to brand/IDENTITY.md. Use when the user wants to define, shape or revisit their brand's identity, personality or voice, or starts paper-motion with no brand/IDENTITY.md yet."
 ---
 
 # Identity

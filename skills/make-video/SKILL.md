@@ -1,6 +1,6 @@
 ---
 name: make-video
-description: Make one video (a piece) for a brand, from brief to final render, with Paper Shaders: launches, explainers, social loops, end cards, README loops, animated posters, moving artwork. Use when the user asks for a video, loop, reel, promo, motion piece or anything that moves, even if they never say "shader" or "Paper"; it takes the look, motion, sound and material from brand/ when it exists.
+description: "Make one video (a piece) for a brand, from brief to final render, with Paper Shaders: launches, explainers, social loops, end cards, README loops, animated posters, moving artwork. Use when the user asks for a video, loop, reel, promo, motion piece or anything that moves, even if they never say \"shader\" or \"Paper\"; it takes the look, motion, sound and material from brand/ when it exists."
 ---
 
 # make-video

@@ -1,6 +1,6 @@
 ---
 name: interview
-description: Find out what the user wants by interviewing them in rounds of numbered questions, each with a recommended answer, showing lettered option boards for visual choices. Use when a paper-motion skill needs the user's decisions (identity, visual system, motion style, sound kit, a piece's brief), or when the user asks to be asked or helped to decide.
+description: "Find out what the user wants by interviewing them in rounds of numbered questions, each with a recommended answer, showing lettered option boards for visual choices. Use when a paper-motion skill needs the user's decisions (identity, visual system, motion style, sound kit, a piece's brief), or when the user asks to be asked or helped to decide."
 ---
 
 # Interview

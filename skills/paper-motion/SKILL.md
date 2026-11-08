@@ -1,6 +1,6 @@
 ---
 name: paper-motion
-description: The entry to the paper-motion pack: see where a brand stands and which skill comes next, from brand identity to finished videos. Use when the user mentions paper-motion, asks where to start, what to do next, or wants help with "my brand and its videos" without naming a step.
+description: "The entry to the paper-motion pack: see where a brand stands and which skill comes next, from brand identity to finished videos. Use when the user mentions paper-motion, asks where to start, what to do next, or wants help with \"my brand and its videos\" without naming a step."
 ---
 
 # paper-motion

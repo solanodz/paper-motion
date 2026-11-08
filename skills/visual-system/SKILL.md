@@ -1,6 +1,6 @@
 ---
 name: visual-system
-description: Decide how a brand looks (typefaces, palette, shape language, wordmark) with option boards, and write brand/VISUAL.md, brand/tokens.json and the wordmark files. Use when the user wants to choose fonts, colors or a look for their brand, needs a wordmark, or has an identity and no visual system yet.
+description: "Decide how a brand looks (typefaces, palette, shape language, wordmark) with option boards, and write brand/VISUAL.md, brand/tokens.json and the wordmark files. Use when the user wants to choose fonts, colors or a look for their brand, needs a wordmark, or has an identity and no visual system yet."
 ---
 
 # Visual system

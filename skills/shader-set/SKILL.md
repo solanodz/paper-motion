@@ -1,6 +1,6 @@
 ---
 name: shader-set
-description: Build a brand's shader set, its bank of moving material (fields, patterns, logo effects, image filters) in one shared format, from the user's own loops and images, shaders made by the agent from the visual system, or shaders tuned by hand in Paper. Use when the user wants backgrounds, textures, loops or "material" for their videos, wants to bring their own footage or shaders, or has a visual system and no shader set yet.
+description: "Build a brand's shader set, its bank of moving material (fields, patterns, logo effects, image filters) in one shared format, from the user's own loops and images, shaders made by the agent from the visual system, or shaders tuned by hand in Paper. Use when the user wants backgrounds, textures, loops or \"material\" for their videos, wants to bring their own footage or shaders, or has a visual system and no shader set yet."
 ---
 
 # Shader set

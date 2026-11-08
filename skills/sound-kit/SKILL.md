@@ -1,6 +1,6 @@
 ---
 name: sound-kit
-description: Decide how a brand sounds (sound palette, typing, music stance, loudness) from options the user hears, and write brand/SOUND.md, brand/sound.json and playable samples. Use when the user wants to choose sounds, sound effects, typing sounds or music for their videos, or has a motion style and no sound kit yet.
+description: "Decide how a brand sounds (sound palette, typing, music stance, loudness) from options the user hears, and write brand/SOUND.md, brand/sound.json and playable samples. Use when the user wants to choose sounds, sound effects, typing sounds or music for their videos, or has a motion style and no sound kit yet."
 ---
 
 # Sound kit

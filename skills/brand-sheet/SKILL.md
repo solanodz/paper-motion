@@ -1,6 +1,6 @@
 ---
 name: brand-sheet
-description: Build the brand sheet, one animated web page with the whole brand (wordmark, identity, palette, type, motion, sound, shader set), plus PNG and PDF exports, from the brand folder. Use when the user wants to see, share or export their brand at a glance, asks for brand guidelines or an identity page, or has just finished their visual system.
+description: "Build the brand sheet, one animated web page with the whole brand (wordmark, identity, palette, type, motion, sound, shader set), plus PNG and PDF exports, from the brand folder. Use when the user wants to see, share or export their brand at a glance, asks for brand guidelines or an identity page, or has just finished their visual system."
 ---
 
 # Brand sheet

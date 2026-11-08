@@ -1,6 +1,6 @@
 ---
 name: motion-style
-description: Decide how a brand moves (pace, camera, text behavior, a repertoire of transitions, how color enters, endings) from short option clips, and write brand/MOTION.md, brand/motion.json and the brand's move clips. Use when the user wants to define how their videos should move, choose transitions or effects, or has a visual system and no motion style yet.
+description: "Decide how a brand moves (pace, camera, text behavior, a repertoire of transitions, how color enters, endings) from short option clips, and write brand/MOTION.md, brand/motion.json and the brand's move clips. Use when the user wants to define how their videos should move, choose transitions or effects, or has a visual system and no motion style yet."
 ---
 
 # Motion style

@@ -20,13 +20,13 @@
   "author": "Solano de Zuasnabar",
   "repository": {
     "type": "git",
-    "url": "https://github.com/solanodz/paper-motion",
+    "url": "git+https://github.com/solanodz/paper-motion.git",
     "directory": "packages/engine"
   },
   "type": "module",
   "bin": {
-    "pamo": "./bin/pamo.mjs",
-    "paper-motion": "./bin/pamo.mjs"
+    "pamo": "bin/pamo.mjs",
+    "paper-motion": "bin/pamo.mjs"
   },
   "files": [
     "bin/",
