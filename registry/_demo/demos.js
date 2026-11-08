@@ -15,7 +15,17 @@ const SERIF = 'var(--pm-display, GSerif)', MONO = 'var(--pm-mono, GMono)', PIXEL
 /** Live params from the site's playground; every move call merges them over the demo's own options. */
 const LIVE = {};
 const L = (opts = {}) => ({ ...opts, ...LIVE });
-export function setParams(values) { for (const k of Object.keys(LIVE)) delete LIVE[k]; Object.assign(LIVE, values); }
+// values arrive as the playground holds them: a curve is the string "ease.outExpo" (what the code shows), so resolve
+// it to the function the move expects; anything that doesn't resolve is dropped rather than passed as a string
+const resolve = (k, v) => {
+  if (typeof v === 'string' && /^ease\.\w+$/.test(v)) return ease[v.slice(5)];
+  if (k === 'curve' && typeof v !== 'function') return undefined;
+  return v;
+};
+export function setParams(values) {
+  for (const k of Object.keys(LIVE)) delete LIVE[k];
+  for (const [k, v] of Object.entries(values ?? {})) { const r = resolve(k, v); if (r !== undefined) LIVE[k] = r; }
+}
 
 const camel = (id) => ({ 'flip-3d': 'flip3D', 'rgb-split': 'rgbSplit' }[id] ?? id.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase()));
 
