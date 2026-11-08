@@ -46,6 +46,10 @@ Each example is a finished piece with its scene, brief and brand folder in [`pac
 
 <p><img src="docs/images/halo-explainer.webp" width="100%" alt="Halo explainer: a dithered sun draws its day over a chart, energy pours into a battery, a solar panel lights up, a home lights at night"></p>
 
+**Presentation · Orbit** (an invented calendar that schedules meetings by itself): a 39 s product keynote in the same language, dark and interface-driven: one unbroken chain where a chat thread becomes a line, the line becomes the app, the app finds the gap. [Watch it with sound](https://github.com/solanodz/paper-motion/releases/tag/example-orbit-keynote).
+
+<p><img src="docs/images/orbit-keynote.webp" width="100%" alt="Orbit keynote: a chat thread squashes into a line that becomes the app's text field; the window unfolds; six calendars are scanned for a free slot; the booked card moves when someone drops out"></p>
+
 ## Install
 
 Requirements: Node ≥ 18, ffmpeg, Google Chrome (or `npx playwright-core install chromium`).

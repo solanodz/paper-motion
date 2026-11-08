@@ -1,0 +1,9 @@
+{
+  "pace": "fast",
+  "camera": "travel",
+  "text": "rise",
+  "color": "constant",
+  "ending": "wordmark",
+  "timing": null,
+  "moves": ["3D depth", "inertial camera that banks", "pop-in with blur and spring", "pull-back reveal", "whip with directional blur", "parallax stack", "morph, never appear", "kinetic words in the scene"]
+}

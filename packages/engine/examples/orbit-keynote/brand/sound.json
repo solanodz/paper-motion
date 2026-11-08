@@ -1,0 +1,45 @@
+{
+  "palette": "crisp",
+  "lowpass": 3200,
+  "cues": {
+    "transition": {
+      "type": "swell",
+      "dur": 1.0,
+      "freq": 98,
+      "gain": 0.06
+    },
+    "land": {
+      "type": "tick",
+      "freq": 1200,
+      "gain": 0.05
+    },
+    "text": {
+      "type": "tick",
+      "freq": 900,
+      "gain": 0.05
+    },
+    "whip": {
+      "type": "whoosh",
+      "dur": 0.3,
+      "from": 400,
+      "to": 1400,
+      "peak": 0.4,
+      "gain": 0.05
+    },
+    "bed": null
+  },
+  "keys": {
+    "bank": null,
+    "style": "clack",
+    "gain": 0.07
+  },
+  "voice": {
+    "provider": "elevenlabs",
+    "language": "en",
+    "voice": "Eric",
+    "id": "cjVigY5qzO86Huf0OWal",
+    "note": "cast against Sarah and Alice; Halo uses Matilda"
+  },
+  "music": null,
+  "loudness": -16
+}

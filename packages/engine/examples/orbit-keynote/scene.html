@@ -1,0 +1,323 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Orbit · keynote</title>
+<!-- Orbit product keynote, 39 s, 60 fps. ONE chain, each element becomes the next, the camera follows what leads.
+     thread piles → squashes into one line → "Eleven emails." rises from it → the line becomes the text field → "Orbit"
+     rises and shrinks into the window title → the window unfolds (the dithered warp leaks out behind) → the prompt types
+     → chips spawn from the words → a line from the last chip draws the button → its fill spills into a band → the band
+     lifts and the chips become column headers; six calendars draw up from it in depth → the band becomes a scan line
+     that finds the free row → the row lights and merges into the booked card → one person drops: the card lifts, the
+     scan resumes, the card lands lower, pings reach the rest → the window folds back into the field, into the line →
+     "No back and forth." rises from it; the first bubble returns and is squashed → the line curls into a ring filled
+     with the smooth warp → "Orbit. Meetings find their own time." → a pill. Beats are keyed to Eric's words
+     (audio/words.json). Render from this folder: pamo render scene.html --fps 60 --motion-blur 4 [--audio voice.wav]. -->
+<style>
+  #stage { overflow: hidden; color: #FFF; font-family: 'Space Grotesk', sans-serif; perspective: 1500px; perspective-origin: 50% 50%; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .sh { position: absolute; inset: 0; }
+  #cam { position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-style: preserve-3d; }
+  .layer { position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-style: preserve-3d; }
+  .m { font-family: 'Space Mono', monospace; letter-spacing: 0.04em; white-space: nowrap; }
+  .d { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.05em; white-space: nowrap; }
+  .ch { display: inline-block; }
+  .bub { position: absolute; padding: 14px 22px; border: 1px solid #FFF; font-size: 26px; line-height: 1.2; white-space: nowrap; background: #000; transform-origin: 50% 100%; opacity: 0; }
+  .bub.them { border-color: #8A8A8A; color: #8A8A8A; }
+  .dots { position: absolute; padding: 14px 18px; border: 1px solid #8A8A8A; background: #000; display: flex; gap: 7px; opacity: 0; }
+  .dots i { width: 8px; height: 8px; border-radius: 50%; background: #8A8A8A; display: block; }
+  .chip { position: absolute; display: inline-flex; align-items: center; gap: 12px; padding: 10px 22px 10px 11px; border-radius: 999px; border: 1px solid #FFF; font-size: 24px; font-weight: 500; white-space: nowrap; background: #000; opacity: 0; transform-origin: 0 50%; }
+  .chip .ok { font-family: 'Space Mono', monospace; font-size: 14px; color: #FFF; opacity: 0; margin-left: -6px; }
+  .av { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #FFF; display: inline-flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 13px; }
+  .mask { position: absolute; overflow: hidden; }
+  .col { position: absolute; transform-style: preserve-3d; }
+  .ev { position: absolute; border: 1px solid #2A2A2A; background: #0A0A0A; opacity: 0; }
+  .ping { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #FFF; margin: -5px 0 0 -5px; opacity: 0; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="cam">
+    <div id="far" class="layer">
+      <div id="planeBox" class="abs" style="left:-100px;top:-120px;width:2120px;height:1340px;overflow:hidden;clip-path:inset(50% 50% 50% 50%)"><div id="plane" class="sh"></div></div>
+    </div>
+    <div id="mid" class="layer">
+      <div id="thread" class="abs" style="left:0;top:0"></div>
+      <div id="line" class="abs" style="left:960px;top:840px;width:0;height:2px;border:1px solid #FFF;background:#000"></div>
+      <div id="mask1" class="mask" style="left:400px;top:0;width:1200px;height:140px"><div id="eleven" class="d" style="position:absolute;left:0;top:20px;font-size:100px;line-height:1"></div></div>
+      <div id="mask2" class="mask" style="left:400px;top:0;width:1260px;height:230px"><div id="orbit" class="d" style="position:absolute;left:60px;top:20px;font-size:150px;line-height:1;transform-origin:0 0">Orbit</div><div id="sub" style="position:absolute;left:4px;top:176px;font-size:40px;font-weight:500;letter-spacing:-0.03em;white-space:nowrap">schedules meetings for you.</div></div>
+      <svg class="abs" style="left:0;top:0;overflow:visible" width="2000" height="1200">
+        <line id="wtop" x1="360" y1="300" x2="1560" y2="300" stroke="#FFF" stroke-width="2"/>
+        <line id="whead" x1="360" y1="356" x2="1560" y2="356" stroke="#FFF" stroke-width="1.5"/>
+        <line id="wl" x1="360" y1="300" x2="360" y2="1000" stroke="#FFF" stroke-width="2"/>
+        <line id="wr" x1="1560" y1="300" x2="1560" y2="1000" stroke="#FFF" stroke-width="2"/>
+        <line id="wbot" x1="360" y1="1000" x2="1560" y2="1000" stroke="#FFF" stroke-width="2"/>
+        <path id="conn" d="M 1388 556 V 910 H 660" fill="none" stroke="#FFF" stroke-width="1.5"/>
+        <rect id="btn" x="400" y="880" width="260" height="60" fill="none" stroke="#FFF" stroke-width="1.5"/>
+      </svg>
+      <div id="wfill" class="abs" style="left:361px;top:301px;width:1198px;height:698px;background:#000;opacity:0"></div>
+      <div id="wtitle" class="abs m" style="left:384px;top:318px;font-size:18px;opacity:0">ORBIT <span style="color:#8A8A8A">· THIS WEEK</span></div>
+      <div id="wcount" class="abs m" style="left:1300px;top:318px;width:236px;text-align:right;font-size:18px;color:#8A8A8A;opacity:0">0 PEOPLE</div>
+      <div id="prompt" class="abs" style="left:420px;top:410px;font-size:30px;white-space:pre;opacity:0"></div>
+      <div id="cur" class="abs" style="left:420px;top:412px;width:14px;height:34px;background:#FFF;opacity:0"></div>
+      <div id="ul" class="abs" style="left:0;top:448px;height:2px;background:#FFF;width:0"></div>
+      <div id="btnt" class="abs m" style="left:402px;top:882px;width:256px;height:56px;display:flex;align-items:center;justify-content:center;font-size:17px;opacity:0"></div>
+      <div class="abs" style="left:402px;top:882px;width:256px;height:56px;overflow:hidden"><div id="bfill" class="abs" style="left:0;top:0;width:256px;height:56px;clip-path:inset(0 100% 0 0)"><div id="bfill-sh" class="sh"></div></div></div>
+      <!-- the band: the spill, then the scan line -->
+      <div id="band" class="abs" style="left:402px;top:940px;width:256px;height:0;overflow:hidden"><div id="band-sh" class="sh"></div></div>
+      <!-- the calendars -->
+      <div id="times" class="abs" style="left:0;top:0"></div>
+      <div id="cols" class="abs" style="left:0;top:0"></div>
+      <div id="slots" class="abs" style="left:0;top:0"></div>
+      <div id="card" class="abs" style="left:400px;top:660px;width:1120px;height:44px;border:1px solid #FFF;overflow:hidden;opacity:0;background:#000"><div id="card-sh" class="sh"></div><div id="cardt" class="abs m" style="left:14px;top:12px;font-size:15px;background:#000;padding:1px 6px"></div><div id="booked" class="abs m" style="right:14px;top:12px;font-size:15px;background:#000;padding:1px 6px;opacity:0">BOOKED</div></div>
+      <div id="pings" class="abs" style="left:0;top:0"></div>
+      <div id="chips" class="abs" style="left:0;top:0"></div>
+      <!-- the return of the problem, and the end -->
+      <div id="mask3" class="mask" style="left:560px;top:0;width:900px;height:140px"><div id="noback" class="d" style="position:absolute;left:0;top:20px;font-size:100px;line-height:1"></div></div>
+      <div id="mask4" class="mask" style="left:560px;top:0;width:800px;height:120px"><div id="bub2" class="bub them" style="left:0;top:40px;opacity:1;transform-origin:50% 100%">Does Tuesday work for everyone?</div></div>
+      <svg class="abs" style="left:0;top:0;overflow:visible" width="2000" height="1200"><circle id="ring" cx="960" cy="650" r="170" fill="none" stroke="#FFF" stroke-width="2" transform="rotate(-90 960 650)"/><rect id="pill" x="1184" y="790" width="210" height="54" rx="27" fill="none" stroke="#FFF" stroke-width="1.5"/></svg>
+      <div class="abs" style="left:790px;top:480px;width:340px;height:340px;border-radius:50%;overflow:hidden"><div id="ringfill" class="abs" style="left:0;top:0;width:340px;height:340px;clip-path:circle(0px at 170px 170px)"><div id="ring-sh" class="sh"></div></div></div>
+      <div id="orbit2" class="abs d" style="left:1180px;top:560px;font-size:150px;line-height:1"></div>
+      <div id="tag" class="abs" style="left:1186px;top:722px;font-size:44px;font-weight:500;letter-spacing:-0.03em;white-space:nowrap"></div>
+      <div id="pillt" class="abs m" style="left:1184px;top:790px;width:210px;height:54px;display:flex;align-items:center;justify-content:center;font-size:17px;opacity:0"></div>
+      <div class="abs" style="left:1185px;top:791px;width:208px;height:52px;border-radius:26px;overflow:hidden"><div id="pillfill" class="abs" style="left:0;top:0;width:208px;height:52px;clip-path:inset(0 100% 0 0)"><div id="pill-sh" class="sh"></div></div></div>
+    </div>
+  </div>
+  <div id="hud"><div id="count" class="abs m" style="left:96px;top:64px;font-size:18px;opacity:0"></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, clamp, lerp } from 'paper-motion';
+import { typeOn, typingTimes, keySounds } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const B = await loadBrand('./brand');
+const WORDS = await (await fetch('./audio/words.json')).json();
+const clean = (w) => w.toLowerCase().replace(/[^a-z0-9']/g, '');
+const W = (word, n = 1) => { let k = 0; for (const x of WORDS) if (clean(x.w) === word && ++k === n) return x.t; throw new Error(`word "${word}" #${n} not spoken`); };
+
+const FPS = 60, DUR = 39;
+const s = scene({ width: 1920, height: 1080, fps: 30, duration: DUR, background: B.color('ground') });
+const $ = (id) => document.getElementById(id);
+const mk = (cls, parent, css = {}) => { const d = Object.assign(document.createElement('div'), { className: cls }); Object.assign(d.style, css); parent.append(d); return d; };
+const use = (sel, id, extra = {}) => { const e = B.set.entries.find((x) => x.id === id); return s.shader(sel, e.shader, { ...e.props, ...extra }); };
+use('#plane', 'dither-warp', { scale: 1.2 }); use('#bfill-sh', 'dither-warp', { scale: 0.16, size: 1.6 }); use('#band-sh', 'dither-warp', { scale: 0.5, size: 2 });
+use('#card-sh', 'dither-warp', { scale: 0.45, size: 2 }); use('#ring-sh', 'warp', { scale: 0.6 }); use('#pill-sh', 'dither-warp', { scale: 0.14, size: 1.6 });
+const punch = (t, at, amt = 0.1, decay = 7, f = 16) => (t < at ? 0 : amt * Math.exp(-(t - at) * decay) * Math.cos((t - at) * f));
+const draw = (el, L, p) => { el.style.strokeDasharray = `${L}`; el.style.strokeDashoffset = `${L * (1 - p)}`; el.style.opacity = p > 0 ? 1 : 0; };
+$('far').style.transform = 'translateZ(-420px)';
+
+// ---------- timeline, keyed to the voice ----------
+const V = { eleven: W('eleven'), emails: W('emails'), orbit: W('orbit', 1), you: W('you'), tell: W('tell'), who: W('who'), reads: W('reads'), gap: W('gap'), books: W('books'),
+  drops: W('drops'), out: W('out'), moves: W('moves'), tells: W('tells'), rest: W('rest'), no1: W('no', 1), forth: W('forth'), no2: W('no', 2), does: W('does'), work: W('work'), orbit2: W('orbit', 2), meetings2: W('meetings', 2), time2: W('time', 2) };
+const T0 = 0.4, STEP = 0.3, BASE = 900, GAP = 84, LINE_Y = 840;
+const MSG = [['them', 'Does Tuesday work for everyone?'], ['me', 'Not for me, sorry'], ['them', 'Thursday then?'], ['me', "I'm out Thursday"], ['them', 'Friday morning?'], ['me', 'Dentist at 9, after 10 is fine'], ['them', 'Friday 11?'], ['me', 'Can we make it 30 min?'], ['them', 'Sure. Friday 11, 30 min?'], ['me', "Wait, Friday's a holiday"], ['them', '…']];
+const tArr = (i) => T0 + i * STEP;
+const SQUASH = V.eleven - 0.3, tSq = (i) => SQUASH + i * 0.06;
+const ELEVEN = V.emails - 0.1, ELEVEN_OUT = 5.95, RISE = [6.0, 6.8], ORBIT = V.orbit - 0.05, SHRINK = [7.7, 8.25], UNFOLD = [8.2, 9.05];
+const TYPE_AT = 9.5, PROMPT = '30 min with the design team', times = typingTimes(PROMPT, { start: TYPE_AT, cps: 30, seed: 3 });
+const ENTER = times[times.length - 1] + 0.35, CHIP_AT = ENTER + 0.25, NAMES = ['Mara', 'Jonas', 'Ayo', 'Lena', 'Teo', 'Sam'];
+const CONN = CHIP_AT + 1.2, BTN = CONN + 0.45, FILL = BTN + 0.5, SPILL = FILL + 0.45;
+const CAL0 = V.reads - 0.35, SCAN0 = V.gap - 0.6, SLOT = V.gap + 0.05, CARD = V.books, DROP = V.drops - 0.05, LIFT = V.moves - 0.1, LAND2 = V.moves + 0.75, TELL = V.tells;
+const FOLD = 25.3, NOBACK = V.no1, BUB = V.no2 - 0.1, SQB = V.work + 0.25, RING = 32.3, ORBIT2 = V.orbit2 - 0.05, TAG = V.meetings2 - 0.05, PILL = V.time2 + 1.0;
+
+// ---------- the thread ----------
+const bubs = MSG.map(([who, text]) => { const b = mk(`bub ${who}`, $('thread')); b.textContent = text; return b; });
+const dots = mk('dots', $('thread')); dots.innerHTML = '<i></i><i></i><i></i>';
+await document.fonts.ready;
+const widths = bubs.map((b) => { b.style.opacity = 1; const w = b.offsetWidth; b.style.opacity = 0; return w; });
+const xOf = (i) => (MSG[i][0] === 'them' ? 600 : 1320 - widths[i]);
+const yOf = (j, t) => { let y = BASE - 60; for (let k = j + 1; k < MSG.length; k++) y -= GAP * ease.outCubic(progress(t, tArr(k) - 0.05, tArr(k) + 0.3)); return y; };
+
+// ---------- kinetic helpers ----------
+const chars = (el, text) => { el.innerHTML = [...text].map((c) => `<span class="ch">${c === ' ' ? '&nbsp;' : c}</span>`).join(''); return [...el.children]; };
+const elevenCs = chars($('eleven'), 'Eleven emails.'), orbitCs = chars($('orbit'), 'Orbit'), subCs = chars($('sub'), 'schedules meetings for you.');
+const nobackCs = chars($('noback'), 'No back and forth.'), orbit2Cs = chars($('orbit2'), 'Orbit.'), tagCs = chars($('tag'), 'Meetings find their own time.');
+function riseFrom(cs, t, at, { each = 0.03, dur = 0.6, h = 120 } = {}) { cs.forEach((c, i) => { const p = progress(t, at + i * each, at + i * each + dur, ease.outExpo); c.style.transform = `translateY(${(1 - p) * h}px)`; c.style.opacity = t >= at + i * each ? 1 : 0; }); }
+function kin(cs, t, at, { each = 0.035, dur = 0.65, dy = 50, rot = 6 } = {}) { cs.forEach((c, i) => { const p = progress(t, at + i * each, at + i * each + dur, ease.outExpo); c.style.opacity = progress(t, at + i * each, at + i * each + dur * 0.4); c.style.transform = `translateY(${(1 - p) * dy}px) rotate(${(1 - p) * rot}deg) scale(${lerp(0.85, 1, p)})`; c.style.filter = p < 0.99 ? `blur(${(1 - p) * 12}px)` : 'none'; }); }
+function leaveUp(el, t, at, dur = 0.45) { const p = progress(t, at, at + dur, ease.inExpo); el.style.opacity = 1 - p; el.style.filter = p > 0.01 ? `blur(${p * 14}px)` : 'none'; el.style.translate = `0 ${-p * 60}px`; }
+
+// ---------- chips → column headers ----------
+const chips = NAMES.map((n) => { const c = mk('chip', $('chips')); c.innerHTML = `<span class="av">${n[0]}</span>${n}<span class="ok">✓</span>`; return c; });
+await new Promise((r) => requestAnimationFrame(r));
+const chipW = chips.map((c) => { c.style.opacity = 1; const w = c.offsetWidth; c.style.opacity = 0; return w; });
+const chipX = []; { let x = 420; chips.forEach((c, i) => { chipX.push(x); x += chipW[i] + 14; }); }
+const ROW_Y = 500, SPAWN_X = 420 + 12 * 17.4, SPAWN_Y = 410;
+const COLX = (i) => 405 + i * 186, COLW = 170, COLTOP = 520, ROW0 = 540, ROWH = 40, NROWS = 11, HEAD_Y = 470;
+const COLZ = (i) => (i - 2.5) * 44;
+
+// ---------- the calendars ----------
+const BUSY = [[[0, 2], [5, 1], [8, 1]], [[1, 1], [4, 2], [9, 1]], [[0, 1], [2, 1], [7, 2]], [[1, 2], [5, 1], [8, 2]], [[0, 2], [4, 1], [7, 1], [9, 1]], [[2, 1], [4, 2], [8, 1]]];
+const cols = NAMES.map((_, i) => {
+  const c = mk('col', $('cols'), { left: `${COLX(i)}px`, top: `${COLTOP}px`, width: `${COLW}px`, height: `${NROWS * ROWH + 20}px`, transform: `translateZ(${COLZ(i)}px)` });
+  c.innerHTML = `<svg class="abs" style="left:0;top:0;overflow:visible" width="${COLW}" height="${NROWS * ROWH + 20}"><path class="frame" d="M 0 ${NROWS * ROWH + 20} V 0 H ${COLW} V ${NROWS * ROWH + 20}" fill="none" stroke="#2A2A2A" stroke-width="1.5"/></svg>`;
+  const evs = BUSY[i].map(([r, n]) => mk('ev', c, { left: '8px', top: `${20 + r * ROWH + 3}px`, width: `${COLW - 16}px`, height: `${n * ROWH - 6}px` }));
+  const late = mk('ev', c, { left: '8px', top: `${20 + 3 * ROWH + 3}px`, width: `${COLW - 16}px`, height: `${ROWH - 6}px`, borderColor: '#8A8A8A' }); // Lena's new conflict
+  const slot = mk('abs', c, { left: '8px', top: `${20 + 3 * ROWH + 3}px`, width: `${COLW - 16}px`, height: `${ROWH - 6}px`, border: '1px solid #FFF', opacity: 0 });
+  return { c, frame: c.querySelector('.frame'), evs, late, slot };
+});
+const TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00'].map((l, i) => { const d = mk('abs m', $('times'), { left: '366px', top: `${ROW0 + i * 2 * ROWH - 8}px`, fontSize: '12px', color: '#8A8A8A', opacity: 0 }); d.textContent = l; return d; });
+const pings = chips.map(() => mk('ping', $('pings')));
+const rowY = (r) => ROW0 + r * ROWH;
+
+// ---------- the line / the field: the thread's remains, the input, and back again ----------
+function lineRect(t) {
+  const merged = MSG.reduce((n, _, i) => n + ease.inOutCubic(progress(t, tSq(i) + 0.15, tSq(i) + 0.45)), 0);
+  const w0 = (merged / MSG.length) * 800, r = progress(t, RISE[0], RISE[1], ease.inOutCubic);
+  let R = { x: lerp(960 - w0 / 2, 400, r), y: lerp(LINE_Y, 396, r), w: lerp(w0, 1120, r), h: lerp(2, 64, ease.inOutCubic(progress(t, RISE[0] + 0.45, RISE[1] + 0.1))) };
+  const f = progress(t, FOLD + 0.7, FOLD + 1.05, ease.inOutCubic); // the field folds back into a line at the centre
+  R = { x: lerp(R.x, 560, f), y: lerp(R.y, 650, f), w: lerp(R.w, 800, f), h: lerp(R.h, 2, f) };
+  const g = progress(t, RING, RING + 0.5, ease.inCubic); // and the line shrinks to a point as the ring draws
+  return { x: lerp(R.x, 960, g), y: R.y, w: lerp(R.w, 0, g), h: R.h };
+}
+
+// ---------- the camera follows what leads ----------
+function target(t) {
+  const n = clamp(Math.floor((t - T0) / STEP) + 1, 1, MSG.length);
+  let x = 960, y = yOf(Math.max(0, n - 1), t) - 150, z = 1.12, yaw = 0;
+  const sq = progress(t, SQUASH, SQUASH + 0.9, ease.inOutCubic); y = lerp(y, LINE_Y - 120, sq); z = lerp(z, 1.0, sq);
+  const L = lineRect(t); const r = progress(t, RISE[0], RISE[1], ease.inOutCubic); y = lerp(y, L.y + 140, r);
+  const u = progress(t, UNFOLD[0], UNFOLD[1] + 0.3, ease.inOutCubic); y = lerp(y, 650, u); z = lerp(z, 0.92, u); yaw = lerp(yaw, -7, u);
+  const ty = progress(t, TYPE_AT - 0.3, TYPE_AT + 0.8, ease.inOutCubic); x = lerp(x, 860, ty); y = lerp(y, 520, ty); z = lerp(z, 1.14, ty); yaw = lerp(yaw, -2, ty);
+  const cx = progress(t, CHIP_AT - 0.1, CHIP_AT + 1.0, ease.inOutCubic); x = lerp(x, 960, cx); y = lerp(y, 580, cx); z = lerp(z, 1.02, cx);
+  const bt = progress(t, CONN, BTN + 0.5, ease.inOutCubic); x = lerp(x, 720, bt); y = lerp(y, 800, bt); z = lerp(z, 1.3, bt); yaw = lerp(yaw, 5, bt);
+  const sp = progress(t, SPILL, SPILL + 0.9, ease.inOutCubic); y = lerp(y, 920, sp); x = lerp(x, 900, sp); z = lerp(z, 1.1, sp); yaw = lerp(yaw, 0, sp);
+  const ca = progress(t, CAL0, CAL0 + 1.2, ease.inOutCubic); x = lerp(x, 960, ca); y = lerp(y, 720, ca); z = lerp(z, 0.9, ca); yaw = lerp(yaw, -12, ca);   // step back: six calendars in depth
+  const sc = progress(t, SCAN0 - 0.2, SLOT + 0.6, ease.inOutCubic); y = lerp(y, rowY(3) + 60, sc); z = lerp(z, 1.12, sc); yaw = lerp(yaw, -4, sc);         // lean in on the gap
+  const dp = progress(t, DROP - 0.2, DROP + 0.6, ease.inOutCubic); x = lerp(x, COLX(3) + 85, dp); y = lerp(y, rowY(3) - 20, dp); z = lerp(z, 1.2, dp);        // Lena
+  const mv = progress(t, LIFT, LAND2 + 0.2, ease.inOutCubic); x = lerp(x, 960, mv); y = lerp(y, rowY(6) + 40, mv); z = lerp(z, 1.05, mv);                   // follow the card down
+  const tl = progress(t, TELL, TELL + 0.9, ease.inOutCubic); y = lerp(y, 640, tl); z = lerp(z, 0.92, tl); yaw = lerp(yaw, -8, tl);                           // see everyone get told
+  const fo = progress(t, FOLD, FOLD + 1.1, ease.inOutCubic); x = lerp(x, 960, fo); y = lerp(y, 650, fo); z = lerp(z, 1.0, fo); yaw = lerp(yaw, 0, fo);
+  const nb = progress(t, NOBACK, NOBACK + 0.8, ease.inOutCubic); y = lerp(y, 600, nb); z = lerp(z, 1.06, nb);
+  const bb = progress(t, BUB - 0.2, BUB + 0.6, ease.inOutCubic); y = lerp(y, 620, bb);
+  const rg = progress(t, RING, RING + 1.2, ease.inOutCubic); x = lerp(x, 1000, rg); y = lerp(y, 660, rg); z = lerp(z, 0.98, rg);
+  const en = progress(t, RING + 1.2, DUR, ease.linear); z = lerp(z, 1.08, en); x = lerp(x, 1040, en);
+  return [x, y, z, yaw];
+}
+const steps = Math.ceil(DUR * FPS) + 2, cache = [];
+{ let [x, y, z, yw] = target(0), vx = 0, vy = 0, vz = 0, vw = 0; const k = 42, c = 12;
+  for (let i = 0; i < steps; i++) { const t = i / FPS, dt = 1 / FPS, [tx, ty, tz, tw] = target(t);
+    vx += ((tx - x) * k - vx * c) * dt; vy += ((ty - y) * k - vy * c) * dt; vz += ((tz - z) * k - vz * c) * dt; vw += ((tw - yw) * k - vw * c) * dt;
+    x += vx * dt; y += vy * dt; z += vz * dt; yw += vw * dt; cache.push([x, y, z, yw, vx, vy]); } }
+const camAt = (t) => { const f = clamp(t * FPS, 0, steps - 2), i = Math.floor(f), u = f - i; return cache[i].map((v, j) => lerp(v, cache[i + 1][j], u)); };
+
+s.update((t) => {
+  const [cx, cy, z, yawB, vx, vy] = camAt(t);
+  const bank = clamp(-vx / 320, -6, 6), tiltX = clamp(vy / 260, -5, 5), yaw = clamp(vx / 420, -8, 8) + yawB;
+  $('cam').style.transform = `translate(960px,540px) rotateZ(${bank + Math.sin(t * 0.7) * 0.15}deg) rotateX(${tiltX}deg) rotateY(${yaw}deg) scale(${z}) translate(${-cx}px,${-cy}px)`;
+
+  // ===== 1 · the thread piles, then squashes into the line =====
+  let n = 0;
+  bubs.forEach((b, i) => {
+    const at = tArr(i), p = progress(t, at, at + 0.5, ease.outBack), q = progress(t, at, at + 0.25); if (t >= at) n = i + 1;
+    const age = bubs.filter((_, k) => k > i && t >= tArr(k)).length, sq = progress(t, tSq(i), tSq(i) + 0.45, ease.inOutCubic);
+    Object.assign(b.style, { left: `${lerp(xOf(i), 960 - widths[i] / 2, sq)}px`, top: `${lerp(yOf(i, t), LINE_Y, sq)}px`, opacity: Math.min(q, 1 - age * 0.045) * (1 - progress(t, tSq(i) + 0.35, tSq(i) + 0.45)),
+      transform: `translate3d(0, ${(1 - p) * 60}px, ${-age * 16 * (1 - sq)}px) scale(${lerp(0.8, 1, p)}, ${lerp(lerp(0.8, 1, p), 0.04, sq)}) rotate(${(1 - p) * (i % 2 ? 3 : -3)}deg)`, filter: q < 0.99 ? `blur(${(1 - q) * 10}px)` : 'none' });
+  });
+  const next = bubs.findIndex((_, i) => t < tArr(i));
+  if (next > 0 && t > tArr(next) - 0.26) { Object.assign(dots.style, { opacity: 1, left: `${MSG[next][0] === 'them' ? 600 : 1320 - 84}px`, top: `${BASE - 60}px` }); dots.querySelectorAll('i').forEach((d, k) => { d.style.transform = `translateY(${Math.sin(t * 14 + k) * 3}px)`; }); } else dots.style.opacity = 0;
+  const hud1 = t > T0 - 0.1 && t < SQUASH + 0.4, hud2 = t > SQB + 0.5 && t < RING;
+  $('count').textContent = hud1 ? `${String(n).padStart(2, '0')} MESSAGES · 0 MEETINGS` : '00 EMAILS · 1 MEETING'; $('count').style.opacity = hud1 || hud2 ? 1 : 0; $('count').style.transform = `scale(${1 + punch(t, hud1 ? tArr(n - 1) : SQB + 0.5, 0.06, 10)})`;
+
+  // ===== 2 · the line =====
+  const L = lineRect(t);
+  Object.assign($('line').style, { left: `${L.x}px`, top: `${L.y}px`, width: `${L.w}px`, height: `${L.h}px`, opacity: L.w > 1 ? 1 : 0, transform: `scale(${1 + punch(t, tSq(MSG.length - 1) + 0.45, 0.03, 8)})` });
+  Object.assign($('mask1').style, { left: `${L.x}px`, top: `${L.y - 140}px` }); riseFrom(elevenCs, t, ELEVEN, { h: 130 }); leaveUp($('mask1'), t, ELEVEN_OUT);
+  Object.assign($('mask2').style, { left: `${L.x - 60}px`, top: `${L.y - 230}px` }); riseFrom(orbitCs, t, ORBIT, { each: 0.05, h: 200, dur: 0.7 }); riseFrom(subCs, t, ORBIT + 0.4, { each: 0.018, h: 60, dur: 0.5 });
+  const sh = progress(t, SHRINK[0], SHRINK[1], ease.inOutCubic);
+  $('orbit').style.transform = `translate(${(384 - L.x) * sh}px, ${(318 - (L.y - 230 + 20)) * sh}px) scale(${lerp(1, 0.125, sh)})`; $('orbit').style.opacity = 1 - progress(t, SHRINK[1] - 0.1, SHRINK[1]);
+  leaveUp($('sub'), t, SHRINK[0]);
+
+  // ===== 3 · the window unfolds from the field … and later folds back =====
+  const u1 = progress(t, UNFOLD[0], UNFOLD[0] + 0.4, ease.inOutCubic), u2 = progress(t, UNFOLD[0] + 0.25, UNFOLD[0] + 0.75, ease.inOutCubic), u3 = progress(t, UNFOLD[0] + 0.6, UNFOLD[1], ease.inOutCubic);
+  const f1 = progress(t, FOLD, FOLD + 0.45, ease.inOutCubic), f2 = progress(t, FOLD + 0.35, FOLD + 0.8, ease.inOutCubic), f3 = progress(t, FOLD + 0.6, FOLD + 0.95, ease.inOutCubic); // content, sides, header
+  const topY = lerp(lerp(396, 300, u1), 396, f3), headY = lerp(lerp(396, 356, u1), 396, f3), sideBottom = lerp(300, 1000, u2 * (1 - f2));
+  $('wtop').setAttribute('y1', topY); $('wtop').setAttribute('y2', topY); $('wtop').setAttribute('x1', lerp(400, 360, u1)); $('wtop').setAttribute('x2', lerp(1520, 1560, u1)); $('wtop').style.opacity = t >= UNFOLD[0] && f3 < 1 ? 1 : 0;
+  $('whead').setAttribute('y1', headY); $('whead').setAttribute('y2', headY); $('whead').style.opacity = t >= UNFOLD[0] + 0.1 && f3 < 1 ? 1 : 0;
+  ['wl', 'wr'].forEach((id) => { const e = $(id); e.setAttribute('y1', topY); e.setAttribute('y2', Math.max(topY, sideBottom)); e.style.opacity = u1 > 0.9 && f3 < 1 ? 1 : 0; });
+  draw($('wbot'), 1200, u3); $('wbot').setAttribute('y1', sideBottom); $('wbot').setAttribute('y2', sideBottom); if (f2 > 0.98) $('wbot').style.opacity = 0;
+  $('wfill').style.opacity = u1 > 0.95 && f3 < 0.9 ? 1 : 0; $('wfill').style.clipPath = `inset(0 0 ${100 - 100 * u2 * (1 - f2)}% 0)`;
+  const pl = u2 * (1 - progress(t, FOLD + 0.2, FOLD + 0.8, ease.inOutCubic)); $('planeBox').style.clipPath = `inset(${50 - 50 * pl}% ${50 - 50 * pl}% ${50 - 50 * pl}% ${50 - 50 * pl}%)`;
+  const hdr = progress(t, SHRINK[1] - 0.08, SHRINK[1] + 0.05) * (1 - f3); $('wtitle').style.opacity = hdr; $('wcount').style.opacity = progress(t, SHRINK[1], SHRINK[1] + 0.25) * (1 - f3);
+
+  // ===== 4 · the prompt types; chips spawn from the words; a line draws the button; the fill spills =====
+  const inputGone = progress(t, CAL0, CAL0 + 0.4, ease.inCubic);
+  $('prompt').style.opacity = (t >= TYPE_AT - 0.05 ? 1 : 0) * (1 - inputGone); typeOn($('prompt'), PROMPT, t, { times });
+  { const k = times.filter((x) => x <= t).length; $('cur').style.left = `${420 + k * 17.4 + 2}px`; $('cur').style.opacity = t >= TYPE_AT - 0.05 && t < CHIP_AT + 0.6 && (k < PROMPT.length || Math.floor(t * 2.4) % 2 === 0) ? 1 : 0; }
+  const ul = progress(t, ENTER, ENTER + 0.3, ease.outCubic) * (1 - progress(t, CHIP_AT + 0.8, CHIP_AT + 1.1)); Object.assign($('ul').style, { left: `${SPAWN_X}px`, width: `${ul * 11 * 17.4}px` });
+  $('line').style.opacity = (L.w > 1 ? 1 : 0) * (t > CAL0 && t < FOLD + 0.7 ? 1 - inputGone : 1);
+  const lastRight = chipX[5] + chipW[5]; $('conn').setAttribute('d', `M ${lastRight - 40} ${ROW_Y + 56} V 910 H 660`);
+  draw($('conn'), 1200, progress(t, CONN, CONN + 0.5, ease.inOutCubic) * (1 - inputGone)); draw($('btn'), 640, progress(t, BTN, BTN + 0.45, ease.inOutCubic) * (1 - inputGone));
+  $('btnt').textContent = 'FIND A TIME'.slice(0, Math.floor(11 * progress(t, BTN + 0.3, BTN + 0.7))); $('btnt').style.opacity = (t > BTN + 0.3 ? 1 : 0) * (1 - inputGone);
+  $('bfill').style.clipPath = `inset(0 ${100 - 100 * progress(t, FILL, FILL + 0.5, ease.inOutCubic)}% 0 0)`; $('bfill').style.opacity = 1 - inputGone;
+  // the band: spills out of the button, widens, lifts to the calendars' baseline, then becomes the scan line
+  const spl = progress(t, SPILL, SPILL + 0.6, ease.inOutCubic), wide = progress(t, SPILL + 0.5, SPILL + 1.1, ease.inOutCubic), lift = progress(t, CAL0, CAL0 + 0.5, ease.inOutCubic);
+  let bandTop = lerp(940, COLTOP + 20 + NROWS * ROWH - 40, lift), bandH = lerp(spl * 58, 40, lift), bandL = lerp(402, 400, wide), bandW = lerp(256, 1120, wide), bandOp = 1;
+  const scanRow = (t0, r0, r1, dur) => r0 + Math.min(r1 - r0, Math.floor(progress(t, t0, t0 + dur) * (r1 - r0 + 0.999)));
+  if (t >= SCAN0 - 0.5) { const toTop = progress(t, SCAN0 - 0.5, SCAN0, ease.inOutCubic); bandTop = lerp(bandTop, rowY(0), toTop); bandL = 400; bandW = 1120; bandH = ROWH; }
+  if (t >= SCAN0) { const r = t < LIFT ? scanRow(SCAN0, 0, 3, SLOT - SCAN0) : scanRow(LIFT + 0.15, 3, 6, LAND2 - LIFT - 0.4); bandTop = rowY(r); bandOp = t < SLOT + 0.5 ? 1 : t < LIFT + 0.1 ? 1 - progress(t, SLOT + 0.5, SLOT + 0.8) : progress(t, LIFT + 0.1, LIFT + 0.25) * (1 - progress(t, LAND2 - 0.2, LAND2)); }
+  Object.assign($('band').style, { left: `${bandL}px`, top: `${bandTop}px`, width: `${bandW}px`, height: `${bandH}px`, opacity: bandOp * (1 - f1) });
+
+  // ===== 5 · the calendars: chips rise to be the column headers, columns draw up from the band, busy blocks pop =====
+  let landed = 0;
+  chips.forEach((c, i) => {
+    const at = CHIP_AT + i * 0.1, p = progress(t, at, at + 0.6, ease.outBack), q = progress(t, at, at + 0.2); if (t >= at + 0.5) landed++;
+    const arc = Math.sin(p * Math.PI) * -70, h = progress(t, CAL0 + 0.1 + i * 0.06, CAL0 + 0.7 + i * 0.06, ease.inOutCubic);
+    const x = lerp(lerp(SPAWN_X + i * 30, chipX[i], p), COLX(i) + (COLW - chipW[i]) / 2, h), y = lerp(lerp(SPAWN_Y, ROW_Y, p) + arc, HEAD_Y, h);
+    const gone = i === 3 ? progress(t, DROP, DROP + 0.5, ease.inCubic) : 0; // Lena drops out
+    const told = i !== 3 ? progress(t, TELL + 0.55 + [0, 1, 2, 4, 5].indexOf(i) * 0.08, TELL + 0.75 + [0, 1, 2, 4, 5].indexOf(i) * 0.08) : 0;
+    Object.assign(c.style, { left: `${x}px`, top: `${y + gone * 160}px`, opacity: q * (1 - gone) * (1 - f1), borderColor: i === 3 && t > DROP ? '#8A8A8A' : '#FFF', color: i === 3 && t > DROP ? '#8A8A8A' : '#FFF',
+      transform: `translateZ(${COLZ(i) * h}px) scale(${lerp(0.25, 1, p) + punch(t, at + 0.5, 0.05, 9) + punch(t, TELL + 0.55 + Math.max(0, [0, 1, 2, 4, 5].indexOf(i)) * 0.08, i === 3 ? 0 : 0.1, 9)})`, filter: q < 0.99 ? `blur(${(1 - q) * 10}px)` : 'none' });
+    c.querySelector('.ok').style.opacity = told;
+  });
+  $('wcount').textContent = t < CARD + 0.3 ? `${landed} PEOPLE` : t < TELL + 0.6 ? '1 MEETING' : '5 NOTIFIED'; $('wcount').style.transform = `scale(${1 + punch(t, CHIP_AT + (landed - 1) * 0.1 + 0.5, 0.08, 10) + punch(t, CARD + 0.3, 0.08, 10) + punch(t, TELL + 0.6, 0.08, 10)})`;
+  cols.forEach((col, i) => {
+    const d = progress(t, CAL0 + 0.45 + i * 0.07, CAL0 + 1.15 + i * 0.07, ease.inOutCubic) * (1 - f1);
+    draw(col.frame, 2 * (NROWS * ROWH + 20) + COLW, d); col.c.style.opacity = t > CAL0 + 0.45 ? 1 - f1 : 0;
+    col.evs.forEach((e, k) => { const a = CAL0 + 0.9 + i * 0.07 + k * 0.08, p = progress(t, a, a + 0.35, ease.outBack); Object.assign(e.style, { opacity: progress(t, a, a + 0.2) * (1 - f1), transform: `scaleX(${p})`, transformOrigin: '0 50%' }); });
+    const lt = progress(t, DROP + 0.35, DROP + 0.6, ease.outBack); Object.assign(col.late.style, { opacity: i === 3 ? progress(t, DROP + 0.35, DROP + 0.5) * (1 - f1) : 0, transform: `scaleX(${lt})`, transformOrigin: '0 50%' });
+    col.slot.style.opacity = progress(t, SLOT + i * 0.04, SLOT + 0.2 + i * 0.04) * (1 - progress(t, CARD - 0.1, CARD + 0.1));
+  });
+  TIMES.forEach((d, i) => { d.style.opacity = progress(t, CAL0 + 0.8 + i * 0.05, CAL0 + 1.0 + i * 0.05) * (1 - f1); });
+
+  // ===== 6 · the booked card: the six lit slots merge into one; it lifts, glides and lands again; pings go out =====
+  const cp = progress(t, CARD - 0.05, CARD + 0.45, ease.outBack), lifted = progress(t, LIFT, LIFT + 0.35, ease.inOutCubic) * (1 - progress(t, LAND2 - 0.3, LAND2, ease.inOutCubic));
+  const cardRow = lerp(3, 6, progress(t, LIFT + 0.3, LAND2 - 0.05, ease.inOutCubic)), flash = t > DROP + 0.5 && t < LIFT ? (Math.sin((t - DROP) * 18) > 0 ? 1 : 0.35) : 1;
+  Object.assign($('card').style, { opacity: (t >= CARD - 0.05 ? 1 : 0) * (1 - f1), top: `${rowY(cardRow) + 2 - lifted * 10}px`, left: `${lerp(960, 400, cp)}px`, width: `${lerp(0, 1120, cp)}px`,
+    transform: `translateZ(${lifted * 90}px) scale(${1 + punch(t, CARD + 0.4, 0.04, 9) + punch(t, LAND2, 0.04, 9)})`, borderColor: flash > 0.5 ? '#FFF' : '#8A8A8A', boxShadow: `0 ${lifted * 30}px ${lifted * 60}px rgba(0,0,0,${lifted * 0.7})` });
+  const label = t < LIFT + 0.6 ? 'DESIGN SYNC · THU 10:30 → 11:00' : 'DESIGN SYNC · THU 12:00 → 12:30';
+  $('cardt').textContent = label.slice(0, Math.floor(label.length * (t < LIFT + 0.6 ? progress(t, CARD + 0.2, CARD + 0.9) : progress(t, LIFT + 0.6, LIFT + 1.1)))); $('booked').style.opacity = progress(t, CARD + 0.9, CARD + 1.1) * (t < LIFT ? 1 : progress(t, LAND2 + 0.2, LAND2 + 0.4));
+  pings.forEach((pg, i) => { if (i === 3) return; const k = [0, 1, 2, 4, 5].indexOf(i), a = TELL + k * 0.08, p = progress(t, a, a + 0.55, ease.inOutCubic);
+    const x0 = 960, y0 = rowY(6) + 24, x1 = COLX(i) + COLW / 2, y1 = HEAD_Y + 24;
+    Object.assign(pg.style, { left: `${lerp(x0, x1, p)}px`, top: `${lerp(y0, y1, p) - Math.sin(p * Math.PI) * 60}px`, opacity: t >= a && p < 1 ? 1 : 0, transform: `translateZ(${COLZ(i) * p}px)` }); });
+
+  // ===== 7 · the problem returns to the line, and is squashed =====
+  Object.assign($('mask3').style, { left: `${L.x}px`, top: `${L.y - 140}px`, width: `${Math.max(L.w, 10)}px` }); riseFrom(nobackCs, t, NOBACK, { h: 130 }); leaveUp($('mask3'), t, BUB - 0.05);
+  Object.assign($('mask4').style, { left: `${L.x}px`, top: `${L.y - 120}px`, width: `${Math.max(L.w, 10)}px` });
+  { const up = progress(t, BUB, BUB + 0.6, ease.outExpo), sq = progress(t, SQB, SQB + 0.4, ease.inOutCubic); const bw = 440; Object.assign($('bub2').style, { left: `${Math.max(L.w, 10) / 2 - bw / 2}px`, width: `${bw}px`, textAlign: 'center', opacity: t >= BUB && sq < 1 ? 1 : 0, transform: `translateY(${(1 - up) * 90 + sq * 20}px) scaleY(${lerp(1, 0.04, sq)})` }); }
+
+  // ===== 8 · the end: the line curls into a ring filled with the warp; the name; the pill =====
+  const rd = progress(t, RING + 0.15, RING + 0.95, ease.inOutCubic); draw($('ring'), 2 * Math.PI * 170, rd);
+  $('ringfill').style.clipPath = `circle(${170 * progress(t, RING + 0.7, RING + 1.4, ease.inOutCubic)}px at 170px 170px)`;
+  kin(orbit2Cs, t, ORBIT2, { each: 0.05, dy: 80, rot: 8 }); kin(tagCs, t, TAG, { each: 0.02, dy: 36, rot: 3 });
+  draw($('pill'), 2 * (210 + 54), progress(t, PILL, PILL + 0.5, ease.inOutCubic));
+  $('pillt').textContent = 'TRY ORBIT'.slice(0, Math.floor(9 * progress(t, PILL + 0.4, PILL + 0.8))); $('pillt').style.opacity = t > PILL + 0.4 ? 1 : 0;
+  $('pillfill').style.clipPath = `inset(0 ${100 - 100 * progress(t, PILL + 1.0, PILL + 1.5, ease.inOutCubic)}% 0 0)`;
+});
+
+// ---------- sound: the brand's cues under the voice ----------
+MSG.forEach((_, i) => B.cue(s, 'text', tArr(i)));
+B.cue(s, 'transition', SQUASH); B.cue(s, 'land', tSq(MSG.length - 1) + 0.45); B.cue(s, 'text', ELEVEN);
+B.cue(s, 'transition', RISE[0]); B.cue(s, 'text', ORBIT); B.cue(s, 'transition', UNFOLD[0]); B.cue(s, 'land', SHRINK[1]);
+keySounds(s, PROMPT, times, B.keys); B.cue(s, 'land', ENTER);
+NAMES.forEach((_, i) => B.cue(s, 'land', CHIP_AT + i * 0.1 + 0.5));
+B.cue(s, 'text', BTN); B.cue(s, 'transition', FILL); B.cue(s, 'whip', SPILL);
+B.cue(s, 'transition', CAL0); NAMES.forEach((_, i) => B.cue(s, 'text', CAL0 + 0.45 + i * 0.07));
+[0, 1, 2, 3].forEach((r) => B.cue(s, 'text', SCAN0 + (r / 4) * (SLOT - SCAN0))); B.cue(s, 'land', SLOT); B.cue(s, 'land', CARD + 0.4);
+B.cue(s, 'text', DROP); B.cue(s, 'whip', LIFT); B.cue(s, 'land', LAND2); [0, 1, 2, 3, 4].forEach((k) => B.cue(s, 'text', TELL + 0.55 + k * 0.08));
+B.cue(s, 'transition', FOLD); B.cue(s, 'land', FOLD + 1.05); B.cue(s, 'text', NOBACK); B.cue(s, 'text', BUB); B.cue(s, 'land', SQB + 0.4);
+B.cue(s, 'transition', RING); B.cue(s, 'text', ORBIT2); B.cue(s, 'text', PILL); B.cue(s, 'transition', PILL + 1.0);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "format": {
+    "width": 1920,
+    "height": 1080,
+    "duration": 6,
+    "fps": 30
+  },
+  "entries": [
+    {
+      "id": "warp",
+      "source": "engine",
+      "shader": "Warp",
+      "props": {
+        "colors": [
+          "#000000",
+          "#6E7E9E",
+          "#000000",
+          "#1C2232"
+        ],
+        "proportion": 0.45,
+        "softness": 1,
+        "distortion": 0.25,
+        "swirl": 0.8,
+        "swirlIterations": 10,
+        "shapeScale": 0.1,
+        "shape": "checks",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "dither-warp",
+      "source": "engine",
+      "shader": "Dithering",
+      "props": {
+        "colorBack": "#000000",
+        "colorFront": "#6E7E9E",
+        "shape": "warp",
+        "type": "8x8",
+        "size": 3,
+        "scale": 1,
+        "speed": 0.6
+      }
+    }
+  ]
+}

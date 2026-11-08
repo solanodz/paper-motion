@@ -1,0 +1,7 @@
+Finding a time for six people takes eleven emails.
+Orbit is a calendar that schedules meetings for you.
+Tell it who, and how long.
+It reads everyone's calendar, finds the gap, and books it.
+Someone drops out? It moves the meeting, and tells the rest.
+No back and forth. No "does Tuesday work?".
+Orbit. Meetings find their own time.
