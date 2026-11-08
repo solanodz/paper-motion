@@ -29,6 +29,20 @@ npx paper-motion                                                # every command
 
 Installed globally (`npm i -g paper-motion`), the same commands run as `paper-motion` or the short `pamo`.
 
+### Resources from paper-motion.app
+
+The registry at [paper-motion.app](https://paper-motion.app) holds named moves, backgrounds, palettes, font pairs and recipes. Agents pick them for a brand, propose options as a board link, and install what the user chooses as code the user owns.
+
+```bash
+npx paper-motion search --type background --mode dark --near "#0a0f1f,#eef1f8,#3d6bff"   # find resources by mood, mode, color fit
+npx paper-motion add magic-move mesh-sage --set mesh-sage:speed=0.8                     # install, with your values written in
+npx paper-motion board --url --title "Backgrounds" --look cobalt,geist \
+  --option mesh-graphite --option neuro-slate --option grain-slate                         # a live board link for the user to choose on
+npx paper-motion list background                                                          # every resource of a type
+```
+
+`https://paper-motion.app/llms.txt` explains the flow to an agent.
+
 ## Inside a scene
 
 ```js
