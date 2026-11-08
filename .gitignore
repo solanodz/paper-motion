@@ -21,3 +21,13 @@ examples/paper-motion-brand/brand/sheet/sheet.pdf
 **/brand/shader-set/shots/
 **/brand/shader-set/boards/
 **/brand/shader-set/shot.js
+
+# Audio never goes in the repo: sound samples are rebuilt by `pamo sound-samples`, keystroke banks and music stay local
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.ogg
+**/brand/sound/sounds.json
+**/brand/sound/keys/
