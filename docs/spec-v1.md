@@ -147,8 +147,11 @@ renders 2–6 options as one lettered still or clip). Each calling skill brings 
 
 ## Engine additions
 
-- **Moves library** · built: `paper-motion/moves` (cut, crossfade, wipe, push, maskReveal, scanReveal, zoomThrough,
-  typeOn, wordRise, blurIn, trackIn, drift; `PACE`, `MOVES`), and `pamo new --move` for a demo in the brand's look.
+- **Moves library** · built: `paper-motion/moves` (transitions: cut, crossfade, wipe, push, maskReveal, scanReveal,
+  zoomThrough, whip, cells, slices, iris, glitch, flip3D, flash; text: typeOn, wordRise, blurIn, trackIn, scramble, popIn,
+  flipIn, roll, odometer, barReveal; camera: drift, shake, punch, orbit, rgbSplit, drawOn; component transitions:
+  magicMove, whipPan, diveIn, flipLift, squashDrop, snapScroll, unfold, tileSwirl; `PACE`, `MOVES`), and
+  `pamo new --move` for a demo in the brand's look.
 - **Wordmarks** · built: `pamo wordmark <text> --family … --css|--file …` renders the name, cropped to the ink, as a
   transparent PNG. **Still template** · built: `pamo new <name> --still`; `organicPath()` for organic shapes.
 - **Option boards** · built: `pamo board a.html b.html … [--t s | --clip s] --labels "A · x,B · y"` composes 2–6

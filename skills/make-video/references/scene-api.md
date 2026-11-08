@@ -118,6 +118,25 @@ stagger }`), `B.shader(s, el, '<set entry id>')`, `B.cue(s, 'transition' | 'land
 
 `import { wipe, push, maskReveal, scanReveal, zoomThrough, crossfade, cut, typeOn, wordRise, blurIn, trackIn, drift, PACE, MOVES } from 'paper-motion/moves'`
 
+The library, by family (`MOVES` maps every name to a one-line description):
+- **Transitions** `(a, b, p, opts)`: `cut`, `crossfade`, `wipe`, `push`, `maskReveal`, `scanReveal`, `zoomThrough`,
+  `whip` (fast push with motion blur), `cells` (grid of growing squares), `slices` (strips from alternating sides),
+  `iris` (circle from a point), `glitch` (torn bands + RGB split), `flip3D` (card flip), `flash` (overexposed white).
+  At `p = 0` only A shows, at `p = 1` only B; the incoming layer must sit above the outgoing one.
+- **Text** `(el, t, opts)`: `typeOn`, `wordRise`, `blurIn`, `trackIn`, `scramble` (glyphs lock in), `popIn` (letters on
+  a spring), `flipIn` (letters flip up in 3D), `roll(el, words, t)` (slot-machine word), `odometer` (rolling digits,
+  `{ from, to }`), `barReveal` (a bar sweeps over the line).
+- **Camera and energy** `(el, t, opts)`: `drift`, `shake` / `punch` / `rgbSplit` (on each time in `hits: [...]`),
+  `orbit(world, t, { yaw, pitch, dolly })` (children at different `translateZ`), `drawOn(svg, t)` (strokes draw).
+- **Component transitions** `(a, b, p, { duration })`, for a card, a button or a panel inside a page that stays
+  still (or a whole frame): `magicMove` (parts with the same `data-part` fly into each other on springs; the box
+  reshapes), `whipPan` (wind-up, tilted whip with a light streak, overshoot), `diveIn` (the camera dives into a
+  detail, `target`, and B opens inside it), `flipLift` (lift, flip with a sheen, land with an echo), `squashDrop`
+  (squash and stretch, impact lines), `snapScroll` (a 3D reel that snaps onto B), `unfold` (fold into a glowing line,
+  unfold out of it), `tileSwirl` (tiles swirl and flip into B). Stack A and B in one positioned slot (give it
+  `overflow:hidden` to keep travel inside); pass the real `duration` in seconds; call through `p = 1`; render with
+  `--motion-blur 5`.
+
 Named, reusable motion. Transitions take two layers and progress `p` (0 → 1): `wipe(a, b, p)`. Text and camera moves
 take scene time `t`: `typeOn(el, text, t, { start, cps, cursor })`, `wordRise(el, t, { start, each })`,
 `drift(world, t)`. `PACE.calm|medium|fast` gives `{ enter, hold, stagger }` in seconds. When the brand has a

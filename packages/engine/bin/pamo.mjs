@@ -33,7 +33,7 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      (sound effects declared with s.sfx() are mixed in)
   sfx <scene.html> [--out file.wav] [--from s] [--to s]
                                      export only the synthesized sound effects
-  board <a.html> <b.html> [...] [--t 2 | --clip 5] [--labels "A · calm|B · loud"] [--cols n] [--out board.png]
+  board <a.html> <b.html> [...] [--t 2 | --clip 5] [--labels "A · calm|B · loud"] [--cols n] [--motion-blur 6] [--out board.png]
                                      option board for interviews: 2–6 options side by side,
                                      lettered A, B, C…; a still (.png) or short clips (.mp4).
                                      Labels split on | (or on commas when there is no |).
@@ -311,6 +311,7 @@ async function main() {
       const sequence = !!args.sequence;
       if (sequence && !clip) { console.error('board: --sequence needs --clip <seconds>'); process.exit(1); }
       const t = Number(args.t ?? 2);
+      const blur = args['motion-blur'] ? Number(args['motion-blur'] === true ? 8 : args['motion-blur']) : 1;
       const out = path.resolve(args.out ?? (clip ? 'board.mp4' : 'board.png'));
       const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-board-'));
       const raw = args.labels ? String(args.labels) : '';
@@ -322,10 +323,10 @@ async function main() {
           process.stdout.write(`\roption ${labels[i].split(' · ')[0]} · ${i + 1}/${files.length}   `);
           if (clip) {
             const o = path.join(tmp, `${i}.mp4`);
-            await withServer(file, (url) => renderVideo({ url: url('?render'), out: o, from: 0, to: clip, sfx: sequence, dpr: Number(args.dpr ?? 1) }));
+            await withServer(file, (url) => renderVideo({ url: url('?render'), out: o, from: 0, to: clip, sfx: sequence, dpr: Number(args.dpr ?? 1), motionBlur: blur }));
             inputs.push(o);
           } else {
-            const r = await withServer(file, (url) => renderStills({ url: url('?render'), times: [t], outDir: path.join(tmp, String(i)), sheet: false, dpr: Number(args.dpr ?? 1) }));
+            const r = await withServer(file, (url) => renderStills({ url: url('?render'), times: [t], outDir: path.join(tmp, String(i)), sheet: false, dpr: Number(args.dpr ?? 1), motionBlur: blur }));
             inputs.push(r.files[0]);
           }
         }

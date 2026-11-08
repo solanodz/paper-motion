@@ -23,7 +23,7 @@ import { scene, ease, clamp } from 'paper-motion';
 import * as M from 'paper-motion/moves';
 
 // The four choices this demo shows. `pamo new <name> --move … --pace … --text … --camera …` sets them.
-const MOVE = 'crossfade'; // transition between frames: cut crossfade wipe push maskReveal scanReveal zoomThrough
+const MOVE = 'crossfade'; // transition between frames: cut crossfade wipe push maskReveal scanReveal zoomThrough whip cells slices iris glitch flip3D flash
 const PACE = 'medium';    // calm | medium | fast
 const TEXT = 'plain';     // how the line appears: typing | rise | blur | track | plain
 const CAMERA = 'still';   // still | drift | travel (travel moves the camera between frames and replaces MOVE)
@@ -105,9 +105,10 @@ s.update((t) => {
     if (k < 0) beats[0].el.style.opacity = 1;
     else {
       const a = beats[k].el, b = beats[k + 1].el;
-      ({ cut: () => M.cut(a, b, p >= 0.5 ? 1 : 0), crossfade: () => M.crossfade(a, b, p), wipe: () => M.wipe(a, b, p),
+      (({ cut: () => M.cut(a, b, p >= 0.5 ? 1 : 0), crossfade: () => M.crossfade(a, b, p), wipe: () => M.wipe(a, b, p),
          push: () => M.push(a, b, p), maskReveal: () => M.maskReveal(a, b, p), scanReveal: () => M.scanReveal(a, b, p),
-         zoomThrough: () => M.zoomThrough(a, b, p, { origin: beats[k].kind === 'name' ? '30% 50%' : '50% 50%' }) })[MOVE]?.();
+         zoomThrough: () => M.zoomThrough(a, b, p, { origin: beats[k].kind === 'name' ? '30% 50%' : '50% 50%' }) })[MOVE]
+        ?? (() => M[MOVE]?.(a, b, p)))(); // any other transition in the library: whip, cells, slices, iris, glitch, flip3D, flash
     }
   }
   // the line appears as its frame lands
