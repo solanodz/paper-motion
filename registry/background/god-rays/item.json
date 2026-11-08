@@ -1,0 +1,165 @@
+{
+  "$schema": "../../schema.json",
+  "id": "god-rays",
+  "type": "background",
+  "title": "God Rays",
+  "summary": "Animated rays of light radiating from the center, blended with up to 5 colors.",
+  "tags": [
+    "background",
+    "god-rays",
+    "gentle",
+    "dark"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorBloom",
+      "type": "color",
+      "default": "#2a2a2a",
+      "description": "Color overlay blended with the rays in RGBA, needs bloom > 0",
+      "group": "advanced"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#ffffff40",
+        "#C9A65A80",
+        "#ffffff",
+        "#8EA3AD"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 5,
+      "group": "main"
+    },
+    {
+      "name": "density",
+      "type": "number",
+      "default": 0.3,
+      "description": "The number of rays",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "spotty",
+      "type": "number",
+      "default": 0.3,
+      "description": "The length of the rays, higher = more spots/shorter rays",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "midIntensity",
+      "type": "number",
+      "default": 0.4,
+      "description": "Brightness/intensity of the central glow, needs midSize > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "midSize",
+      "type": "number",
+      "default": 0.2,
+      "description": "Size of the circular glow shape in the center, needs midIntensity > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "intensity",
+      "type": "number",
+      "default": 0.7,
+      "description": "intensity",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "bloom",
+      "type": "number",
+      "default": 0.35,
+      "description": "Strength of the bloom/overlay effect, 0 = alpha blend, 1 = additive blend",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.5,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "GodRays",
+      "props": {
+        "colorBack": "#000000",
+        "colorBloom": "#2a2a2a",
+        "colors": [
+          "#ffffff40",
+          "#C9A65A80",
+          "#ffffff",
+          "#8EA3AD"
+        ],
+        "density": 0.3,
+        "spotty": 0.3,
+        "midIntensity": 0.4,
+        "midSize": 0.2,
+        "intensity": 0.7,
+        "bloom": 0.35,
+        "speed": 0.5
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'god-rays');",
+  "notes": [
+    "Paper shader `GodRays` (animated)."
+  ],
+  "preview": {
+    "video": "previews/god-rays.webm",
+    "poster": "previews/god-rays.jpg"
+  },
+  "colors": [
+    "#ffffff",
+    "#c9a65a",
+    "#8ea3ad",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "luxury",
+    "calm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark luxury piece"
+  ]
+}

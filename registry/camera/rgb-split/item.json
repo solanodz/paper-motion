@@ -1,0 +1,91 @@
+{
+  "$schema": "../../schema.json",
+  "id": "rgb-split",
+  "type": "camera",
+  "title": "RGB split",
+  "summary": "Red and cyan fringes burst out on each hit and fade.",
+  "tags": [
+    "camera",
+    "impact",
+    "digital",
+    "beat"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "rgbSplit",
+  "signature": "rgbSplit(el, t, { hits, amount, decay, base })",
+  "params": [
+    {
+      "name": "hits",
+      "type": "numbers",
+      "default": [
+        0
+      ],
+      "description": "times (s) of the hits, e.g. on the beat",
+      "control": "numbers",
+      "group": "advanced"
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "default": 22,
+      "description": "strength",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "decay",
+      "type": "number",
+      "default": 6,
+      "description": "how fast it dies out (higher is faster)",
+      "min": 1,
+      "max": 20,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "base",
+      "type": "number",
+      "default": 0,
+      "description": "resting split in px",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/rgb-split.js",
+      "to": "moves/rgb-split.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { rgbSplit } from './moves/rgb-split.js';\n\ns.update((t) => rgbSplit(world, t, { hits: [1.0, 2.0, 2.5] }));",
+  "notes": [
+    "Red and cyan fringes burst out on each hit and fade.",
+    "Put hits on the beat or on a sound cue, never on every beat."
+  ],
+  "preview": {
+    "video": "previews/rgb-split.webm",
+    "poster": "previews/rgb-split.jpg"
+  },
+  "mood": [
+    "raw",
+    "technical",
+    "bold"
+  ],
+  "energy": 4,
+  "role": "emphasis",
+  "when": [
+    "digital glitch accents on hits",
+    "gaming, music, underground"
+  ]
+}

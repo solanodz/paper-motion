@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schema.json",
+  "id": "lavender-ash",
+  "type": "palette",
+  "title": "Lavender ash",
+  "summary": "Light palette: cool lilac greys; gentle, wellness, modern.",
+  "tags": [
+    "palette",
+    "light",
+    "gentle",
+    "wellness",
+    "modern"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#ECE9F0",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#221F29",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#7E7594",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#E1DDE8",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#7E7594",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#ECE9F0",
+        "#BDB4CB",
+        "#7E7594",
+        "#2E2A38"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#ECE9F0",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#221F29",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#7E7594",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#E1DDE8",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#7E7594",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#ECE9F0",
+        "#BDB4CB",
+        "#7E7594",
+        "#2E2A38"
+      ],
+      "mode": "light"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 13.5:1, muted on ground 3.6:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/lavender-ash.webm",
+    "poster": "previews/lavender-ash.jpg"
+  },
+  "colors": [
+    "#ece9f0",
+    "#221f29",
+    "#7e7594"
+  ],
+  "mode": "light",
+  "mood": [
+    "calm",
+    "minimal"
+  ],
+  "when": [
+    "a light piece that should feel calm, minimal",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
+}

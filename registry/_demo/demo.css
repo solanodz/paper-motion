@@ -1,0 +1,40 @@
+@font-face { font-family: GSerif; src: url(fonts/GeistSerif-Regular.woff2); }
+@font-face { font-family: GMono; font-weight: 100 900; src: url(fonts/GeistMono-Variable.woff2); }
+@font-face { font-family: GPixel; src: url(fonts/GeistPixel-Square.woff2); }
+#stage { background: var(--pm-g, #000); overflow: hidden; }
+
+/* component demos: a card in a slot, inside a page that stays still */
+.card { position: absolute; inset: 0; box-sizing: border-box; padding: 50px 56px; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+.card-a { background: var(--pm-s, #0e0e0e); border: 1.5px solid var(--pm-l, #343434); color: var(--pm-f, #fff); }
+.card-b { background: var(--pm-a, #E9E4D8); border: 1.5px solid var(--pm-a, #E9E4D8); color: var(--pm-g, #000); }
+.card .lbl { font: 500 22px/1 var(--pm-mono, GMono); opacity: .6; }
+.card .ttl { font: 400 112px/1 var(--pm-display, GSerif); letter-spacing: -0.03em; margin-top: 26px; }
+.card .bar { height: 10px; border-radius: 5px; margin-top: 22px; background: var(--pm-l, #2a2a2a); }
+.card-b .track { height: 10px; border-radius: 5px; margin-top: 40px; background: color-mix(in oklab, var(--pm-a, #E9E4D8) 78%, var(--pm-g, #000)); overflow: hidden; }
+.card-b .track i { display: block; height: 100%; width: 72%; background: var(--pm-g, #000); }
+.card-b .meta { font: 500 22px/1 var(--pm-mono, GMono); margin-top: 22px; }
+.pill { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 14px; border-radius: 44px; background: var(--pm-f, #fff); color: var(--pm-g, #000); border: 1.5px solid var(--pm-f, #fff); font: 500 30px/1 var(--pm-mono, GMono); }
+
+/* round 3: richer cards whose parts match by data-part (label, title, body, meta, media) */
+.kc { position: absolute; inset: 0; box-sizing: border-box; padding: 50px 56px; border-radius: 14px; display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; }
+.kc-a { background: var(--pm-s, #0e0e0e); border: 1.5px solid var(--pm-l, #343434); color: var(--pm-f, #fff); }
+.kc-b { background: var(--pm-a, #E9E4D8); border: 1.5px solid var(--pm-a, #E9E4D8); color: var(--pm-g, #000); }
+.kc [data-part="label"] { font: 500 22px/1 var(--pm-mono, GMono); }
+.kc-a [data-part="label"], .kc-a [data-part="meta"] { color: var(--pm-m, #8a8a8a); }
+.kc-b [data-part="label"] { color: color-mix(in oklab, var(--pm-g, #000) 55%, var(--pm-a, #E9E4D8)); }
+.kc [data-part="title"] { font: 400 112px/1 var(--pm-display, GSerif); letter-spacing: -0.03em; margin-top: 26px; }
+.kc [data-part="meta"] { font: 500 22px/1 var(--pm-mono, GMono); margin-top: auto; }
+.kc-a [data-part="body"] { margin-top: 30px; width: 420px; }
+.kc-a [data-part="body"] b { display: block; height: 10px; border-radius: 5px; background: var(--pm-l, #2a2a2a); margin-top: 14px; }
+.kc-b [data-part="body"] { margin-top: 40px; width: 100%; height: 10px; border-radius: 5px; background: color-mix(in oklab, var(--pm-a, #E9E4D8) 78%, var(--pm-g, #000)); overflow: hidden; }
+.kc-b [data-part="body"] i { display: block; height: 100%; width: 72%; background: var(--pm-g, #000); }
+.kc [data-part="media"] { position: absolute; top: 46px; right: 52px; }
+.kc-a [data-part="media"] { width: 64px; height: 64px; box-sizing: border-box; border: 2px solid var(--pm-f, #fff); border-radius: 50%; }
+.kc-a [data-part="media"] i { position: absolute; inset: 20px; background: var(--pm-f, #fff); border-radius: 50%; }
+.kc-b [data-part="media"] { width: 120px; height: 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.kc-b [data-part="media"] i { background: var(--pm-g, #000); border-radius: 4px; }
+.kc.compact { inset: auto; left: 0; top: 80px; width: 440px; height: 340px; padding: 40px 44px; }
+.kc.compact [data-part="title"] { font-size: 76px; margin-top: 20px; }
+.kc.compact [data-part="body"] { width: 250px; margin-top: 22px; }
+.kc.compact [data-part="media"] { top: 36px; right: 40px; width: 52px; height: 52px; }
+.kc.compact [data-part="media"] i { inset: 16px; }

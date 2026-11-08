@@ -1,0 +1,182 @@
+{
+  "$schema": "../../schema.json",
+  "id": "lens-distortion",
+  "type": "background",
+  "title": "Lens Distortion",
+  "summary": "Lens Distortion image filter separates an image into shifting color layers (recreating the chromatic aberration of a lens) and warps the image geometry, curving it outward or inward like barrel and pi",
+  "tags": [
+    "background",
+    "lens-distortion",
+    "gentle",
+    "image"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "fit",
+      "type": "string",
+      "default": "cover",
+      "description": "How to fit the rendered shader into the canvas dimensions (0 = none, 1 = contain, 2 = cover)",
+      "group": "advanced"
+    },
+    {
+      "name": "spread",
+      "type": "number",
+      "default": 0.6,
+      "description": "Strength of the color split; how far the color layers are pushed apart; 0 is off",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "bias",
+      "type": "number",
+      "default": 1,
+      "description": "Shifts the colors toward one end of the spread; 0 spaces them evenly, needs spread > 0, count > 2",
+      "min": -1,
+      "max": 1,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "angle",
+      "type": "number",
+      "default": 0,
+      "description": "Direction of the spread in degrees, needs spread > 0, perspective < 1",
+      "min": 0,
+      "max": 360,
+      "step": 1.8,
+      "group": "main"
+    },
+    {
+      "name": "perspective",
+      "type": "number",
+      "default": 0.1,
+      "description": "Shapes the spread direction from a straight line (0) to a radial burst out from the centre (1), needs spread > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "count",
+      "type": "number",
+      "default": 35,
+      "description": "Number of sampled color layers along the spread; higher is smoother and costlier, needs spread > 0",
+      "min": 2,
+      "max": 50,
+      "step": 0.24,
+      "group": "advanced"
+    },
+    {
+      "name": "dispersion",
+      "type": "number",
+      "default": 1,
+      "description": "Overall amount of color dispersion; 1 gives each layer its own color from the spectrum, 0 keeps the original image color, needs spread > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "dispersionColor",
+      "type": "number",
+      "default": 0.6,
+      "description": "Rotates the colors around the hue wheel, 0 to 1 for a full turn, needs spread > 0, dispersion > 0",
+      "min": 0,
+      "max": 1.7999999999999998,
+      "step": 0.009,
+      "group": "advanced"
+    },
+    {
+      "name": "focusCenter",
+      "type": "number",
+      "default": 0.8,
+      "description": "Reduces the spread in a circular zone at the centre; 0 keeps it full to the centre, needs spread > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "focusEdges",
+      "type": "number",
+      "default": 1,
+      "description": "Reduces the spread toward the edges; 0 keeps it full to the edges, 1 restores the original image there, needs spread > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "swirl",
+      "type": "number",
+      "default": 0.35,
+      "description": "amount of swirl",
+      "min": -1,
+      "max": 1,
+      "step": 0.01,
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "LensDistortion",
+      "props": {
+        "fit": "cover",
+        "spread": 0.6,
+        "bias": 1,
+        "angle": 0,
+        "perspective": 0.1,
+        "count": 35,
+        "dispersion": 1,
+        "dispersionColor": 0.6,
+        "focusCenter": 0.8,
+        "focusEdges": 1,
+        "swirl": 0.35
+      },
+      "image": "assets/materials/material-a.jpg",
+      "motion": {
+        "param": "swirl",
+        "from": 0.1,
+        "to": 0.6
+      }
+    }
+  },
+  "files": [
+    {
+      "from": "registry/_assets/materials/material-a.jpg",
+      "to": "brand/assets/materials/material-a.jpg"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'lens-distortion');",
+  "notes": [
+    "Paper shader `LensDistortion` (still).",
+    "Uses an image (installed to brand/assets/materials/); swap `image` for your own picture or texture.",
+    "Breathes on `swirl` from 0.1 to 0.6 so a still shader stays alive."
+  ],
+  "preview": {
+    "video": "previews/lens-distortion.webm",
+    "poster": "previews/lens-distortion.jpg"
+  },
+  "colors": [
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "raw",
+    "technical"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark raw piece",
+    "you have a photo or a logo to run through it"
+  ]
+}

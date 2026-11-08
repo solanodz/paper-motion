@@ -1,0 +1,158 @@
+{
+  "$schema": "../../schema.json",
+  "id": "warp-ochre",
+  "type": "background",
+  "title": "Warp · ochre",
+  "summary": "Animated color fields warped by noise and swirls, applied over base patterns (checks, stripes, or split edge), in ochre.",
+  "tags": [
+    "background",
+    "warp",
+    "gentle",
+    "dark",
+    "ochre"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#0a0a0a",
+        "#C9A65A",
+        "#0a0a0a",
+        "#7A5A24"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    },
+    {
+      "name": "proportion",
+      "type": "number",
+      "default": 0.45,
+      "description": "Blend point between colors, 0.5 = equal distribution",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 1,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "distortion",
+      "type": "number",
+      "default": 0.25,
+      "description": "amount of organic distortion",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "swirl",
+      "type": "number",
+      "default": 0.8,
+      "description": "amount of swirl",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "swirlIterations",
+      "type": "number",
+      "default": 10,
+      "description": "Number of layered swirl passes as an integer, needs swirl > 0",
+      "min": 2,
+      "max": 20,
+      "step": 0.09,
+      "group": "advanced"
+    },
+    {
+      "name": "shapeScale",
+      "type": "number",
+      "default": 0.1,
+      "description": "Zoom level of the base pattern",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "shape",
+      "type": "string",
+      "default": "checks",
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.5,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Warp",
+      "props": {
+        "colors": [
+          "#0a0a0a",
+          "#C9A65A",
+          "#0a0a0a",
+          "#7A5A24"
+        ],
+        "proportion": 0.45,
+        "softness": 1,
+        "distortion": 0.25,
+        "swirl": 0.8,
+        "swirlIterations": 10,
+        "shapeScale": 0.1,
+        "shape": "checks",
+        "speed": 0.5
+      },
+      "loop": 1.5
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'warp-ochre');",
+  "notes": [
+    "Paper shader `Warp` (animated)."
+  ],
+  "preview": {
+    "video": "previews/warp-ochre.webm",
+    "poster": "previews/warp-ochre.jpg"
+  },
+  "colors": [
+    "#0a0a0a",
+    "#c9a65a",
+    "#7a5a24"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "bold"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark playful piece"
+  ]
+}

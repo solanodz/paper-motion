@@ -1,0 +1,187 @@
+{
+  "$schema": "../../schema.json",
+  "id": "launch",
+  "type": "recipe",
+  "title": "Launch",
+  "summary": "Something new exists: hook, problem, reveal, three proof moments and a close, in 24 s.",
+  "tags": [
+    "recipe",
+    "launch",
+    "product",
+    "16:9"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "hook",
+      "type": "string",
+      "default": "Something new is here.",
+      "description": "the boldest claim",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "problem",
+      "type": "string",
+      "default": "The situation it changes, in the brand’s words.",
+      "description": "the problem line",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "what",
+      "type": "string",
+      "default": "",
+      "description": "what it is; empty reads IDENTITY.md",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "action",
+      "type": "string",
+      "default": "your.site",
+      "description": "where to get it",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "main",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    },
+    {
+      "name": "proof1Label",
+      "type": "string",
+      "default": "01 · fast",
+      "description": "proof 1 label",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "proof1Title",
+      "type": "string",
+      "default": "Fact one",
+      "description": "proof 1 title",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "proof1Body",
+      "type": "string",
+      "default": "A real number or a real result.",
+      "description": "proof 1 line",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "proof2Label",
+      "type": "string",
+      "default": "02 · simple",
+      "description": "proof 2 label",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "proof2Title",
+      "type": "string",
+      "default": "Fact two",
+      "description": "proof 2 title",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "proof2Body",
+      "type": "string",
+      "default": "What it replaces, in one line.",
+      "description": "proof 2 line",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "proof3Label",
+      "type": "string",
+      "default": "03 · yours",
+      "description": "proof 3 label",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "proof3Title",
+      "type": "string",
+      "default": "Fact three",
+      "description": "proof 3 title",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "proof3Body",
+      "type": "string",
+      "default": "Who it is for, and why now.",
+      "description": "proof 3 line",
+      "group": "advanced",
+      "control": "text"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/recipe/launch/scene.html",
+      "to": "pieces/launch/scene.html"
+    },
+    {
+      "from": "registry/recipe/launch/brief.md",
+      "to": "pieces/launch/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "npx paper-motion add launch --name my-piece\n# edit CONFIG in pieces/my-piece/scene.html, then:\nnpx paper-motion render pieces/my-piece/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work: pamo add sage-night instrument) and, for the background, a shader-set entry (pamo add mesh-sage).",
+    "Structure and timing only; the look always comes from the brand.",
+    "Uses these moves from the engine: zoom-through, flip-lift, whip-pan, flash, word-rise, blur-in, pop-in."
+  ],
+  "related": [
+    "zoom-through",
+    "flip-lift",
+    "whip-pan"
+  ],
+  "preview": {
+    "video": "previews/launch.webm",
+    "poster": "previews/launch.jpg"
+  },
+  "mood": [
+    "bold",
+    "editorial"
+  ],
+  "duration": 24,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "when": [
+    "announcing something new",
+    "you have proof: facts, UI, a command"
+  ]
+}

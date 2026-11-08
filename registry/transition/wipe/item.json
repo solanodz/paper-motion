@@ -1,0 +1,75 @@
+{
+  "$schema": "../../schema.json",
+  "id": "wipe",
+  "type": "transition",
+  "title": "Wipe",
+  "summary": "A soft diagonal edge uncovers B.",
+  "tags": [
+    "transition",
+    "medium",
+    "soft"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "wipe",
+  "signature": "wipe(a, b, p, { angle, soft, curve })",
+  "params": [
+    {
+      "name": "angle",
+      "type": "number",
+      "default": 100,
+      "description": "angle in degrees",
+      "min": -180,
+      "max": 180,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "soft",
+      "type": "number",
+      "default": 30,
+      "description": "softness of the edge (%)",
+      "min": 0,
+      "max": 80,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "object",
+      "description": "easing function (from `ease`)",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/wipe.js",
+      "to": "moves/wipe.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { wipe } from './moves/wipe.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nwipe(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "B is uncovered by a soft edge at `angle` degrees; A stays underneath.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/wipe.webm",
+    "poster": "previews/wipe.jpg"
+  },
+  "mood": [
+    "calm",
+    "editorial"
+  ],
+  "energy": 2,
+  "role": "swap",
+  "when": [
+    "a soft, directional change between frames",
+    "the brand is quiet but not static"
+  ]
+}

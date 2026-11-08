@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>explainer</title>
+<!--
+  Recipe · explainer (36 s). How something works, in steps.
+  Question 0–3 s · Steps 3–27 s (three steps on one card that changes state: magicMove, then unfold) ·
+  Recap 27–32 s (all steps at once, small) · Close 32–36 s (the ending and the action).
+  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first; swap the moves for
+  the ones the user picked (pamo add <id>) and show real material inside each step when there is some.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .frame { position: absolute; inset: 0; }
+  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8%; box-sizing: border-box; }
+  .card { position: absolute; inset: 0; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; }
+  .card [data-part] { align-self: flex-start; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="f1" class="frame"><div class="center"><div id="question"></div></div></div>
+  <div id="f2" class="frame"><div id="slot" class="abs"></div></div>
+  <div id="f3" class="frame"><div id="recap" class="abs"></div></div>
+  <div id="f4" class="frame"><div class="center"><div id="mark"></div><div id="action"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { wordRise, blurIn, push, magicMove, unfold, crossfade } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                         // a calm shader-set id, or null for the brand's first entry
+  question: 'How does it work?',            // what this answers, naming what the brand is
+  steps: [
+    { label: '01', title: 'First', body: 'What happens first, in one line.' },
+    { label: '02', title: 'Then', body: 'The step that does the work.' },
+    { label: '03', title: 'Done', body: 'What you get at the end.' },
+  ],
+  action: 'your.site',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 36;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+
+const question = B.style($('question'), 'display', { short: SHORT });
+const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'muted' });
+action.style.marginTop = `${SHORT * 0.03}px`;
+question.textContent = CONFIG.question; mark.textContent = B.name; action.textContent = CONFIG.action;
+
+const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080);
+function card(p, i, host, w) {
+  const c = document.createElement('div');
+  c.className = 'card';
+  const light = i === 1;
+  Object.assign(c.style, { padding: `${w * 0.07}px`, borderRadius: `${R}px`, background: light ? B.color('accent', '#E9E4D8') : B.color('surface', '#111'), border: `1.5px solid ${light ? 'transparent' : B.color('muted') + '55'}` });
+  c.innerHTML = `<div data-part="label"></div><div data-part="title"></div><div data-part="body"></div>`;
+  const k = w / (SHORT * 1.2);
+  const set = (el, role, color) => { B.style(el, role, { short: SHORT * Math.max(0.45, k), color: light ? 'ground' : color }); return el; };
+  set(c.children[0], 'caption', 'muted').textContent = p.label;
+  set(c.children[1], 'display', 'figure').textContent = p.title;
+  set(c.children[2], 'body', 'muted').textContent = p.body;
+  c.children[2].style.marginTop = 'auto';
+  host.append(c);
+  return c;
+}
+const slot = $('slot'), cw = Math.min(W * 0.62, SHORT * 1.25), ch = cw * 0.6;
+Object.assign(slot.style, { left: `${(W - cw) / 2}px`, top: `${(H - ch) / 2}px`, width: `${cw}px`, height: `${ch}px` });
+const steps = CONFIG.steps.map((p, i) => card(p, i, slot, cw));
+// recap: the three steps side by side, small
+const recap = $('recap'), gap = SHORT * 0.03, rw = Math.min((W * 0.86 - gap * 2) / 3, SHORT * 0.5), rh = rw * 0.6;
+Object.assign(recap.style, { left: `${(W - (rw * 3 + gap * 2)) / 2}px`, top: `${(H - rh) / 2}px`, width: `${rw * 3 + gap * 2}px`, height: `${rh}px` });
+const small = CONFIG.steps.map((p, i) => { const box = document.createElement('div'); Object.assign(box.style, { position: 'absolute', left: `${i * (rw + gap)}px`, top: 0, width: `${rw}px`, height: `${rh}px` }); recap.append(box); return card(p, i, box, rw); });
+await document.fonts.ready;
+for (const el of [question, mark]) { const k = (W * 0.84) / el.scrollWidth; if (k < 1) el.style.fontSize = `${parseFloat(el.style.fontSize) * k}px`; }
+
+const T = { steps: [2.8, 3.6], swap1: [10.4, 11.5], swap2: [18.4, 19.6], recap: [26.6, 27.4], close: [31.6, 32.4] };
+const frames = [$('f1'), $('f2'), $('f3'), $('f4')];
+const RESET = ['transform', 'opacity', 'filter', 'clipPath', 'zIndex', 'transformOrigin', 'backgroundColor', 'borderColor', 'overflow'];
+const clean = (els) => els.forEach((e) => RESET.forEach((k) => { if (!['backgroundColor', 'borderColor'].includes(k)) e.style[k] = ''; }));
+s.update((t) => {
+  if (t >= T.swap1[1]) magicMove(steps[0], steps[1], 1, { duration: 1.1 });
+  if (t >= T.swap2[1]) unfold(steps[1], steps[2], 1, { duration: 1.2 });
+  clean([...frames, ...steps, ...steps.flatMap((c) => [...c.children])]);
+  frames.forEach((f, i) => { f.style.opacity = 0; f.style.zIndex = i + 1; });
+  steps.forEach((c, i) => { c.style.opacity = 0; c.style.zIndex = i + 1; });
+
+  wordRise(question, t, { start: 0.3, each: B.pace.stagger, duration: 0.9 });
+  if (t < T.steps[0]) frames[0].style.opacity = 1;
+  else if (t < T.steps[1]) push(frames[0], frames[1], progress(t, ...T.steps), { dir: 'up' });
+  else if (t < T.recap[0]) frames[1].style.opacity = 1;
+  if (t >= T.steps[0] && t < T.recap[1]) {
+    if (t < T.swap1[0]) steps[0].style.opacity = 1;
+    else if (t < T.swap1[1]) magicMove(steps[0], steps[1], progress(t, ...T.swap1), { duration: 1.1 });
+    else if (t < T.swap2[0]) steps[1].style.opacity = 1;
+    else if (t < T.swap2[1]) unfold(steps[1], steps[2], progress(t, ...T.swap2), { duration: 1.2 });
+    else steps[2].style.opacity = 1;
+  }
+  if (t >= T.recap[0] && t < T.recap[1]) crossfade(frames[1], frames[2], progress(t, ...T.recap));
+  else if (t >= T.recap[1] && t < T.close[0]) frames[2].style.opacity = 1;
+  small.forEach((c, i) => { const q = t < T.recap[0] ? 0 : spring(t - T.recap[0] - i * 0.12, { stiffness: 220, damping: 16 }); c.parentElement.style.transform = `translateY(${(1 - q) * SHORT * 0.05}px) scale(${0.9 + 0.1 * q})`; c.parentElement.style.opacity = Math.min(1, q * 1.5); });
+  if (t >= T.close[0] && t < T.close[1]) crossfade(frames[2], frames[3], progress(t, ...T.close));
+  else if (t >= T.close[1]) frames[3].style.opacity = 1;
+  wordRise(mark, t, { start: T.close[1] - 0.2, each: B.pace.stagger, duration: 0.9 });
+  blurIn(action, t, { start: T.close[1] + 0.6, duration: 0.8 });
+});
+B.cue(s, 'land', 0.3); B.cue(s, 'transition', T.steps[0]); B.cue(s, 'transition', T.swap1[0]); B.cue(s, 'transition', T.swap2[0]);
+B.cue(s, 'land', T.recap[1]); B.cue(s, 'land', T.close[1]); B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

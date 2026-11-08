@@ -1,0 +1,167 @@
+{
+  "$schema": "../../schema.json",
+  "id": "swirl-paper",
+  "type": "background",
+  "title": "Swirl · paper",
+  "summary": "Animated bands of color twisting and bending, producing spirals, arcs, and flowing circular patterns, in paper.",
+  "tags": [
+    "background",
+    "swirl",
+    "gentle",
+    "dark",
+    "paper"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#E9E4D8",
+        "#8a8a8a",
+        "#1a1a1a"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    },
+    {
+      "name": "bandCount",
+      "type": "number",
+      "default": 5,
+      "description": "Number of color bands, 0 = concentric ripples",
+      "min": 0,
+      "max": 15,
+      "step": 0.075,
+      "group": "main"
+    },
+    {
+      "name": "twist",
+      "type": "number",
+      "default": 0.25,
+      "description": "Vortex power, 0 = straight sectoral shapes",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "center",
+      "type": "number",
+      "default": 0.2,
+      "description": "How far from the center the swirl colors begin to appear, needs twist > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "proportion",
+      "type": "number",
+      "default": 0.5,
+      "description": "Blend point between colors, 0.5 = equal distribution",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0.1,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "noiseFrequency",
+      "type": "number",
+      "default": 0.4,
+      "description": "Noise frequency, needs noise > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "noise",
+      "type": "number",
+      "default": 0.2,
+      "description": "Strength of noise distortion, needs noiseFrequency > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.3,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Swirl",
+      "props": {
+        "colorBack": "#000000",
+        "colors": [
+          "#E9E4D8",
+          "#8a8a8a",
+          "#1a1a1a"
+        ],
+        "bandCount": 5,
+        "twist": 0.25,
+        "center": 0.2,
+        "proportion": 0.5,
+        "softness": 0.1,
+        "noiseFrequency": 0.4,
+        "noise": 0.2,
+        "speed": 0.3
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'swirl-paper');",
+  "notes": [
+    "Paper shader `Swirl` (animated)."
+  ],
+  "preview": {
+    "video": "previews/swirl-paper.webm",
+    "poster": "previews/swirl-paper.jpg"
+  },
+  "colors": [
+    "#e9e4d8",
+    "#8a8a8a",
+    "#1a1a1a",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "calm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark playful piece"
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "../../schema.json",
+  "id": "mask-reveal",
+  "type": "transition",
+  "title": "Mask reveal",
+  "summary": "B is revealed from one edge, behind a hard mask line.",
+  "tags": [
+    "transition",
+    "fast",
+    "graphic"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "maskReveal",
+  "signature": "maskReveal(a, b, p, { from, curve })",
+  "params": [
+    {
+      "name": "from",
+      "type": "enum",
+      "default": "bottom",
+      "description": "start value",
+      "options": [
+        "bottom",
+        "top",
+        "left",
+        "right"
+      ],
+      "control": "segmented",
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.outExpo",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/mask-reveal.js",
+      "to": "moves/mask-reveal.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { maskReveal } from './moves/mask-reveal.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nmaskReveal(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "B is revealed from an edge (`from`: bottom, top, left, right) behind a hard mask.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/mask-reveal.webm",
+    "poster": "previews/mask-reveal.jpg"
+  },
+  "mood": [
+    "bold",
+    "editorial",
+    "minimal"
+  ],
+  "energy": 3,
+  "role": "enter",
+  "when": [
+    "a hard graphic edge fits the brand",
+    "revealing a title or a frame on the beat"
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "$schema": "../../schema.json",
+  "id": "dither-sage",
+  "type": "background",
+  "title": "Dithering · sage on charcoal",
+  "summary": "Animated 2-color dithering over multiple pattern sources (noise, warp, dots, waves, ripple, swirl, sphere), in sage on charcoal.",
+  "tags": [
+    "background",
+    "dithering",
+    "lively",
+    "dark",
+    "sage"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 1,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "simplex",
+      "options": [
+        "simplex",
+        "warp",
+        "dots",
+        "wave",
+        "ripple",
+        "swirl",
+        "sphere"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "default": "4x4",
+      "options": [
+        "random",
+        "2x2",
+        "4x4",
+        "8x8"
+      ],
+      "description": "variant",
+      "group": "advanced"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 2,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 6,
+      "step": 0.03,
+      "group": "main"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 0.6,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#00000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#8FA67A",
+      "description": "foreground color",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Dithering",
+      "props": {
+        "speed": 1,
+        "shape": "simplex",
+        "type": "4x4",
+        "size": 2,
+        "scale": 0.6,
+        "colorBack": "#00000000",
+        "colorFront": "#8FA67A"
+      },
+      "background": "#1E201C"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'dither-sage');",
+  "notes": [
+    "Paper shader `Dithering` (animated). Tuned by hand in Paper."
+  ],
+  "preview": {
+    "video": "previews/dither-sage.webm",
+    "poster": "previews/dither-sage.jpg"
+  },
+  "colors": [
+    "#1e201c",
+    "#8fa67a"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "../../schema.json",
+  "id": "push",
+  "type": "transition",
+  "title": "Push",
+  "summary": "B pushes A out of frame.",
+  "tags": [
+    "transition",
+    "medium",
+    "directional"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "push",
+  "signature": "push(a, b, p, { dir, curve })",
+  "params": [
+    {
+      "name": "dir",
+      "type": "enum",
+      "default": "left",
+      "description": "direction",
+      "options": [
+        "left",
+        "right",
+        "up",
+        "down"
+      ],
+      "control": "segmented",
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.inOutQuart",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/push.js",
+      "to": "moves/push.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { push } from './moves/push.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\npush(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "B pushes A out; `dir` is where A leaves to.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/push.webm",
+    "poster": "previews/push.jpg"
+  },
+  "mood": [
+    "bold",
+    "technical"
+  ],
+  "energy": 3,
+  "role": "swap",
+  "when": [
+    "frames feel like a sequence of panels",
+    "a clear direction of travel helps the story"
+  ]
+}

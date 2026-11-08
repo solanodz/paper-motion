@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schema.json",
+  "id": "navy-bone",
+  "type": "palette",
+  "title": "Navy on bone",
+  "summary": "Light palette: bone white with ink navy; classic, editorial, banking.",
+  "tags": [
+    "palette",
+    "light",
+    "classic",
+    "editorial",
+    "banking"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#E9E3D3",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#14213D",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#5A6478",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#DED7C4",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#C8553D",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#E9E3D3",
+        "#A9B1C2",
+        "#4B5A7A",
+        "#14213D"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#E9E3D3",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#14213D",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#5A6478",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#DED7C4",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#C8553D",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#E9E3D3",
+        "#A9B1C2",
+        "#4B5A7A",
+        "#14213D"
+      ],
+      "mode": "light"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 12.5:1, muted on ground 4.6:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/navy-bone.webm",
+    "poster": "previews/navy-bone.jpg"
+  },
+  "colors": [
+    "#e9e3d3",
+    "#14213d",
+    "#c8553d"
+  ],
+  "mode": "light",
+  "mood": [
+    "editorial",
+    "luxury"
+  ],
+  "when": [
+    "a light piece that should feel editorial, luxury",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
+}

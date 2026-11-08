@@ -1,0 +1,71 @@
+{
+  "$schema": "../../schema.json",
+  "id": "iris",
+  "type": "transition",
+  "title": "Iris",
+  "summary": "B opens from a circle that grows out of a point.",
+  "tags": [
+    "transition",
+    "playful",
+    "focus"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "iris",
+  "signature": "iris(a, b, p, { x, y, curve })",
+  "params": [
+    {
+      "name": "x",
+      "type": "string",
+      "default": "50%",
+      "description": "center x (CSS)",
+      "group": "main"
+    },
+    {
+      "name": "y",
+      "type": "string",
+      "default": "50%",
+      "description": "center y (CSS)",
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.inOutCubic",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/iris.js",
+      "to": "moves/iris.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { iris } from './moves/iris.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\niris(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "B opens from a circle growing out of (x, y); A sinks back a little.",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/iris.webm",
+    "poster": "previews/iris.jpg"
+  },
+  "mood": [
+    "playful",
+    "warm"
+  ],
+  "energy": 2,
+  "role": "swap",
+  "when": [
+    "a friendly, cinematic reveal from a point",
+    "focusing on one spot"
+  ]
+}

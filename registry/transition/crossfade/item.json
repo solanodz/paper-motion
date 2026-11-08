@@ -1,0 +1,54 @@
+{
+  "$schema": "../../schema.json",
+  "id": "crossfade",
+  "type": "transition",
+  "title": "Crossfade",
+  "summary": "A dissolves into B.",
+  "tags": [
+    "transition",
+    "calm",
+    "soft"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "crossfade",
+  "signature": "crossfade(a, b, p, { curve })",
+  "params": [
+    {
+      "name": "curve",
+      "type": "object",
+      "description": "easing function (from `ease`)",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/crossfade.js",
+      "to": "moves/crossfade.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { crossfade } from './moves/crossfade.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\ncrossfade(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/crossfade.webm",
+    "poster": "previews/crossfade.jpg"
+  },
+  "mood": [
+    "calm",
+    "minimal"
+  ],
+  "energy": 1,
+  "role": "swap",
+  "when": [
+    "two soft fields blend",
+    "nothing should call attention to the cut"
+  ]
+}

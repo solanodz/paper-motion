@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schema.json",
+  "id": "slate-sea",
+  "type": "palette",
+  "title": "Slate sea",
+  "summary": "Dark palette: deep blue-grey with cool slate; trustworthy, financial, calm.",
+  "tags": [
+    "palette",
+    "dark",
+    "trustworthy",
+    "financial",
+    "calm"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#1C2226",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#E6ECEE",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#8FA3AD",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#242C31",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#A9C7D3",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#1C2226",
+        "#3E4E57",
+        "#6F8794",
+        "#A9B8BE"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#1C2226",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#E6ECEE",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#8FA3AD",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#242C31",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#A9C7D3",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#1C2226",
+        "#3E4E57",
+        "#6F8794",
+        "#A9B8BE"
+      ],
+      "mode": "dark"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 13.5:1, muted on ground 6.1:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/slate-sea.webm",
+    "poster": "previews/slate-sea.jpg"
+  },
+  "colors": [
+    "#1c2226",
+    "#e6ecee",
+    "#a9c7d3"
+  ],
+  "mode": "dark",
+  "mood": [
+    "calm",
+    "technical"
+  ],
+  "when": [
+    "a dark piece that should feel calm, technical",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
+}

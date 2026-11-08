@@ -1,0 +1,146 @@
+{
+  "$schema": "../../schema.json",
+  "id": "perlin-sage",
+  "type": "background",
+  "title": "Perlin Noise · sage",
+  "summary": "Classic animated 3D Perlin noise with exposed controls, in sage.",
+  "tags": [
+    "background",
+    "perlin-noise",
+    "gentle",
+    "dark",
+    "sage"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#C8D5A8",
+      "description": "foreground color",
+      "group": "main"
+    },
+    {
+      "name": "proportion",
+      "type": "number",
+      "default": 0.42,
+      "description": "Blend point between two colors, 0.5 = equal distribution",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0.35,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "octaveCount",
+      "type": "number",
+      "default": 2,
+      "description": "Perlin noise octaves number, more octaves for more detailed patterns",
+      "min": 1,
+      "max": 8,
+      "step": 0.035,
+      "group": "advanced"
+    },
+    {
+      "name": "persistence",
+      "type": "number",
+      "default": 0.6,
+      "description": "Roughness, falloff between octaves, needs octaveCount > 1",
+      "min": 0.3,
+      "max": 1,
+      "step": 0.0035,
+      "group": "advanced"
+    },
+    {
+      "name": "lacunarity",
+      "type": "number",
+      "default": 2,
+      "description": "Frequency step, defines how compressed the pattern is, needs octaveCount > 1",
+      "min": 1.5,
+      "max": 10,
+      "step": 0.0425,
+      "group": "advanced"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 2.5,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.3,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "PerlinNoise",
+      "props": {
+        "colorBack": "#000000",
+        "colorFront": "#C8D5A8",
+        "proportion": 0.42,
+        "softness": 0.35,
+        "octaveCount": 2,
+        "persistence": 0.6,
+        "lacunarity": 2,
+        "scale": 2.5,
+        "speed": 0.3
+      },
+      "loop": 1.5
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'perlin-sage');",
+  "notes": [
+    "Paper shader `PerlinNoise` (animated)."
+  ],
+  "preview": {
+    "video": "previews/perlin-sage.webm",
+    "poster": "previews/perlin-sage.jpg"
+  },
+  "colors": [
+    "#c8d5a8",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "calm",
+    "technical"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark calm piece"
+  ]
+}

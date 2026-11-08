@@ -1,0 +1,80 @@
+{
+  "$schema": "../../schema.json",
+  "id": "dive-in",
+  "type": "component",
+  "title": "Dive in",
+  "summary": "The camera dives into a detail of A; B opens inside it, a ring breaks outward, B's parts rise into focus.",
+  "tags": [
+    "component",
+    "focus",
+    "camera",
+    "ui"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "diveIn",
+  "signature": "diveIn(a, b, p, { duration, target, depth })",
+  "params": [
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 1.1,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "target",
+      "type": "string",
+      "default": "[data-par",
+      "description": "CSS selector of the detail to dive into",
+      "hidden": true
+    },
+    {
+      "name": "depth",
+      "type": "number",
+      "default": 16,
+      "description": "how deep the camera dives",
+      "min": 2,
+      "max": 30,
+      "step": 0.5,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/dive-in.js",
+      "to": "moves/dive-in.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { diveIn } from './moves/dive-in.js';\n\n// A and B (two states of a card) stacked in one positioned slot; 1.1 s from 2.0 s:\ns.update((t) => diveIn(cardA, cardB, progress(t, 2.0, 3.1), { duration: 1.1 }));",
+  "notes": [
+    "The camera dives into a detail of A (`target`); B opens inside it as it fills the slot, a ring breaks outward, B's parts rise into focus.",
+    "Stack A and B in one positioned slot (their parent); give the slot overflow:hidden to keep travel inside it.",
+    "Pass the real duration in seconds and call it through p = 1: that is when it hides the layers it made.",
+    "Render with --motion-blur 5.",
+    "`target` is a selector inside A (default [data-part=\"media\"]); a round detail reads best."
+  ],
+  "preview": {
+    "video": "previews/dive-in.webm",
+    "poster": "previews/dive-in.jpg"
+  },
+  "mood": [
+    "technical",
+    "luxury"
+  ],
+  "energy": 4,
+  "role": "camera",
+  "when": [
+    "going into a detail of a card or UI",
+    "\"and now, inside\""
+  ]
+}

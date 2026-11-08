@@ -81,6 +81,20 @@ node paper-motion/packages/engine/bin/pamo.mjs setup
 Optional: connect the [Paper Desktop](https://paper.design) MCP to tune shaders by hand on the canvas and use it for
 style frames. Recommended, never required; the free plan allows 100 calls a week.
 
+## Use paper-motion.app
+
+[paper-motion.app](https://paper-motion.app) is a library of named resources your agent can use: component transitions, transitions, text effects, camera moves, Paper shader backgrounds, palettes, font pairs and recipes. Tell your agent which ones you want:
+
+> Use paper-motion.app to make a video for my brand. Use the backgrounds mesh-sage and grain-slate, the effects magic-move and whip-pan, the palette sage-night and the font pair instrument.
+
+The agent reads `https://paper-motion.app/llms.txt` and installs each resource into your project as code you own:
+
+```bash
+npx paper-motion add magic-move mesh-sage sage-night instrument launch
+```
+
+`npx paper-motion search <words>` and `npx paper-motion list <type>` browse the catalog from the terminal. The source of every resource is in [`registry/`](registry/).
+
 ## The engine
 
 `packages/engine` renders an HTML scene, a pure function of time, frame by frame in headless Chrome and encodes it

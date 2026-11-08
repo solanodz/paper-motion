@@ -1,0 +1,144 @@
+{
+  "$schema": "../../schema.json",
+  "id": "image-dither",
+  "type": "background",
+  "title": "Image Dithering",
+  "summary": "A dithering image filter with support for 4 dithering modes and multiple color palettes (2-color, 3-color, and multicolor options, using either predefined colors or colors sampled from the original im",
+  "tags": [
+    "background",
+    "image-dithering",
+    "gentle",
+    "dark",
+    "image"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "fit",
+      "type": "string",
+      "default": "cover",
+      "description": "How to fit the rendered shader into the canvas dimensions (0 = none, 1 = contain, 2 = cover)",
+      "group": "advanced"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#E9E4D8",
+      "description": "foreground color",
+      "group": "main"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorHighlight",
+      "type": "color",
+      "default": "#ffffff",
+      "description": "Secondary foreground color in RGBA (set same as colorFront for classic 2-color dithering), needs originalColors off",
+      "group": "advanced"
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "default": "8x8",
+      "description": "variant",
+      "group": "advanced"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 2,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 6,
+      "step": 0.03,
+      "group": "main"
+    },
+    {
+      "name": "colorSteps",
+      "type": "number",
+      "default": 2,
+      "description": "Number of colors to use, applies to both color modes",
+      "min": 1,
+      "max": 7,
+      "step": 0.03,
+      "group": "main"
+    },
+    {
+      "name": "originalColors",
+      "type": "boolean",
+      "default": false,
+      "description": "Use the original colors of the image instead of the color palette",
+      "group": "advanced"
+    },
+    {
+      "name": "inverted",
+      "type": "boolean",
+      "default": false,
+      "description": "Inverts the image luminance, doesn't affect the color scheme",
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "ImageDithering",
+      "props": {
+        "fit": "cover",
+        "colorFront": "#E9E4D8",
+        "colorBack": "#000000",
+        "colorHighlight": "#ffffff",
+        "type": "8x8",
+        "size": 2,
+        "colorSteps": 2,
+        "originalColors": false,
+        "inverted": false
+      },
+      "image": "assets/materials/material-a.jpg",
+      "motion": {
+        "param": "size",
+        "from": 2,
+        "to": 4
+      }
+    }
+  },
+  "files": [
+    {
+      "from": "registry/_assets/materials/material-a.jpg",
+      "to": "brand/assets/materials/material-a.jpg"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'image-dither');",
+  "notes": [
+    "Paper shader `ImageDithering` (still).",
+    "Uses an image (installed to brand/assets/materials/); swap `image` for your own picture or texture.",
+    "Breathes on `size` from 2 to 4 so a still shader stays alive."
+  ],
+  "preview": {
+    "video": "previews/image-dither.webm",
+    "poster": "previews/image-dither.jpg"
+  },
+  "colors": [
+    "#e9e4d8",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "technical",
+    "raw"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark technical piece",
+    "you have a photo or a logo to run through it"
+  ]
+}

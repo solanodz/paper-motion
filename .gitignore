@@ -7,7 +7,7 @@ renders/
 stills/
 
 # Personal shader library while it is being moved into examples/paper-motion-brand (spec step 11)
-library/
+/library/
 
 # Example brand: the shader-set loops are local (works/shader-set/renders); the sheet exports are regenerated
 examples/paper-motion-brand/brand/shader-set/renders

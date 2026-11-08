@@ -1,0 +1,110 @@
+{
+  "$schema": "../../schema.json",
+  "id": "simplex-slate",
+  "type": "background",
+  "title": "Simplex Noise · slate",
+  "summary": "A multi-color gradient mapped into smooth, animated curves built as a combination of 2 Simplex noises, in slate.",
+  "tags": [
+    "background",
+    "simplex-noise",
+    "gentle",
+    "light",
+    "slate"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#DCE3E3",
+        "#A9B8BE",
+        "#6F8794",
+        "#3E4E57",
+        "#1E272C"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    },
+    {
+      "name": "stepsPerColor",
+      "type": "number",
+      "default": 2,
+      "description": "Number of extra colors between base colors, 1 = N colors, 2 = 2×N, etc., needs 2+ colors",
+      "min": 1,
+      "max": 10,
+      "step": 0.045,
+      "group": "main"
+    },
+    {
+      "name": "softness",
+      "type": "number",
+      "default": 0.15,
+      "description": "edge softness",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.35,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "SimplexNoise",
+      "props": {
+        "colors": [
+          "#DCE3E3",
+          "#A9B8BE",
+          "#6F8794",
+          "#3E4E57",
+          "#1E272C"
+        ],
+        "stepsPerColor": 2,
+        "softness": 0.15,
+        "speed": 0.35
+      },
+      "loop": 1.5
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'simplex-slate');",
+  "notes": [
+    "Paper shader `SimplexNoise` (animated)."
+  ],
+  "preview": {
+    "video": "previews/simplex-slate.webm",
+    "poster": "previews/simplex-slate.jpg"
+  },
+  "colors": [
+    "#dce3e3",
+    "#a9b8be",
+    "#6f8794",
+    "#3e4e57",
+    "#1e272c"
+  ],
+  "mode": "light",
+  "motion": "gentle",
+  "mood": [
+    "playful",
+    "bold"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a light playful piece"
+  ]
+}

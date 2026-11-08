@@ -1,0 +1,191 @@
+{
+  "$schema": "../../schema.json",
+  "id": "radial-ash",
+  "type": "background",
+  "title": "Radial Gradient · lavender ash",
+  "summary": "Radial gradient with up to 10 blended colors, featuring advanced mixing modes, focal point controls, shape distortion, and grain effects, in lavender ash.",
+  "tags": [
+    "background",
+    "radial-gradient",
+    "still",
+    "light",
+    "ash"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 1,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "offsetX",
+      "type": "number",
+      "default": 0,
+      "description": "horizontal offset",
+      "min": -1,
+      "max": 1,
+      "step": 0.01,
+      "group": "advanced"
+    },
+    {
+      "name": "offsetY",
+      "type": "number",
+      "default": 0.06,
+      "description": "vertical offset",
+      "min": -1,
+      "max": 1,
+      "step": 0.01,
+      "group": "advanced"
+    },
+    {
+      "name": "radius",
+      "type": "number",
+      "default": 1.09,
+      "description": "radius",
+      "min": 0,
+      "max": 3,
+      "step": 0.015,
+      "group": "main"
+    },
+    {
+      "name": "focalDistance",
+      "type": "number",
+      "default": 0.74,
+      "description": "Distance of the focal point from center",
+      "min": 0,
+      "max": 3,
+      "step": 0.015,
+      "group": "main"
+    },
+    {
+      "name": "falloff",
+      "type": "number",
+      "default": 0.33,
+      "description": "Gradient decay, 0 = equal color distribution",
+      "min": -1,
+      "max": 1,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "mixing",
+      "type": "number",
+      "default": 0.64,
+      "description": "Blending behavior, 0 = hard stripes, 1 = smooth gradient",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "distortionShift",
+      "type": "number",
+      "default": 0,
+      "description": "Radial distortion offset, needs distortion > 0",
+      "min": -1,
+      "max": 1,
+      "step": 0.01,
+      "group": "advanced"
+    },
+    {
+      "name": "distortionFreq",
+      "type": "number",
+      "default": 12,
+      "description": "Radial distortion frequency, needs distortion > 0",
+      "min": 0,
+      "max": 20,
+      "step": 0.1,
+      "group": "advanced"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#00000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "focalAngle",
+      "type": "number",
+      "default": 35,
+      "description": "Angle of the focal point in degrees, needs focalDistance > 0",
+      "min": 0,
+      "max": 360,
+      "step": 1.8,
+      "group": "advanced"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#7E7594",
+        "#BDB4CB",
+        "#FFFFFF"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "StaticRadialGradient",
+      "props": {
+        "scale": 1,
+        "offsetX": 0,
+        "offsetY": 0.06,
+        "radius": 1.09,
+        "focalDistance": 0.74,
+        "falloff": 0.33,
+        "mixing": 0.64,
+        "distortionShift": 0,
+        "distortionFreq": 12,
+        "colorBack": "#00000000",
+        "focalAngle": 35,
+        "colors": [
+          "#7E7594",
+          "#BDB4CB",
+          "#FFFFFF"
+        ]
+      },
+      "background": "#E6E2EA"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'radial-ash');",
+  "notes": [
+    "Paper shader `StaticRadialGradient` (still). Tuned by hand in Paper."
+  ],
+  "preview": {
+    "video": "previews/radial-ash.webm",
+    "poster": "previews/radial-ash.jpg"
+  },
+  "colors": [
+    "#e6e2ea",
+    "#7e7594",
+    "#bdb4cb",
+    "#ffffff"
+  ],
+  "mode": "light",
+  "motion": "still",
+  "mood": [
+    "calm",
+    "minimal",
+    "warm"
+  ],
+  "when": [
+    "a quiet ground behind type",
+    "a light calm piece"
+  ]
+}

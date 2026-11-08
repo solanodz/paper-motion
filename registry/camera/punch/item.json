@@ -1,0 +1,96 @@
+{
+  "$schema": "../../schema.json",
+  "id": "punch",
+  "type": "camera",
+  "title": "Punch",
+  "summary": "The frame punches in on each hit and springs back.",
+  "tags": [
+    "camera",
+    "impact",
+    "beat"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "punch",
+  "signature": "punch(el, t, { hits, amount, stiffness, damping, origin })",
+  "params": [
+    {
+      "name": "hits",
+      "type": "numbers",
+      "default": [
+        0
+      ],
+      "description": "times (s) of the hits, e.g. on the beat",
+      "control": "numbers",
+      "group": "advanced"
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "default": 0.09,
+      "description": "strength",
+      "min": 0,
+      "max": 0.3,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "stiffness",
+      "type": "number",
+      "default": 420,
+      "description": "spring stiffness (higher is snappier)",
+      "min": 40,
+      "max": 600,
+      "step": 5,
+      "group": "main"
+    },
+    {
+      "name": "damping",
+      "type": "number",
+      "default": 16,
+      "description": "spring damping (lower bounces more)",
+      "min": 4,
+      "max": 40,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "origin",
+      "type": "string",
+      "default": "50% 50%",
+      "description": "transform origin (CSS)",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/punch.js",
+      "to": "moves/punch.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { punch } from './moves/punch.js';\n\ns.update((t) => punch(world, t, { hits: [1.0, 2.0, 2.5] }));",
+  "notes": [
+    "The frame jumps in by `amount` on each hit and springs back.",
+    "Put hits on the beat or on a sound cue, never on every beat."
+  ],
+  "preview": {
+    "video": "previews/punch.webm",
+    "poster": "previews/punch.jpg"
+  },
+  "mood": [
+    "bold",
+    "playful"
+  ],
+  "energy": 4,
+  "role": "emphasis",
+  "when": [
+    "a zoom-in on each hit",
+    "music videos, sports"
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "$schema": "../../schema.json",
+  "id": "smoke-ring",
+  "type": "background",
+  "title": "Smoke Ring",
+  "summary": "Radial multi-colored gradient shaped with layered noise for a natural, smoky aesthetic.",
+  "tags": [
+    "background",
+    "smoke-ring",
+    "gentle",
+    "dark"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#ffffff"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    },
+    {
+      "name": "noiseScale",
+      "type": "number",
+      "default": 3,
+      "description": "Noise frequency",
+      "min": 0.01,
+      "max": 5,
+      "step": 0.02495,
+      "group": "main"
+    },
+    {
+      "name": "noiseIterations",
+      "type": "number",
+      "default": 8,
+      "description": "Number of noise layers, more layers gives more details",
+      "min": 1,
+      "max": 8,
+      "step": 0.035,
+      "group": "main"
+    },
+    {
+      "name": "radius",
+      "type": "number",
+      "default": 0.28,
+      "description": "radius",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "thickness",
+      "type": "number",
+      "default": 0.6,
+      "description": "Thickness of the ring shape",
+      "min": 0.01,
+      "max": 1,
+      "step": 0.00495,
+      "group": "advanced"
+    },
+    {
+      "name": "innerShape",
+      "type": "number",
+      "default": 0.7,
+      "description": "Ring inner fill amount, needs radius > 0",
+      "min": 0,
+      "max": 4,
+      "step": 0.02,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.5,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "SmokeRing",
+      "props": {
+        "colorBack": "#000000",
+        "colors": [
+          "#ffffff"
+        ],
+        "noiseScale": 3,
+        "noiseIterations": 8,
+        "radius": 0.28,
+        "thickness": 0.6,
+        "innerShape": 0.7,
+        "speed": 0.5
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'smoke-ring');",
+  "notes": [
+    "Paper shader `SmokeRing` (animated)."
+  ],
+  "preview": {
+    "video": "previews/smoke-ring.webm",
+    "poster": "previews/smoke-ring.jpg"
+  },
+  "colors": [
+    "#ffffff",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "luxury",
+    "calm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark luxury piece"
+  ]
+}

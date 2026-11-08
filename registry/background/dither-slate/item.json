@@ -1,0 +1,134 @@
+{
+  "$schema": "../../schema.json",
+  "id": "dither-slate",
+  "type": "background",
+  "title": "Dithering · slate ripple",
+  "summary": "Animated 2-color dithering over multiple pattern sources (noise, warp, dots, waves, ripple, swirl, sphere), in slate ripple.",
+  "tags": [
+    "background",
+    "dithering",
+    "lively",
+    "dark",
+    "slate"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 1,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "ripple",
+      "options": [
+        "simplex",
+        "warp",
+        "dots",
+        "wave",
+        "ripple",
+        "swirl",
+        "sphere"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "default": "2x2",
+      "options": [
+        "random",
+        "2x2",
+        "4x4",
+        "8x8"
+      ],
+      "description": "variant",
+      "group": "advanced"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 3,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 9,
+      "step": 0.045,
+      "group": "main"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 0.8,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#00000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#8EA3AD",
+      "description": "foreground color",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Dithering",
+      "props": {
+        "speed": 1,
+        "shape": "ripple",
+        "type": "2x2",
+        "size": 3,
+        "scale": 0.8,
+        "colorBack": "#00000000",
+        "colorFront": "#8EA3AD"
+      },
+      "background": "#1C2226"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'dither-slate');",
+  "notes": [
+    "Paper shader `Dithering` (animated). Tuned by hand in Paper."
+  ],
+  "preview": {
+    "video": "previews/dither-slate.webm",
+    "poster": "previews/dither-slate.jpg"
+  },
+  "colors": [
+    "#1c2226",
+    "#8ea3ad"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
+}

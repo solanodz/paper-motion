@@ -1,0 +1,96 @@
+{
+  "$schema": "../../schema.json",
+  "id": "magic-move",
+  "type": "component",
+  "title": "Magic move",
+  "summary": "Each part of A flies on its own spring into the matching part of B; text cross-blurs; the box reshapes.",
+  "tags": [
+    "component",
+    "shared-element",
+    "spring",
+    "ui"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "magicMove",
+  "signature": "magicMove(a, b, p, { duration, stagger, stiffness, damping })",
+  "params": [
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 1.1,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "stagger",
+      "type": "number",
+      "default": 0.045,
+      "description": "delay between parts (as a fraction of the transition)",
+      "min": 0,
+      "max": 0.15,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "stiffness",
+      "type": "number",
+      "default": 190,
+      "description": "spring stiffness (higher is snappier)",
+      "min": 40,
+      "max": 600,
+      "step": 5,
+      "group": "main"
+    },
+    {
+      "name": "damping",
+      "type": "number",
+      "default": 17,
+      "description": "spring damping (lower bounces more)",
+      "min": 4,
+      "max": 40,
+      "step": 0.5,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/magic-move.js",
+      "to": "moves/magic-move.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { magicMove } from './moves/magic-move.js';\n\n// A and B (two states of a card) stacked in one positioned slot; 1.1 s from 2.0 s:\ns.update((t) => magicMove(cardA, cardB, progress(t, 2.0, 3.1), { duration: 1.1 }));",
+  "notes": [
+    "Magic move: parts with the same `data-part` in A and B fly from A's place and size to B's, each on its own spring, a few frames apart; text parts scale evenly and cross-blur; parts only in A leave, parts only in B pop in. The box behind (background, border, corners) reshapes from A's to B's.",
+    "Stack A and B in one positioned slot (their parent); give the slot overflow:hidden to keep travel inside it.",
+    "Pass the real duration in seconds and call it through p = 1: that is when it hides the layers it made.",
+    "Render with --motion-blur 5.",
+    "Parts match by data-part (label, title, body, meta, media…); unmatched parts leave or pop in."
+  ],
+  "preview": {
+    "video": "previews/magic-move.webm",
+    "poster": "previews/magic-move.jpg"
+  },
+  "mood": [
+    "calm",
+    "technical",
+    "luxury",
+    "editorial"
+  ],
+  "energy": 3,
+  "role": "swap",
+  "when": [
+    "a UI card changes state and parts carry over",
+    "product and app videos",
+    "continuity matters more than impact"
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "$schema": "../../schema.json",
+  "id": "dither-sphere",
+  "type": "background",
+  "title": "Dithering",
+  "summary": "Animated 2-color dithering over multiple pattern sources (noise, warp, dots, waves, ripple, swirl, sphere).",
+  "tags": [
+    "background",
+    "dithering",
+    "lively",
+    "dark"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colorFront",
+      "type": "color",
+      "default": "#A3A3A3",
+      "description": "foreground color",
+      "group": "main"
+    },
+    {
+      "name": "shape",
+      "type": "enum",
+      "default": "sphere",
+      "options": [
+        "simplex",
+        "warp",
+        "dots",
+        "wave",
+        "ripple",
+        "swirl",
+        "sphere"
+      ],
+      "description": "base pattern",
+      "group": "advanced"
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "default": "4x4",
+      "options": [
+        "random",
+        "2x2",
+        "4x4",
+        "8x8"
+      ],
+      "description": "variant",
+      "group": "advanced"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 2,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 6,
+      "step": 0.03,
+      "group": "main"
+    },
+    {
+      "name": "scale",
+      "type": "number",
+      "default": 0.6,
+      "description": "zoom of the pattern",
+      "min": 0.01,
+      "max": 4,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 1,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Dithering",
+      "props": {
+        "colorBack": "#000000",
+        "colorFront": "#A3A3A3",
+        "shape": "sphere",
+        "type": "4x4",
+        "size": 2,
+        "scale": 0.6,
+        "speed": 1
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'dither-sphere');",
+  "notes": [
+    "Paper shader `Dithering` (animated)."
+  ],
+  "preview": {
+    "video": "previews/dither-sphere.webm",
+    "poster": "previews/dither-sphere.jpg"
+  },
+  "colors": [
+    "#a3a3a3",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "raw",
+    "editorial"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
+}

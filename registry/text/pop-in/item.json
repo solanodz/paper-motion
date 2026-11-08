@@ -1,0 +1,96 @@
+{
+  "$schema": "../../schema.json",
+  "id": "pop-in",
+  "type": "text",
+  "title": "Pop in",
+  "summary": "Letters pop up one by one on a spring, with a little overshoot.",
+  "tags": [
+    "text",
+    "playful",
+    "spring"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "popIn",
+  "signature": "popIn(el, t, { start, each, stiffness, damping, rise })",
+  "params": [
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "each",
+      "type": "number",
+      "default": 0.04,
+      "description": "delay between items (s)",
+      "min": 0,
+      "max": 0.3,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "stiffness",
+      "type": "number",
+      "default": 260,
+      "description": "spring stiffness (higher is snappier)",
+      "min": 40,
+      "max": 600,
+      "step": 5,
+      "group": "main"
+    },
+    {
+      "name": "damping",
+      "type": "number",
+      "default": 13,
+      "description": "spring damping (lower bounces more)",
+      "min": 4,
+      "max": 40,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "rise",
+      "type": "number",
+      "default": 0.45,
+      "description": "rise distance (em)",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/pop-in.js",
+      "to": "moves/pop-in.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { popIn } from './moves/pop-in.js';\n\ns.update((t) => popIn(el, t, { start: 0.5 }));",
+  "notes": [
+    "Letters pop up from the baseline on a spring."
+  ],
+  "preview": {
+    "video": "previews/pop-in.webm",
+    "poster": "previews/pop-in.jpg"
+  },
+  "mood": [
+    "playful",
+    "warm",
+    "bold"
+  ],
+  "energy": 4,
+  "role": "text",
+  "when": [
+    "friendly consumer brands",
+    "short punchy words"
+  ]
+}

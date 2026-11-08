@@ -1,0 +1,130 @@
+{
+  "$schema": "../../schema.json",
+  "id": "mesh-sage",
+  "type": "background",
+  "title": "Mesh Gradient · sage",
+  "summary": "A flowing composition of color spots, moving along distinct trajectories and transformed by organic distortion, in sage.",
+  "tags": [
+    "background",
+    "mesh-gradient",
+    "gentle",
+    "dark",
+    "sage"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#070806",
+        "#5E7457",
+        "#C8D5A8",
+        "#1c2219"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    },
+    {
+      "name": "distortion",
+      "type": "number",
+      "default": 0.8,
+      "description": "amount of organic distortion",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "swirl",
+      "type": "number",
+      "default": 0.25,
+      "description": "amount of swirl",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.4,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "grainMixer",
+      "type": "number",
+      "default": 0.12,
+      "description": "grain mixed into the colors",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "grainOverlay",
+      "type": "number",
+      "default": 0.08,
+      "description": "grain laid over the image",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "MeshGradient",
+      "props": {
+        "colors": [
+          "#070806",
+          "#5E7457",
+          "#C8D5A8",
+          "#1c2219"
+        ],
+        "distortion": 0.8,
+        "swirl": 0.25,
+        "speed": 0.4,
+        "grainMixer": 0.12,
+        "grainOverlay": 0.08
+      },
+      "loop": 1.5
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'mesh-sage');",
+  "notes": [
+    "Paper shader `MeshGradient` (animated)."
+  ],
+  "preview": {
+    "video": "previews/mesh-sage.webm",
+    "poster": "previews/mesh-sage.jpg"
+  },
+  "colors": [
+    "#070806",
+    "#5e7457",
+    "#c8d5a8",
+    "#1c2219"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "calm",
+    "luxury",
+    "warm"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark calm piece"
+  ]
+}

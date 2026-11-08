@@ -1,0 +1,138 @@
+{
+  "$schema": "../../schema.json",
+  "id": "voronoi-glass",
+  "type": "background",
+  "title": "Voronoi · glass",
+  "summary": "Anti-aliased animated Voronoi pattern with smooth and customizable edges, in glass.",
+  "tags": [
+    "background",
+    "voronoi",
+    "gentle",
+    "dark",
+    "glass"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#1c1c1c",
+        "#4a4a4a"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 5,
+      "group": "main"
+    },
+    {
+      "name": "stepsPerColor",
+      "type": "number",
+      "default": 2,
+      "description": "Number of extra colors between base colors, 1 = N colors, 2 = 2×N, etc., needs 2+ colors",
+      "min": 1,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "colorGlow",
+      "type": "color",
+      "default": "#ffffff",
+      "description": "Color tint for radial inner shadow inside cells in RGBA, needs glow > 0",
+      "group": "advanced"
+    },
+    {
+      "name": "colorGap",
+      "type": "color",
+      "default": "#000000",
+      "description": "Color used for cell borders/gaps in RGBA",
+      "group": "advanced"
+    },
+    {
+      "name": "distortion",
+      "type": "number",
+      "default": 0.4,
+      "description": "amount of organic distortion",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.0025,
+      "group": "main"
+    },
+    {
+      "name": "gap",
+      "type": "number",
+      "default": 0.03,
+      "description": "Width of the border/gap between cells",
+      "min": 0,
+      "max": 0.1,
+      "step": 0.0005,
+      "group": "main"
+    },
+    {
+      "name": "glow",
+      "type": "number",
+      "default": 0.45,
+      "description": "Strength of the radial inner shadow inside cells, needs colorGlow alpha > 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 0.4,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "Voronoi",
+      "props": {
+        "colors": [
+          "#1c1c1c",
+          "#4a4a4a"
+        ],
+        "stepsPerColor": 2,
+        "colorGlow": "#ffffff",
+        "colorGap": "#000000",
+        "distortion": 0.4,
+        "gap": 0.03,
+        "glow": 0.45,
+        "speed": 0.4
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'voronoi-glass');",
+  "notes": [
+    "Paper shader `Voronoi` (animated)."
+  ],
+  "preview": {
+    "video": "previews/voronoi-glass.webm",
+    "poster": "previews/voronoi-glass.jpg"
+  },
+  "colors": [
+    "#1c1c1c",
+    "#4a4a4a"
+  ],
+  "mode": "dark",
+  "motion": "gentle",
+  "mood": [
+    "technical",
+    "playful"
+  ],
+  "when": [
+    "a field that breathes behind a title or a card",
+    "a dark technical piece"
+  ]
+}

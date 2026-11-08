@@ -1,0 +1,136 @@
+{
+  "$schema": "../../schema.json",
+  "id": "dot-orbit",
+  "type": "background",
+  "title": "Dot Orbit",
+  "summary": "Animated multi-color dots pattern with each dot orbiting around its cell center.",
+  "tags": [
+    "background",
+    "dot-orbit",
+    "lively",
+    "dark"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "colorBack",
+      "type": "color",
+      "default": "#000000",
+      "description": "background color behind the effect",
+      "group": "main"
+    },
+    {
+      "name": "colors",
+      "type": "colors",
+      "default": [
+        "#ffffff",
+        "#8EA3AD",
+        "#5F7A86",
+        "#2a2a2a"
+      ],
+      "description": "palette colors (hex)",
+      "maxItems": 10,
+      "group": "main"
+    },
+    {
+      "name": "size",
+      "type": "number",
+      "default": 0.8,
+      "description": "dot or pattern size",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "sizeRange",
+      "type": "number",
+      "default": 0.3,
+      "description": "Random variation in shape size, 0 = uniform, higher = random up to base size",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "spreading",
+      "type": "number",
+      "default": 0.8,
+      "description": "Maximum orbit distance around cell center, dots are static at 0",
+      "min": 0,
+      "max": 1,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "stepsPerColor",
+      "type": "number",
+      "default": 3,
+      "description": "Number of extra colors between base colors, 1 = N colors, 2 = 2×N, etc., needs 2+ colors",
+      "min": 1,
+      "max": 4,
+      "step": 0.015,
+      "group": "advanced"
+    },
+    {
+      "name": "speed",
+      "type": "number",
+      "default": 1,
+      "description": "animation speed (0 = still)",
+      "min": 0,
+      "max": 3,
+      "step": 0.01,
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "shader-set",
+    "entry": {
+      "shader": "DotOrbit",
+      "props": {
+        "colorBack": "#000000",
+        "colors": [
+          "#ffffff",
+          "#8EA3AD",
+          "#5F7A86",
+          "#2a2a2a"
+        ],
+        "size": 0.8,
+        "sizeRange": 0.3,
+        "spreading": 0.8,
+        "stepsPerColor": 3,
+        "speed": 1
+      }
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\n// a full-frame element <div id=\"bg\"></div> behind everything:\nB.shader(s, '#bg', 'dot-orbit');",
+  "notes": [
+    "Paper shader `DotOrbit` (animated)."
+  ],
+  "preview": {
+    "video": "previews/dot-orbit.webm",
+    "poster": "previews/dot-orbit.jpg"
+  },
+  "colors": [
+    "#ffffff",
+    "#8ea3ad",
+    "#5f7a86",
+    "#2a2a2a",
+    "#000000"
+  ],
+  "mode": "dark",
+  "motion": "lively",
+  "mood": [
+    "technical",
+    "playful"
+  ],
+  "when": [
+    "a hero moment where the material is the message",
+    "a dark technical piece"
+  ]
+}

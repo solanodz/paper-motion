@@ -1,0 +1,94 @@
+{
+  "$schema": "../../schema.json",
+  "id": "track-in",
+  "type": "text",
+  "title": "Track in",
+  "summary": "Letters settle from wide spacing to their tracking.",
+  "tags": [
+    "text",
+    "luxury",
+    "editorial"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "trackIn",
+  "signature": "trackIn(el, t, { start, duration, from, to, curve })",
+  "params": [
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 1,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "from",
+      "type": "number",
+      "default": 0.4,
+      "description": "start value",
+      "min": -0.05,
+      "max": 1,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "to",
+      "type": "number",
+      "default": 0,
+      "description": "end value",
+      "min": -0.1,
+      "max": 0.3,
+      "step": 0.005,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.outExpo",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/track-in.js",
+      "to": "moves/track-in.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { trackIn } from './moves/track-in.js';\n\ns.update((t) => trackIn(el, t, { start: 0.5 }));",
+  "notes": [
+    "Letters settle from wide spacing (`from`, em) to `to`."
+  ],
+  "preview": {
+    "video": "previews/track-in.webm",
+    "poster": "previews/track-in.jpg"
+  },
+  "mood": [
+    "luxury",
+    "editorial",
+    "minimal"
+  ],
+  "energy": 1,
+  "role": "text",
+  "when": [
+    "fashion, editorial, premium",
+    "a logotype settling into place"
+  ]
+}

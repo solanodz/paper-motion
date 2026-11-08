@@ -1,0 +1,63 @@
+{
+  "$schema": "../../schema.json",
+  "id": "scan-reveal",
+  "type": "transition",
+  "title": "Scan reveal",
+  "summary": "B draws in under a moving scan line.",
+  "tags": [
+    "transition",
+    "tech",
+    "graphic"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "scanReveal",
+  "signature": "scanReveal(a, b, p, { line, curve })",
+  "params": [
+    {
+      "name": "line",
+      "type": "object",
+      "description": "line height (em)",
+      "hidden": true
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.linear",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/scan-reveal.js",
+      "to": "moves/scan-reveal.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { scanReveal } from './moves/scan-reveal.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\nscanReveal(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "B draws in from the top under a scan line element (`line`, absolutely positioned inside B's parent).",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/scan-reveal.webm",
+    "poster": "previews/scan-reveal.jpg"
+  },
+  "mood": [
+    "technical",
+    "raw"
+  ],
+  "energy": 3,
+  "role": "enter",
+  "when": [
+    "the brand is a terminal, a scanner, a process",
+    "drawing in UI or data"
+  ]
+}

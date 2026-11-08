@@ -1,0 +1,100 @@
+{
+  "$schema": "../../schema.json",
+  "id": "scramble",
+  "type": "text",
+  "title": "Scramble",
+  "summary": "Letters cycle through random glyphs and lock into place, left to right.",
+  "tags": [
+    "text",
+    "tech",
+    "digital"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "scramble",
+  "signature": "scramble(el, t, { start, duration, fps, rate, seed, glyphs })",
+  "params": [
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 1.4,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 3,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "fps",
+      "type": "number",
+      "default": 30,
+      "description": "scene fps",
+      "hidden": true
+    },
+    {
+      "name": "rate",
+      "type": "number",
+      "default": 2,
+      "description": "frames per glyph change",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "seed",
+      "type": "number",
+      "default": 1,
+      "description": "random seed; change it for a different variation",
+      "min": 1,
+      "max": 999,
+      "step": 1,
+      "group": "advanced"
+    },
+    {
+      "name": "glyphs",
+      "type": "string",
+      "default": "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#%&*+=/<>",
+      "description": "glyphs used while scrambling",
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/scramble.js",
+      "to": "moves/scramble.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { scramble } from './moves/scramble.js';\n\ns.update((t) => scramble(el, t, { start: 0.5 }));",
+  "notes": [
+    "Letters show random glyphs, then lock into the real text from left to right. Widths stay fixed."
+  ],
+  "preview": {
+    "video": "previews/scramble.webm",
+    "poster": "previews/scramble.jpg"
+  },
+  "mood": [
+    "technical",
+    "raw",
+    "playful"
+  ],
+  "energy": 3,
+  "role": "text",
+  "when": [
+    "hacker, data, cipher moods",
+    "numbers or codes resolving"
+  ]
+}

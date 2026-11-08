@@ -1,0 +1,128 @@
+{
+  "$schema": "../../schema.json",
+  "id": "dusty-rose",
+  "type": "palette",
+  "title": "Dusty rose",
+  "summary": "Light palette: pale blush with deep rose; soft, beauty, lifestyle.",
+  "tags": [
+    "palette",
+    "light",
+    "soft",
+    "beauty",
+    "lifestyle"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#F3E9E4",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#2E1E1C",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#8C6660",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#EADBD3",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#B07D73",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#F3E9E4",
+        "#D9B3A5",
+        "#B07D73",
+        "#4A2E2A"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#F3E9E4",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#2E1E1C",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#8C6660",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#EADBD3",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#B07D73",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#F3E9E4",
+        "#D9B3A5",
+        "#B07D73",
+        "#4A2E2A"
+      ],
+      "mode": "light"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 13.3:1, muted on ground 4.2:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/dusty-rose.webm",
+    "poster": "previews/dusty-rose.jpg"
+  },
+  "colors": [
+    "#f3e9e4",
+    "#2e1e1c",
+    "#b07d73"
+  ],
+  "mode": "light",
+  "mood": [
+    "calm",
+    "warm",
+    "luxury"
+  ],
+  "when": [
+    "a light piece that should feel calm, warm, luxury",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
+}

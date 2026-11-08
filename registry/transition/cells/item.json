@@ -1,0 +1,98 @@
+{
+  "$schema": "../../schema.json",
+  "id": "cells",
+  "type": "transition",
+  "title": "Cells",
+  "summary": "B appears through a grid of squares that grow in a diagonal wave.",
+  "tags": [
+    "transition",
+    "graphic",
+    "grid"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "cells",
+  "signature": "cells(a, b, p, { cols, rows, origin, spread, curve })",
+  "params": [
+    {
+      "name": "cols",
+      "type": "number",
+      "default": 16,
+      "description": "grid columns",
+      "min": 2,
+      "max": 24,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "rows",
+      "type": "number",
+      "default": 9,
+      "description": "grid rows",
+      "min": 2,
+      "max": 16,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "origin",
+      "type": "array",
+      "default": [
+        0,
+        0
+      ],
+      "description": "transform origin (CSS)",
+      "group": "main"
+    },
+    {
+      "name": "spread",
+      "type": "number",
+      "default": 0.6,
+      "description": "how much the wave spreads (0–1)",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.outCubic",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/cells.js",
+      "to": "moves/cells.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { cells } from './moves/cells.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\ncells(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "B shows through a grid of squares that grow from their centres in a wave from `origin` (0..1, 0..1).",
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/cells.webm",
+    "poster": "previews/cells.jpg"
+  },
+  "mood": [
+    "technical",
+    "playful",
+    "bold"
+  ],
+  "energy": 4,
+  "role": "swap",
+  "when": [
+    "a grid-minded, graphic brand",
+    "a transition that reads as pixels or tiles"
+  ]
+}

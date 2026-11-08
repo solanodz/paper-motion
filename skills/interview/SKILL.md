@@ -46,7 +46,9 @@ Keep the option list for any multiple-choice question; add the board line only f
 
 The calling skill sets the depth (identity three to four rounds, most others one or two). Depth is a ceiling, never a quota: stop as soon as the frontier is empty. An import start usually needs one or two rounds.
 
-## 3 · Show visual choices as option boards
+## 3 · Show visual choices as boards
+
+A board has two forms. When the user can open a browser, prefer a **live board**: `pamo board --url --title … --ask … --look <palette>,<font> --option <id>[:key=value] …` prints a paper-motion.app link where the options play in the brand's look and can be tuned before choosing (`make-video/references/boards.md`). Their answer arrives as one pasted line, `paper-motion: B · <id> [--set …]` or `paper-motion: none of <name>, …`; treat it as the answer to that question. Live boards work for anything in the registry (palettes, font pairs, backgrounds, moves, recipes); for options that only exist as scenes of this brand, or when the user wants to see them in the chat, build a rendered board as below.
 
 When a choice is about how something **looks** or **moves**, the user picks from a board, never from a description.
 

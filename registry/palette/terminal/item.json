@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schema.json",
+  "id": "terminal",
+  "type": "palette",
+  "title": "Terminal",
+  "summary": "Dark palette: black with phosphor green; developer tools, CLI, retro.",
+  "tags": [
+    "palette",
+    "dark",
+    "developer",
+    "tools",
+    "retro"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#050805",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#D7F5D0",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#5F8F5A",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#0C120C",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#4BE36A",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#050805",
+        "#13301A",
+        "#2E8B45",
+        "#4BE36A"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#050805",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#D7F5D0",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#5F8F5A",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#0C120C",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#4BE36A",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#050805",
+        "#13301A",
+        "#2E8B45",
+        "#4BE36A"
+      ],
+      "mode": "dark"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 17.1:1, muted on ground 5.3:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/terminal.webm",
+    "poster": "previews/terminal.jpg"
+  },
+  "colors": [
+    "#050805",
+    "#d7f5d0",
+    "#4be36a"
+  ],
+  "mode": "dark",
+  "mood": [
+    "technical",
+    "raw"
+  ],
+  "when": [
+    "a dark piece that should feel technical, raw",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
+}

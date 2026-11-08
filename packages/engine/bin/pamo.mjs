@@ -33,6 +33,11 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      (sound effects declared with s.sfx() are mixed in)
   sfx <scene.html> [--out file.wav] [--from s] [--to s]
                                      export only the synthesized sound effects
+  board --url --title "…" [--ask "…"] [--reply name] [--look palette,font]
+        --option id[:key=value,…] [--note "why"] … [--kit] [--site url]
+                                     a live board: a paper-motion.app link the user opens to see
+                                     2–4 options in their look, tune one and choose; with --kit each
+                                     option is a space-separated list of ids (a whole kit)
   board <a.html> <b.html> [...] [--t 2 | --clip 5] [--labels "A · calm|B · loud"] [--cols n] [--motion-blur 6] [--out board.png]
                                      option board for interviews: 2–6 options side by side,
                                      lettered A, B, C…; a still (.png) or short clips (.mp4).
@@ -61,6 +66,20 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
   status [--brand brand]              what the brand folder has, and the next step on the main flow
   shaders [--json | --md [--out f]] [name]
                                      catalog of every Paper shader, params and presets
+
+Resources (paper-motion.app: moves, backgrounds, palettes, font pairs, recipes)
+  add <id> [<id>...] [--set key=value ...] [--force] [--name piece] [--registry url|dir]
+                                     install resources into this project: moves to moves/,
+                                     backgrounds to brand/shader-set/set.json, palettes and fonts
+                                     into brand/tokens.json, recipes to pieces/<name>/;
+                                     --set writes your values in (id:key=value with several ids)
+  list [type] [--json]               every resource (types: component transition text camera
+                                     background palette font-pair recipe)
+  search <words> [--type t] [--mode light|dark] [--mood m] [--motion still|gentle|lively]
+         [--role r] [--energy 2-4] [--near "#hex,#hex"] [--json]
+                                     find resources by words, mood, mode, energy; --near sorts by color fit
+  registry build [--out dir] [--site url]
+                                     validate registry/ and publish registry.json, r/<id>.json, llms.txt
 `;
 
 function parse(argv) {
@@ -301,9 +320,40 @@ async function main() {
     }
 
     case 'board': {
+      if (args.url) {
+        // the live form: a paper-motion.app link the user opens to compare, tune and choose
+        const { encodeBoard, boardUrl } = await import('../lib/board.js');
+        const { getIndex, resolveRegistry, SITE, getItem } = await import('../lib/registry.mjs');
+        const { parseSet, setArgs } = await import('../lib/customize.mjs');
+        const reg = resolveRegistry(args.registry), { items } = await getIndex(reg), index = Object.fromEntries(items.map((i) => [i.id, i]));
+        const opts = process.argv.flatMap((a, i, all) => (a === '--option' ? [all[i + 1]] : a.startsWith('--option=') ? [a.slice(9)] : [])).filter(Boolean);
+        if (!opts.length || !args.title || args.help) { console.error('Usage: board --url --title "…" [--ask "…"] [--reply name] [--look palette,font] --option id[:key=value,…] [--note "why"] … [--kit] [--site url]\n  Prints a live board link. Values after the colon are your adjustments; the reply line the user pastes carries every non-default value.'); process.exit(args.help ? 0 : 1); }
+        const LABELS = ['A', 'B', 'C', 'D'];
+        const parseOne = async (spec) => {
+          const [id, kv] = spec.split(':'), it = index[id];
+          if (!it) throw new Error(`"${id}" is not in the registry (try pamo search)`);
+          if (!kv) return { id, values: {} };
+          const full = await getItem(id, reg), values = parseSet(full, kv.split(',').map((x) => x.trim()).filter(Boolean));
+          // keep only what differs from the defaults, so the link stays small and the reply line honest
+          const keep = Object.fromEntries(setArgs(full, values).map((a) => { const m = a.match(/^--set '?(\w+)=(.*?)'?$/); return [m[1], values[m[1]]]; }));
+          return { id, values: keep };
+        };
+        const notes = process.argv.flatMap((a, i, all) => (a === '--note' ? [all[i + 1]] : a.startsWith('--note=') ? [a.slice(7)] : []));
+        const options = [];
+        for (const [i, spec] of opts.entries()) {
+          if (args.kit) options.push({ label: LABELS[i], items: await Promise.all(spec.split(/\s+/).filter(Boolean).map(parseOne)), ...(notes[i] ? { note: notes[i] } : {}) });
+          else options.push({ label: LABELS[i], ...(await parseOne(spec)), ...(notes[i] ? { note: notes[i] } : {}) });
+        }
+        const look = {};
+        if (typeof args.look === 'string') for (const spec of args.look.split(',')) { const o = await parseOne(spec.trim()); const t = index[o.id]?.type; if (t === 'palette') look.palette = o; else if (t === 'font-pair') look.font = o; else throw new Error(`--look takes a palette and a font pair, not "${o.id}"`); }
+        const board = { v: 1, kind: args.kit ? 'kit' : 'resource', title: String(args.title), ...(args.ask ? { ask: String(args.ask) } : {}), ...(args.reply ? { reply: String(args.reply) } : {}), ...(Object.keys(look).length ? { look } : {}), options };
+        try { const frag = await encodeBoard(board, index); console.log(boardUrl(typeof args.site === 'string' ? args.site : SITE, frag)); }
+        catch (e) { console.error(e.message); process.exit(1); }
+        break;
+      }
       await ensureDeps();
       const files = args._.slice(1);
-      if (files.length < 2 || files.length > 6) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]'); process.exit(1); }
+      if (files.length < 2 || files.length > 6 || args.help) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]   (a rendered board)\n       board --url --title "…" --option id[:key=value,…] … [--look palette,font] [--kit]        (a live board link)'); process.exit(args.help ? 0 : 1); }
       const { renderStills, renderVideo } = await import('../lib/render.mjs');
       const { composeBoard } = await import('../lib/board.mjs');
       const os = await import('node:os');
@@ -524,6 +574,84 @@ async function main() {
         console.log(`wrote ${dest}`);
       } else if (args.json || name) console.log(JSON.stringify(list, null, 2));
       else for (const s of cat) console.log(`${s.name.padEnd(22)} ${s.animated ? 'anim ' : 'still'} ${s.usesImage ? 'img' : '   '}  ${s.description.split('. ')[0]}`);
+      break;
+    }
+
+    case 'add': {
+      const ids = args._.slice(1);
+      if (!ids.length || args.help) { console.error('Usage: add <id> [<id>...] [--set key=value ...] [--force] [--name piece] [--registry url|dir]\n  --set writes your values into the installed copy (with several ids: --set id:key=value). --registry picks where resources come from (default: the site).'); process.exit(args.help ? 0 : 1); }
+      const { add } = await import('../lib/registry.mjs');
+      const set = process.argv.flatMap((a, i, all) => (a === '--set' ? [all[i + 1]] : a.startsWith('--set=') ? [a.slice(6)] : [])).filter(Boolean);
+      const report = await add(ids.filter((x) => !set.includes(x)), { registry: args.registry, force: !!args.force, name: typeof args.name === 'string' ? args.name : undefined, set });
+      for (const r of report) {
+        console.log(`✓ ${r.id} (${r.type})${r.wrote.length ? ` → ${[...new Set(r.wrote)].join(', ')}` : ''}`);
+        for (const f of r.skipped) console.log(`  kept your ${f} (it differs; --force to replace)`);
+        for (const c of r.conflicts) console.log(`  kept your value at ${c} (--force to replace)`);
+      }
+      const last = report.filter((r) => ids.includes(r.id) && r.usage);
+      if (last.length === 1) console.log(`\nUsage:\n${last[0].usage.split('\n').map((l) => `  ${l}`).join('\n')}`);
+      break;
+    }
+
+    case 'list':
+    case 'search': {
+      const { search } = await import('../lib/registry.mjs');
+      const isList = cmd === 'list';
+      if (args.help) { console.log(isList ? 'Usage: list [type] [--json]' : 'Usage: search <words> [--type t] [--mode light|dark] [--mood m] [--motion still|gentle|lively] [--role r] [--energy 2-4] [--near "#hex,#hex"] [--json]\n  --near sorts by color fit: the mean distance from each resource color to the nearest of yours (lower is closer); pass your ground, figure and accent.'); break; }
+      const items = await search(isList ? '' : args._.slice(1).join(' '), { type: isList ? args._[1] : args.type, mode: args.mode, mood: args.mood, motion: args.motion, role: args.role, energy: args.energy, near: args.near, registry: args.registry });
+      if (args.json) { console.log(JSON.stringify(items, null, 2)); break; }
+      let type = '';
+      if (items.some((i) => i.fit !== undefined)) console.log('fit: mean distance to your nearest color, lower is closer');
+      for (const i of items) { if (i.type !== type) { type = i.type; console.log(`\n${type}`); } console.log(`  ${i.id.padEnd(18)} ${[i.mode, i.motion, i.role, i.energy !== undefined ? `energy ${i.energy}` : null, i.fit !== undefined ? `fit ${Math.round(i.fit)}` : null].filter(Boolean).join(' · ').padEnd(26)} ${i.summary}`); }
+      if (!items.length) console.log('nothing found');
+      break;
+    }
+
+    case 'registry': {
+      const sub = args._[1];
+      if (sub === 'previews') {
+        // one clip (webm, 1280x720) and one poster (jpg) per code resource, from registry/_demo/index.html?demo=<id>
+        const { loadItems, resolveRegistry } = await import('../lib/registry.mjs');
+        const { renderVideo } = await import('../lib/render.mjs');
+        const os = await import('node:os');
+        const reg = resolveRegistry();
+        if (!reg.dir) { console.error('registry previews runs inside the paper-motion repo'); process.exit(1); }
+        const only = typeof args.only === 'string' ? args.only.split(',') : null;
+        const out = path.resolve(args.out ?? path.join(reg.dir, '..', 'apps', 'web', 'public', 'previews'));
+        fs.mkdirSync(out, { recursive: true });
+        const items = loadItems(reg.dir).filter((i) => ['component', 'transition', 'text', 'camera', 'recipe'].includes(i.type) && (!only || only.includes(i.id)));
+        const POSTER = { component: 1.5, transition: 1.4, text: 2.6, camera: 0.9, recipe: 2.5 };
+        const demo = path.join(reg.dir, '_demo', 'index.html');
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-previews-'));
+        try {
+          for (const [k, it] of items.entries()) {
+            process.stdout.write(`\r${k + 1}/${items.length} ${it.id.padEnd(16)}`);
+            const mp4 = path.join(tmp, `${it.id}.mp4`);
+            if (it.type === 'recipe') {
+              // a recipe renders whole, wired to the demo brand in registry/_demo/brand (served as /brand)
+              const here = process.cwd(), copy = path.join(reg.dir, '_demo', `.${it.id}.recipe.html`);
+              fs.copyFileSync(path.join(reg.dir, 'recipe', it.id, 'scene.html'), copy);
+              process.chdir(path.join(reg.dir, '_demo'));
+              try { await withServer(copy, (url) => renderVideo({ url: url('?render'), out: mp4, sfx: false, crf: 18, motionBlur: Number(args['motion-blur'] ?? 3) })); }
+              finally { process.chdir(here); fs.rmSync(copy, { force: true }); }
+            } else await withServer(demo, (url) => renderVideo({ url: url(`?render&demo=${it.id}`), out: mp4, from: 0, to: 5, sfx: false, crf: 16, motionBlur: Number(args['motion-blur'] ?? 4) }));
+            const vf = 'scale=1280:-2';
+            const a = spawnSync('ffmpeg', ['-v', 'error', '-y', '-i', mp4, '-vf', vf, '-c:v', 'libvpx-vp9', '-crf', '38', '-b:v', '0', '-row-mt', '1', '-an', path.join(out, `${it.id}.webm`)]);
+            const b = spawnSync('ffmpeg', ['-v', 'error', '-y', '-ss', String(POSTER[it.type] ?? 1.5), '-i', mp4, '-frames:v', '1', '-vf', vf, '-q:v', '4', path.join(out, `${it.id}.jpg`)]);
+            if (a.status || b.status) throw new Error(`ffmpeg failed for ${it.id}: ${a.stderr}${b.stderr}`);
+          }
+        } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+        const kb = Math.round(fs.readdirSync(out).reduce((n, f) => n + fs.statSync(path.join(out, f)).size, 0) / 1024);
+        console.log(`\r✓ ${items.length} previews → ${path.relative(process.cwd(), out)} (${kb} KB in all)`);
+        break;
+      }
+      if (sub !== 'build') { console.error('Usage: registry build [--out dir] [--site url] | registry previews [--only ids] [--motion-blur 4]'); process.exit(1); }
+      const { build, resolveRegistry, SITE } = await import('../lib/registry.mjs');
+      const reg = resolveRegistry();
+      if (!reg.dir) { console.error('registry build runs inside the paper-motion repo (no registry/ folder found)'); process.exit(1); }
+      const out = path.resolve(args.out ?? path.join(reg.dir, '..', 'apps', 'web', 'public'));
+      try { const r = build({ dir: reg.dir, out, site: typeof args.site === 'string' ? args.site.replace(/\/$/, '') : SITE }); console.log(`✓ ${r.count} resources → ${path.relative(process.cwd(), out) || '.'} (registry.json, r/, llms.txt, llms-full.txt)`); }
+      catch (e) { console.error(e.message); process.exit(1); }
       break;
     }
 

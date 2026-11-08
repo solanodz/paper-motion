@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schema.json",
+  "id": "ink-paper",
+  "type": "palette",
+  "title": "Ink on paper",
+  "summary": "Light palette: warm off-white paper with near-black ink; editorial and calm.",
+  "tags": [
+    "palette",
+    "light",
+    "editorial",
+    "calm"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#ECE6D6",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#141311",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#6E685C",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#E2DBC8",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#B5462E",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#ECE6D6",
+        "#D8CFBA",
+        "#A39A86",
+        "#141311"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#ECE6D6",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#141311",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#6E685C",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#E2DBC8",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#B5462E",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#ECE6D6",
+        "#D8CFBA",
+        "#A39A86",
+        "#141311"
+      ],
+      "mode": "light"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 14.9:1, muted on ground 4.4:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/ink-paper.webm",
+    "poster": "previews/ink-paper.jpg"
+  },
+  "colors": [
+    "#ece6d6",
+    "#141311",
+    "#b5462e"
+  ],
+  "mode": "light",
+  "mood": [
+    "editorial",
+    "calm",
+    "warm"
+  ],
+  "when": [
+    "a light piece that should feel editorial, calm, warm",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
+}

@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paper-motion.app/schema.json",
+  "title": "paper-motion resource",
+  "description": "One resource in the paper-motion registry: a move, a background, a palette, a font pair or a recipe. Agents read these to pick resources by name and install them into a project as editable code or brand files.",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "title",
+    "summary",
+    "tags",
+    "install",
+    "files",
+    "usage",
+    "license",
+    "version"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Unique, kebab-case. What users and agents call the resource by."
+    },
+    "type": {
+      "enum": [
+        "transition",
+        "component",
+        "text",
+        "camera",
+        "background",
+        "palette",
+        "font-pair",
+        "recipe"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "One line that tells an agent what it does and when to use it."
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "license": {
+      "type": "string"
+    },
+    "export": {
+      "type": "string",
+      "description": "For code resources: the function the file exports."
+    },
+    "signature": {
+      "type": "string",
+      "description": "For code resources: how to call it."
+    },
+    "params": {
+      "type": "array",
+      "description": "What an agent can change: options of a move, colors and motion of a background, roles of a palette.",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "number",
+              "string",
+              "boolean",
+              "color",
+              "colors",
+              "array",
+              "function",
+              "element",
+              "enum",
+              "object",
+              "range",
+              "numbers"
+            ]
+          },
+          "default": {},
+          "options": {
+            "type": "array"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "step": {
+            "type": "number"
+          },
+          "group": {
+            "enum": [
+              "main",
+              "advanced"
+            ],
+            "description": "main params show in the playground; advanced ones sit under Advanced"
+          },
+          "control": {
+            "enum": [
+              "slider",
+              "color",
+              "colors",
+              "segmented",
+              "select",
+              "toggle",
+              "range",
+              "ease",
+              "numbers",
+              "text",
+              "font"
+            ],
+            "description": "overrides the control the param's type implies"
+          },
+          "hidden": {
+            "type": "boolean",
+            "description": "not shown in the playground (still usable in code)"
+          },
+          "maxItems": {
+            "type": "number",
+            "description": "for colors: the technical maximum"
+          }
+        }
+      }
+    },
+    "install": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "code",
+            "shader-set",
+            "tokens",
+            "scene"
+          ],
+          "description": "code: copy files; shader-set: add an entry to brand/shader-set/set.json; tokens: merge into brand/tokens.json; scene: write a piece"
+        },
+        "entry": {
+          "type": "object",
+          "description": "shader-set: the set.json entry. tokens: the fragment to merge."
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Path in this repo."
+          },
+          "to": {
+            "type": "string",
+            "description": "Path in the user's project, relative to its root."
+          }
+        }
+      }
+    },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "type": "string",
+          "description": "Minimum paper-motion engine version, e.g. >=0.2.0"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Other resource ids this one needs."
+        },
+        "fonts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "usage": {
+      "type": "string",
+      "description": "A short snippet that shows the resource in a scene."
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What an agent must know to use it well."
+    },
+    "related": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "video": {
+          "type": "string"
+        },
+        "poster": {
+          "type": "string"
+        }
+      }
+    },
+    "when": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 4,
+      "description": "'Use it when\u2026' phrases an agent reasons with, apart from the summary."
+    },
+    "mood": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "calm",
+          "bold",
+          "playful",
+          "technical",
+          "editorial",
+          "warm",
+          "minimal",
+          "luxury",
+          "raw"
+        ]
+      },
+      "description": "The feelings it suits."
+    },
+    "energy": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Moves: how much happens, 1 still to 5 violent."
+    },
+    "role": {
+      "enum": [
+        "enter",
+        "exit",
+        "swap",
+        "emphasis",
+        "camera",
+        "text"
+      ],
+      "description": "Moves: what it does in a sequence."
+    },
+    "colors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$"
+      },
+      "description": "Backgrounds and palettes: dominant colors, for matching a brand."
+    },
+    "mode": {
+      "enum": [
+        "light",
+        "dark"
+      ],
+      "description": "Backgrounds and palettes: which side of middle grey."
+    },
+    "motion": {
+      "enum": [
+        "still",
+        "gentle",
+        "lively"
+      ],
+      "description": "Backgrounds: how much it moves."
+    },
+    "voice": {
+      "enum": [
+        "serif",
+        "sans",
+        "display",
+        "mono"
+      ],
+      "description": "Font pairs: the headline's voice."
+    },
+    "duration": {
+      "type": "number",
+      "description": "Recipes: seconds."
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Recipes: formats it is designed for, e.g. 16:9."
+    }
+  }
+}

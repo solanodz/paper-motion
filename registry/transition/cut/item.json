@@ -1,0 +1,49 @@
+{
+  "$schema": "../../schema.json",
+  "id": "cut",
+  "type": "transition",
+  "title": "Cut",
+  "summary": "Hard cut from A to B, on the beat.",
+  "tags": [
+    "transition",
+    "fast",
+    "minimal"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "cut",
+  "signature": "cut(a, b, p)",
+  "params": [],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/cut.js",
+      "to": "moves/cut.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { cut } from './moves/cut.js';\n\n// two stacked layers, B above A; in s.update(t), from 2.0 s to 2.6 s:\ncut(a, b, progress(t, 2.0, 2.6));",
+  "notes": [
+    "At p = 0 only A shows, at p = 1 only B; keep B above A (z-index)."
+  ],
+  "preview": {
+    "video": "previews/cut.webm",
+    "poster": "previews/cut.jpg"
+  },
+  "mood": [
+    "bold",
+    "minimal",
+    "editorial"
+  ],
+  "energy": 3,
+  "role": "swap",
+  "when": [
+    "the beat is the point",
+    "you want no transition at all",
+    "cutting between real material"
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "$schema": "../../schema.json",
+  "id": "shake",
+  "type": "camera",
+  "title": "Shake",
+  "summary": "A camera shake on each hit that dies out fast.",
+  "tags": [
+    "camera",
+    "impact",
+    "beat"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "shake",
+  "signature": "shake(el, t, { hits, amount, rot, decay, freq, seed })",
+  "params": [
+    {
+      "name": "hits",
+      "type": "numbers",
+      "default": [
+        0
+      ],
+      "description": "times (s) of the hits, e.g. on the beat",
+      "control": "numbers",
+      "group": "advanced"
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "default": 34,
+      "description": "strength",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "rot",
+      "type": "number",
+      "default": 1.4,
+      "description": "rotation in degrees",
+      "min": 0,
+      "max": 10,
+      "step": 0.1,
+      "group": "main"
+    },
+    {
+      "name": "decay",
+      "type": "number",
+      "default": 7,
+      "description": "how fast it dies out (higher is faster)",
+      "min": 1,
+      "max": 20,
+      "step": 0.5,
+      "group": "main"
+    },
+    {
+      "name": "freq",
+      "type": "number",
+      "default": 24,
+      "description": "shake frequency",
+      "min": 4,
+      "max": 60,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "seed",
+      "type": "number",
+      "default": 1,
+      "description": "random seed; change it for a different variation",
+      "min": 1,
+      "max": 999,
+      "step": 1,
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/shake.js",
+      "to": "moves/shake.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { shake } from './moves/shake.js';\n\ns.update((t) => shake(world, t, { hits: [1.0, 2.0, 2.5] }));",
+  "notes": [
+    "A camera shake on each time in `hits`, dying out at `decay`.",
+    "Put hits on the beat or on a sound cue, never on every beat."
+  ],
+  "preview": {
+    "video": "previews/shake.webm",
+    "poster": "previews/shake.jpg"
+  },
+  "mood": [
+    "bold",
+    "raw"
+  ],
+  "energy": 5,
+  "role": "emphasis",
+  "when": [
+    "hits on the beat",
+    "impact without changing the frame"
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schema.json",
+  "id": "ochre-sun",
+  "type": "palette",
+  "title": "Ochre sun",
+  "summary": "Light palette: cream with ochre and olive; sunny, optimistic, vintage.",
+  "tags": [
+    "palette",
+    "light",
+    "sunny",
+    "optimistic",
+    "vintage"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "params": [
+    {
+      "name": "ground",
+      "type": "color",
+      "default": "#F1E8C9",
+      "description": "every frame",
+      "group": "main"
+    },
+    {
+      "name": "figure",
+      "type": "color",
+      "default": "#2A2618",
+      "description": "primary type",
+      "group": "main"
+    },
+    {
+      "name": "muted",
+      "type": "color",
+      "default": "#6F7A3A",
+      "description": "secondary text",
+      "group": "main"
+    },
+    {
+      "name": "surface",
+      "type": "color",
+      "default": "#E8DDB6",
+      "description": "panels and cards",
+      "group": "main"
+    },
+    {
+      "name": "accent",
+      "type": "color",
+      "default": "#B08A3E",
+      "description": "one moment of emphasis",
+      "group": "main"
+    },
+    {
+      "name": "ramp",
+      "type": "colors",
+      "default": [
+        "#F1E8C9",
+        "#D8BC6E",
+        "#B08A3E",
+        "#3A3424"
+      ],
+      "description": "four steps from ground toward accent, for shaders and gradients",
+      "group": "main",
+      "maxItems": 8
+    }
+  ],
+  "install": {
+    "kind": "tokens",
+    "entry": {
+      "colors": {
+        "ground": {
+          "hex": "#F1E8C9",
+          "role": "every frame"
+        },
+        "figure": {
+          "hex": "#2A2618",
+          "role": "primary type"
+        },
+        "muted": {
+          "hex": "#6F7A3A",
+          "role": "secondary text"
+        },
+        "surface": {
+          "hex": "#E8DDB6",
+          "role": "panels and cards"
+        },
+        "accent": {
+          "hex": "#B08A3E",
+          "role": "one moment of emphasis"
+        }
+      },
+      "ramp": [
+        "#F1E8C9",
+        "#D8BC6E",
+        "#B08A3E",
+        "#3A3424"
+      ],
+      "mode": "light"
+    }
+  },
+  "files": [],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { loadBrand } from 'paper-motion/brand';\n\nconst B = await loadBrand();\nconst s = scene({ background: B.color('ground') });\ntitle.style.color = B.color('figure');",
+  "notes": [
+    "Contrast: figure on ground 12.3:1, muted on ground 3.8:1.",
+    "Use the accent for one moment, not everywhere."
+  ],
+  "preview": {
+    "video": "previews/ochre-sun.webm",
+    "poster": "previews/ochre-sun.jpg"
+  },
+  "colors": [
+    "#f1e8c9",
+    "#2a2618",
+    "#b08a3e"
+  ],
+  "mode": "light",
+  "mood": [
+    "warm",
+    "playful"
+  ],
+  "when": [
+    "a light piece that should feel warm, playful",
+    "you want roles (ground, figure, accent) rather than loose colors"
+  ]
+}

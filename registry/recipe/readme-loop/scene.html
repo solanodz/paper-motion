@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>readme loop</title>
+<!--
+  Recipe · README loop (6 s, seamless, 1600×900). For a repository or a landing page hero; silent.
+  Field: a calm shader behind the wordmark · What: the wordmark and one plain line · Command 0.4–2 s: the install
+  command types in and holds · Erase 5–5.5 s: it erases, so the loop closes on an empty prompt.
+  Deliver mp4 and gif: pamo render scene.html --format gif --gif-width 800. Edit CONFIG first.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #cur { display: inline-block; width: 0.55em; height: 1em; vertical-align: -0.15em; margin-left: 3px; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div class="abs" style="inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+    <div id="mark"></div><div id="line"></div><div id="cmdrow"><span id="pr">$ </span><span id="cmd"></span><span id="cur"></span></div>
+  </div>
+</main>
+<script type="module">
+import { scene } from 'paper-motion';
+import { typeOn, typingTimes } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                       // a calm shader-set id, or null for the brand's first entry
+  line: null,                             // null reads IDENTITY.md "In one line"
+  command: 'npx skills add your/repo',
+};
+
+const B = await loadBrand();
+const W = 1600, H = 900, SHORT = H, D = 6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId, { loop: D });
+
+const mark = B.style(document.querySelector('#mark'), 'display', { short: SHORT });
+const line = B.style(document.querySelector('#line'), 'body', { short: SHORT, color: 'muted' });
+const row = document.querySelector('#cmdrow'), cmd = document.querySelector('#cmd'), cur = document.querySelector('#cur');
+Object.assign(row.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.026}px`, color: B.color('figure'), marginTop: `${SHORT * 0.06}px` });
+document.querySelector('#pr').style.color = B.color('muted');
+line.style.marginTop = `${SHORT * 0.02}px`;
+cur.style.background = B.color('figure');
+mark.textContent = B.name;
+line.textContent = CONFIG.line ?? ((B.identity['In one line'] ?? '').split('\n')[0] || '');
+await document.fonts.ready;
+const fit = (W * 0.8) / mark.scrollWidth;
+if (fit < 1) mark.style.fontSize = `${parseFloat(mark.style.fontSize) * fit}px`;
+
+const times = typingTimes(CONFIG.command, { start: 0.4, cps: 20, seed: 5 });
+const N = CONFIG.command.length;
+s.update((t) => {
+  if (t < 5) typeOn(cmd, CONFIG.command, t, { times, cursor: cur });
+  else { const k = Math.max(0, N - Math.floor((t - 5) / 0.5 * N)); cmd.textContent = CONFIG.command.slice(0, k); cur.style.opacity = 1; }
+});
+await s.start();
+</script>
+</body>
+</html>

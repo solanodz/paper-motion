@@ -1,0 +1,101 @@
+{
+  "$schema": "../../schema.json",
+  "id": "odometer",
+  "type": "text",
+  "title": "Odometer",
+  "summary": "A number counts up with rolling digit wheels, like an odometer.",
+  "tags": [
+    "text",
+    "numbers",
+    "stats"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "export": "odometer",
+  "signature": "odometer(el, t, { from, to, start, duration, curve, separator })",
+  "params": [
+    {
+      "name": "from",
+      "type": "number",
+      "default": 0,
+      "description": "start value",
+      "min": 0,
+      "max": 1000000,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "to",
+      "type": "number",
+      "default": 1000,
+      "description": "end value",
+      "min": 0,
+      "max": 1000000,
+      "step": 1,
+      "group": "main"
+    },
+    {
+      "name": "start",
+      "type": "number",
+      "default": 0,
+      "description": "start time in seconds",
+      "hidden": true
+    },
+    {
+      "name": "duration",
+      "type": "number",
+      "default": 2,
+      "description": "length of the transition in seconds; springs use it to keep their feel",
+      "min": 0.2,
+      "max": 6,
+      "step": 0.05,
+      "group": "main"
+    },
+    {
+      "name": "curve",
+      "type": "function",
+      "default": "ease.outExpo",
+      "description": "easing function (from `ease`)",
+      "control": "ease",
+      "group": "main"
+    },
+    {
+      "name": "separator",
+      "type": "string",
+      "default": ",",
+      "description": "thousands separator",
+      "group": "advanced"
+    }
+  ],
+  "install": {
+    "kind": "code"
+  },
+  "files": [
+    {
+      "from": "packages/engine/runtime/moves/odometer.js",
+      "to": "moves/odometer.js"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.0"
+  },
+  "usage": "import { odometer } from './moves/odometer.js';\n\ns.update((t) => odometer(el, t, { start: 0.5 }));",
+  "notes": [
+    "Counts from `from` to `to` on rolling digit wheels; a wheel only turns when the one to its right rolls over."
+  ],
+  "preview": {
+    "video": "previews/odometer.webm",
+    "poster": "previews/odometer.jpg"
+  },
+  "mood": [
+    "technical",
+    "editorial",
+    "bold"
+  ],
+  "energy": 3,
+  "role": "text",
+  "when": [
+    "a big number is the message",
+    "stats, counts, prices"
+  ]
+}
