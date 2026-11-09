@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "fonts": "node scripts/google-fonts.mjs"
+    "fonts": "node scripts/google-fonts.mjs",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@paper-design/shaders": "^0.0.82",

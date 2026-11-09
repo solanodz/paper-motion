@@ -55,6 +55,10 @@ All 30 [Paper Shaders](https://shaders.paper.design), a library of moves (wipes,
 frame, terminal typing), synthesized sound effects or real keystrokes split from your own recording, option boards,
 wordmarks and the brand sheet.
 
+## Changes
+
+[CHANGELOG.md](./CHANGELOG.md) lists what each npm release changed.
+
 ## License
 
 MIT. Paper Shaders are © Paper Design (Apache-2.0).
