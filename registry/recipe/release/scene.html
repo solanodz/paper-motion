@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>release</title>
+<!--
+  Recipe · release (15 s, square). A record, a single, an episode: the cover art, who and what, when and where.
+  Cover 0–1.5 s (the sleeve rises through a mask, the `land` cue) · Words 1.5–6 s (artist, title, what it is) ·
+  Pulse whole piece (the cover breathes on the beat, a row of bars moves with it) · Action 9–15 s (the date and
+  where to listen, then the wordmark; everything holds so the frame can be read).
+  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first: the cover (a square
+  image next to this file or under brand/assets/), the names, the BPM of the track. Render with the music:
+  `pamo render scene.html --audio track.wav --loudness -14`. With no cover, the brand's shader fills the sleeve.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #glow { inset: -20%; filter: blur(70px); opacity: 0.55; background-size: cover; background-position: center; }
+  #sleeve { overflow: hidden; }
+  #sleeve img, #sleeve .fill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  #bars { display: flex; align-items: flex-end; gap: 4%; }
+  #bars i { flex: 1; display: block; border-radius: 999px; }
+  #words { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="glow" class="abs"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="sleeve" class="abs"></div>
+  <div id="words" class="abs"><div id="title"></div><div id="artist"></div><div id="what"></div></div>
+  <div id="bars" class="abs"></div>
+  <div id="action" class="abs"></div>
+  <div id="mark" class="abs"></div>
+</main>
+<script type="module">
+import { scene, progress, ease, noise, fract } from 'paper-motion';
+import { wordRise, blurIn, trackIn } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id behind everything, or null for the brand's first entry
+  cover: '',                             // the square cover art (path); empty fills the sleeve with the brand's shader
+  title: 'Title',                        // the record, the single, the episode
+  artist: '',                            // who; empty uses the brand's name
+  what: 'the debut EP',                  // what this is, in plain words ("the debut EP", "episode 12", "a single")
+  action: 'Out 21 Nov · everywhere you listen',
+  bpm: 96,                               // the track's tempo: the cover and the bars move on it
+  format: [1080, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 15, tall = H > W;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = 0.35;
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)';
+const $ = (id) => document.getElementById(id);
+
+// layout: the sleeve on the left (or on top, in portrait), the words beside it (or under)
+const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080);
+const side = tall ? SHORT * 0.7 : SHORT * 0.56;
+const sleeve = $('sleeve');
+const sx = tall ? (W - side) / 2 : W * 0.08, sy = tall ? H * 0.12 : (H - side) / 2 - SHORT * 0.04;
+Object.assign(sleeve.style, { left: `${sx}px`, top: `${sy}px`, width: `${side}px`, height: `${side}px`, borderRadius: `${R * 0.6}px`, background: B.color('surface', '#111'), boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.1}px rgba(0,0,0,0.5)` });
+if (CONFIG.cover) {
+  const img = document.createElement('img'); img.src = CONFIG.cover; sleeve.append(img);
+  $('glow').style.backgroundImage = `url(${CONFIG.cover})`;
+} else {
+  const fill = document.createElement('div'); fill.className = 'fill'; sleeve.append(fill);
+  if (bgId) B.shader(s, fill, bgId);
+  const mono = document.createElement('div');
+  Object.assign(mono.style, { position: 'absolute', left: '8%', bottom: '7%', fontFamily: B.font('mono'), fontSize: `${side * 0.05}px`, color: B.color('figure'), letterSpacing: '0.04em' });
+  mono.textContent = (CONFIG.artist || B.name).toUpperCase();
+  sleeve.append(mono);
+  $('glow').style.background = `radial-gradient(circle at 35% 50%, ${B.color('accent')} 0%, ${B.color('ground')} 60%)`;
+}
+const words = $('words');
+const wx = tall ? W * 0.08 : sx + side + SHORT * 0.07, wy = tall ? sy + side + SHORT * 0.07 : sy + side * 0.08, ww = tall ? W * 0.84 : W - wx - W * 0.08;
+Object.assign(words.style, { left: `${wx}px`, top: `${wy}px`, width: `${ww}px` });
+const title = B.style($('title'), 'display', { short: SHORT }), artist = B.style($('artist'), 'title', { short: SHORT, color: 'figure' }), what = B.style($('what'), 'body', { short: SHORT, color: 'muted' });
+title.textContent = CONFIG.title; artist.textContent = CONFIG.artist || B.name; what.textContent = CONFIG.what;
+artist.style.marginTop = `${SHORT * 0.025}px`; what.style.marginTop = `${SHORT * 0.015}px`;
+Object.assign(what.style, { fontSize: `${SHORT * 0.03}px`, lineHeight: 1.35 });
+// the bars: twelve, under the words, moving on the beat
+const bars = $('bars'), bh = SHORT * 0.07;
+Object.assign(bars.style, { left: `${wx}px`, width: `${Math.min(ww, SHORT * 0.4)}px`, top: `${tall ? wy + SHORT * 0.26 : sy + side - bh}px`, height: `${bh}px` });
+bars.innerHTML = Array.from({ length: 12 }, (_, i) => `<i style="background:${i === 7 ? B.color('accent') : B.color('figure')};opacity:${i === 7 ? 1 : 0.55}"></i>`).join('');
+const barEls = [...bars.children];
+// the action and the wordmark, bottom
+const action = B.style($('action'), 'body', { short: SHORT, color: 'figure' });
+Object.assign(action.style, { left: `${W * 0.08}px`, right: `${W * 0.08}px`, bottom: `${H * 0.085}px`, fontFamily: B.font('mono'), fontSize: `${SHORT * 0.03}px`, letterSpacing: '0em', lineHeight: 1.3 });
+action.textContent = CONFIG.action;
+const mark = B.style($('mark'), 'caption', { short: SHORT, color: 'muted' });
+Object.assign(mark.style, { right: `${W * 0.08}px`, bottom: `${H * 0.085}px`, fontFamily: B.font('mono'), letterSpacing: '0.06em' });
+mark.textContent = B.name.toUpperCase();
+await document.fonts.ready;
+for (const el of [title]) { const k = ww / el.scrollWidth; if (k < 1) el.style.fontSize = `${parseFloat(el.style.fontSize) * Math.max(k, 0.55)}px`; }
+
+// timeline
+const T = { cover: [0.1, 1.3], title: 1.4, artist: 2.2, what: 2.9, bars: 3.2, action: 9.4, mark: 10.6 };
+const beat = 60 / CONFIG.bpm;
+s.update((t) => {
+  // the sleeve rises through a mask, then breathes on the beat
+  const inP = progress(t, ...T.cover, ease.outExpo);
+  const ph = t < T.bars ? 1 : fract((t - T.bars) / beat);
+  const pulse = 1 + 0.012 * Math.exp(-7 * ph) * (t >= T.bars ? 1 : 0);
+  sleeve.style.clipPath = `inset(${(1 - inP) * 100}% 0 0 0 round ${R * 0.6}px)`;
+  sleeve.style.transform = `translateY(${(1 - inP) * SHORT * 0.04}px) scale(${pulse})`;
+  $('glow').style.opacity = String(0.55 * inP);
+  wordRise(title, t, { start: T.title, each: B.pace.stagger, duration: 0.9 });
+  trackIn(artist, t, { start: T.artist, duration: 1.0 });
+  blurIn(what, t, { start: T.what, duration: 0.8 });
+  const barsIn = progress(t, T.bars, T.bars + 0.8, ease.outCubic);
+  bars.style.opacity = String(barsIn);
+  barEls.forEach((b, i) => { const n = noise(i * 0.9, t * 1.7), hit = Math.exp(-6 * fract((t - T.bars) / beat + i * 0.05)); b.style.height = `${(0.18 + 0.62 * n + 0.2 * hit) * 100 * barsIn}%`; });
+  blurIn(action, t, { start: T.action, duration: 0.9 });
+  blurIn(mark, t, { start: T.mark, duration: 0.8 });
+});
+B.cue(s, 'land', T.cover[1] - 0.2); B.cue(s, 'text', T.title); B.cue(s, 'text', T.artist); B.cue(s, 'land', T.action);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

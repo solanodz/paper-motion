@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { decodeBoard, replyLine } from "@/lib/board.mjs";
-import { setArgs } from "@/lib/customize.mjs";
+import { recolor, setArgs } from "@/lib/customize.mjs";
 import { kit } from "@/lib/kit";
 import { buildTheme, loadResource, type Res, type Theme } from "@/lib/theme";
 import { ResourceStage } from "@/components/playground/resource-stage";
@@ -18,13 +18,18 @@ type Full = Res & { title: string; type: string; summary?: string; install: { ki
 
 const enc = (o: object) => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
+/** An option's values in the look: a background is recolored into the look's palette first, the agent's values on top. */
+const inLook = (res: Full | undefined, values: Values | undefined, theme: Theme): Values =>
+  res?.type === "background" && theme?.palette ? { ...(recolor(res, theme.palette) as Values), ...(values ?? {}) } : values ?? {};
+
 /** One option of a resource board: its live stage, label, note and the two actions. */
 function ResourceOption({ o, res, theme, fragment, chosen, onChoose }: { o: Option; res: Full | undefined; theme: Theme; fragment: string; chosen: boolean; onChoose: () => void }) {
   const Icon = res ? TYPE_ICONS[res.type] : null;
+  const values = inLook(res, o.values, theme);
   return (
     <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
       <div className="relative aspect-video overflow-hidden bg-black [container-type:inline-size]">
-        {res ? <ResourceStage resource={res} values={o.values ?? {}} theme={theme} compact /> : null}
+        {res ? <ResourceStage resource={res} values={values} theme={theme} compact /> : null}
         <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-md bg-ground/80 px-2 font-mono text-[13px] text-figure backdrop-blur">{o.label}</span>
       </div>
       <div className="flex flex-1 flex-col p-4">
@@ -35,11 +40,12 @@ function ResourceOption({ o, res, theme, fragment, chosen, onChoose }: { o: Opti
         </div>
         {o.note ? <p className="mt-2 text-[13px] leading-snug text-muted">{o.note}</p> : null}
         {o.values && Object.keys(o.values).length ? <p className="mt-1.5 font-mono text-[11px] text-faint">{Object.keys(o.values).length} setting{Object.keys(o.values).length > 1 ? "s" : ""} adjusted by your agent</p> : null}
+        {res?.type === "background" && theme?.palette ? <p className="mt-1.5 font-mono text-[11px] text-faint">recolored to your palette</p> : null}
         <div className="mt-4 flex gap-2">
           <button type="button" onClick={onChoose} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
             {chosen ? <IconCheck size={14} /> : null}{chosen ? "Chosen" : `Choose ${o.label}`}
           </button>
-          <Link href={`/r/${o.id}?from=${encodeURIComponent(fragment)}&label=${o.label}${o.values && Object.keys(o.values).length ? `&s=${enc(o.values)}` : ""}`} className="rounded-md border border-line px-3 py-2 text-[13px] text-figure hover:border-faint">Tune</Link>
+          <Link href={`/r/${o.id}?from=${encodeURIComponent(fragment)}&label=${o.label}${Object.keys(values).length ? `&s=${enc(values)}` : ""}`} className="rounded-md border border-line px-3 py-2 text-[13px] text-figure hover:border-faint">Tune</Link>
         </div>
       </div>
     </div>
@@ -58,7 +64,7 @@ function KitOption({ o, res, chosen, onChoose }: { o: Option; res: Record<string
     <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
       <div className="relative aspect-[4/3] overflow-hidden" style={{ background: c?.ground ?? "#000" }}>
         {theme?.links.map((href) => <link key={href} rel="stylesheet" href={href} />)}
-        {bg && res[bg.id] ? <div className="absolute inset-0 opacity-90"><ResourceStage resource={res[bg.id]} values={bg.values ?? {}} compact /></div> : null}
+        {bg && res[bg.id] ? <div className="absolute inset-0 opacity-90"><ResourceStage resource={res[bg.id]} values={inLook(res[bg.id], bg.values, theme)} compact /></div> : null}
         <div className="absolute inset-0 flex flex-col justify-end p-5">
           <span className="leading-[0.95] tracking-[-0.02em]" style={{ fontFamily: theme?.vars["--pm-display"], color: c?.figure ?? "#fff", fontSize: "clamp(26px,6cqw,52px)", fontWeight: 600 }}>Your brand, moving.</span>
           {c ? <span className="mt-3 flex h-2 w-full max-w-[200px] overflow-hidden rounded-sm">{[c.ground, c.surface, c.muted, c.figure, c.accent].map((h, i) => <span key={i} className="flex-1" style={{ background: h }} />)}</span> : null}
@@ -114,13 +120,15 @@ export function BoardView() {
     if (!board) return;
     setNone(false); setChosen(o.label);
     if (board.kind === "kit") {
-      const items = (o.items ?? []).map((i) => ({ id: i.id, type: res[i.id]?.type ?? "", title: res[i.id]?.title ?? i.id, values: i.values ?? {} }));
+      const pick = (t: string) => (o.items ?? []).find((i) => res[i.id]?.type === t);
+      const t = buildTheme(pick("palette"), pick("font-pair"), res);
+      const items = (o.items ?? []).map((i) => ({ id: i.id, type: res[i.id]?.type ?? "", title: res[i.id]?.title ?? i.id, values: inLook(res[i.id], i.values, t) }));
       kit.set({ name: kit.get().name, items });
       say(replyLine(board, { label: o.label }));
     } else {
-      const r = res[o.id!];
-      if (r) kit.add({ id: r.id, type: r.type, title: r.title, values: o.values ?? {} });
-      say(replyLine(board, { label: o.label, setArgs: r ? (setArgs(r, { ...Object.fromEntries((r.params ?? []).map((p) => [p.name, p.default])), ...(o.values ?? {}) }) as string[]) : [] }));
+      const r = res[o.id!], values = inLook(r, o.values, theme);
+      if (r) kit.add({ id: r.id, type: r.type, title: r.title, values });
+      say(replyLine(board, { label: o.label, setArgs: r ? (setArgs(r, { ...Object.fromEntries((r.params ?? []).map((p) => [p.name, p.default])), ...values }) as string[]) : [] }));
     }
   };
   const sayNone = () => { if (!board) return; setChosen(null); say(replyLine(board, { none: true, text: noneText.trim() })); };

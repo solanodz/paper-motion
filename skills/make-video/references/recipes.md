@@ -39,6 +39,31 @@ How something works, in steps.
 
 16:9 suits it best; on 9:16 give each step its own screen.
 
+## Product demo (18–24 s)
+
+The real product, seen. `pamo add product-demo` writes a scene that needs only the screenshots.
+
+| Beat | Time | What happens |
+|---|---|---|
+| What | 0–3 s | The name and what it is, in plain words, over the brand's field. |
+| Shots | 3–19 s | Three screens of the real UI inside one window. One camera lives on them: it drifts, punches into the detail that matters (`focus`), snap-scrolls to the next screen, whips to the third. A caption under the window says what each screen proves. |
+| Close | 19–22 s | The wordmark and the **action**. |
+
+Without screenshots each shot draws a placeholder UI in the brand's colors, so the structure can be judged before the material exists; never ship the placeholders. 9:16: the window fills the width and the captions go above it.
+
+## Release (12–18 s, square or portrait)
+
+A record, a single, an episode. `pamo add release`; render with the track (`--audio`).
+
+| Beat | Time | What happens |
+|---|---|---|
+| Cover | 0–1.5 s | The cover art rises through a mask, the `land` cue; its colors glow behind everything. |
+| Words | 1.5–6 s | The title (display), who (title), what it is in plain words ("the debut EP", "episode 12"). |
+| Pulse | whole piece | The cover breathes and a row of bars moves on the track's BPM (`CONFIG.bpm`), not on the audio. |
+| Action | 9–15 s | The date and where to listen, then the wordmark small; everything holds so the frame can be read. |
+
+1:1 and 4:5 for feeds, 9:16 for stories (the sleeve on top, the words under it). Without a cover the brand's shader fills the sleeve.
+
 ## Social loop (6–10 s, seamless)
 
 A piece that plays forever in a feed.

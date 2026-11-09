@@ -11,7 +11,7 @@ const STEPS: [string, string, string?][] = [
   ["The user starts", "They paste the home page's prompt in their agent. The agent installs the skills and reads llms.txt.", "npx skills add solanodz/paper-motion"],
   ["Interview", "The make-video skill asks what the brand is, what the video is for, the format and the feel. It reads the brand folder when there is one."],
   ["Search", "The agent filters the registry by the metadata: mode, colors near the brand's, mood, energy, role.", `npx paper-motion search --type background --mode dark --near "#0a0f1f,#3d6bff"`],
-  ["Propose a board", "Two to four options in one link. The user opens it and sees them live, in their own look.", BOARD_CMD],
+  ["Propose a board", "Two to four options in one link. The user opens it and sees them live, in their own look: backgrounds come recolored into their palette.", BOARD_CMD],
   ["Read the reply", "The user pastes one line back. It names the option and carries any tuning as --set arguments.", "paper-motion: C · dither-slate --set speed=1.5 --set colorFront=#3d6bff (bg-1)"],
   ["Install and build", "The agent installs the choice as code the user owns, then builds, checks stills and renders.", "npx paper-motion add dither-slate --set speed=1.5 --set colorFront=#3d6bff"],
 ];

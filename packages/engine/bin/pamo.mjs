@@ -579,10 +579,10 @@ async function main() {
 
     case 'add': {
       const ids = args._.slice(1);
-      if (!ids.length || args.help) { console.error('Usage: add <id> [<id>...] [--set key=value ...] [--force] [--name piece] [--brand "Name"] [--registry url|dir]\n  --set writes your values into the installed copy (with several ids: --set id:key=value). --force replaces values already in the project. --brand names the brand in brand/tokens.json; palettes, fonts and recipes also write brand/motion.json and brand/sound.json defaults when missing. --registry picks where resources come from (default: the site).'); process.exit(args.help ? 0 : 1); }
+      if (!ids.length || args.help) { console.error('Usage: add <id> [<id>...] [--set key=value ...] [--palette id|brand] [--force] [--name piece] [--brand "Name"] [--registry url|dir]\n  --set writes your values into the installed copy (with several ids: --set id:key=value). --palette installs backgrounds recolored into a palette (a registry palette, or "brand" for brand/tokens.json); --set still wins. --force replaces values already in the project. --brand names the brand in brand/tokens.json; palettes, fonts and recipes also write brand/motion.json and brand/sound.json defaults when missing. --registry picks where resources come from (default: the site).'); process.exit(args.help ? 0 : 1); }
       const { add } = await import('../lib/registry.mjs');
       const set = process.argv.flatMap((a, i, all) => (a === '--set' ? [all[i + 1]] : a.startsWith('--set=') ? [a.slice(6)] : [])).filter(Boolean);
-      const report = await add(ids.filter((x) => !set.includes(x)), { registry: args.registry, force: !!args.force, name: typeof args.name === 'string' ? args.name : undefined, brand: typeof args.brand === 'string' ? args.brand : undefined, set });
+      const report = await add(ids.filter((x) => !set.includes(x) && x !== args.palette), { registry: args.registry, force: !!args.force, name: typeof args.name === 'string' ? args.name : undefined, brand: typeof args.brand === 'string' ? args.brand : undefined, set, palette: typeof args.palette === 'string' ? args.palette : undefined });
       for (const r of report) {
         console.log(`✓ ${r.id} (${r.type})${r.wrote.length ? ` → ${[...new Set(r.wrote)].join(', ')}` : ''}`);
         for (const f of r.skipped) console.log(`  kept your ${f} (it differs; --force to replace)`);

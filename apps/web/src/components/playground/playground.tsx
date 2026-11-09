@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { code as codeFor, defaults as defaultsOf, MOVE_TYPES } from "@/lib/customize.mjs";
+import { code as codeFor, defaults as defaultsOf, MOVE_TYPES, paramsOf, recolor } from "@/lib/customize.mjs";
 import { Controls, type Param } from "./controls";
 import { CodeView, copyText } from "./code-view";
 import { DURATION, type PlayerHandle } from "./move-player";
@@ -56,16 +56,22 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
   const theme: Theme = boardLook ?? kitLook;
   const live = theme && useTheme ? theme : null;
   const isMove = MOVE_TYPES.includes(r.type);
+  const isBackground = r.type === "background";
   const key = `pm:v:${r.id}`;
+  // a background in the look: its colors recolored into the palette, as values the user can still tune
+  const looked = useMemo(() => (isBackground && live?.palette ? (recolor(r, live.palette) as Values) : {}), [r, isBackground, live]);
+  const touched = useRef(false);
 
   // restore: the shared link first, then this browser's last settings
   useEffect(() => {
     try {
       const s = new URLSearchParams(location.search).get("s");
       const saved = s ? dec(s) : JSON.parse(localStorage.getItem(key) ?? "null");
-      if (saved && typeof saved === "object") setValues({ ...defaults, ...saved });
+      if (saved && typeof saved === "object" && Object.keys(saved).length) { touched.current = true; setValues({ ...defaults, ...saved }); }
     } catch { /* ignore a bad link or blocked storage */ }
   }, [defaults, key]);
+  // the look changes (or is toggled): recolor unless the user already tuned the values
+  useEffect(() => { if (!touched.current) setValues({ ...defaults, ...looked }); }, [defaults, looked]);
   const diff = useMemo(() => Object.fromEntries(Object.entries(values).filter(([k, v]) => !same(v, defaults[k]))), [values, defaults]);
   useEffect(() => {
     try { if (Object.keys(diff).length) localStorage.setItem(key, JSON.stringify(diff)); else localStorage.removeItem(key); } catch { /* storage blocked */ }
@@ -76,8 +82,8 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const set = (k: string, v: unknown) => setValues((x) => ({ ...x, [k]: v }));
-  const reset = () => setValues(defaults);
+  const set = (k: string, v: unknown) => { touched.current = true; setValues((x) => ({ ...x, [k]: v })); };
+  const reset = () => { touched.current = false; setValues({ ...defaults, ...looked }); };
   const out = useMemo(() => codeFor(r, values, { showAll, site }) as { tabs: { key: string; label: string; code: string }[]; changed: number; agent: string }, [r, values, showAll, site]);
   const share = async () => {
     const url = new URL(location.href);
@@ -111,7 +117,7 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
     </div>
   ) : null;
 
-  const controls = <Controls params={r.params ?? []} values={values} set={set} reset={reset} extra={{ backgrounds }} />;
+  const controls = <Controls params={paramsOf(r) as Param[]} values={values} set={set} reset={reset} extra={{ backgrounds }} />;
   const codeView = (tall?: boolean) => <CodeView tabs={out.tabs} changed={out.changed} agent={out.agent} showAll={showAll} setShowAll={setShowAll} canShowAll={isMove} onShare={share} tall={tall} />;
 
   return (
@@ -133,10 +139,10 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-[13px] text-muted">{out.changed ? `${out.changed} setting${out.changed > 1 ? "s" : ""} tuned` : "Tune it, then add it to your kit"}</span>
-          {isMove && theme ? (
+          {(isMove || (isBackground && theme?.palette)) && theme ? (
             <button type="button" onClick={() => setUseTheme((u) => !u)} className={`flex items-center gap-2 truncate rounded-full border px-2.5 py-1 text-[12px] ${useTheme ? "border-paper text-paper" : "border-line text-muted"}`}>
               <span className="h-2 w-2 rounded-full" style={{ background: theme.vars["--pm-a"] ?? "#e9e4d8" }} />
-              {useTheme ? `In your kit's look · ${theme.label}` : "Show in my kit's look"}
+              {useTheme ? (isBackground ? `In your palette · ${theme.label}` : `In your kit's look · ${theme.label}`) : isBackground ? "Recolor to my palette" : "Show in my kit's look"}
             </button>
           ) : null}
         </div>

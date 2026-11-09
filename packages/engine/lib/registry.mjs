@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { apply as applyValues, parseSet } from './customize.mjs';
+import { apply as applyValues, defaults, paletteColors, parseSet, recolor } from './customize.mjs';
 
 const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = path.resolve(ENGINE, '..', '..');
@@ -137,6 +137,11 @@ ${site}/registry.json is the index; every item carries, beside id, type, title, 
 - \`mood\`: calm, bold, playful, technical, editorial, warm, minimal, luxury, raw.
 - Moves: \`energy\` 1 (still) to 5 (violent) and \`role\` (enter, exit, swap, emphasis, camera, text).
 - Backgrounds and palettes: \`colors\` (dominant hex) and \`mode\` (light, dark); backgrounds also \`motion\` (still, gentle, lively).
+  **Every background is a color family**: a board with a \`look.palette\` shows each background recolored into that
+  palette (each of its colors keeps its tone and takes the nearest palette hue, so a dark one stays dark), and the
+  reply line carries the resulting values. Without a board, \`pamo add <background> --palette <palette-id|brand>\`
+  installs it that way (\`brand\` reads \`brand/tokens.json\`). So choose backgrounds by \`motion\`, \`mood\` and
+  texture first; the color comes from the palette.
 - Font pairs: \`voice\` (serif, sans, display, mono). Recipes: \`duration\`, \`formats\`.
 
 \`pamo search\` filters by them: \`pamo search --type background --mode dark --near "#0a0f1f,#eef1f8,#3d6bff"\`
@@ -275,8 +280,19 @@ function mergeInto(base, frag, force, at = '', conflicts = []) {
 const MOTION_DEFAULT = { pace: 'medium', camera: 'still', text: 'rise', color: 'constant', ending: 'wordmark', timing: null, moves: [] };
 const SOUND_DEFAULT = { palette: 'soft', lowpass: 2400, cues: { transition: { type: 'sweep', dur: 0.7, gain: 0.07 }, land: { type: 'thud', gain: 0.09 }, text: { type: 'tick', freq: 900, gain: 0.04 }, bed: null }, keys: { bank: null, style: 'creamy', gain: 0.12 }, music: null, loudness: -14 };
 
-export async function add(ids, { cwd = process.cwd(), registry, force = false, name, brand, set = [] } = {}) {
+export async function add(ids, { cwd = process.cwd(), registry, force = false, name, brand, set = [], palette } = {}) {
   const reg = resolveRegistry(registry), done = new Map(), report = [];
+  // --palette <id|brand>: backgrounds install recolored into that palette (the registry's, or brand/tokens.json)
+  let pal = null;
+  if (palette === 'brand') {
+    const tokens = readJson(path.join(cwd, 'brand/tokens.json'), {});
+    pal = { ...(tokens.colors ?? {}), ramp: tokens.ramp };
+    if (!paletteColors(pal).length) throw new Error('--palette brand: brand/tokens.json has no colors yet (pamo add <palette> first)');
+  } else if (palette) {
+    const p = await getItem(palette, reg);
+    if (p.type !== 'palette') throw new Error(`--palette takes a palette id (or "brand"), not "${palette}" (${p.type})`);
+    pal = defaults(p);
+  }
   const scaffold = (r) => {
     // a brand folder a recipe can run on: its name, a pace and sound cues (silent pieces are the usual surprise)
     const tokensFile = path.join(cwd, 'brand/tokens.json'), tokens = readJson(tokensFile, {});
@@ -295,7 +311,10 @@ export async function add(ids, { cwd = process.cwd(), registry, force = false, n
     for (const dep of it.requires?.items ?? []) await one(dep);
     // --set key=value (or --set id:key=value with several ids): the same output the site's code tabs show
     const pairs = set.filter((x) => (x.includes(':') && x.indexOf(':') < x.indexOf('=') ? x.startsWith(`${id}:`) : ids.length === 1 && ids[0] === id)).map((x) => (x.startsWith(`${id}:`) ? x.slice(id.length + 1) : x));
-    if (pairs.length) it = { ...it, ...applyValues(it, parseSet(it, pairs)) };
+    if (pairs.length || (pal && it.type === 'background')) {
+      const parsed = parseSet(it, pairs), explicit = Object.fromEntries(pairs.map((x) => x.slice(0, x.indexOf('='))).map((k) => [k, parsed[k]]));
+      it = { ...it, ...applyValues(it, { ...parsed, ...(pal ? recolor(it, pal) : {}), ...explicit }) };
+    }
     const r = { id, type: it.type, wrote: [], skipped: [], conflicts: [], usage: it.usage, notes: it.notes ?? [] };
     const kind = it.install?.kind ?? 'code';
     const base = kind === 'scene' ? path.join('pieces', name ?? it.id) : '';
