@@ -1,0 +1,232 @@
+{
+  "$schema": "../../schema.json",
+  "type": "recipe",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "three-things",
+  "title": "Three things",
+  "summary": "Three traits, features or reasons, each with its own mechanic: one rises, two pushes, three flips; a card with words and the brand's material (or a picture), then the close, in 22 s.",
+  "tags": [
+    "recipe",
+    "three",
+    "features",
+    "reasons",
+    "cards",
+    "16:9",
+    "9:16"
+  ],
+  "params": [
+    {
+      "name": "intro",
+      "type": "string",
+      "default": "Three things to know.",
+      "description": "the line under the name",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "action",
+      "type": "string",
+      "default": "your.site",
+      "description": "the one action at the end",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "main",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    },
+    {
+      "name": "thing1Label",
+      "type": "string",
+      "default": "01",
+      "description": "the small label of thing 1",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing1Title",
+      "type": "string",
+      "default": "Fast",
+      "description": "thing one",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing1Body",
+      "type": "string",
+      "default": "A real number, a real result.",
+      "description": "what it means, in one line",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing1Image",
+      "type": "string",
+      "default": "",
+      "description": "a picture for it (path); empty uses the brand's material",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing2Label",
+      "type": "string",
+      "default": "02",
+      "description": "the small label of thing 2",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing2Title",
+      "type": "string",
+      "default": "Simple",
+      "description": "thing two",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing2Body",
+      "type": "string",
+      "default": "What it replaces, in one line.",
+      "description": "what it means",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing2Image",
+      "type": "string",
+      "default": "",
+      "description": "a picture (path)",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing3Label",
+      "type": "string",
+      "default": "03",
+      "description": "the small label of thing 3",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing3Title",
+      "type": "string",
+      "default": "Yours",
+      "description": "thing three",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing3Body",
+      "type": "string",
+      "default": "Who it is for, and why now.",
+      "description": "what it means",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "thing3Image",
+      "type": "string",
+      "default": "",
+      "description": "a picture (path)",
+      "group": "advanced",
+      "control": "text"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/recipe/three-things/scene.html",
+      "to": "pieces/three-things/scene.html"
+    },
+    {
+      "from": "registry/recipe/three-things/brief.md",
+      "to": "pieces/three-things/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.1"
+  },
+  "usage": "npx paper-motion add three-things --name my-piece\n# edit CONFIG in pieces/my-piece/scene.html, then:\nnpx paper-motion render pieces/my-piece/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work: pamo add sage-night instrument) and, for the background, a shader-set entry (pamo add mesh-sage).",
+    "Three mechanics for three things (rise, push, flip): swap any of them for the moves the user chose.",
+    "Uses these moves from the engine: word-rise, pop-in, blur-in, push, flip-3d, crossfade."
+  ],
+  "related": [
+    "push",
+    "flip-3d",
+    "launch"
+  ],
+  "preview": {
+    "video": "previews/three-things.webm",
+    "poster": "previews/three-things.jpg",
+    "at": 6.0
+  },
+  "mood": [
+    "technical",
+    "editorial",
+    "calm"
+  ],
+  "duration": 22,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Intro",
+      "from": 0,
+      "to": 2.5,
+      "what": "the name and the line"
+    },
+    {
+      "name": "One",
+      "from": 2.5,
+      "to": 8,
+      "what": "the card rises in, its words follow"
+    },
+    {
+      "name": "Two",
+      "from": 8,
+      "to": 13.5,
+      "what": "pushes the first up"
+    },
+    {
+      "name": "Three",
+      "from": 13.5,
+      "to": 19,
+      "what": "flips in"
+    },
+    {
+      "name": "Close",
+      "from": 19,
+      "to": 22,
+      "what": "the wordmark and the action"
+    }
+  ],
+  "when": [
+    "three reasons, features or values",
+    "a product page in motion"
+  ]
+}

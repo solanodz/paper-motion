@@ -1,0 +1,170 @@
+{
+  "$schema": "../../schema.json",
+  "type": "recipe",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "before-after",
+  "title": "Before / after",
+  "summary": "Two states of the same thing in one panel: the old one muted, a wipe, the new one in the brand's colors, then the close, in 16 s.",
+  "tags": [
+    "recipe",
+    "before",
+    "after",
+    "comparison",
+    "wipe",
+    "16:9",
+    "1:1"
+  ],
+  "params": [
+    {
+      "name": "beforeTag",
+      "type": "string",
+      "default": "Before",
+      "description": "label of the old state",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "beforeLine",
+      "type": "string",
+      "default": "Forty minutes, three tools, one guess.",
+      "description": "the old state, in one line",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "beforeImage",
+      "type": "string",
+      "default": "",
+      "description": "a picture of the old state (path)",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "afterTag",
+      "type": "string",
+      "default": "After",
+      "description": "label of the new state",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "afterLine",
+      "type": "string",
+      "default": "One command. Every frame on purpose.",
+      "description": "the new state, in one line",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "afterImage",
+      "type": "string",
+      "default": "",
+      "description": "a picture of the new state (path)",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "action",
+      "type": "string",
+      "default": "your.site",
+      "description": "the one action at the end",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "main",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/recipe/before-after/scene.html",
+      "to": "pieces/before-after/scene.html"
+    },
+    {
+      "from": "registry/recipe/before-after/brief.md",
+      "to": "pieces/before-after/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.1"
+  },
+  "usage": "npx paper-motion add before-after --name my-piece\n# edit CONFIG in pieces/my-piece/scene.html, then:\nnpx paper-motion render pieces/my-piece/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work: pamo add sage-night instrument) and, for the background, a shader-set entry (pamo add mesh-sage).",
+    "A real picture of each state beats any panel; the before picture is shown desaturated.",
+    "Uses these moves from the engine: wipe, word-rise, blur-in, crossfade."
+  ],
+  "related": [
+    "wipe",
+    "mask-reveal",
+    "launch"
+  ],
+  "preview": {
+    "video": "previews/before-after.webm",
+    "poster": "previews/before-after.jpg",
+    "at": 8.0
+  },
+  "mood": [
+    "bold",
+    "technical",
+    "minimal"
+  ],
+  "duration": 16,
+  "formats": [
+    "16:9",
+    "1:1",
+    "9:16"
+  ],
+  "beats": [
+    {
+      "name": "Before",
+      "from": 0,
+      "to": 6,
+      "what": "the old state: muted panel, its line"
+    },
+    {
+      "name": "Wipe",
+      "from": 6,
+      "to": 7.5,
+      "what": "the new state sweeps in"
+    },
+    {
+      "name": "After",
+      "from": 7.5,
+      "to": 13,
+      "what": "the brand's state, the accent, its line"
+    },
+    {
+      "name": "Close",
+      "from": 13,
+      "to": 16,
+      "what": "the wordmark and the action"
+    }
+  ],
+  "when": [
+    "the product replaces a worse way",
+    "a redesign, a migration, a result"
+  ]
+}

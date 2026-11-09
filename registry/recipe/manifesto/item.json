@@ -1,0 +1,160 @@
+{
+  "$schema": "../../schema.json",
+  "type": "recipe",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "manifesto",
+  "title": "Manifesto",
+  "summary": "Words only: three statements in the brand's voice, each arriving its own way, a turn where one word becomes the name, then what it is and the action, in 18 s.",
+  "tags": [
+    "recipe",
+    "manifesto",
+    "words",
+    "typographic",
+    "statement",
+    "16:9",
+    "9:16"
+  ],
+  "params": [
+    {
+      "name": "statement1",
+      "type": "string",
+      "default": "Tools were made for hands.",
+      "description": "statement one (under eight words)",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "statement2",
+      "type": "string",
+      "default": "Agents have none.",
+      "description": "statement two",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "statement3",
+      "type": "string",
+      "default": "So we made the tool speak.",
+      "description": "statement three",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "what",
+      "type": "string",
+      "default": "",
+      "description": "what the brand is, in plain words; empty reads IDENTITY.md",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "action",
+      "type": "string",
+      "default": "your.site",
+      "description": "the one action at the end",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "main",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/recipe/manifesto/scene.html",
+      "to": "pieces/manifesto/scene.html"
+    },
+    {
+      "from": "registry/recipe/manifesto/brief.md",
+      "to": "pieces/manifesto/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.1"
+  },
+  "usage": "npx paper-motion add manifesto --name my-piece\n# edit CONFIG in pieces/my-piece/scene.html, then:\nnpx paper-motion render pieces/my-piece/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work: pamo add sage-night instrument) and, for the background, a shader-set entry (pamo add mesh-sage).",
+    "Three statements, three entrances: never the same treatment twice. Keep each under eight words.",
+    "Uses these moves from the engine: word-rise, track-in, pop-in, scramble, blur-in."
+  ],
+  "related": [
+    "word-rise",
+    "scramble",
+    "launch"
+  ],
+  "preview": {
+    "video": "previews/manifesto.webm",
+    "poster": "previews/manifesto.jpg",
+    "at": 9.5
+  },
+  "mood": [
+    "bold",
+    "editorial",
+    "minimal"
+  ],
+  "duration": 18,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Statement 1",
+      "from": 0,
+      "to": 4,
+      "what": "words rise, large"
+    },
+    {
+      "name": "Statement 2",
+      "from": 4,
+      "to": 8,
+      "what": "tracks in while the first blurs out"
+    },
+    {
+      "name": "Statement 3",
+      "from": 8,
+      "to": 12,
+      "what": "pops in word by word"
+    },
+    {
+      "name": "Turn",
+      "from": 12,
+      "to": 15,
+      "what": "the name scrambles in"
+    },
+    {
+      "name": "Close",
+      "from": 15,
+      "to": 18,
+      "what": "what it is, the action"
+    }
+  ],
+  "when": [
+    "the brand has a point of view to state",
+    "there is no product to show yet, only words"
+  ]
+}

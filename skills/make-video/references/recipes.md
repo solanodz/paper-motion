@@ -64,6 +64,43 @@ A record, a single, an episode. `pamo add release`; render with the track (`--au
 
 1:1 and 4:5 for feeds, 9:16 for stories (the sleeve on top, the words under it). Without a cover the brand's shader fills the sleeve.
 
+## Manifesto (15–20 s)
+
+Words only: a point of view, no product on screen. `pamo add manifesto`.
+
+| Beat | Time | What happens |
+|---|---|---|
+| Statements | 0–12 s | Three statements in the brand's voice, under eight words each, one at a time, each arriving its own way (rise, track in, pop). |
+| Turn | 12–15 s | One word scrambles into the brand's name: the pivot from the world to the brand. |
+| Close | 15–18 s | What the brand is, in plain words, and the **action**. |
+
+Never three slogans: the statements argue, the third turns. 9:16 suits it as well as 16:9.
+
+## Three things (18–24 s)
+
+Three traits, features or reasons. `pamo add three-things`.
+
+| Beat | Time | What happens |
+|---|---|---|
+| Intro | 0–2.5 s | The name and a line (name what the brand is when the brand is new). |
+| One, two, three | 2.5–19 s | Three cards, words on one side and the brand's material or a real picture on the other. Each arrives its own way: one rises, two pushes the first up, three flips in. |
+| Close | 19–22 s | The wordmark and the **action**. |
+
+Swap the three mechanics for the moves the user chose; never the same treatment twice.
+
+## Before / after (12–18 s)
+
+Two states of the same thing. `pamo add before-after`.
+
+| Beat | Time | What happens |
+|---|---|---|
+| Before | 0–6 s | The old state: a muted panel (or a desaturated picture), a label, its line. |
+| Wipe | 6–7.5 s | The new state sweeps in with the transition from the repertoire. |
+| After | 7.5–13 s | The brand's state: its colors, the accent on the label, its line (a true claim, from the Facts). |
+| Close | 13–16 s | The wordmark and the **action**. |
+
+A real picture of each state beats any panel. 1:1 keeps both lines readable on a phone.
+
 ## Social loop (6–10 s, seamless)
 
 A piece that plays forever in a feed.
