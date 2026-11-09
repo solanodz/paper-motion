@@ -2,7 +2,16 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
-## 0.2.3 · unreleased
+## 0.2.5 · unreleased
+
+- Font pairs keep their own stylesheet when the family is unchanged, so self-hosted faces work: the new `geist-serif` pair (Geist Serif headlines served by paper-motion.app, Geist text, Geist Mono labels) is the site's own look.
+
+## 0.2.4 · 2026-11-09
+
+- `pamo board --url` waits for the user's choice by default (`--no-wait`, `--wait <minutes>`); `--choose 3` or `--choose 1-3` lets them pick several options, and the reply line lists them (`A+C · type-on · scramble`). `parseReply` returns `picks`.
+- llms.txt: read the installed skill at once, the decisions that always go through a board, every chosen move appears in the piece.
+
+## 0.2.3 · 2026-11-09
 
 - Boards get short links and a return channel: `pamo board --url` stores the board on the site (`/b/<id>`, 90 days) and falls back to the long link; `--wait [minutes]` prints the reply line when the user chooses in the browser; `--long`, `--forget <id>`. `lib/live-board.js` gains `shortenBoard`, `awaitChoice`, `forgetBoard`; the search filters move to `lib/find.mjs` (shared with the site's MCP at `/mcp`).
 

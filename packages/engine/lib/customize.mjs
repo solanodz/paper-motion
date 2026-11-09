@@ -130,7 +130,8 @@ function paletteTokens(item, values) {
 function fontTokens(item, values) {
   const e = item.install.entry ?? {};
   const f = e.fonts ?? {}, w = values.displayWeight ?? e.type?.display?.weight ?? 400, tr = `${values.tracking ?? parseFloat(e.type?.display?.tracking ?? '0')}em`;
-  const pick = (role, weights) => { const family = values[role] ?? f[role]?.family; return { ...f[role], family, weights, css: gf(family, weights) }; };
+  // a pair's own css (self-hosted families such as Geist Serif) stays while its family is unchanged; a new family loads from Google Fonts
+  const pick = (role, weights) => { const family = values[role] ?? f[role]?.family; const own = f[role]?.css && family === f[role]?.family && !/fonts\.googleapis\.com/.test(f[role].css); return { ...f[role], family, weights, css: own ? f[role].css : gf(family, weights) }; };
   const fonts = { display: pick('display', [w]), text: pick('text', f.text?.weights ?? [400, 500]), mono: pick('mono', f.mono?.weights ?? [400]) };
   const type = { ...e.type, display: { ...e.type?.display, weight: w, tracking: tr }, title: { ...e.type?.title, weight: w, tracking: tr } };
   return { fonts, type };

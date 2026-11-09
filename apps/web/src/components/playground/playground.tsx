@@ -6,7 +6,7 @@ import { Controls, type Param } from "./controls";
 import { CodeView, copyText } from "./code-view";
 import { DURATION, type PlayerHandle } from "./move-player";
 import { ResourceStage } from "./resource-stage";
-import { decodeBoard, replyLine } from "@/lib/board.mjs";
+import { chooseRange, decodeBoard, replyLine } from "@/lib/board.mjs";
 import { buildTheme, loadResource, type Res, type Theme } from "@/lib/theme";
 import { IconAgent, IconCheck, IconCopy } from "@/components/icons";
 import { kit } from "@/lib/kit";
@@ -106,6 +106,18 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
     if (/^[a-z0-9]{8}$/.test(from)) fetch(`/api/boards/${from}/choice`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ line, label: board.label }) }).catch(() => {});
   };
   const boardHref = () => { const from = new URLSearchParams(location.search).get("from") ?? ""; return /^[a-z0-9]{8}$/.test(from) ? `/b/${from}` : `/b#${from}`; };
+  // a board that lets the user pick several: this tune joins the picks, and the board sends them all together
+  const multiBoard = !!board && (chooseRange(board.b) as [number, number])[1] > 1;
+  const addToPicks = () => {
+    if (!board) return;
+    const from = new URLSearchParams(location.search).get("from") ?? "", key = `pm:picks:${from.slice(0, 64)}`;
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) ?? "null") ?? { labels: [], tuned: {} };
+      const labels: string[] = saved.labels.includes(board.label) ? saved.labels : [...saved.labels, board.label];
+      localStorage.setItem(key, JSON.stringify({ labels, tuned: { ...saved.tuned, [board.label]: diff } }));
+    } catch { /* storage blocked: the board will not remember this tune */ }
+    location.href = boardHref();
+  };
 
   const playback = isMove || r.type === "background" ? (
     <div className="flex items-center gap-3 font-mono text-[11.5px] text-muted">
@@ -153,7 +165,7 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
           ) : null}
         </div>
         {board ? (
-          <button type="button" onClick={choose} className="flex items-center gap-2 rounded-md bg-paper px-3.5 py-2 text-[13px] font-medium text-ground hover:bg-figure"><IconCheck size={15} /> Choose {board.label}, like this</button>
+          <button type="button" onClick={multiBoard ? addToPicks : choose} className="flex items-center gap-2 rounded-md bg-paper px-3.5 py-2 text-[13px] font-medium text-ground hover:bg-figure"><IconCheck size={15} /> {multiBoard ? `Keep ${board.label} like this, back to the board` : `Choose ${board.label}, like this`}</button>
         ) : <KitButton id={r.id} type={r.type} title={r.title} values={diff} variant="solid" />}
       </div>
       {/* phone: Preview / Code tabs */}
