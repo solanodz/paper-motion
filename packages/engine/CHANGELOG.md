@@ -2,7 +2,7 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
-## 0.2.1 · unreleased
+## 0.2.1 · 2026-11-08
 
 Fixes found by making paper-motion's own launch video as a fresh user.
 
