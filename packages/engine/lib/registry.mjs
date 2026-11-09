@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { apply as applyValues, defaults, paletteColors, parseSet, recolor } from './customize.mjs';
+import { find } from './find.mjs';
 
 const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = path.resolve(ENGINE, '..', '..');
@@ -116,9 +117,12 @@ export function llmsTxt(items, site, { full = false } = {}) {
    Mirror it back before proposing anything.
 3. **Propose with boards.** For each visual decision (palette, type, background, moves, recipe) pick 2–4 options from
    this registry and share a board link: \`pamo board --url --title … --option id … --look palette,font\` prints it
-   (format below). The user opens it, sees the options live in their look, may tune one, and pastes back one line:
-   \`paper-motion: B · mesh-sage --set speed=0.8 (bg-1)\`, or \`paper-motion: none of bg-1, calmer ones\`. The reply
-   carries every value that differs from the defaults, your pre-tuning included, so installing it reproduces what they saw.
+   (format below): a short link (\`${site}/b/<id>\`, stored for 90 days) when the site answers, the long form
+   with the board in the URL fragment otherwise. The user opens it, sees the options live in their look, may tune one,
+   and chooses. The choice comes back as one line: \`paper-motion: B · mesh-sage --set speed=0.8 (bg-1)\`, or
+   \`paper-motion: none of bg-1, calmer ones\`. With \`--wait\` the command keeps running and prints that line the
+   moment they choose (10 min by default); without it, they paste the line in the chat. The reply carries every value
+   that differs from the defaults, your pre-tuning included, so installing it reproduces what they saw.
 4. **Install the choices.** \`npx paper-motion add <id> [--set key=value …]\` in the project root, with exactly the
    \`--set\` arguments from the reply. Moves go to \`moves/\`, backgrounds to \`brand/shader-set/set.json\`, palettes and
    fonts to \`brand/tokens.json\`, recipes to \`pieces/<id>/\`. Their choices also accumulate in a kit at ${site}/kit,
@@ -155,6 +159,13 @@ a lively one); prefer
 \`mood\` overlapping the brand's words; tune one toward the accent (\`dither-slate:colorFront=#3d6bff\`); write a
 one-line \`--note\` for each; share the link.
 
+## The MCP server
+
+The same registry as tools, with no install: add \`${site}/mcp\` (streamable HTTP, no auth) to your agent. Tools:
+\`search\` (the filters above), \`resource\` (one record in full), \`recolor\` (a background's values in a palette),
+\`board\` (creates a short link and, with \`wait\`, returns the user's choice) and \`board_choice\`. Installing is
+still \`npx paper-motion add\` in the user's project, or your own file tools from the record.
+
 ## The board link format
 
 \`${site}/b#<payload>\` where payload = base64url(deflate-raw(JSON)). The JSON:
@@ -169,6 +180,9 @@ one-line \`--note\` for each; share the link.
     { "label": "C", "id": "dither-slate", "values": { "colorFront": "#3d6bff" }, "note": "pixels in your accent" },
     { "label": "D", "id": "grain-slate", "values": {} } ] }
 \`\`\`
+
+Short links: \`POST ${site}/api/boards\` with \`{ "board": … }\` returns \`{ id, url }\`; \`GET /api/boards/<id>/choice\`
+answers 204 until the user chooses, then \`{ line, label }\`. Boards expire after 90 days; \`DELETE /api/boards/<id>\` forgets one.
 
 Rules: 2–4 options, labels A–D, one resource type per \`resource\` board; \`kind: "kit"\` makes each option
 \`{ "label", "items": [{ "id", "values" }], "note" }\` (a whole kit); \`values\` hold only what differs from the
@@ -355,16 +369,7 @@ export async function add(ids, { cwd = process.cwd(), registry, force = false, n
   return report;
 }
 
-const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-/** Distance between two hex colors (0 = same, ~441 = black to white). */
-export const colorDistance = (a, b) => { const x = rgb(a), y = rgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); };
-/** How far a resource's colors sit from a brand's: the mean nearest distance (lower is closer). */
-export const colorFit = (item, brand) => {
-  if (!item.colors?.length || !brand.length) return null;
-  const mean = item.colors.reduce((s, c) => s + Math.min(...brand.map((b) => colorDistance(c, b))), 0) / item.colors.length;
-  // a resource that declares one or two colors is thin evidence of a match: nudge it behind real palettes
-  return mean + (item.colors.length < 3 ? 40 * (3 - item.colors.length) : 0);
-};
+export { colorDistance, colorFit } from './find.mjs';
 
 /**
  * Finds resources: free words over id/title/summary/tags/when, plus filters: type, mode (light|dark), mood,
@@ -372,11 +377,5 @@ export const colorFit = (item, brand) => {
  */
 export async function search(query, opts = {}) {
   const { items } = await getIndex(resolveRegistry(opts.registry));
-  const words = String(query ?? '').toLowerCase().split(/\s+/).filter(Boolean);
-  const hit = (i) => { const hay = [i.id, i.type, i.title, i.summary, ...(i.tags ?? []), ...(i.when ?? []), ...(i.mood ?? [])].join(' ').toLowerCase(); return words.every((w) => hay.includes(w)); };
-  const en = (v) => { if (!opts.energy) return true; const e = String(opts.energy), m = e.match(/^(\d)-(\d)$/); if (m) return v >= +m[1] && v <= +m[2]; if (e.startsWith('<=')) return v <= +e.slice(2); if (e.startsWith('>=')) return v >= +e.slice(2); return v === +e; };
-  const near = opts.near ? String(opts.near).split(',').map((c) => c.trim()).filter((c) => /^#[0-9a-f]{6}$/i.test(c)) : [];
-  let out = items.filter((i) => (!opts.type || i.type === opts.type) && (!opts.mode || i.mode === opts.mode) && (!opts.mood || (i.mood ?? []).includes(opts.mood)) && (!opts.motion || i.motion === opts.motion) && (!opts.role || i.role === opts.role) && (i.energy === undefined || en(i.energy)) && hit(i));
-  if (near.length) out = out.map((i) => ({ ...i, fit: colorFit(i, near) })).filter((i) => i.fit !== null).sort((a, b) => a.fit - b.fit);
-  return out;
+  return find(items, query, opts);
 }
