@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
 import { chooseRange, decodeBoard, replyLine } from "@/lib/board.mjs";
 import { recolor, setArgs } from "@/lib/customize.mjs";
 import { kit } from "@/lib/kit";
@@ -86,8 +85,9 @@ function KitOption({ o, res, chosen, multi, onChoose }: { o: Option; res: Record
 }
 
 export function BoardView({ short = false }: { short?: boolean } = {}) {
-  const params = useParams<{ id?: string }>();
-  const id = short ? String(params?.id ?? "") : undefined;
+  // a short link's id comes from the URL in the browser (not from a hook: the page prerenders as a static shell)
+  const [id, setId] = useState<string | undefined>(undefined);
+  useEffect(() => { if (short) setId(location.pathname.split("/").filter(Boolean).pop() ?? ""); }, [short]);
   const [fragment, setFragment] = useState("");
   const [sent, setSent] = useState<boolean | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
@@ -101,6 +101,7 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (short && id === undefined) return;   // the id is read on the client first
     // a short link (/b/<id>) loads the stored board; a long one carries it in the fragment
     if (id) {
       setFragment(id);
@@ -120,7 +121,7 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
     read();
     window.addEventListener("hashchange", read);
     return () => window.removeEventListener("hashchange", read);
-  }, [id]);
+  }, [id, short]);
   useEffect(() => {
     if (!board) return;
     const ids = new Set<string>();
