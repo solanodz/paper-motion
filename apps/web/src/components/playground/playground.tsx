@@ -47,7 +47,9 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
   useEffect(() => {
     const q = new URLSearchParams(location.search), from = q.get("from"), label = q.get("label");
     if (!from || !label) return;
-    decodeBoard(from).then((b: Board) => {
+    // `from` is the board's fragment, or the id of a stored board (a short link)
+    const load: Promise<Board> = /^[a-z0-9]{8}$/.test(from) ? fetch(`/api/boards/${from}`).then((r) => r.json()).then((j) => j.board) : decodeBoard(from);
+    load.then((b: Board) => {
       setBoard({ b, label });
       for (const it of [b.look?.palette, b.look?.font]) if (it) loadResource(it.id).then((r) => setBoardRes((x) => ({ ...x, [it.id]: r })));
     }).catch(() => {});
@@ -99,7 +101,11 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
     kit.add({ id: r.id, type: r.type, title: r.title, values: diff });
     setReply(line);
     setCopied(await copyText(line));
+    // a short board: the choice also reaches the agent through the server (`pamo board --wait`)
+    const from = new URLSearchParams(location.search).get("from") ?? "";
+    if (/^[a-z0-9]{8}$/.test(from)) fetch(`/api/boards/${from}/choice`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ line, label: board.label }) }).catch(() => {});
   };
+  const boardHref = () => { const from = new URLSearchParams(location.search).get("from") ?? ""; return /^[a-z0-9]{8}$/.test(from) ? `/b/${from}` : `/b#${from}`; };
 
   const playback = isMove || r.type === "background" ? (
     <div className="flex items-center gap-3 font-mono text-[11.5px] text-muted">
@@ -126,7 +132,7 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
         <div className="mb-5 rounded-lg border border-paper/40 bg-surface px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3 text-[13px]">
             <span className="flex items-center gap-2 text-muted"><IconAgent size={15} className="text-paper" /> Tuning option <b className="text-figure">{board.label}</b> of “{board.b.title}”. Adjust, then choose it.</span>
-            <a href={`/b#${new URLSearchParams(location.search).get("from")}`} className="text-muted underline decoration-faint underline-offset-4 hover:text-figure">Back to the board</a>
+            <a href={boardHref()} className="text-muted underline decoration-faint underline-offset-4 hover:text-figure">Back to the board</a>
           </div>
           {reply ? (
             <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">

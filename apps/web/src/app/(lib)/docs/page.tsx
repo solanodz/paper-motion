@@ -5,15 +5,16 @@ import { getIndex, TYPES } from "@/lib/registry";
 
 export const metadata: Metadata = { title: "For agents" };
 
-const BOARD_CMD = `npx paper-motion board --url --title "Backgrounds for Kiln" --ask "Which one feels like the product?" --reply bg-1 --look cobalt,geist --option mesh-graphite --note "quiet, graphite" --option neuro-slate --note "a technical web" --option "dither-slate:colorFront=#3d6bff" --note "pixels in your accent" --option grain-slate`;
+const BOARD_CMD = `npx paper-motion board --url --title "Backgrounds for Kiln" --ask "Which one feels like the product?" --reply bg-1 --look cobalt,geist --option mesh-graphite --note "quiet, graphite" --option neuro-slate --note "a technical web" --option "dither-slate:colorFront=#3d6bff" --note "pixels in your accent" --option grain-slate --wait`;
 
 const STEPS: [string, string, string?][] = [
   ["The user starts", "They paste the home page's prompt in their agent. The agent installs the skills and reads llms.txt.", "npx skills add solanodz/paper-motion"],
   ["Interview", "The make-video skill asks what the brand is, what the video is for, the format and the feel. It reads the brand folder when there is one."],
   ["Search", "The agent filters the registry by the metadata: mode, colors near the brand's, mood, energy, role.", `npx paper-motion search --type background --mode dark --near "#0a0f1f,#3d6bff"`],
   ["Propose a board", "Two to four options in one link. The user opens it and sees them live, in their own look: backgrounds come recolored into their palette.", BOARD_CMD],
-  ["Read the reply", "The user pastes one line back. It names the option and carries any tuning as --set arguments.", "paper-motion: C · dither-slate --set speed=1.5 --set colorFront=#3d6bff (bg-1)"],
+  ["Read the reply", "The choice comes back as one line that names the option and carries any tuning as --set arguments: printed by the waiting command, or pasted by the user.", "paper-motion: C · dither-slate --set speed=1.5 --set colorFront=#3d6bff (bg-1)"],
   ["Install and build", "The agent installs the choice as code the user owns, then builds, checks stills and renders.", "npx paper-motion add dither-slate --set speed=1.5 --set colorFront=#3d6bff"],
+  ["Or connect the MCP", "The same registry as tools, no install: search, resource, recolor, board (with wait) and board_choice. Installing stays with pamo add.", "https://paper-motion.vercel.app/mcp"],
 ];
 
 const META: [string, string][] = [

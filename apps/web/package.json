@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "registry": "node ../../packages/engine/bin/pamo.mjs registry build --out public && cp ../../packages/engine/lib/customize.mjs src/lib/customize.mjs && cp ../../packages/engine/lib/live-board.js src/lib/board.mjs",
+    "registry": "node ../../packages/engine/bin/pamo.mjs registry build --out public && cp ../../packages/engine/lib/customize.mjs src/lib/customize.mjs && cp ../../packages/engine/lib/live-board.js src/lib/board.mjs && cp ../../packages/engine/lib/find.mjs src/lib/find.mjs",
     "predev": "npm run registry",
     "dev": "next dev",
     "prebuild": "npm run registry",
@@ -14,11 +14,15 @@
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "^2.4.0",
     "@paper-design/shaders": "^0.0.82",
     "@paper-design/shaders-react": "^0.0.82",
+    "@upstash/redis": "^1.41.0",
+    "mcp-handler": "^2.3.1",
     "next": "16.4.5",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

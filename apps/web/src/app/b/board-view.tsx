@@ -84,8 +84,9 @@ function KitOption({ o, res, chosen, onChoose }: { o: Option; res: Record<string
   );
 }
 
-export function BoardView() {
+export function BoardView({ id }: { id?: string } = {}) {
   const [fragment, setFragment] = useState("");
+  const [sent, setSent] = useState<boolean | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [res, setRes] = useState<Record<string, Full>>({});
@@ -96,6 +97,16 @@ export function BoardView() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    // a short link (/b/<id>) loads the stored board; a long one carries it in the fragment
+    if (id) {
+      setFragment(id);
+      fetch(`/api/boards/${id}`).then(async (r) => {
+        if (r.status === 404) throw new Error("this board expired or was forgotten");
+        if (!r.ok) throw new Error(`the server answered ${r.status}`);
+        return (await r.json()).board as Board;
+      }).then((b) => { setBoard(b); setError(null); }).catch((e: Error) => setError(e.message));
+      return;
+    }
     const read = () => {
       const f = location.hash.slice(1);
       setFragment(f);
@@ -105,7 +116,7 @@ export function BoardView() {
     read();
     window.addEventListener("hashchange", read);
     return () => window.removeEventListener("hashchange", read);
-  }, []);
+  }, [id]);
   useEffect(() => {
     if (!board) return;
     const ids = new Set<string>();
@@ -115,7 +126,12 @@ export function BoardView() {
   }, [board, res]);
   const theme = useMemo(() => (board ? buildTheme(board.look?.palette, board.look?.font, res) : null), [board, res]);
 
-  const say = async (line: string) => { setReply(line); setCopied(await copyText(line)); };
+  // the line reaches the agent two ways: pasted by the user, and (short links) stored for `pamo board --wait`
+  const say = async (line: string, meta: { label?: string; none?: boolean; text?: string } = {}) => {
+    setReply(line); setSent(null);
+    setCopied(await copyText(line));
+    if (id) fetch(`/api/boards/${id}/choice`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ line, ...meta }) }).then((r) => setSent(r.ok)).catch(() => setSent(false));
+  };
   const choose = (o: Option) => {
     if (!board) return;
     setNone(false); setChosen(o.label);
@@ -124,14 +140,14 @@ export function BoardView() {
       const t = buildTheme(pick("palette"), pick("font-pair"), res);
       const items = (o.items ?? []).map((i) => ({ id: i.id, type: res[i.id]?.type ?? "", title: res[i.id]?.title ?? i.id, values: inLook(res[i.id], i.values, t) }));
       kit.set({ name: kit.get().name, items });
-      say(replyLine(board, { label: o.label }));
+      say(replyLine(board, { label: o.label }), { label: o.label });
     } else {
       const r = res[o.id!], values = inLook(r, o.values, theme);
       if (r) kit.add({ id: r.id, type: r.type, title: r.title, values });
-      say(replyLine(board, { label: o.label, setArgs: r ? (setArgs(r, { ...Object.fromEntries((r.params ?? []).map((p) => [p.name, p.default])), ...values }) as string[]) : [] }));
+      say(replyLine(board, { label: o.label, setArgs: r ? (setArgs(r, { ...Object.fromEntries((r.params ?? []).map((p) => [p.name, p.default])), ...values }) as string[]) : [] }), { label: o.label });
     }
   };
-  const sayNone = () => { if (!board) return; setChosen(null); say(replyLine(board, { none: true, text: noneText.trim() })); };
+  const sayNone = () => { if (!board) return; setChosen(null); say(replyLine(board, { none: true, text: noneText.trim() }), { none: true, text: noneText.trim() }); };
 
   if (error) {
     return (
@@ -179,7 +195,7 @@ export function BoardView() {
 
       {reply ? (
         <div className="corner-marks mt-8 rounded-xl border border-paper/50 bg-surface p-5">
-          <div className="flex items-center gap-2 text-[14px] font-medium"><IconCheck size={16} className="text-paper" /> {copied ? "Copied. Paste this line in the chat with your agent:" : "Paste this line in the chat with your agent:"}</div>
+          <div className="flex items-center gap-2 text-[14px] font-medium"><IconCheck size={16} className="text-paper" /> {sent ? "Your agent has it. If it was not waiting, paste this line in the chat:" : copied ? "Copied. Paste this line in the chat with your agent:" : "Paste this line in the chat with your agent:"}</div>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-md bg-ground px-3 py-2 font-mono text-[13px] text-figure">{reply}</code>
             <button type="button" onClick={async () => setCopied(await copyText(reply))} className="flex items-center gap-1.5 rounded-md bg-paper px-3 py-2 text-[12.5px] font-medium text-ground hover:bg-figure"><IconCopy size={13} /> Copy</button>

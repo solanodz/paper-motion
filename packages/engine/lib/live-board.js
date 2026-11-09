@@ -95,6 +95,37 @@ export async function decodeBoard(fragment) {
 
 export const boardUrl = (site, fragment) => `${site.replace(/\/$/, '')}/b#${fragment}`;
 
+/**
+ * Stores a board on the site and returns its short link `{ id, url, expires }` (`POST /api/boards`). Throws when
+ * the site refuses or is unreachable; callers fall back to the fragment link.
+ */
+export async function shortenBoard(site, board) {
+  const r = await fetch(`${site.replace(/\/$/, '')}/api/boards`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ board }) });
+  if (!r.ok) { let msg = `${r.status}`; try { msg = (await r.json()).error ?? msg; } catch { /* keep the status */ } throw new Error(`the site did not store the board (${msg})`); }
+  return r.json();
+}
+
+/**
+ * Waits for the choice made on a stored board: polls `GET /api/boards/<id>/choice` every `every` ms until one
+ * exists or `timeout` ms pass. Resolves `{ line, label?, none?, text?, at }`, or null on timeout.
+ */
+export async function awaitChoice(site, id, { timeout = 10 * 60 * 1000, every = 2000, signal } = {}) {
+  const base = `${site.replace(/\/$/, '')}/api/boards/${id}/choice`, until = Date.now() + timeout;
+  while (Date.now() < until && !signal?.aborted) {
+    const r = await fetch(base, { cache: 'no-store' });
+    if (r.status === 200) return r.json();
+    if (r.status !== 204) throw new Error(`the site answered ${r.status} while waiting for the choice`);
+    await new Promise((res) => setTimeout(res, every));
+  }
+  return null;
+}
+
+/** Forgets a stored board and its choice (`DELETE /api/boards/<id>`). */
+export async function forgetBoard(site, id) {
+  const r = await fetch(`${site.replace(/\/$/, '')}/api/boards/${id}`, { method: 'DELETE' });
+  if (!r.ok && r.status !== 404) throw new Error(`the site answered ${r.status}`);
+}
+
 // ── the reply line ──────────────────────────────────────────────
 // What the user pastes back in the chat. One line, starts with "paper-motion:", so an agent can spot and parse it.
 //   paper-motion: A · mesh-sage                                   chose A as proposed
