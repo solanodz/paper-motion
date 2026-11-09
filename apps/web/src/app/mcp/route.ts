@@ -132,7 +132,7 @@ const handler = createMcpHandler(
       async ({ id }) => text({ id, choice: (await getStore().get<Choice>(choiceKey(id))) ?? null }),
     );
   },
-  { serverInfo: { name: "paper-motion", version: "0.2.2" } },
+  { serverInfo: { name: "paper-motion", version: "0.2.3" } },
 );
 
 export { handler as GET, handler as POST };
