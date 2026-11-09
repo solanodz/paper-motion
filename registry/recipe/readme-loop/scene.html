@@ -29,6 +29,7 @@ import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
   background: null,                       // a calm shader-set id, or null for the brand's first entry
+  backgroundOpacity: 0.85,                 // the shader behind the type; 1 for a field with no words over it
   line: null,                             // null reads IDENTITY.md "In one line"
   command: 'npx skills add your/repo',
 };
@@ -38,9 +39,11 @@ const W = 1600, H = 900, SHORT = H, D = 6;
 const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 if (bgId) B.shader(s, '#bg', bgId, { loop: D });
+document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;   // the material sits behind the type, never over it
 
 const mark = B.style(document.querySelector('#mark'), 'display', { short: SHORT });
 const line = B.style(document.querySelector('#line'), 'body', { short: SHORT, color: 'muted' });
+line.style.fontSize = `${SHORT * 0.03}px`;
 const row = document.querySelector('#cmdrow'), cmd = document.querySelector('#cmd'), cur = document.querySelector('#cur');
 Object.assign(row.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.026}px`, color: B.color('figure'), marginTop: `${SHORT * 0.06}px` });
 document.querySelector('#pr').style.color = B.color('muted');

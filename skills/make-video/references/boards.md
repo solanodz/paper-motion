@@ -23,7 +23,7 @@ pamo board --url --title "Backgrounds for Kiln" --ask "Which one feels like the 
 - `--option id[:key=value,…]`: 2 to 4, one resource type per board. Values are your adjustments (hex colors, numbers, JSON for lists).
 - `--note "…"`: one line per option saying why you propose it. Users read these.
 - `--kit`: each option is a whole kit, a space-separated list of ids (`--option "cobalt geist mesh-graphite magic-move launch"`), for "show me three directions".
-- The command validates ids and params against the registry and prints the URL. Share it as is. Without the CLI, build the payload by hand: the format is in `https://paper-motion.app/llms.txt`.
+- The command validates ids and params against the registry and prints the URL. Share it as is. Without the CLI, build the payload by hand: the format is in `https://paper-motion.vercel.app/llms.txt`.
 
 ### Read the reply
 

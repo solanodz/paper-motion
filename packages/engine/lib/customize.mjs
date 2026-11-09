@@ -120,7 +120,7 @@ export function apply(item, values) {
 }
 
 /** The code tabs, the change count and the agent prompt for a resource at these values. */
-export function code(item, values, { showAll = false, site = 'https://paper-motion.app' } = {}) {
+export function code(item, values, { showAll = false, site = 'https://paper-motion.vercel.app' } = {}) {
   const v = { ...defaults(item), ...values }, diff = changed(item, v), out = apply(item, v);
   const args = setArgs(item, v);
   const agent = `Use the paper-motion resource "${item.id}" (${site}/r/${item.id}.json) in my video. Install it with: npx paper-motion add ${item.id}${args.length ? ` ${args.join(' ')}` : ''}`;

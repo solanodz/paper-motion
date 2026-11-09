@@ -11,7 +11,7 @@ const geistSerif = localFont({ src: "../fonts/GeistSerif-Regular.woff2", variabl
 const geistPixel = localFont({ src: "../fonts/GeistPixel-Square.woff2", variable: "--font-geist-pixel" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.PAPER_MOTION_SITE ?? "https://paper-motion.app"),
+  metadataBase: new URL(process.env.PAPER_MOTION_SITE ?? "https://paper-motion.vercel.app"),
   openGraph: { images: ["/site/og.png"], siteName: "paper-motion" },
   twitter: { card: "summary_large_image" },
   title: { default: "paper-motion · motion resources for AI agents", template: "%s · paper-motion" },

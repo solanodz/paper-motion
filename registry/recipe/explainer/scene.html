@@ -22,6 +22,7 @@
 <body>
 <main id="stage">
   <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
   <div id="f1" class="frame"><div class="center"><div id="question"></div></div></div>
   <div id="f2" class="frame"><div id="slot" class="abs"></div></div>
   <div id="f3" class="frame"><div id="recap" class="abs"></div></div>
@@ -34,6 +35,7 @@ import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
   background: null,                         // a calm shader-set id, or null for the brand's first entry
+  backgroundOpacity: 0.55,                 // the shader behind the type; 1 for a field with no words over it
   question: 'How does it work?',            // what this answers, naming what the brand is
   steps: [
     { label: '01', title: 'First', body: 'What happens first, in one line.' },
@@ -49,10 +51,13 @@ const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 36;
 const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;   // the material sits behind the type, never over it
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)';
 const $ = (id) => document.getElementById(id);
 
 const question = B.style($('question'), 'display', { short: SHORT });
-const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'muted' });
+const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'figure' });
+Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.028}px`, letterSpacing: '0em' });
 action.style.marginTop = `${SHORT * 0.03}px`;
 question.textContent = CONFIG.question; mark.textContent = B.name; action.textContent = CONFIG.action;
 
@@ -69,6 +74,7 @@ function card(p, i, host, w) {
   set(c.children[1], 'display', 'figure').textContent = p.title;
   set(c.children[2], 'body', 'muted').textContent = p.body;
   c.children[2].style.marginTop = 'auto';
+  Object.assign(c.children[2].style, { fontSize: `${SHORT * Math.max(0.45, k) * 0.03}px`, lineHeight: 1.35, maxWidth: '26ch' });   // readable on a phone
   host.append(c);
   return c;
 }

@@ -18,6 +18,7 @@
 <body>
 <main id="stage">
   <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
   <div id="group" class="abs" style="inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
     <div id="mark"></div><div id="line"></div><div id="cmdrow"><span id="cmd"></span><span id="cur"></span></div>
   </div>
@@ -29,6 +30,7 @@ import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
   background: null,                 // a shader-set id (pamo add mesh-sage), or null for the brand's first entry
+  backgroundOpacity: 0.6,                 // the shader behind the type; 1 for a field with no words over it
   line: null,                       // what the brand is, in plain words; null reads IDENTITY.md "In one line"
   action: 'npx skills add your/brand', // a URL, a handle, a date or a command
   format: [1920, 1080],             // 1920×1080, 1080×1920 or 1080×1080
@@ -39,9 +41,12 @@ const [W, H] = CONFIG.format, SHORT = Math.min(W, H);
 const s = scene({ width: W, height: H, fps: 30, duration: 6, background: B.color('ground') });
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;   // the material sits behind the type, never over it
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)';
 
 const mark = B.style(document.querySelector('#mark'), 'display', { short: SHORT });
 const line = B.style(document.querySelector('#line'), 'body', { short: SHORT, color: 'muted' });
+line.style.fontSize = `${SHORT * 0.03}px`;   // readable on a phone
 const cmd = document.querySelector('#cmd'), cur = document.querySelector('#cur');
 Object.assign(document.querySelector('#cmdrow').style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.024}px`, color: B.color('figure'), marginTop: `${SHORT * 0.05}px` });
 Object.assign(line.style, { marginTop: `${SHORT * 0.025}px` });

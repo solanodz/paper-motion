@@ -24,7 +24,7 @@
     {
       "name": "problem",
       "type": "string",
-      "default": "The situation it changes, in the brand’s words.",
+      "default": "The situation it changes, in the brand\u2019s words.",
       "description": "the problem line",
       "group": "main",
       "control": "text"
@@ -69,7 +69,7 @@
     {
       "name": "proof1Label",
       "type": "string",
-      "default": "01 · fast",
+      "default": "01 \u00b7 fast",
       "description": "proof 1 label",
       "group": "advanced",
       "control": "text"
@@ -93,7 +93,7 @@
     {
       "name": "proof2Label",
       "type": "string",
-      "default": "02 · simple",
+      "default": "02 \u00b7 simple",
       "description": "proof 2 label",
       "group": "advanced",
       "control": "text"
@@ -117,7 +117,7 @@
     {
       "name": "proof3Label",
       "type": "string",
-      "default": "03 · yours",
+      "default": "03 \u00b7 yours",
       "description": "proof 3 label",
       "group": "advanced",
       "control": "text"
@@ -168,7 +168,8 @@
   ],
   "preview": {
     "video": "previews/launch.webm",
-    "poster": "previews/launch.jpg"
+    "poster": "previews/launch.jpg",
+    "at": 8.2
   },
   "mood": [
     "bold",
