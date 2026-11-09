@@ -20,7 +20,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   let body: Partial<Choice>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "a JSON body is required" }, { status: 400 }); }
   if (typeof body.line !== "string" || body.line.length > 2000) return NextResponse.json({ error: "line (the reply line) is required" }, { status: 400 });
-  const choice: Choice = { line: body.line, at: Date.now(), ...(body.label ? { label: String(body.label).slice(0, 1) } : {}), ...(body.none ? { none: true } : {}), ...(body.text ? { text: String(body.text).slice(0, 500) } : {}) };
+  const labels = Array.isArray(body.labels) ? body.labels.map((l) => String(l).slice(0, 1)).slice(0, 4) : undefined;
+  const choice: Choice = { line: body.line, at: Date.now(), ...(body.label ? { label: String(body.label).slice(0, 1) } : {}), ...(labels?.length ? { labels } : {}), ...(body.none ? { none: true } : {}), ...(body.text ? { text: String(body.text).slice(0, 500) } : {}) };
   await getStore().set(choiceKey(id), choice, BOARD_TTL);
   return NextResponse.json(choice, { status: 201 });
 }

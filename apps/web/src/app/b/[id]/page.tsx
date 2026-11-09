@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { BoardView } from "../board-view";
-import { isId } from "@/lib/store";
 
 export const metadata: Metadata = {
   title: "A board from your agent",
@@ -11,17 +8,10 @@ export const metadata: Metadata = {
   openGraph: { images: ["/site/og-board.png"], title: "Your agent proposes. You choose." },
 };
 
-async function ShortBoard({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  if (!isId(id)) notFound();
-  return <BoardView id={id} />;
-}
-
-/** A short board link: the board is stored on the server under this id and read in the browser. */
-export default function ShortBoardPage({ params }: { params: Promise<{ id: string }> }) {
-  return (
-    <Suspense fallback={<div className="px-5 py-24 text-center font-mono text-[13px] text-faint">Opening the board…</div>}>
-      <ShortBoard params={params} />
-    </Suspense>
-  );
+/**
+ * A short board link: the board is stored on the server under the id in the path. The page is static; the client
+ * reads the id from the URL and fetches the board, so nothing here waits on params during the render.
+ */
+export default function ShortBoardPage() {
+  return <BoardView short />;
 }

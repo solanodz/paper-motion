@@ -14,6 +14,7 @@ const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palet
 /**
  * @typedef {{ v: 1, kind: 'resource'|'kit', title: string, ask?: string, reply?: string,
  *   look?: { palette?: { id: string, values?: object }, font?: { id: string, values?: object } },
+ *   choose?: number | [number, number],   // how many options the user may pick: 1 (default), 3, or [min, max]
  *   options: Array<{ label: string, id?: string, values?: object, items?: Array<{ id: string, values?: object }>, note?: string }> }} Board
  */
 
@@ -25,6 +26,7 @@ export function validateBoard(b, index) {
   if (!['resource', 'kit'].includes(b.kind)) errs.push('kind must be "resource" or "kit"');
   if (!b.title || typeof b.title !== 'string') errs.push('title is required');
   if (!Array.isArray(b.options) || b.options.length < 2 || b.options.length > 4) errs.push('2 to 4 options');
+  if (b.choose !== undefined) { const [lo, hi] = chooseRange(b); if (!(Number.isInteger(lo) && Number.isInteger(hi) && lo >= 1 && hi >= lo && hi <= 4)) errs.push('choose must be 1–4 or [min, max] within 1–4'); }
   const seen = new Set();
   for (const [i, o] of (b.options ?? []).entries()) {
     const at = `options[${i}]`;
@@ -47,6 +49,9 @@ export function validateBoard(b, index) {
   for (const k of ['palette', 'font']) { const l = b.look?.[k]; if (l && index && !index[l.id]) errs.push(`look.${k} "${l.id}" is not in the registry`); }
   return errs;
 }
+
+/** How many options a board lets the user pick: [min, max]. Defaults to [1, 1]. */
+export const chooseRange = (b) => (Array.isArray(b?.choose) ? [Number(b.choose[0]), Number(b.choose[1])] : [1, Math.max(1, Number(b?.choose ?? 1))]);
 
 // ── compression, both runtimes ──────────────────────────────────
 
@@ -134,14 +139,17 @@ export async function forgetBoard(site, id) {
 //   paper-motion: kit B · cobalt geist mesh-graphite whip-pan      a kit board choice
 // `reply` (the agent's name for the decision) is appended as "(bg-1)" when present.
 
+//   paper-motion: A+C · type-on · scramble --set speed=2           several picks on a board with choose > 1
+// `choice` is { label, setArgs? } for one pick, { picks: [{ label, setArgs? }, …] } for several, or { none, text }.
+
 export function replyLine(board, choice) {
   const tag = board.reply ? ` (${board.reply})` : '';
   if (choice.none) return `paper-motion: none of ${board.reply ?? `"${board.title}"`}${choice.text ? `, ${choice.text}` : ''}`;
-  const o = board.options.find((x) => x.label === choice.label);
-  if (!o) throw new Error(`no option ${choice.label}`);
-  if (board.kind === 'kit') return `paper-motion: kit ${o.label} · ${o.items.map((i) => i.id).join(' ')}${tag}`;
-  const sets = (choice.setArgs ?? []).join(' ');
-  return `paper-motion: ${o.label} · ${o.id}${sets ? ` ${sets}` : ''}${tag}`;
+  const picks = choice.picks ?? [choice];
+  const found = picks.map((c) => { const o = board.options.find((x) => x.label === c.label); if (!o) throw new Error(`no option ${c.label}`); return { o, sets: (c.setArgs ?? []).join(' ') }; });
+  const labels = found.map((f) => f.o.label).join('+');
+  if (board.kind === 'kit') return `paper-motion: kit ${labels} · ${found.map((f) => f.o.items.map((i) => i.id).join(' ')).join(' + ')}${tag}`;
+  return `paper-motion: ${labels} · ${found.map((f) => `${f.o.id}${f.sets ? ` ${f.sets}` : ''}`).join(' · ')}${tag}`;
 }
 
 /** Parses a reply line the user pasted. Returns null when the text is not one. */
@@ -150,10 +158,15 @@ export function parseReply(text) {
   if (!m) return null;
   const body = m[1].trim(), tag = body.match(/\(([^()]+)\)\s*$/)?.[1] ?? null, core = body.replace(/\s*\([^()]+\)\s*$/, '');
   if (core.startsWith('none of ')) { const rest = core.slice(8); const i = rest.indexOf(','); return { none: true, reply: tag ?? rest.slice(0, i < 0 ? undefined : i).trim(), text: i < 0 ? '' : rest.slice(i + 1).trim() }; }
-  const kit = core.match(/^kit ([A-D]) · (.+)$/);
-  if (kit) return { kind: 'kit', label: kit[1], ids: kit[2].split(/\s+/), reply: tag };
-  const one = core.match(/^([A-D]) · (\S+)(.*)$/);
-  if (!one) return null;
-  const sets = [...one[3].matchAll(/--set\s+('([^']*)'|(\S+))/g)].map((x) => x[2] ?? x[3]);
-  return { kind: 'resource', label: one[1], id: one[2], set: sets, reply: tag };
+  const kit = core.match(/^kit ([A-D](?:\+[A-D])*) · (.+)$/);
+  if (kit) { const labels = kit[1].split('+'), kits = kit[2].split(' + ').map((k) => k.split(/\s+/)); return { kind: 'kit', label: labels[0], labels, ids: kits[0], kits, reply: tag }; }
+  const many = core.match(/^([A-D](?:\+[A-D])*) · (.+)$/);
+  if (!many) return null;
+  const labels = many[1].split('+');
+  const picks = many[2].split(' · ').map((part, i) => {
+    const m = part.trim().match(/^(\S+)(.*)$/);
+    return { label: labels[i], id: m[1], set: [...m[2].matchAll(/--set\s+('([^']*)'|(\S+))/g)].map((x) => x[2] ?? x[3]) };
+  });
+  // one pick keeps the original shape (label, id, set); several add `picks`
+  return { kind: 'resource', label: picks[0].label, id: picks[0].id, set: picks[0].set, labels, picks, reply: tag };
 }

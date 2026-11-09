@@ -327,7 +327,7 @@ async function main() {
         const { parseSet, setArgs } = await import('../lib/customize.mjs');
         const reg = resolveRegistry(args.registry), { items } = await getIndex(reg), index = Object.fromEntries(items.map((i) => [i.id, i]));
         const opts = process.argv.flatMap((a, i, all) => (a === '--option' ? [all[i + 1]] : a.startsWith('--option=') ? [a.slice(9)] : [])).filter(Boolean);
-        if (!opts.length || !args.title || args.help) { console.error('Usage: board --url --title "…" [--ask "…"] [--reply name] [--look palette,font] --option id[:key=value,…] [--note "why"] … [--kit] [--wait [minutes]] [--long] [--site url]\n       board --forget <id>\n  Prints a live board link: short (/b/<id>, stored on the site for 90 days) when the site answers, long (the board in the URL fragment) otherwise or with --long. Values after the colon are your adjustments; the reply line carries every non-default value.\n  --wait keeps running until the user chooses in the browser (10 min by default) and prints the reply line, the same one they could paste. --forget deletes a stored board early.'); process.exit(args.help ? 0 : 1); }
+        if (!opts.length || !args.title || args.help) { console.error('Usage: board --url --title "…" [--ask "…"] [--reply name] [--look palette,font] --option id[:key=value,…] [--note "why"] … [--kit] [--choose 1-3] [--wait minutes | --no-wait] [--long] [--site url]\n       board --forget <id>\n  Prints a live board link: short (/b/<id>, stored on the site for 90 days) when the site answers, long (the board in the URL fragment) otherwise or with --long. Values after the colon are your adjustments; the reply line carries every non-default value.\n  With a short link the command keeps running until the user chooses in the browser (10 min; --wait 3 changes it, --no-wait returns at once) and prints the reply line, the same one they could paste. --choose lets them pick several options (a count, or min-max). --forget deletes a stored board early.'); process.exit(args.help ? 0 : 1); }
         const LABELS = ['A', 'B', 'C', 'D'];
         const parseOne = async (spec) => {
           const [id, kv] = spec.split(':'), it = index[id];
@@ -346,20 +346,22 @@ async function main() {
         }
         const look = {};
         if (typeof args.look === 'string') for (const spec of args.look.split(',')) { const o = await parseOne(spec.trim()); const t = index[o.id]?.type; if (t === 'palette') look.palette = o; else if (t === 'font-pair') look.font = o; else throw new Error(`--look takes a palette and a font pair, not "${o.id}"`); }
-        const board = { v: 1, kind: args.kit ? 'kit' : 'resource', title: String(args.title), ...(args.ask ? { ask: String(args.ask) } : {}), ...(args.reply ? { reply: String(args.reply) } : {}), ...(Object.keys(look).length ? { look } : {}), options };
+        const choose = args.choose === undefined ? undefined : /^\d+-\d+$/.test(String(args.choose)) ? String(args.choose).split('-').map(Number) : Number(args.choose);
+        const board = { v: 1, kind: args.kit ? 'kit' : 'resource', title: String(args.title), ...(args.ask ? { ask: String(args.ask) } : {}), ...(args.reply ? { reply: String(args.reply) } : {}), ...(Object.keys(look).length ? { look } : {}), ...(choose !== undefined ? { choose } : {}), options };
         const site = typeof args.site === 'string' ? args.site : SITE;
         let frag, short = null;
         try { frag = await encodeBoard(board, index); } catch (e) { console.error(e.message); process.exit(1); }
         // the short link when the site stores it; the long one (the board in the fragment) when it cannot
         if (!args.long) { try { short = await shortenBoard(site, board); } catch (e) { console.error(`(${e.message}; sharing the long link)`); } }
         console.log(short ? short.url : boardUrl(site, frag));
-        if (short && args.wait) {
-          const minutes = Number.isFinite(Number(args.wait)) && args.wait !== true ? Number(args.wait) : 10;
+        const wait = !args['no-wait'];   // waiting is the default: the choice comes back without the user pasting anything
+        if (short && wait) {
+          const minutes = Number.isFinite(Number(args.wait)) && args.wait !== undefined && args.wait !== true ? Number(args.wait) : 10;
           console.error(`waiting up to ${minutes} min for the choice on ${short.id} (the user can still paste the line)…`);
           const choice = await awaitChoice(site, short.id, { timeout: minutes * 60 * 1000 });
           if (!choice) { console.error('no choice yet; ask the user to paste the line from the board'); process.exit(3); }
           console.log(choice.line);
-        } else if (!short && args.wait) console.error('--wait needs the short link; the user will paste the line instead');
+        } else if (!short && wait) console.error('(no short link, so no waiting: the user will paste the line from the board)');
         break;
       }
       if (args.forget) {

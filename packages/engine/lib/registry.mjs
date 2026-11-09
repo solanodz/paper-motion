@@ -119,10 +119,12 @@ export function llmsTxt(items, site, { full = false } = {}) {
    this registry and share a board link: \`pamo board --url --title … --option id … --look palette,font\` prints it
    (format below): a short link (\`${site}/b/<id>\`, stored for 90 days) when the site answers, the long form
    with the board in the URL fragment otherwise. The user opens it, sees the options live in their look, may tune one,
-   and chooses. The choice comes back as one line: \`paper-motion: B · mesh-sage --set speed=0.8 (bg-1)\`, or
-   \`paper-motion: none of bg-1, calmer ones\`. With \`--wait\` the command keeps running and prints that line the
-   moment they choose (10 min by default); without it, they paste the line in the chat. The reply carries every value
-   that differs from the defaults, your pre-tuning included, so installing it reproduces what they saw.
+   and chooses. The command keeps running and prints the choice the moment they choose (10 min by default;
+   \`--no-wait\` returns at once and they paste the line instead). It is one line: \`paper-motion: B · mesh-sage --set
+   speed=0.8 (bg-1)\`, \`paper-motion: A+C · type-on · scramble (text-1)\` when the board let them pick several
+   (\`--choose 1-3\`: use it for text effects and transitions), or \`paper-motion: none of bg-1, calmer ones\`. The
+   reply carries every value that differs from the defaults, your pre-tuning included, so installing it reproduces what
+   they saw. Never ask the user to paste anything while a command or the MCP is waiting: the choice arrives on its own.
 4. **Install the choices.** \`npx paper-motion add <id> [--set key=value …]\` in the project root, with exactly the
    \`--set\` arguments from the reply. Moves go to \`moves/\`, backgrounds to \`brand/shader-set/set.json\`, palettes and
    fonts to \`brand/tokens.json\`, recipes to \`pieces/<id>/\`. Their choices also accumulate in a kit at ${site}/kit,
@@ -163,7 +165,7 @@ one-line \`--note\` for each; share the link.
 
 The same registry as tools, with no install: add \`${site}/mcp\` (streamable HTTP, no auth) to your agent. Tools:
 \`search\` (the filters above), \`resource\` (one record in full), \`recolor\` (a background's values in a palette),
-\`board\` (creates a short link and, with \`wait\`, returns the user's choice) and \`board_choice\`. Installing is
+\`board\` (creates a short link and waits for the user's choice, which it returns as \`choices\`) and \`board_choice\`. Installing is
 still \`npx paper-motion add\` in the user's project, or your own file tools from the record.
 
 ## The board link format
@@ -172,7 +174,7 @@ still \`npx paper-motion add\` in the user's project, or your own file tools fro
 
 \`\`\`json
 { "v": 1, "kind": "resource", "title": "Backgrounds for Kiln", "ask": "Which one feels like the product?",
-  "reply": "bg-1",
+  "reply": "bg-1", "choose": 1,
   "look": { "palette": { "id": "cobalt", "values": {} }, "font": { "id": "geist", "values": {} } },
   "options": [
     { "label": "A", "id": "mesh-graphite", "values": {}, "note": "quiet, graphite" },
@@ -184,7 +186,7 @@ still \`npx paper-motion add\` in the user's project, or your own file tools fro
 Short links: \`POST ${site}/api/boards\` with \`{ "board": … }\` returns \`{ id, url }\`; \`GET /api/boards/<id>/choice\`
 answers 204 until the user chooses, then \`{ line, label }\`. Boards expire after 90 days; \`DELETE /api/boards/<id>\` forgets one.
 
-Rules: 2–4 options, labels A–D, one resource type per \`resource\` board; \`kind: "kit"\` makes each option
+Rules: 2–4 options, labels A–D, \`choose\` 1 (default), a count or \`[min, max]\`, one resource type per \`resource\` board; \`kind: "kit"\` makes each option
 \`{ "label", "items": [{ "id", "values" }], "note" }\` (a whole kit); \`values\` hold only what differs from the
 defaults; the JSON stays under 8 KB. \`pamo board --url\` builds and validates it for you.
 
