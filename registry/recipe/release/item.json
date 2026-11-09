@@ -4,35 +4,163 @@
   "type": "recipe",
   "title": "Release",
   "summary": "A record, a single, an episode: the cover art rises in, who and what, a pulse on the track's beat, the date and where to listen, in 15 s.",
-  "tags": ["recipe", "music", "podcast", "release", "cover", "1:1", "9:16"],
+  "tags": [
+    "recipe",
+    "music",
+    "podcast",
+    "release",
+    "cover",
+    "1:1",
+    "9:16"
+  ],
   "version": "1.0.0",
   "license": "MIT",
   "params": [
-    { "name": "title", "type": "string", "default": "Title", "description": "the record, the single, the episode", "group": "main", "control": "text" },
-    { "name": "artist", "type": "string", "default": "", "description": "who; empty uses the brand's name", "group": "main", "control": "text" },
-    { "name": "what", "type": "string", "default": "the debut EP", "description": "what this is, in plain words", "group": "main", "control": "text" },
-    { "name": "action", "type": "string", "default": "Out 21 Nov · everywhere you listen", "description": "the date and where to listen", "group": "main", "control": "text" },
-    { "name": "bpm", "type": "number", "default": 96, "min": 50, "max": 180, "step": 1, "description": "the track's tempo: the cover and the bars move on it", "group": "main" },
-    { "name": "cover", "type": "string", "default": "", "description": "the square cover art (path); empty fills the sleeve with the brand's shader", "group": "main", "control": "text" },
-    { "name": "background", "type": "string", "default": "", "description": "a background id from the registry; empty uses the brand's first", "group": "advanced", "control": "select" },
-    { "name": "format", "type": "enum", "default": "1080x1080", "options": ["1080x1080", "1080x1920", "1080x1350", "1920x1080"], "description": "output size", "group": "main", "control": "segmented" }
+    {
+      "name": "title",
+      "type": "string",
+      "default": "Title",
+      "description": "the record, the single, the episode",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "artist",
+      "type": "string",
+      "default": "",
+      "description": "who; empty uses the brand's name",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "what",
+      "type": "string",
+      "default": "the debut EP",
+      "description": "what this is, in plain words",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "action",
+      "type": "string",
+      "default": "Out 21 Nov · everywhere you listen",
+      "description": "the date and where to listen",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "bpm",
+      "type": "number",
+      "default": 96,
+      "min": 50,
+      "max": 180,
+      "step": 1,
+      "description": "the track's tempo: the cover and the bars move on it",
+      "group": "main"
+    },
+    {
+      "name": "cover",
+      "type": "string",
+      "default": "",
+      "description": "the square cover art (path); empty fills the sleeve with the brand's shader",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1080x1080",
+      "options": [
+        "1080x1080",
+        "1080x1920",
+        "1080x1350",
+        "1920x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    }
   ],
-  "install": { "kind": "scene" },
+  "install": {
+    "kind": "scene"
+  },
   "files": [
-    { "from": "registry/recipe/release/scene.html", "to": "pieces/release/scene.html" },
-    { "from": "registry/recipe/release/brief.md", "to": "pieces/release/brief.md" }
+    {
+      "from": "registry/recipe/release/scene.html",
+      "to": "pieces/release/scene.html"
+    },
+    {
+      "from": "registry/recipe/release/brief.md",
+      "to": "pieces/release/brief.md"
+    }
   ],
-  "requires": { "engine": ">=0.2.1" },
+  "requires": {
+    "engine": ">=0.2.1"
+  },
   "usage": "npx paper-motion add release --name my-piece\n# put the cover in, edit CONFIG in pieces/my-piece/scene.html, then:\nnpx paper-motion render pieces/my-piece/scene.html --audio track.wav --loudness -14",
   "notes": [
     "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work: pamo add sage-night instrument) and, for the background, a shader-set entry (pamo add mesh-sage).",
     "Made for a cover and a track: render with --audio; the pulse follows CONFIG.bpm, not the audio.",
     "Uses these moves from the engine: word-rise, track-in, blur-in."
   ],
-  "related": ["social-loop", "end-card", "word-rise"],
-  "preview": { "video": "previews/release.webm", "poster": "previews/release.jpg", "at": 4.0 },
-  "mood": ["calm", "editorial", "warm"],
+  "related": [
+    "social-loop",
+    "end-card",
+    "word-rise"
+  ],
+  "preview": {
+    "video": "previews/release.webm",
+    "poster": "previews/release.jpg",
+    "at": 4.0
+  },
+  "mood": [
+    "calm",
+    "editorial",
+    "warm"
+  ],
   "duration": 15,
-  "formats": ["1:1", "9:16", "4:5", "16:9"],
-  "when": ["a record, a single or an episode comes out", "you have cover art and the track"]
+  "formats": [
+    "1:1",
+    "9:16",
+    "4:5",
+    "16:9"
+  ],
+  "when": [
+    "a record, a single or an episode comes out",
+    "you have cover art and the track"
+  ],
+  "beats": [
+    {
+      "name": "Cover",
+      "from": 0,
+      "to": 1.5,
+      "what": "the sleeve rises through a mask"
+    },
+    {
+      "name": "Words",
+      "from": 1.4,
+      "to": 4,
+      "what": "title, who, what it is"
+    },
+    {
+      "name": "Pulse",
+      "from": 3.2,
+      "to": 15,
+      "what": "the cover and a row of bars move on the beat"
+    },
+    {
+      "name": "Action",
+      "from": 9.4,
+      "to": 15,
+      "what": "the date and where to listen, then the wordmark"
+    }
+  ]
 }

@@ -155,7 +155,10 @@ ${site}/registry.json is the index; every item carries, beside id, type, title, 
   reply line carries the resulting values. Without a board, \`pamo add <background> --palette <palette-id|brand>\`
   installs it that way (\`brand\` reads \`brand/tokens.json\`). So choose backgrounds by \`motion\`, \`mood\` and
   texture first; the color comes from the palette.
-- Font pairs: \`voice\` (serif, sans, display, mono). Recipes: \`duration\`, \`formats\`.
+- Font pairs: \`voice\` (serif, sans, display, mono). Recipes: \`duration\`, \`formats\` and \`beats\` (the structure as a
+  timeline: name, from, to, what). A recipe board shows the beats, so the user chooses a rhythm, not a name; you may add
+  one option that is a **structure of your own** for this brief (\`structure\` instead of \`id\`, format below), which you
+  then build from scratch.
 
 \`pamo search\` filters by them: \`pamo search --type background --mode dark --near "#0a0f1f,#eef1f8,#3d6bff"\`
 sorts backgrounds by color fit (the mean distance from each of theirs to the nearest of yours; lower is closer; pass
@@ -188,6 +191,15 @@ still \`npx paper-motion add\` in the user's project, or your own file tools fro
     { "label": "B", "id": "neuro-slate", "values": {}, "note": "a technical web" },
     { "label": "C", "id": "dither-slate", "values": { "colorFront": "#3d6bff" }, "note": "pixels in your accent" },
     { "label": "D", "id": "grain-slate", "values": {} } ] }
+\`\`\`
+
+A recipe board may hold one option that is a structure of your own for this brief; if chosen, you build it from scratch:
+
+\`\`\`json
+{ "label": "D", "structure": { "title": "Three cuts", "duration": 18, "beats": [
+    { "name": "Hook", "from": 0, "to": 2, "what": "one line over the field" },
+    { "name": "Proof", "from": 2, "to": 12, "what": "three shots of the product" },
+    { "name": "Close", "from": 12, "to": 18, "what": "the wordmark and the action" } ] } }
 \`\`\`
 
 Short links: \`POST ${site}/api/boards\` with \`{ "board": … }\` returns \`{ id, url }\`; \`GET /api/boards/<id>/choice\`
@@ -243,7 +255,7 @@ export function build({ dir = resolveRegistry().dir, out, site = SITE } = {}) {
   for (const it of items) if (it.preview) { const have = Object.fromEntries(Object.entries(it.preview).filter(([, p]) => typeof p !== 'string' || fs.existsSync(path.join(out, p)))); it.preview = Object.values(have).some((p) => typeof p === 'string') ? have : undefined; }
   const index = {
     name: 'paper-motion', site, schema: `${site}/schema.json`, count: items.length, types: TYPES.filter((t) => items.some((i) => i.type === t)),
-    items: items.map(({ id, type, title, summary, tags, version, preview, related, when, mood, energy, role, colors, mode, motion, voice, duration, formats, params }) => ({ id, type, title, summary, tags, version, url: `${site}/r/${id}.json`, ...Object.fromEntries(Object.entries({ when, mood, energy, role, colors, mode, motion, voice, duration, formats, preview, related, params: params?.filter((p) => !p.hidden).map((p) => p.name) }).filter(([, v]) => v !== undefined)) })),
+    items: items.map(({ id, type, title, summary, tags, version, preview, related, when, mood, energy, role, colors, mode, motion, voice, duration, formats, beats, params }) => ({ id, type, title, summary, tags, version, url: `${site}/r/${id}.json`, ...Object.fromEntries(Object.entries({ when, mood, energy, role, colors, mode, motion, voice, duration, formats, beats, preview, related, params: params?.filter((p) => !p.hidden).map((p) => p.name) }).filter(([, v]) => v !== undefined)) })),
   };
   fs.writeFileSync(path.join(out, 'registry.json'), JSON.stringify(index, null, 2));
   fs.mkdirSync(path.join(out, 'files'), { recursive: true });
