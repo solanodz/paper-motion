@@ -157,7 +157,6 @@
         "radius": 1.25,
         "size": 0.5,
         "scale": 1,
-        "image": "https://app.paper.design/file-assets/01M6SRQNT8A40GRN1N12WDCCM2/01M6SSXH0VAPZM08QX2B3B73SB.png",
         "grainMixer": 0.2,
         "grainOverlay": 0.2,
         "grainSize": 0.5,
@@ -166,10 +165,16 @@
         "colorFront": "#8A4F3D",
         "colorBack": "#00000000"
       },
-      "background": "#EADBC8"
+      "background": "#EADBC8",
+      "image": "assets/materials/material-b.jpg"
     }
   },
-  "files": [],
+  "files": [
+    {
+      "from": "registry/_assets/materials/material-b.jpg",
+      "to": "brand/assets/materials/material-b.jpg"
+    }
+  ],
   "requires": {
     "engine": ">=0.2.0"
   },

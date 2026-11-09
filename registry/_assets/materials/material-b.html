@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>material b</title>
+<!--
+  Source of material-b.jpg, the tonal image the halftone backgrounds filter:
+  `pamo still registry/_assets/materials/material-b.html --t 1.4 --out registry/_assets/materials/material-b.png`
+  then `sips -s format jpeg -s formatOptions 86 material-b.png --out material-b.jpg`.
+  A monochrome still life of soft forms with a full tonal range, so dots, hexes and CMYK screens have something to read.
+-->
+<style>
+  #stage { overflow: hidden; background: #0a0a0a; }
+  .abs { position: absolute; }
+  #field { inset: 0; opacity: 0.9; }
+  .orb { border-radius: 50%; }
+  #a { left: 980px; top: 120px; width: 760px; height: 760px; background: radial-gradient(circle at 36% 30%, #f4f1ea 0%, #cfcbc2 22%, #6f6d68 60%, #151515 100%); filter: blur(2px); }
+  #b { left: 160px; top: 520px; width: 520px; height: 520px; background: radial-gradient(circle at 60% 35%, #d9d4c8 0%, #8f8b82 40%, #1c1c1c 100%); filter: blur(3px); }
+  #c { left: 620px; top: -220px; width: 560px; height: 560px; background: radial-gradient(circle at 50% 70%, #5a5853 0%, #262523 55%, #0a0a0a 100%); filter: blur(6px); }
+  #floor { left: 0; right: 0; bottom: 0; height: 320px; background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(230,226,216,0.35) 100%); }
+  #ray { left: -200px; top: -200px; width: 1400px; height: 1800px; background: linear-gradient(115deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0) 60%); transform: rotate(-8deg); }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="field" class="abs"></div>
+  <div id="c" class="abs orb"></div>
+  <div id="ray" class="abs"></div>
+  <div id="a" class="abs orb"></div>
+  <div id="b" class="abs orb"></div>
+  <div id="floor" class="abs"></div>
+</main>
+<script type="module">
+import { scene } from 'paper-motion';
+const s = scene({ width: 1920, height: 1080, fps: 30, duration: 3, background: '#0a0a0a' });
+s.shader('#field', 'MeshGradient', { speed: 0.4, distortion: 0.6, swirl: 0.3, colors: ['#050505', '#3a3935', '#8a877f', '#121212'] });
+await s.start();
+</script>
+</body>
+</html>
