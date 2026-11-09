@@ -2,11 +2,14 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
-## 0.2.2 · unreleased
+## 0.2.3 · unreleased
+
+- Boards get short links and a return channel: `pamo board --url` stores the board on the site (`/b/<id>`, 90 days) and falls back to the long link; `--wait [minutes]` prints the reply line when the user chooses in the browser; `--long`, `--forget <id>`. `lib/live-board.js` gains `shortenBoard`, `awaitChoice`, `forgetBoard`; the search filters move to `lib/find.mjs` (shared with the site's MCP at `/mcp`).
+
+## 0.2.2 · 2026-11-09
 
 - Every background is a color family: `recolor(item, palette)` in `lib/customize.mjs`, `pamo add <background> --palette <id|brand>`, boards with a `--look` show backgrounds recolored and their reply lines carry the values. A background's CSS `background` is a param; `B.shader` paints it.
 - Two recipes: `product-demo` and `release`.
-- Boards get short links and a return channel: `pamo board --url` stores the board on the site (`/b/<id>`, 90 days) and falls back to the long link; `--wait [minutes]` prints the reply line when the user chooses in the browser; `--long`, `--forget <id>`. `lib/live-board.js` gains `shortenBoard`, `awaitChoice`, `forgetBoard`; the search filters move to `lib/find.mjs` (shared with the site's MCP).
 - Six halftone backgrounds filter `material-b.jpg`, rendered by the engine, instead of an image hosted by Paper.
 
 ## 0.2.1 · 2026-11-08
