@@ -171,7 +171,7 @@ const handler = createMcpHandler(
     );
   },
   {
-    serverInfo: { name: "paper-motion", version: "0.2.3" },
+    serverInfo: { name: "paper-motion", version: "0.2.5" },
     instructions: FLOW,
   },
 );

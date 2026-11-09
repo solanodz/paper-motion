@@ -23,9 +23,9 @@ const inLook = (res: Full | undefined, values: Values | undefined, theme: Theme)
   res?.type === "background" && theme?.palette ? { ...(recolor(res, theme.palette) as Values), ...(values ?? {}) } : values ?? {};
 
 /** One option of a resource board: its live stage, label, note and the two actions. */
-function ResourceOption({ o, res, theme, fragment, chosen, multi, onChoose }: { o: Option; res: Full | undefined; theme: Theme; fragment: string; chosen: boolean; multi: boolean; onChoose: () => void }) {
+function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoose }: { o: Option; res: Full | undefined; theme: Theme; fragment: string; chosen: boolean; multi: boolean; tuned?: Values; onChoose: () => void }) {
   const Icon = res ? TYPE_ICONS[res.type] : null;
-  const values = inLook(res, o.values, theme);
+  const values = tuned ?? inLook(res, o.values, theme);
   return (
     <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
       <div className="relative aspect-video overflow-hidden bg-black [container-type:inline-size]">
@@ -41,6 +41,7 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, onChoose }: { 
         {o.note ? <p className="mt-2 text-[13px] leading-snug text-muted">{o.note}</p> : null}
         {o.values && Object.keys(o.values).length ? <p className="mt-1.5 font-mono text-[11px] text-faint">{Object.keys(o.values).length} setting{Object.keys(o.values).length > 1 ? "s" : ""} adjusted by your agent</p> : null}
         {res?.type === "background" && theme?.palette ? <p className="mt-1.5 font-mono text-[11px] text-faint">recolored to your palette</p> : null}
+        {tuned ? <p className="mt-1.5 font-mono text-[11px] text-paper">tuned by you</p> : null}
         <div className="mt-4 flex gap-2">
           <button type="button" onClick={onChoose} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
             {chosen ? <IconCheck size={14} /> : null}{multi ? (chosen ? "Picked" : `Pick ${o.label}`) : chosen ? "Chosen" : `Choose ${o.label}`}
@@ -95,6 +96,14 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
   const [res, setRes] = useState<Record<string, Full>>({});
   const [chosen, setChosen] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
+  const [tuned, setTuned] = useState<Record<string, Values>>({});
+  // picks survive a trip to the playground (Tune) in this browser: { labels, tuned: { [label]: values } }
+  const picksKey = () => `pm:picks:${id ?? fragment.slice(0, 64)}`;
+  useEffect(() => {
+    if (!board) return;
+    try { const saved = JSON.parse(localStorage.getItem(picksKey()) ?? "null"); if (saved) { setPicked(saved.labels ?? []); setTuned(saved.tuned ?? {}); } } catch { /* ignore */ }
+  }, [board]); // eslint-disable-line react-hooks/exhaustive-deps
+  const savePicks = (labels: string[], t: Record<string, Values>) => { try { if (labels.length || Object.keys(t).length) localStorage.setItem(picksKey(), JSON.stringify({ labels, tuned: t })); else localStorage.removeItem(picksKey()); } catch { /* ignore */ } };
   const [reply, setReply] = useState<string | null>(null);
   const [none, setNone] = useState(false);
   const [noneText, setNoneText] = useState("");
@@ -156,7 +165,7 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
   // boards with choose > 1: picks accumulate, then one "Send to my agent" sends them all as one line
   const [lo, hi] = board ? (chooseRange(board) as [number, number]) : [1, 1];
   const multi = hi > 1;
-  const togglePick = (o: Option) => { setNone(false); setPicked((p) => (p.includes(o.label) ? p.filter((l) => l !== o.label) : p.length >= hi ? p : [...p, o.label])); };
+  const togglePick = (o: Option) => { setNone(false); setPicked((p) => { const next = p.includes(o.label) ? p.filter((l) => l !== o.label) : p.length >= hi ? p : [...p, o.label]; savePicks(next, tuned); return next; }); };
   const sendPicks = () => {
     if (!board || picked.length < lo) return;
     const opts = board.options.filter((o) => picked.includes(o.label));
@@ -167,11 +176,12 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
       return;
     }
     const picks = opts.map((o) => {
-      const r = res[o.id!], values = inLook(r, o.values, theme);
+      const r = res[o.id!], values = tuned[o.label] ?? inLook(r, o.values, theme);
       if (r) kit.add({ id: r.id, type: r.type, title: r.title, values });
       return { label: o.label, setArgs: r ? (setArgs(r, { ...Object.fromEntries((r.params ?? []).map((p) => [p.name, p.default])), ...values }) as string[]) : [] };
     });
     say(replyLine(board, { picks }), { labels: opts.map((x) => x.label) });
+    try { localStorage.removeItem(picksKey()); } catch { /* ignore */ }
   };
 
   if (error) {
@@ -206,7 +216,7 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
       <div className={`mt-10 grid gap-5 ${cols}`}>
         {board.options.map((o) => (board.kind === "kit"
           ? <KitOption key={o.label} o={o} res={res} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
-          : <ResourceOption key={o.label} o={o} res={o.id ? res[o.id] : undefined} theme={theme} fragment={fragment} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />))}
+          : <ResourceOption key={o.label} o={o} res={o.id ? res[o.id] : undefined} theme={theme} fragment={fragment} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} tuned={tuned[o.label]} onChoose={() => (multi ? togglePick(o) : choose(o))} />))}
       </div>
       {multi ? (
         <div className="mt-6 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-surface px-5 py-4">
