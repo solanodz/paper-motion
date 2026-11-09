@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# paper-motion.app
 
-## Getting Started
+The site: a library of named motion resources for agents and the live boards they send their users. Next.js 16, deployed on Vercel from `main` (project `paper-motion`, root directory `apps/web`).
 
-First, run the development server:
+## Develop
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`predev` and `prebuild` run `npm run registry`, which builds `public/registry.json`, `public/r/<id>.json`, `public/llms.txt` and `public/llms-full.txt` from `../../registry` with the engine, and copies the two engine modules the site shares (`customize.mjs`, `live-board.js`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`PAPER_MOTION_SITE` sets the public URL written into those files and the OG metadata. It defaults to `https://paper-motion.vercel.app`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Previews
 
-## Learn More
+```bash
+node ../../packages/engine/bin/pamo.mjs registry previews [--only <id>]
+```
 
-To learn more about Next.js, take a look at the following resources:
+renders a clip and a poster per move and recipe into `public/previews/`. Backgrounds play live and have no files.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Smoke test
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run smoke                       # production
+npm run smoke -- http://localhost:3000
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+fetches every page, every agent-facing file and every published preview the index lists, and fails if any answer is not 200. Run it after a deploy.
