@@ -19,7 +19,7 @@ pamo board --url --title "Backgrounds for Kiln" --ask "Which one feels like the 
 
 - `--title` and `--ask`: what the user is deciding, in their words.
 - `--reply <name>`: your name for this decision (`bg-1`, `type-2`). It comes back in the user's reply, so you can match it.
-- `--look palette,font`: the user's palette and font pair, with values when tuned (`cobalt:accent=#ff5b2e,geist`). Every option plays in that look. Without a look, options play in paper-motion's own.
+- `--look palette,font`: the user's palette and font pair, with values when tuned (`cobalt:accent=#ff5b2e,geist`). Every option plays in that look: moves in its colors and type, and **backgrounds recolored into its palette** (each color keeps its tone and takes the nearest palette hue), so a board of backgrounds is a board of textures and motion, not of colors. The reply line carries the recolored values. Without a look, options play in paper-motion's own.
 - `--option id[:key=value,…]`: 2 to 4, one resource type per board. Values are your adjustments (hex colors, numbers, JSON for lists).
 - `--note "…"`: one line per option saying why you propose it. Users read these.
 - `--kit`: each option is a whole kit, a space-separated list of ids (`--option "cobalt geist mesh-graphite magic-move launch"`), for "show me three directions".

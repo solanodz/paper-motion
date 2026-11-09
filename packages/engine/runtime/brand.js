@@ -53,6 +53,8 @@ export async function loadBrand(root = '/brand') {
       if (!e?.shader) throw new Error(`paper-motion/brand: no shader entry "${id}" in brand/shader-set/set.json`);
       const props = { ...e.props };
       if (e.image) props.image = e.image === 'wordmark' ? B.wordmark.onDark ?? B.wordmark.onLight : e.image === 'wordmark-dark' ? B.wordmark.onLight ?? B.wordmark.onDark : `${root}/${e.image}`;
+      // the color behind the shader (entries with a transparent colorBack rely on it)
+      if (e.background) { const node = typeof el === 'string' ? document.querySelector(el) : el; if (node && !node.style.background) node.style.background = e.background; }
       const layer = s.shader(el, e.shader, props, { ...(e.loop ? { loop: e.loop } : {}), ...options });
       // the entry's periodic motion, as in its rendered loop (static shaders stay alive)
       if (e.motion) { const D = set.format?.duration ?? s.duration, { param, from, to, cycles = 1 } = e.motion; s.update((t) => layer.set({ [param]: from + (to - from) * (0.5 - 0.5 * Math.cos((2 * Math.PI * cycles * t) / D)) })); }

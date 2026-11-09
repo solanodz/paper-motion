@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>product-demo</title>
+<!--
+  Recipe · product demo (22 s). The real product, seen: three screens of its UI under one camera.
+  What 0–3 s (name and what it is) · Shots 3–19 s (three screenshots in one window: the camera drifts, punches into a
+  detail, snap-scrolls to the next, whips to the third; each shot has a caption) · Close 19–22 s (wordmark, action).
+  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first: put the real
+  screenshots in (paths relative to this file, or under brand/assets/); with no image a shot draws a placeholder UI in
+  the brand's colors, so the structure can be judged before the material exists.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .frame { position: absolute; inset: 0; }
+  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8%; box-sizing: border-box; }
+  .shot { position: absolute; inset: 0; overflow: hidden; box-sizing: border-box; }
+  .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; display: block; }
+  .mock { position: absolute; inset: 0; display: grid; grid-template-columns: 22% 1fr; }
+  .mock .side { display: flex; flex-direction: column; gap: 6%; padding: 7% 14%; }
+  .mock .side i, .mock .row i { display: block; height: 0.55em; border-radius: 999px; opacity: 0.45; }
+  .mock .main { display: flex; flex-direction: column; gap: 4%; padding: 5%; }
+  .mock .row { display: grid; gap: 3%; }
+  .mock .box { border-radius: 0.6em; }
+  .chrome { position: absolute; left: 0; right: 0; top: 0; display: flex; gap: 0.6em; align-items: center; padding: 0 1.2em; }
+  .chrome b { width: 0.9em; height: 0.9em; border-radius: 50%; opacity: 0.35; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="f1" class="frame"><div class="center"><div id="name"></div><div id="what"></div></div></div>
+  <div id="f2" class="frame"><div id="window" class="abs"><div id="chrome" class="chrome"></div><div id="screen" class="abs"></div></div><div id="caption" class="abs"></div></div>
+  <div id="f3" class="frame"><div class="center"><div id="mark"></div><div id="action"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, noise } from 'paper-motion';
+import { wordRise, blurIn, maskReveal, drift, punch, snapScroll, whipPan, flash } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a calm shader-set id, or null for the brand's first entry
+  backgroundOpacity: 0.5,                // the shader behind the window; the product is the picture
+  what: '',                              // what the brand is, in plain words; empty reads IDENTITY.md's "In one line"
+  shots: [
+    { image: '', caption: 'The overview: everything in one place.', focus: [0.3, 0.35] },
+    { image: '', caption: 'One click to the detail that matters.', focus: [0.6, 0.5] },
+    { image: '', caption: 'Numbers you can act on, as they change.', focus: [0.5, 0.6] },
+  ],
+  chrome: 'browser',                     // 'browser' (three dots), 'none'
+  action: 'your.site',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 22;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)';
+const $ = (id) => document.getElementById(id);
+
+const name = B.style($('name'), 'display', { short: SHORT }), what = B.style($('what'), 'title', { short: SHORT, color: 'muted' });
+const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'figure' });
+Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.028}px`, letterSpacing: '0em' });
+what.style.marginTop = action.style.marginTop = `${SHORT * 0.03}px`;
+name.textContent = mark.textContent = B.name;
+what.textContent = CONFIG.what || ((B.identity['In one line'] ?? '').split('\n')[0] || '');
+action.textContent = CONFIG.action;
+
+// the window: one frame, three screens inside it
+const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080);
+const win = $('window'), ww = Math.min(W * 0.74, SHORT * 1.45), chromeH = CONFIG.chrome === 'none' ? 0 : SHORT * 0.036, wh = ww * 0.58 + chromeH;
+Object.assign(win.style, { left: `${(W - ww) / 2}px`, top: `${(H - wh) / 2 - SHORT * 0.02}px`, width: `${ww}px`, height: `${wh}px`, borderRadius: `${R}px`, overflow: 'hidden', background: B.color('surface', '#111'), border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.03}px ${SHORT * 0.08}px rgba(0,0,0,0.45)` });
+const chrome = $('chrome');
+Object.assign(chrome.style, { height: `${chromeH}px`, fontSize: `${chromeH * 0.42}px`, background: B.color('ground') });
+if (chromeH) chrome.innerHTML = `<b style="background:${B.color('muted')}"></b><b style="background:${B.color('muted')}"></b><b style="background:${B.color('muted')}"></b>`;
+Object.assign($('screen').style, { left: 0, right: 0, top: `${chromeH}px`, bottom: 0 });
+
+function mock(i, host) {
+  // a placeholder UI in the brand's colors, one layout per shot: a list, a detail, a chart
+  const m = document.createElement('div');
+  m.className = 'mock';
+  m.style.fontSize = `${ww * 0.012}px`;
+  const line = (w, c = B.color('muted')) => `<i style="width:${w}%;background:${c}"></i>`;
+  const box = (h, c = B.color('ground')) => `<div class="box" style="height:${h}px;background:${c};border:1px solid ${B.color('muted')}33"></div>`;
+  const side = `<div class="side" style="background:${B.color('ground')}">${line(60, B.color('figure'))}${line(80)}${line(55)}${line(70)}${line(40)}</div>`;
+  const bodyH = (wh - chromeH) * 0.9;
+  const layouts = [
+    `<div class="main">${line(28, B.color('figure'))}<div class="row" style="grid-template-columns:1fr 1fr 1fr">${box(bodyH * 0.22)}${box(bodyH * 0.22)}${box(bodyH * 0.22, B.color('accent'))}</div>${box(bodyH * 0.42)}</div>`,
+    `<div class="main">${line(40, B.color('figure'))}<div class="row" style="grid-template-columns:1.4fr 1fr">${box(bodyH * 0.66)}<div class="row" style="grid-template-rows:1fr 1fr">${box(bodyH * 0.3, B.color('accent'))}${box(bodyH * 0.3)}</div></div></div>`,
+    `<div class="main">${line(34, B.color('figure'))}<div class="row" style="grid-template-columns:repeat(12,1fr);align-items:end;height:${bodyH * 0.6}px">${Array.from({ length: 12 }, (_, k) => `<div class="box" data-bar="${k}" style="height:${30 + 60 * noise(k * 0.7, i)}%;background:${k === 8 ? B.color('accent') : B.color('muted')}"></div>`).join('')}</div>${line(50)}</div>`,
+  ];
+  m.innerHTML = side + layouts[i % layouts.length];
+  host.append(m);
+  return m;
+}
+const shots = CONFIG.shots.map((sh, i) => {
+  const el = document.createElement('div');
+  el.className = 'shot';
+  el.style.background = B.color('surface', '#111');
+  if (sh.image) { const img = document.createElement('img'); img.src = sh.image; el.append(img); } else mock(i, el);
+  el.style.transformOrigin = `${(sh.focus?.[0] ?? 0.5) * 100}% ${(sh.focus?.[1] ?? 0.5) * 100}%`;
+  $('screen').append(el);
+  return el;
+});
+const caption = B.style($('caption'), 'body', { short: SHORT, color: 'figure' });
+Object.assign(caption.style, { left: `${(W - ww) / 2}px`, width: `${ww}px`, top: `${(H - wh) / 2 - SHORT * 0.02 + wh + SHORT * 0.035}px`, textAlign: 'center', fontSize: `${SHORT * 0.03}px`, lineHeight: 1.35 });
+await document.fonts.ready;
+for (const el of [name, mark]) { el.style.whiteSpace = 'nowrap'; const k = (W * 0.84) / el.scrollWidth; if (k < 1) el.style.fontSize = `${parseFloat(el.style.fontSize) * k}px`; }
+
+// timeline
+const T = { shots: [2.6, 3.4], punch1: 6.2, swap1: [8.6, 9.8], punch2: 12.0, swap2: [14.4, 15.3], punch3: 17.0, close: [18.8, 19.3] };
+const frames = [$('f1'), $('f2'), $('f3')];
+const RESET = ['transform', 'opacity', 'filter', 'clipPath', 'zIndex', 'transformOrigin', 'backfaceVisibility'];
+const clean = (els) => els.forEach((e) => RESET.forEach((k) => { if (k !== 'transformOrigin' || !e.classList.contains('shot')) e.style[k] = ''; }));
+const captionAt = (t) => (t < T.swap1[0] + 0.5 ? 0 : t < T.swap2[0] + 0.4 ? 1 : 2);
+let shown = -1;
+s.update((t) => {
+  if (t >= T.swap1[1]) snapScroll(shots[0], shots[1], 1, { duration: 1.2 });
+  if (t >= T.swap2[1]) whipPan(shots[1], shots[2], 1, { duration: 0.9 });
+  clean([...frames, ...shots]);
+  frames.forEach((f, i) => { f.style.opacity = 0; f.style.zIndex = i + 1; });
+  shots.forEach((c, i) => { c.style.opacity = 0; c.style.zIndex = i + 1; });
+
+  // 1 · the name and what it is
+  wordRise(name, t, { start: 0.2, each: B.pace.stagger, duration: 0.9 });
+  blurIn(what, t, { start: 0.9, duration: 0.9 });
+  // 2 · the window rises in; inside it the camera lives on the product
+  if (t < T.shots[0]) frames[0].style.opacity = 1;
+  else if (t < T.shots[1]) maskReveal(frames[0], frames[1], progress(t, ...T.shots), { from: 'bottom' });
+  else if (t < T.close[0]) frames[1].style.opacity = 1;
+  if (t >= T.shots[0] && t < T.close[1]) {
+    const rise = progress(t, T.shots[0], T.shots[1] + 0.3, ease.outCubic);
+    win.style.transform = `translateY(${(1 - rise) * SHORT * 0.05}px)`;
+    if (t < T.swap1[0]) { shots[0].style.opacity = 1; drift(shots[0], t, { amount: 0.05, duration: 9 }); punch(shots[0], t, { hits: [T.punch1], amount: 0.1 }); }
+    else if (t < T.swap1[1]) snapScroll(shots[0], shots[1], progress(t, ...T.swap1), { duration: 1.2 });
+    else if (t < T.swap2[0]) { shots[1].style.opacity = 1; drift(shots[1], t - T.swap1[1], { amount: 0.05, duration: 9 }); punch(shots[1], t, { hits: [T.punch2], amount: 0.1 }); }
+    else if (t < T.swap2[1]) whipPan(shots[1], shots[2], progress(t, ...T.swap2), { duration: 0.9 });
+    else { shots[2].style.opacity = 1; drift(shots[2], t - T.swap2[1], { amount: 0.05, duration: 9 }); punch(shots[2], t, { hits: [T.punch3], amount: 0.1 }); }
+    const c = captionAt(t);
+    if (c !== shown) { caption.textContent = CONFIG.shots[c]?.caption ?? ''; shown = c; }
+    const starts = [T.shots[1], T.swap1[1], T.swap2[1]];
+    blurIn(caption, t, { start: starts[c] + 0.2, duration: 0.7 });
+    const outAt = [T.swap1[0], T.swap2[0], T.close[0]][c];
+    const out = progress(t, outAt - 0.35, outAt);
+    if (out > 0) caption.style.opacity = String((1 - out) * Number(caption.style.opacity || 1));
+  } else win.style.transform = '';
+  // 3 · a flash into the close
+  if (t >= T.close[0] && t < T.close[1]) flash(frames[1], frames[2], progress(t, ...T.close));
+  else if (t >= T.close[1]) frames[2].style.opacity = 1;
+  wordRise(mark, t, { start: T.close[1], each: B.pace.stagger, duration: 0.9 });
+  blurIn(action, t, { start: T.close[1] + 0.8, duration: 0.8 });
+});
+B.cue(s, 'land', 0.2); B.cue(s, 'transition', T.shots[0]); B.cue(s, 'land', T.shots[1]);
+for (const h of [T.punch1, T.punch2, T.punch3]) B.cue(s, 'text', h);
+B.cue(s, 'transition', T.swap1[0]); B.cue(s, 'transition', T.swap2[0]); B.cue(s, 'transition', T.close[0]); B.cue(s, 'land', T.close[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>
