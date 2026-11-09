@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { decodeBoard, replyLine } from "@/lib/board.mjs";
+import { useParams } from "next/navigation";
+import { chooseRange, decodeBoard, replyLine } from "@/lib/board.mjs";
 import { recolor, setArgs } from "@/lib/customize.mjs";
 import { kit } from "@/lib/kit";
 import { buildTheme, loadResource, type Res, type Theme } from "@/lib/theme";
@@ -13,7 +14,7 @@ import { IconAgent, IconArrow, IconCheck, IconCopy, IconKit, TYPE_ICONS } from "
 type Values = Record<string, unknown>;
 type Pick = { id: string; values?: Values };
 type Option = { label: string; id?: string; values?: Values; items?: Pick[]; note?: string };
-type Board = { v: number; kind: "resource" | "kit"; title: string; ask?: string; reply?: string; look?: { palette?: Pick; font?: Pick }; options: Option[] };
+type Board = { v: number; kind: "resource" | "kit"; title: string; ask?: string; reply?: string; look?: { palette?: Pick; font?: Pick }; choose?: number | [number, number]; options: Option[] };
 type Full = Res & { title: string; type: string; summary?: string; install: { kind: string; entry?: Record<string, unknown> }; preview?: { video?: string; poster?: string } };
 
 const enc = (o: object) => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -23,7 +24,7 @@ const inLook = (res: Full | undefined, values: Values | undefined, theme: Theme)
   res?.type === "background" && theme?.palette ? { ...(recolor(res, theme.palette) as Values), ...(values ?? {}) } : values ?? {};
 
 /** One option of a resource board: its live stage, label, note and the two actions. */
-function ResourceOption({ o, res, theme, fragment, chosen, onChoose }: { o: Option; res: Full | undefined; theme: Theme; fragment: string; chosen: boolean; onChoose: () => void }) {
+function ResourceOption({ o, res, theme, fragment, chosen, multi, onChoose }: { o: Option; res: Full | undefined; theme: Theme; fragment: string; chosen: boolean; multi: boolean; onChoose: () => void }) {
   const Icon = res ? TYPE_ICONS[res.type] : null;
   const values = inLook(res, o.values, theme);
   return (
@@ -43,7 +44,7 @@ function ResourceOption({ o, res, theme, fragment, chosen, onChoose }: { o: Opti
         {res?.type === "background" && theme?.palette ? <p className="mt-1.5 font-mono text-[11px] text-faint">recolored to your palette</p> : null}
         <div className="mt-4 flex gap-2">
           <button type="button" onClick={onChoose} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
-            {chosen ? <IconCheck size={14} /> : null}{chosen ? "Chosen" : `Choose ${o.label}`}
+            {chosen ? <IconCheck size={14} /> : null}{multi ? (chosen ? "Picked" : `Pick ${o.label}`) : chosen ? "Chosen" : `Choose ${o.label}`}
           </button>
           <Link href={`/r/${o.id}?from=${encodeURIComponent(fragment)}&label=${o.label}${Object.keys(values).length ? `&s=${enc(values)}` : ""}`} className="rounded-md border border-line px-3 py-2 text-[13px] text-figure hover:border-faint">Tune</Link>
         </div>
@@ -53,7 +54,7 @@ function ResourceOption({ o, res, theme, fragment, chosen, onChoose }: { o: Opti
 }
 
 /** One option of a kit board: a sheet with the background behind a headline in the pair, the palette strip, the names. */
-function KitOption({ o, res, chosen, onChoose }: { o: Option; res: Record<string, Full>; chosen: boolean; onChoose: () => void }) {
+function KitOption({ o, res, chosen, multi, onChoose }: { o: Option; res: Record<string, Full>; chosen: boolean; multi: boolean; onChoose: () => void }) {
   const items = o.items ?? [];
   const by = (t: string) => items.filter((i) => res[i.id]?.type === t);
   const pal = by("palette")[0], font = by("font-pair")[0], bg = by("background")[0], recipe = by("recipe")[0];
@@ -77,20 +78,23 @@ function KitOption({ o, res, chosen, onChoose }: { o: Option; res: Record<string
           {[pal, font, bg, ...moves, recipe].filter((i): i is Pick => !!i).map((i) => { const r = res[i.id], Icon = r ? TYPE_ICONS[r.type] : null; return <li key={i.id} className="flex items-center gap-2"><span className="w-4 text-paper">{Icon ? <Icon size={13} /> : null}</span><span className="truncate">{r?.title ?? i.id}</span><code className="ml-auto font-mono text-[10.5px] text-faint">{i.id}</code></li>; })}
         </ul>
         <button type="button" onClick={onChoose} className={`mt-4 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
-          {chosen ? <IconCheck size={14} /> : <IconKit size={14} />}{chosen ? "Chosen" : `Choose kit ${o.label}`}
+          {chosen ? <IconCheck size={14} /> : <IconKit size={14} />}{multi ? (chosen ? "Picked" : `Pick kit ${o.label}`) : chosen ? "Chosen" : `Choose kit ${o.label}`}
         </button>
       </div>
     </div>
   );
 }
 
-export function BoardView({ id }: { id?: string } = {}) {
+export function BoardView({ short = false }: { short?: boolean } = {}) {
+  const params = useParams<{ id?: string }>();
+  const id = short ? String(params?.id ?? "") : undefined;
   const [fragment, setFragment] = useState("");
   const [sent, setSent] = useState<boolean | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [res, setRes] = useState<Record<string, Full>>({});
   const [chosen, setChosen] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
   const [reply, setReply] = useState<string | null>(null);
   const [none, setNone] = useState(false);
   const [noneText, setNoneText] = useState("");
@@ -111,7 +115,7 @@ export function BoardView({ id }: { id?: string } = {}) {
       const f = location.hash.slice(1);
       setFragment(f);
       if (!f) { setError("empty"); return; }
-      decodeBoard(f).then((b: Board) => { setBoard(b); setError(null); setChosen(null); setReply(null); }).catch((e: Error) => setError(e.message));
+      decodeBoard(f).then((b: Board) => { setBoard(b); setError(null); setChosen(null); setPicked([]); setReply(null); }).catch((e: Error) => setError(e.message));
     };
     read();
     window.addEventListener("hashchange", read);
@@ -127,7 +131,7 @@ export function BoardView({ id }: { id?: string } = {}) {
   const theme = useMemo(() => (board ? buildTheme(board.look?.palette, board.look?.font, res) : null), [board, res]);
 
   // the line reaches the agent two ways: pasted by the user, and (short links) stored for `pamo board --wait`
-  const say = async (line: string, meta: { label?: string; none?: boolean; text?: string } = {}) => {
+  const say = async (line: string, meta: { label?: string; labels?: string[]; none?: boolean; text?: string } = {}) => {
     setReply(line); setSent(null);
     setCopied(await copyText(line));
     if (id) fetch(`/api/boards/${id}/choice`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ line, ...meta }) }).then((r) => setSent(r.ok)).catch(() => setSent(false));
@@ -147,7 +151,27 @@ export function BoardView({ id }: { id?: string } = {}) {
       say(replyLine(board, { label: o.label, setArgs: r ? (setArgs(r, { ...Object.fromEntries((r.params ?? []).map((p) => [p.name, p.default])), ...values }) as string[]) : [] }), { label: o.label });
     }
   };
-  const sayNone = () => { if (!board) return; setChosen(null); say(replyLine(board, { none: true, text: noneText.trim() }), { none: true, text: noneText.trim() }); };
+  const sayNone = () => { if (!board) return; setChosen(null); setPicked([]); say(replyLine(board, { none: true, text: noneText.trim() }), { none: true, text: noneText.trim() }); };
+  // boards with choose > 1: picks accumulate, then one "Send to my agent" sends them all as one line
+  const [lo, hi] = board ? (chooseRange(board) as [number, number]) : [1, 1];
+  const multi = hi > 1;
+  const togglePick = (o: Option) => { setNone(false); setPicked((p) => (p.includes(o.label) ? p.filter((l) => l !== o.label) : p.length >= hi ? p : [...p, o.label])); };
+  const sendPicks = () => {
+    if (!board || picked.length < lo) return;
+    const opts = board.options.filter((o) => picked.includes(o.label));
+    if (board.kind === "kit") {
+      const o = opts[0], pick = (t: string) => (o.items ?? []).find((i) => res[i.id]?.type === t), t = buildTheme(pick("palette"), pick("font-pair"), res);
+      kit.set({ name: kit.get().name, items: (o.items ?? []).map((i) => ({ id: i.id, type: res[i.id]?.type ?? "", title: res[i.id]?.title ?? i.id, values: inLook(res[i.id], i.values, t) })) });
+      say(replyLine(board, { picks: opts.map((x) => ({ label: x.label })) }), { labels: opts.map((x) => x.label) });
+      return;
+    }
+    const picks = opts.map((o) => {
+      const r = res[o.id!], values = inLook(r, o.values, theme);
+      if (r) kit.add({ id: r.id, type: r.type, title: r.title, values });
+      return { label: o.label, setArgs: r ? (setArgs(r, { ...Object.fromEntries((r.params ?? []).map((p) => [p.name, p.default])), ...values }) as string[]) : [] };
+    });
+    say(replyLine(board, { picks }), { labels: opts.map((x) => x.label) });
+  };
 
   if (error) {
     return (
@@ -180,9 +204,15 @@ export function BoardView({ id }: { id?: string } = {}) {
 
       <div className={`mt-10 grid gap-5 ${cols}`}>
         {board.options.map((o) => (board.kind === "kit"
-          ? <KitOption key={o.label} o={o} res={res} chosen={chosen === o.label} onChoose={() => choose(o)} />
-          : <ResourceOption key={o.label} o={o} res={o.id ? res[o.id] : undefined} theme={theme} fragment={fragment} chosen={chosen === o.label} onChoose={() => choose(o)} />))}
+          ? <KitOption key={o.label} o={o} res={res} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
+          : <ResourceOption key={o.label} o={o} res={o.id ? res[o.id] : undefined} theme={theme} fragment={fragment} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />))}
       </div>
+      {multi ? (
+        <div className="mt-6 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-surface px-5 py-4">
+          <span className="text-[14px] text-muted">{picked.length ? `${picked.length} picked` : "Pick what you like"} · {lo === hi ? `choose ${hi}` : `${lo} to ${hi}`}</span>
+          <button type="button" onClick={sendPicks} disabled={picked.length < lo} className="ml-auto flex items-center gap-2 rounded-md bg-paper px-4 py-2 text-[13.5px] font-medium text-ground hover:bg-figure disabled:cursor-not-allowed disabled:opacity-40"><IconAgent size={15} /> Send to my agent</button>
+        </div>
+      ) : null}
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
         {!none ? <button type="button" onClick={() => { setNone(true); setReply(null); }} className="text-[13.5px] text-muted underline decoration-faint underline-offset-4 hover:text-figure">None of these</button> : (
@@ -195,12 +225,28 @@ export function BoardView({ id }: { id?: string } = {}) {
 
       {reply ? (
         <div className="corner-marks mt-8 rounded-xl border border-paper/50 bg-surface p-5">
-          <div className="flex items-center gap-2 text-[14px] font-medium"><IconCheck size={16} className="text-paper" /> {sent ? "Your agent has it. If it was not waiting, paste this line in the chat:" : copied ? "Copied. Paste this line in the chat with your agent:" : "Paste this line in the chat with your agent:"}</div>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-md bg-ground px-3 py-2 font-mono text-[13px] text-figure">{reply}</code>
-            <button type="button" onClick={async () => setCopied(await copyText(reply))} className="flex items-center gap-1.5 rounded-md bg-paper px-3 py-2 text-[12.5px] font-medium text-ground hover:bg-figure"><IconCopy size={13} /> Copy</button>
-          </div>
-          {chosen ? <p className="mt-3 text-[13px] text-muted">It is also in <Link href="/kit" className="text-figure underline decoration-faint underline-offset-4">your kit</Link>, where every choice adds up.</p> : null}
+          {id && sent !== false ? (
+            <>
+              <div className="flex items-center gap-2 text-[15px] font-medium">{sent ? <IconCheck size={16} className="text-paper" /> : <span className="h-2 w-2 animate-pulse rounded-full bg-paper" />} {sent ? "Sent to your agent." : "Sending to your agent…"}</div>
+              <p className="mt-2 text-[13.5px] text-muted">{sent ? "If it is waiting, it already has your choice and keeps going. You can close this tab." : "One moment."}</p>
+              <details className="mt-3 text-[13px] text-muted">
+                <summary className="cursor-pointer hover:text-figure">If your agent was not waiting, paste this line in the chat</summary>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-md bg-ground px-3 py-2 font-mono text-[13px] text-figure">{reply}</code>
+                  <button type="button" onClick={async () => setCopied(await copyText(reply))} className="flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-[12.5px] text-figure hover:border-faint"><IconCopy size={13} /> {copied ? "Copied" : "Copy"}</button>
+                </div>
+              </details>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-[14px] font-medium"><IconCheck size={16} className="text-paper" /> {sent === false ? "The site could not be reached. Paste this line in the chat with your agent:" : copied ? "Copied. Paste this line in the chat with your agent:" : "Paste this line in the chat with your agent:"}</div>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-md bg-ground px-3 py-2 font-mono text-[13px] text-figure">{reply}</code>
+                <button type="button" onClick={async () => setCopied(await copyText(reply))} className="flex items-center gap-1.5 rounded-md bg-paper px-3 py-2 text-[12.5px] font-medium text-ground hover:bg-figure"><IconCopy size={13} /> Copy</button>
+              </div>
+            </>
+          )}
+          {chosen || picked.length ? <p className="mt-3 text-[13px] text-muted">It is also in <Link href="/kit" className="text-figure underline decoration-faint underline-offset-4">your kit</Link>, where every choice adds up.</p> : null}
         </div>
       ) : null}
     </div>

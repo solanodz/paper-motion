@@ -39,7 +39,7 @@ export default function Home() {
               <CopyButton text={PROMPT} label="Copy prompt" />
             </div>
             <p className="px-5 py-5 font-mono text-[14.5px] leading-relaxed text-figure md:text-[15.5px]">{PROMPT}</p>
-            <p className="border-t border-line px-5 py-3 text-[12.5px] text-muted">Works in Claude Code, Codex, Cursor and any agent that reads the web and runs commands.</p>
+            <p className="border-t border-line px-5 py-3 text-[12.5px] text-muted">Works in Claude Code, Codex, Cursor and any agent that reads the web and runs commands. Agents load tools when a session starts: add the MCP first (<code className="font-mono text-[12px] text-figure">claude mcp add --transport http paper-motion {site}/mcp</code>), then open the session and paste this.</p>
           </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-5">

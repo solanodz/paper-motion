@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getIndex, getResource } from "@/lib/registry";
 import { find } from "@/lib/find.mjs";
 import { defaults, recolor, setArgs } from "@/lib/customize.mjs";
-import { validateBoard, MAX_PAYLOAD } from "@/lib/board.mjs";
+import { validateBoard, parseReply, MAX_PAYLOAD } from "@/lib/board.mjs";
 import { allow, BOARD_TTL, boardKey, canStore, type Choice, choiceKey, clientIp, getStore, newId } from "@/lib/store";
 
 export const maxDuration = 300; // `board` may wait for the user's choice
@@ -14,6 +14,33 @@ export const maxDuration = 300; // `board` may wait for the user's choice
 const text = (v: unknown) => ({ content: [{ type: "text" as const, text: typeof v === "string" ? v : JSON.stringify(v, null, 2) }] });
 const fail = (msg: string) => ({ content: [{ type: "text" as const, text: msg }], isError: true });
 const site = () => (process.env.PAPER_MOTION_SITE ?? "https://paper-motion.vercel.app").replace(/\/$/, "");
+
+/** A stored choice as the agent reads it: the picks with ids and `--set` values, plus the reply line. */
+function describe(c: Choice) {
+  const parsed = parseReply(c.line) as { none?: boolean; text?: string; kind?: string; picks?: { label: string; id: string; set: string[] }[]; kits?: string[][]; labels?: string[] } | null;
+  if (!parsed || parsed.none) return { none: true, text: parsed?.text ?? c.text ?? "", line: c.line, at: c.at };
+  if (parsed.kind === "kit") return { choices: (parsed.kits ?? []).map((ids, i) => ({ label: parsed.labels?.[i], kit: ids })), line: c.line, at: c.at };
+  return { choices: (parsed.picks ?? []).map((p) => ({ label: p.label, id: p.id, set: p.set, add: `npx paper-motion add ${p.id}${p.set.map((x) => ` --set '${x}'`).join("")}` })), line: c.line, at: c.at };
+}
+
+/** The flow, for an agent that has only this server: sent as the server's instructions and returned by `flow`. */
+const FLOW = `paper-motion makes brand videos with the user as director. You propose, they choose, you install and render.
+
+The flow, in order:
+1. Interview before anything visual: what the brand is in one plain line; what this video is for and where it plays
+   (16:9, 9:16, 1:1) and how long; three words for the feel and one thing it must never look like; the one action at
+   the end. Mirror it back.
+2. You NEVER choose a look for the user. Each of these decisions is a board (tool \`board\`), one at a time, in this
+   order: palette · font pair · background(s) · moves by role (how things enter, how one thing becomes the next, how
+   text arrives; pass choose: [1, 3] so they can pick several) · recipe. Use \`search\` to pick 2–4 fitting options,
+   \`resource\` to read params before tuning one, \`recolor\` to show a background in their palette. Share the link,
+   say you are waiting; \`board\` returns their choice. Never ask them to paste anything.
+3. Install what they chose with \`npx paper-motion add <id> [--set …]\` in their project (the \`add\` field of each
+   choice). Write brand/tokens.json's name, brand/motion.json and brand/sound.json from the interview.
+4. Build the piece from the recipe they chose. Every move they picked appears in it, and the brief says where.
+   Check stills (\`npx paper-motion still\`), render (\`npx paper-motion render … --motion-blur 5\`).
+
+Skip a board only when the user's brand folder already settles that decision, and say so. Boards expire in 90 days.`;
 
 const pick = z.object({ id: z.string().describe("a resource id"), values: z.record(z.string(), z.unknown()).optional().describe("param values that differ from the defaults") });
 
@@ -40,6 +67,16 @@ const handler = createMcpHandler(
         const items = find(getIndex().items, query ?? "", opts) as unknown[];
         return text({ count: items.length, items: items.slice(0, limit ?? 20) });
       },
+    );
+
+    server.registerTool(
+      "flow",
+      {
+        title: "The flow and the decisions checklist",
+        description: "Read this first: the order of work (interview → one board per decision → install → build) and the list of decisions that always go through a board. Returns a checklist to walk and report against.",
+        inputSchema: z.object({}),
+      },
+      async () => text({ flow: FLOW, checklist: ["what the brand is, format, length, feel, action (interview)", "palette (board)", "font pair (board)", "background(s) (board)", "moves: enter / swap / text (boards, choose several)", "recipe (board)", "install the choices; name, motion.json, sound.json", "build: every chosen move in the piece; stills; render"] }),
     );
 
     server.registerTool(
@@ -85,7 +122,7 @@ const handler = createMcpHandler(
       "board",
       {
         title: "Propose options as a board",
-        description: "Creates a live board (2–4 options the user opens in a browser, sees in their own look, tunes and chooses) and returns its short link. With `wait` true it also waits for the user's choice (up to `waitMinutes`, default 4) and returns the reply line, the same one the user could paste in the chat: `paper-motion: B · mesh-sage --set speed=0.8 (bg-1)`. One resource type per board; `kit` boards take whole kits per option.",
+        description: "Creates a live board (2–4 options the user opens in a browser, sees in their own look, tunes and chooses), returns its short link and, by default, WAITS until the user chooses (up to `waitMinutes`, default 4; call again or use board_choice after a timeout). Share the link, tell the user you are waiting, and never ask them to paste anything: the choice arrives here. The result carries `choices`: the picked options with their ids and `--set` values, and `line`, the same reply line the user could paste. `choose` lets them pick several (3, or [1, 3]); use it for text effects and transitions. One resource type per board; `kit` boards take whole kits per option.",
         inputSchema: z.object({
           title: z.string().describe("what the user is deciding, in their words"),
           ask: z.string().optional(),
@@ -93,16 +130,17 @@ const handler = createMcpHandler(
           look: z.object({ palette: pick.optional(), font: pick.optional() }).optional().describe("the user's palette and font pair; backgrounds are recolored into the palette"),
           options: z.array(z.object({ label: z.enum(["A", "B", "C", "D"]), id: z.string().optional(), values: z.record(z.string(), z.unknown()).optional(), items: z.array(pick).optional().describe("kit boards: the whole kit"), note: z.string().optional() })).min(2).max(4),
           kind: z.enum(["resource", "kit"]).optional(),
-          wait: z.boolean().optional(),
+          choose: z.union([z.number().int().min(1).max(4), z.tuple([z.number().int().min(1), z.number().int().max(4)])]).optional().describe("how many options the user may pick: 1 (default), 3, or [min, max]"),
+          wait: z.boolean().optional().describe("default true: return when the user has chosen"),
           waitMinutes: z.number().min(0.5).max(4.5).optional(),
         }),
       },
-      async ({ title, ask, reply, look, options, kind, wait, waitMinutes }, ctx) => {
+      async ({ title, ask, reply, look, options, kind, choose, wait, waitMinutes }, ctx) => {
         const req = (ctx as { http?: { request?: Request } }).http?.request;
         const ip = req ? clientIp(req) : "mcp";
         if (!canStore()) return fail("boards are not enabled on this site yet; build the link with `pamo board --url` instead");
         if (!(await allow("boards", ip, 60, 3600))) return fail("too many boards from this address; try again in an hour");
-        const board = { v: 1, kind: kind ?? (options.some((o) => o.items) ? "kit" : "resource"), title, ...(ask ? { ask } : {}), ...(reply ? { reply } : {}), ...(look ? { look } : {}), options };
+        const board = { v: 1, kind: kind ?? (options.some((o) => o.items) ? "kit" : "resource"), title, ...(ask ? { ask } : {}), ...(reply ? { reply } : {}), ...(look ? { look } : {}), ...(choose !== undefined ? { choose } : {}), options };
         const json = JSON.stringify(board);
         if (json.length > MAX_PAYLOAD) return fail(`the board is ${json.length} bytes; the limit is ${MAX_PAYLOAD}`);
         const index = Object.fromEntries(getIndex().items.map((i) => [i.id, i]));
@@ -111,14 +149,14 @@ const handler = createMcpHandler(
         const id = newId();
         await getStore().set(boardKey(id), board, BOARD_TTL);
         const url = `${site()}/b/${id}`;
-        if (!wait) return text({ id, url, next: "share the link with the user; call this tool again with wait, or ask them to paste the line the board gives them" });
+        if (wait === false) return text({ id, url, next: "share the link; call board_choice to read the choice when the user has opened it" });
         const until = Date.now() + (waitMinutes ?? 4) * 60 * 1000;
         while (Date.now() < until) {
           const c = await getStore().get<Choice>(choiceKey(id));
-          if (c) return text({ id, url, choice: c });
+          if (c) return text({ id, url, ...describe(c) });
           await new Promise((r) => setTimeout(r, 2000));
         }
-        return text({ id, url, choice: null, next: "no choice yet: ask the user to open the link and paste the line, or call board_choice later" });
+        return text({ id, url, choices: null, next: `no choice yet (the user may still be looking): share ${url} again if needed and call board_choice with id "${id}" to keep waiting` });
       },
     );
 
@@ -129,10 +167,13 @@ const handler = createMcpHandler(
         description: "Reads the choice the user made on a board created earlier (by id). Returns null while there is none.",
         inputSchema: z.object({ id: z.string() }),
       },
-      async ({ id }) => text({ id, choice: (await getStore().get<Choice>(choiceKey(id))) ?? null }),
+      async ({ id }) => { const c = await getStore().get<Choice>(choiceKey(id)); return text(c ? { id, ...describe(c) } : { id, choices: null }); },
     );
   },
-  { serverInfo: { name: "paper-motion", version: "0.2.3" } },
+  {
+    serverInfo: { name: "paper-motion", version: "0.2.3" },
+    instructions: FLOW,
+  },
 );
 
 export { handler as GET, handler as POST };

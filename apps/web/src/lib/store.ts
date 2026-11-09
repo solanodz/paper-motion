@@ -56,7 +56,7 @@ export function newId(length = ID_LENGTH) {
 }
 export const isId = (s: unknown): s is string => typeof s === "string" && new RegExp(`^[${ALPHABET}]{${ID_LENGTH}}$`).test(s);
 
-export type Choice = { label?: string; none?: boolean; text?: string; line: string; at: number };
+export type Choice = { label?: string; labels?: string[]; none?: boolean; text?: string; line: string; at: number };
 export const boardKey = (id: string) => `b:${id}`;
 export const choiceKey = (id: string) => `c:${id}`;
 

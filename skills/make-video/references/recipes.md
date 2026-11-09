@@ -5,7 +5,7 @@ material always come from the brand. Times below are for the brand's pace (`moti
 calm brand, compress ×0.75 for a fast one; when the user asks for a length, theirs wins and the beats scale to fit.
 Every recipe works in 16:9, 9:16 and 1:1; the notes say what changes.
 
-Beats name a gesture and the brand cue it carries (`B.cue(s, 'transition' | 'land' | 'text', t)`).
+Beats name a gesture and the brand cue it carries (`B.cue(s, 'transition' | 'land' | 'text', t)`). The moves a recipe's scene imports are placeholders: swap them for the ones the user chose on their boards, all of them, and note in the brief where each plays.
 
 Every recipe carries the **what** (what the brand is, in plain words) in its first third and **one action** at the
 end; the tables mark where.
