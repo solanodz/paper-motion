@@ -24,7 +24,7 @@
     {
       "name": "problem",
       "type": "string",
-      "default": "The situation it changes, in the brand\u2019s words.",
+      "default": "The situation it changes, in the brand’s words.",
       "description": "the problem line",
       "group": "main",
       "control": "text"
@@ -69,7 +69,7 @@
     {
       "name": "proof1Label",
       "type": "string",
-      "default": "01 \u00b7 fast",
+      "default": "01 · fast",
       "description": "proof 1 label",
       "group": "advanced",
       "control": "text"
@@ -93,7 +93,7 @@
     {
       "name": "proof2Label",
       "type": "string",
-      "default": "02 \u00b7 simple",
+      "default": "02 · simple",
       "description": "proof 2 label",
       "group": "advanced",
       "control": "text"
@@ -117,7 +117,7 @@
     {
       "name": "proof3Label",
       "type": "string",
-      "default": "03 \u00b7 yours",
+      "default": "03 · yours",
       "description": "proof 3 label",
       "group": "advanced",
       "control": "text"
@@ -184,5 +184,37 @@
   "when": [
     "announcing something new",
     "you have proof: facts, UI, a command"
+  ],
+  "beats": [
+    {
+      "name": "Hook",
+      "from": 0,
+      "to": 2.4,
+      "what": "one striking line over the brand's field, already moving"
+    },
+    {
+      "name": "Problem",
+      "from": 2.4,
+      "to": 5.8,
+      "what": "the situation it changes, in the brand's words"
+    },
+    {
+      "name": "Reveal",
+      "from": 5.8,
+      "to": 9,
+      "what": "the name and what it is, through a zoom"
+    },
+    {
+      "name": "Proof",
+      "from": 9,
+      "to": 19.6,
+      "what": "three cards, one component that flips and whips"
+    },
+    {
+      "name": "Close",
+      "from": 19.6,
+      "to": 24,
+      "what": "the wordmark and the action"
+    }
   ]
 }

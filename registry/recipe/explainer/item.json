@@ -167,5 +167,31 @@
   "when": [
     "how something works in steps",
     "onboarding and docs"
+  ],
+  "beats": [
+    {
+      "name": "Question",
+      "from": 0,
+      "to": 2.8,
+      "what": "what this answers, naming the brand"
+    },
+    {
+      "name": "Steps",
+      "from": 3.6,
+      "to": 26.6,
+      "what": "three steps on one card that changes state"
+    },
+    {
+      "name": "Recap",
+      "from": 27.4,
+      "to": 31.6,
+      "what": "all steps at once, small"
+    },
+    {
+      "name": "Close",
+      "from": 32.4,
+      "to": 36,
+      "what": "the ending and the action"
+    }
   ]
 }

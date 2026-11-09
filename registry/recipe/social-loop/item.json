@@ -17,7 +17,7 @@
     {
       "name": "line",
       "type": "string",
-      "default": "One line in the brand\u2019s voice.",
+      "default": "One line in the brand’s voice.",
       "description": "the line that comes and goes",
       "group": "main",
       "control": "text"
@@ -26,7 +26,7 @@
       "name": "what",
       "type": "string",
       "default": "",
-      "description": "name \u00b7 what it is \u00b7 where; empty builds it",
+      "description": "name · what it is · where; empty builds it",
       "group": "main",
       "control": "text"
     },
@@ -112,5 +112,25 @@
   "when": [
     "a feed post that plays forever",
     "presence, not information"
+  ],
+  "beats": [
+    {
+      "name": "Field",
+      "from": 0,
+      "to": 8,
+      "what": "a living background and the brand, steady"
+    },
+    {
+      "name": "Line",
+      "from": 1,
+      "to": 5,
+      "what": "one line enters, holds, leaves"
+    },
+    {
+      "name": "Seam",
+      "from": 7.5,
+      "to": 8,
+      "what": "back to the first frame"
+    }
   ]
 }

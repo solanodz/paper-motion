@@ -325,6 +325,20 @@
       "type": "number",
       "description": "Recipes: seconds."
     },
+    "beats": {
+      "type": "array",
+      "description": "Recipes: the structure as a timeline, in order.",
+      "items": {
+        "type": "object",
+        "required": ["name", "from", "to", "what"],
+        "properties": {
+          "name": { "type": "string" },
+          "from": { "type": "number" },
+          "to": { "type": "number" },
+          "what": { "type": "string" }
+        }
+      }
+    },
     "formats": {
       "type": "array",
       "items": {

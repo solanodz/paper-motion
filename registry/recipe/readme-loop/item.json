@@ -80,5 +80,25 @@
   "when": [
     "a repo or landing hero",
     "a silent loop with the install command"
+  ],
+  "beats": [
+    {
+      "name": "Field",
+      "from": 0,
+      "to": 6,
+      "what": "a calm background behind the wordmark"
+    },
+    {
+      "name": "Command",
+      "from": 0.4,
+      "to": 2,
+      "what": "the install command types in"
+    },
+    {
+      "name": "Erase",
+      "from": 5,
+      "to": 5.5,
+      "what": "it erases; the loop closes on an empty prompt"
+    }
   ]
 }
