@@ -15,7 +15,9 @@ const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palet
  * @typedef {{ v: 1, kind: 'resource'|'kit', title: string, ask?: string, reply?: string,
  *   look?: { palette?: { id: string, values?: object }, font?: { id: string, values?: object } },
  *   choose?: number | [number, number],   // how many options the user may pick: 1 (default), 3, or [min, max]
- *   options: Array<{ label: string, id?: string, values?: object, items?: Array<{ id: string, values?: object }>, note?: string }> }} Board
+ *   options: Array<{ label: string, id?: string, values?: object, items?: Array<{ id: string, values?: object }>, note?: string,
+ *     structure?: { title: string, duration: number, beats: Array<{ name: string, from: number, to: number, what: string }> } }> }} Board
+ * An option with `structure` (recipe boards only) is a structure the agent proposes for this brief instead of a recipe.
  */
 
 /** Checks a board's shape; returns a list of problems (empty when valid). `index` (registry items by id) adds id checks. */
@@ -34,7 +36,14 @@ export function validateBoard(b, index) {
     if (seen.has(o.label)) errs.push(`${at}.label "${o.label}" repeats`);
     seen.add(o.label);
     if (b.kind === 'resource') {
-      if (!o.id) errs.push(`${at}.id is required`);
+      if (o.structure) {
+        const st = o.structure;
+        if (o.id) errs.push(`${at}: either id or structure, not both`);
+        if (!st.title || typeof st.title !== 'string') errs.push(`${at}.structure.title is required`);
+        if (!(Number(st.duration) > 0)) errs.push(`${at}.structure.duration (seconds) is required`);
+        if (!Array.isArray(st.beats) || st.beats.length < 2 || st.beats.length > 8) errs.push(`${at}.structure.beats: 2 to 8 beats`);
+        for (const [j, bt] of (st.beats ?? []).entries()) if (!bt?.name || typeof bt.from !== 'number' || typeof bt.to !== 'number' || bt.to <= bt.from || !bt.what) errs.push(`${at}.structure.beats[${j}] needs name, from < to (seconds) and what`);
+      } else if (!o.id) errs.push(`${at}.id is required`);
       else if (index && !index[o.id]) errs.push(`${at}.id "${o.id}" is not in the registry`);
     } else {
       if (!Array.isArray(o.items) || !o.items.length) errs.push(`${at}.items is required for a kit board`);
@@ -43,7 +52,7 @@ export function validateBoard(b, index) {
     if (o.values && typeof o.values !== 'object') errs.push(`${at}.values must be an object`);
   }
   if (b.kind === 'resource' && index) {
-    const types = new Set(b.options.map((o) => index[o.id]?.type).filter(Boolean));
+    const types = new Set(b.options.map((o) => (o.structure ? 'recipe' : index[o.id]?.type)).filter(Boolean));
     if (types.size > 1) errs.push(`a resource board shows one type at a time (got ${[...types].join(', ')})`);
   }
   for (const k of ['palette', 'font']) { const l = b.look?.[k]; if (l && index && !index[l.id]) errs.push(`look.${k} "${l.id}" is not in the registry`); }
@@ -140,6 +149,7 @@ export async function forgetBoard(site, id) {
 // `reply` (the agent's name for the decision) is appended as "(bg-1)" when present.
 
 //   paper-motion: A+C · type-on · scramble --set speed=2           several picks on a board with choose > 1
+//   paper-motion: D · structure "Three cuts"                        a structure the agent proposed, chosen
 // `choice` is { label, setArgs? } for one pick, { picks: [{ label, setArgs? }, …] } for several, or { none, text }.
 
 export function replyLine(board, choice) {
@@ -149,7 +159,7 @@ export function replyLine(board, choice) {
   const found = picks.map((c) => { const o = board.options.find((x) => x.label === c.label); if (!o) throw new Error(`no option ${c.label}`); return { o, sets: (c.setArgs ?? []).join(' ') }; });
   const labels = found.map((f) => f.o.label).join('+');
   if (board.kind === 'kit') return `paper-motion: kit ${labels} · ${found.map((f) => f.o.items.map((i) => i.id).join(' ')).join(' + ')}${tag}`;
-  return `paper-motion: ${labels} · ${found.map((f) => `${f.o.id}${f.sets ? ` ${f.sets}` : ''}`).join(' · ')}${tag}`;
+  return `paper-motion: ${labels} · ${found.map((f) => (f.o.structure ? `structure "${f.o.structure.title.replace(/"/g, "'")}"` : `${f.o.id}${f.sets ? ` ${f.sets}` : ''}`)).join(' · ')}${tag}`;
 }
 
 /** Parses a reply line the user pasted. Returns null when the text is not one. */
@@ -164,6 +174,8 @@ export function parseReply(text) {
   if (!many) return null;
   const labels = many[1].split('+');
   const picks = many[2].split(' · ').map((part, i) => {
+    const st = part.trim().match(/^structure "(.+)"$/);
+    if (st) return { label: labels[i], structure: st[1], set: [] };
     const m = part.trim().match(/^(\S+)(.*)$/);
     return { label: labels[i], id: m[1], set: [...m[2].matchAll(/--set\s+('([^']*)'|(\S+))/g)].map((x) => x[2] ?? x[3]) };
   });

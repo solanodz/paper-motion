@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyLine } from "@/components/copy-button";
+import { BeatsStrip } from "@/components/beats-strip";
 import { Playground } from "@/components/playground/playground";
 import { ResourceCard } from "@/components/resource-card";
 import { getIndex, getResource, typeTitle } from "@/lib/registry";
@@ -57,6 +58,12 @@ export default async function ResourcePage({ params }: PageProps<"/r/[id]">) {
       </div>
 
       <Playground resource={r} site={site} backgrounds={backgrounds} />
+      {r.beats?.length ? (
+        <section className="mt-12">
+          <h2 className="border-b border-line pb-3 text-[18px] font-medium">Structure</h2>
+          <div className="mt-5"><BeatsStrip beats={r.beats} duration={r.duration} /></div>
+        </section>
+      ) : null}
 
       <div className="mt-16 grid gap-12 xl:grid-cols-[minmax(0,1fr)_300px]">
         {r.notes?.length ? (

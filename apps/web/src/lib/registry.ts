@@ -17,6 +17,8 @@ export type IndexItem = {
   url: string;
   preview?: { video?: string; poster?: string };
   related?: string[];
+  duration?: number;
+  beats?: { name: string; from: number; to: number; what: string }[];
 };
 
 export type Resource = IndexItem & {

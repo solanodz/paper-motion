@@ -95,5 +95,31 @@
   "when": [
     "closing any piece",
     "a sting with the name and the action"
+  ],
+  "beats": [
+    {
+      "name": "Reveal",
+      "from": 0,
+      "to": 2,
+      "what": "the wordmark arrives"
+    },
+    {
+      "name": "Line",
+      "from": 2,
+      "to": 3,
+      "what": "what the brand is, small"
+    },
+    {
+      "name": "Action",
+      "from": 3,
+      "to": 5,
+      "what": "a URL, a handle, a date, typed"
+    },
+    {
+      "name": "Hold",
+      "from": 5,
+      "to": 6,
+      "what": "everything still"
+    }
   ]
 }

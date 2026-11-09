@@ -7,12 +7,14 @@ import { recolor, setArgs } from "@/lib/customize.mjs";
 import { kit } from "@/lib/kit";
 import { buildTheme, loadResource, type Res, type Theme } from "@/lib/theme";
 import { ResourceStage } from "@/components/playground/resource-stage";
+import { BeatsStrip, type Beat } from "@/components/beats-strip";
 import { copyText } from "@/components/playground/code-view";
 import { IconAgent, IconArrow, IconCheck, IconCopy, IconKit, TYPE_ICONS } from "@/components/icons";
 
 type Values = Record<string, unknown>;
 type Pick = { id: string; values?: Values };
-type Option = { label: string; id?: string; values?: Values; items?: Pick[]; note?: string };
+type Structure = { title: string; duration: number; beats: Beat[] };
+type Option = { label: string; id?: string; values?: Values; items?: Pick[]; note?: string; structure?: Structure };
 type Board = { v: number; kind: "resource" | "kit"; title: string; ask?: string; reply?: string; look?: { palette?: Pick; font?: Pick }; choose?: number | [number, number]; options: Option[] };
 type Full = Res & { title: string; type: string; summary?: string; install: { kind: string; entry?: Record<string, unknown> }; preview?: { video?: string; poster?: string } };
 
@@ -40,6 +42,7 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoos
         </div>
         {o.note ? <p className="mt-2 text-[13px] leading-snug text-muted">{o.note}</p> : null}
         {o.values && Object.keys(o.values).length ? <p className="mt-1.5 font-mono text-[11px] text-faint">{Object.keys(o.values).length} setting{Object.keys(o.values).length > 1 ? "s" : ""} adjusted by your agent</p> : null}
+        {res?.type === "recipe" && (res as { beats?: Beat[] }).beats?.length ? <div className="mt-3"><BeatsStrip beats={(res as { beats?: Beat[] }).beats!} duration={(res as { duration?: number }).duration} compact /></div> : null}
         {res?.type === "background" && theme?.palette ? <p className="mt-1.5 font-mono text-[11px] text-faint">recolored to your palette</p> : null}
         {tuned ? <p className="mt-1.5 font-mono text-[11px] text-paper">tuned by you</p> : null}
         <div className="mt-4 flex gap-2">
@@ -47,6 +50,30 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoos
             {chosen ? <IconCheck size={14} /> : null}{multi ? (chosen ? "Picked" : `Pick ${o.label}`) : chosen ? "Chosen" : `Choose ${o.label}`}
           </button>
           <Link href={`/r/${o.id}?from=${encodeURIComponent(fragment)}&label=${o.label}${Object.keys(values).length ? `&s=${enc(values)}` : ""}`} className="rounded-md border border-line px-3 py-2 text-[13px] text-figure hover:border-faint">Tune</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** An option that is a structure the agent proposes for this brief, instead of a recipe: its beats, built from scratch if chosen. */
+function StructureOption({ o, chosen, multi, onChoose }: { o: Option; chosen: boolean; multi: boolean; onChoose: () => void }) {
+  const st = o.structure!;
+  return (
+    <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
+      <div className="relative flex aspect-video flex-col justify-end overflow-hidden bg-black p-4">
+        <BeatsStrip beats={st.beats} duration={st.duration} compact />
+        <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-md bg-ground/80 px-2 font-mono text-[13px] text-figure backdrop-blur">{o.label}</span>
+        <span className="absolute right-3 top-3 rounded-md bg-ground/80 px-2 py-1 font-mono text-[11px] text-muted backdrop-blur">a structure for this brief · {st.duration} s</span>
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex items-center gap-2"><IconAgent size={14} className="text-paper" /><span className="truncate text-[15px] font-medium">{st.title}</span></div>
+        <ul className="mt-2 space-y-1 text-[12.5px] text-muted">{st.beats.map((b) => <li key={b.name + b.from}><span className="font-mono text-[11px] text-faint">{b.from}–{b.to} s</span> <span className="text-figure">{b.name}</span> · {b.what}</li>)}</ul>
+        {o.note ? <p className="mt-2 text-[13px] leading-snug text-muted">{o.note}</p> : null}
+        <div className="mt-4 flex gap-2">
+          <button type="button" onClick={onChoose} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
+            {chosen ? <IconCheck size={14} /> : null}{multi ? (chosen ? "Picked" : `Pick ${o.label}`) : chosen ? "Chosen" : `Choose ${o.label}`}
+          </button>
         </div>
       </div>
     </div>
@@ -155,6 +182,8 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
       const items = (o.items ?? []).map((i) => ({ id: i.id, type: res[i.id]?.type ?? "", title: res[i.id]?.title ?? i.id, values: inLook(res[i.id], i.values, t) }));
       kit.set({ name: kit.get().name, items });
       say(replyLine(board, { label: o.label }), { label: o.label });
+    } else if (o.structure) {
+      say(replyLine(board, { label: o.label }), { label: o.label });
     } else {
       const r = res[o.id!], values = inLook(r, o.values, theme);
       if (r) kit.add({ id: r.id, type: r.type, title: r.title, values });
@@ -176,6 +205,7 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
       return;
     }
     const picks = opts.map((o) => {
+      if (o.structure) return { label: o.label, setArgs: [] };
       const r = res[o.id!], values = tuned[o.label] ?? inLook(r, o.values, theme);
       if (r) kit.add({ id: r.id, type: r.type, title: r.title, values });
       return { label: o.label, setArgs: r ? (setArgs(r, { ...Object.fromEntries((r.params ?? []).map((p) => [p.name, p.default])), ...values }) as string[]) : [] };
@@ -216,6 +246,7 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
       <div className={`mt-10 grid gap-5 ${cols}`}>
         {board.options.map((o) => (board.kind === "kit"
           ? <KitOption key={o.label} o={o} res={res} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
+          : o.structure ? <StructureOption key={o.label} o={o} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
           : <ResourceOption key={o.label} o={o} res={o.id ? res[o.id] : undefined} theme={theme} fragment={fragment} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} tuned={tuned[o.label]} onChoose={() => (multi ? togglePick(o) : choose(o))} />))}
       </div>
       {multi ? (
