@@ -34,8 +34,8 @@ export function LibraryControls({ items, tabs }: { items: Meta[]; tabs: TypeTab[
 
   return (
     <div className="sticky top-14 z-30 border-b border-line bg-ground/90 py-4 backdrop-blur">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="-mx-1 flex gap-1 overflow-x-auto">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="-mx-1 flex min-w-0 flex-1 gap-1 overflow-x-auto lg:flex-wrap lg:overflow-visible">
           {[{ type: "all", short: "All", count: items.length }, ...tabs].map((t) => (
             <button
               key={t.type}
@@ -53,7 +53,7 @@ export function LibraryControls({ items, tabs }: { items: Meta[]; tabs: TypeTab[
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search: spring, dark, 3d, editorial…"
-          className="w-full rounded-md border border-line bg-surface px-3 py-2 font-mono text-[13px] text-figure outline-none placeholder:text-faint focus:border-faint lg:w-[320px]"
+          className="w-full shrink-0 rounded-md border border-line bg-surface px-3 py-2 font-mono text-[13px] text-figure outline-none placeholder:text-faint focus:border-faint lg:w-[300px]"
         />
       </div>
       <p className="mt-3 font-mono text-[12px] text-faint">{shown.size} shown</p>

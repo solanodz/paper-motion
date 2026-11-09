@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 };
 
 const NAV = [
-  { href: "/library", label: "Library" },
-  { href: "/docs", label: "For agents" },
+  { href: "/library", label: "Library", short: "Library" },
+  { href: "/docs", label: "For agents", short: "Agents" },
 ];
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -29,14 +29,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${geistSerif.variable} ${geistPixel.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <header className="sticky top-0 z-40 border-b border-line bg-ground/85 backdrop-blur">
-          <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-5 md:px-8">
-            <Link href="/" className="whitespace-nowrap font-serif text-[22px] tracking-[-0.02em]">
+          <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-5 md:px-8">
+            <Link href="/" className="shrink-0 whitespace-nowrap font-serif text-[19px] tracking-[-0.02em] sm:text-[22px]">
               paper-motion
             </Link>
-            <nav className="flex items-center gap-3 whitespace-nowrap font-mono text-[12px] text-muted sm:gap-5 sm:text-[13px]">
+            <nav className="flex min-w-0 items-center gap-3 whitespace-nowrap font-mono text-[11.5px] text-muted sm:gap-5 sm:text-[13px]">
               {NAV.map((n) => (
                 <Link key={n.href} href={n.href} className="transition-colors hover:text-figure">
-                  {n.label}
+                  <span className="sm:hidden">{n.short}</span><span className="max-sm:hidden">{n.label}</span>
                 </Link>
               ))}
               <KitNavLink />
