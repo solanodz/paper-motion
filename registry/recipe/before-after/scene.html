@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>before-after</title>
+<!--
+  Recipe · before / after (16 s). Two states of the same thing, one wipe between them.
+  Before 0–6 s (the old state: muted panel, its line, a label) · Wipe 6–7.5 s (the new state sweeps in) · After 7.5–13 s
+  (the brand's state: the accent, its line) · Close 13–16 s (the wordmark and the action).
+  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first: a real picture of each
+  state (`image`) beats any panel; without one, each state is a panel with its line.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .frame { position: absolute; inset: 0; }
+  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8%; box-sizing: border-box; }
+  .state { position: absolute; inset: 0; overflow: hidden; }
+  .state img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .state .tag { position: absolute; }
+  .state .line { position: absolute; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="f1" class="frame"><div id="panel" class="abs"></div></div>
+  <div id="f2" class="frame"><div class="center"><div id="mark"></div><div id="action"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { wordRise, blurIn, wipe, crossfade } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id behind the after state, or null for the brand's first entry
+  before: { tag: 'Before', line: 'Forty minutes, three tools, one guess.', image: '' },
+  after: { tag: 'After', line: 'One command. Every frame on purpose.', image: '' },
+  action: 'your.site',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 16;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = 0.5;
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.5) 100%)';
+const $ = (id) => document.getElementById(id);
+
+const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'figure' });
+Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.028}px`, letterSpacing: '0em', marginTop: `${SHORT * 0.03}px` });
+mark.textContent = B.name; action.textContent = CONFIG.action;
+
+// the two states fill one panel; the after state wears the brand
+const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080);
+const panel = $('panel'), pw = Math.min(W * 0.8, SHORT * 1.5), ph = pw * 0.56;
+Object.assign(panel.style, { left: `${(W - pw) / 2}px`, top: `${(H - ph) / 2}px`, width: `${pw}px`, height: `${ph}px`, borderRadius: `${R}px`, overflow: 'hidden', border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.03}px ${SHORT * 0.08}px rgba(0,0,0,0.45)` });
+const state = (cfg, after) => {
+  const el = document.createElement('div');
+  el.className = 'state';
+  el.style.background = after ? B.color('surface', '#111') : '#2a2a2a';
+  if (cfg.image) { const img = document.createElement('img'); img.src = cfg.image; if (!after) img.style.filter = 'grayscale(1) contrast(0.9) brightness(0.8)'; el.append(img); }
+  else if (after && bgId) { const f = document.createElement('div'); Object.assign(f.style, { position: 'absolute', inset: 0, opacity: 0.8 }); el.append(f); B.shader(s, f, bgId); }
+  // the line sits on a quiet band, whatever the picture or the field does behind it
+  const band = document.createElement('div'); Object.assign(band.style, { position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', background: `linear-gradient(to top, ${B.color('ground')}e6 0%, ${B.color('ground')}99 45%, transparent 100%)` }); el.append(band);
+  const tag = document.createElement('div'); tag.className = 'tag';
+  B.style(tag, 'caption', { short: SHORT, color: after ? 'ground' : 'figure' });
+  Object.assign(tag.style, { left: `${pw * 0.05}px`, top: `${pw * 0.045}px`, fontFamily: B.font('mono'), padding: `${SHORT * 0.006}px ${SHORT * 0.012}px`, borderRadius: `${R * 0.5}px`, background: after ? B.color('accent', '#E9E4D8') : '#ffffff22', color: after ? B.color('ground') : '#ddd' });
+  tag.textContent = cfg.tag;
+  const line = document.createElement('div'); line.className = 'line';
+  B.style(line, 'title', { short: SHORT, color: 'figure' });
+  Object.assign(line.style, { left: `${pw * 0.05}px`, right: `${pw * 0.05}px`, bottom: `${pw * 0.05}px`, color: after ? B.color('figure') : '#cfcfcf', maxWidth: '22ch', textShadow: cfg.image ? '0 2px 24px rgba(0,0,0,0.6)' : 'none' });
+  line.textContent = cfg.line;
+  el.append(tag, line);
+  panel.append(el);
+  return { el, tag, line };
+};
+const before = state(CONFIG.before, false), after = state(CONFIG.after, true);
+await document.fonts.ready;
+for (const el of [mark]) { el.style.whiteSpace = 'nowrap'; const k = (W * 0.84) / el.scrollWidth; if (k < 1) el.style.fontSize = `${parseFloat(el.style.fontSize) * k}px`; }
+
+// timeline
+const T = { wipe: [6, 7.5], close: [12.8, 13.5] };
+const frames = [$('f1'), $('f2')];
+const RESET = ['transform', 'opacity', 'filter', 'clipPath', 'zIndex'];
+const clean = (els) => els.forEach((e) => RESET.forEach((k) => { e.style[k] = ''; }));
+s.update((t) => {
+  if (t >= T.wipe[1]) wipe(before.el, after.el, 1);
+  clean([...frames, before.el, after.el, before.line, after.line, before.tag, after.tag]);
+  frames.forEach((f, i) => { f.style.opacity = 0; f.style.zIndex = i + 1; });
+  // the panel rises once; the before state waits for the wipe; the after state arrives with it
+  const rise = progress(t, 0.1, 0.9, ease.outCubic);
+  panel.style.transform = `translateY(${(1 - rise) * SHORT * 0.05}px)`; panel.style.opacity = String(rise);
+  before.el.style.opacity = 0; after.el.style.opacity = 0; before.el.style.zIndex = 1; after.el.style.zIndex = 2;
+  if (t < T.wipe[0]) before.el.style.opacity = 1;
+  else if (t < T.wipe[1]) wipe(before.el, after.el, progress(t, ...T.wipe));
+  else after.el.style.opacity = 1;
+  blurIn(before.tag, t, { start: 0.8, duration: 0.6 }); wordRise(before.line, t, { start: 1.1, each: B.pace.stagger, duration: 0.8 });
+  blurIn(after.tag, t, { start: T.wipe[1] - 0.2, duration: 0.6 }); wordRise(after.line, t, { start: T.wipe[1], each: B.pace.stagger, duration: 0.8 });
+  if (t < T.close[0]) frames[0].style.opacity = 1;
+  else if (t < T.close[1]) crossfade(frames[0], frames[1], progress(t, ...T.close));
+  else frames[1].style.opacity = 1;
+  wordRise(mark, t, { start: T.close[1] - 0.2, each: B.pace.stagger, duration: 0.9 });
+  blurIn(action, t, { start: T.close[1] + 0.6, duration: 0.8 });
+});
+B.cue(s, 'land', 0.9); B.cue(s, 'text', 1.1); B.cue(s, 'transition', T.wipe[0]); B.cue(s, 'land', T.wipe[1]); B.cue(s, 'land', T.close[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

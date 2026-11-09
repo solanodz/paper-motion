@@ -4,6 +4,8 @@ All notable changes to the `paper-motion` npm package. Dates are release dates o
 
 ## 0.2.5 · unreleased
 
+- Recipes declare `beats` (the structure as a timeline); boards draw them, and a recipe board may hold a structure of the agent's own (`--option "@Title | 18 | Hook 0-2 …"`), which `parseReply` returns as `structure`.
+- Three recipes: `manifesto` (words only, three statements and a turn), `three-things` (three cards, three mechanics) and `before-after` (two states, one wipe).
 - Font pairs keep their own stylesheet when the family is unchanged, so self-hosted faces work: the new `geist-serif` pair (Geist Serif headlines served by paper-motion.app, Geist text, Geist Mono labels) is the site's own look.
 
 ## 0.2.4 · 2026-11-09

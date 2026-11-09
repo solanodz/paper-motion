@@ -141,8 +141,12 @@ function fontTokens(item, values) {
 function recipeConfig(values) {
   const cfg = {}, groups = {};
   for (const [k, v] of Object.entries(values)) {
-    const m = k.match(/^(proof|step|shot)(\d)(Label|Title|Body|Image|Caption)$/);
-    if (m) { const g = { proof: 'proof', step: 'steps', shot: 'shots' }[m[1]]; (groups[g] ??= [])[m[2] - 1] ??= {}; groups[g][m[2] - 1][m[3].toLowerCase()] = v; continue; }
+    const m = k.match(/^(proof|step|shot|thing)(\d)(Label|Title|Body|Image|Caption)$/);
+    if (m) { const g = { proof: 'proof', step: 'steps', shot: 'shots', thing: 'things' }[m[1]]; (groups[g] ??= [])[m[2] - 1] ??= {}; groups[g][m[2] - 1][m[3].toLowerCase()] = v; continue; }
+    const ba = k.match(/^(before|after)(Tag|Line|Image)$/);
+    if (ba) { (cfg[ba[1]] ??= {})[ba[2].toLowerCase()] = v; continue; }
+    const st = k.match(/^statement(\d)$/);
+    if (st) { (cfg.statements ??= [])[st[1] - 1] = v; continue; }
     if (k === 'format') cfg.format = String(v).split('x').map(Number);
     else cfg[k] = v === '' ? null : v;
   }
@@ -154,10 +158,17 @@ function recipeScene(content, values) {
   const start = content.indexOf('const CONFIG = {');
   if (start < 0) return content;
   const end = content.indexOf('\n};', start) + 3;
-  const body = Object.entries(cfg).map(([k, v]) => (Array.isArray(v) && v.length && typeof v[0] === 'object'
+  // the original entries, by key (an entry runs until the next top-level key), so settings that are not params
+  // (backgroundOpacity, turnWord, a card's label…) survive a --set
+  const original = content.slice(start + 'const CONFIG = {\n'.length, end - 3).split(/\n(?=  \w+: )/);
+  const kept = new Map(original.map((e) => [e.match(/^  (\w+):/)?.[1], e]).filter(([k]) => k));
+  const render = (k, v) => (Array.isArray(v) && v.length && typeof v[0] === 'object'
     ? `  ${k}: [\n${v.map((o) => `    ${literal(o)},`).join('\n')}\n  ],`
-    : `  ${k}: ${v === null ? 'null' : literal(v)},`)).join('\n');
-  return `${content.slice(0, start)}const CONFIG = {\n${body}\n};${content.slice(end)}`;
+    : `  ${k}: ${v === null ? 'null' : literal(v)},`);
+  const lines = [];
+  for (const [k, e] of kept) lines.push(k in cfg ? render(k, cfg[k]) : e);
+  for (const [k, v] of Object.entries(cfg)) if (!kept.has(k)) lines.push(render(k, v));
+  return `${content.slice(0, start)}const CONFIG = {\n${lines.join('\n')}\n};${content.slice(end)}`;
 }
 
 // ── the public API ──────────────────────────────────────────────
