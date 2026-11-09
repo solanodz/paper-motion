@@ -23,6 +23,25 @@ function describe(c: Choice) {
   return { choices: (parsed.picks ?? []).map((p) => ({ label: p.label, id: p.id, set: p.set, add: `npx paper-motion add ${p.id}${p.set.map((x) => ` --set '${x}'`).join("")}` })), line: c.line, at: c.at };
 }
 
+/** The flow, for an agent that has only this server: sent as the server's instructions and returned by `flow`. */
+const FLOW = `paper-motion makes brand videos with the user as director. You propose, they choose, you install and render.
+
+The flow, in order:
+1. Interview before anything visual: what the brand is in one plain line; what this video is for and where it plays
+   (16:9, 9:16, 1:1) and how long; three words for the feel and one thing it must never look like; the one action at
+   the end. Mirror it back.
+2. You NEVER choose a look for the user. Each of these decisions is a board (tool \`board\`), one at a time, in this
+   order: palette · font pair · background(s) · moves by role (how things enter, how one thing becomes the next, how
+   text arrives; pass choose: [1, 3] so they can pick several) · recipe. Use \`search\` to pick 2–4 fitting options,
+   \`resource\` to read params before tuning one, \`recolor\` to show a background in their palette. Share the link,
+   say you are waiting; \`board\` returns their choice. Never ask them to paste anything.
+3. Install what they chose with \`npx paper-motion add <id> [--set …]\` in their project (the \`add\` field of each
+   choice). Write brand/tokens.json's name, brand/motion.json and brand/sound.json from the interview.
+4. Build the piece from the recipe they chose. Every move they picked appears in it, and the brief says where.
+   Check stills (\`npx paper-motion still\`), render (\`npx paper-motion render … --motion-blur 5\`).
+
+Skip a board only when the user's brand folder already settles that decision, and say so. Boards expire in 90 days.`;
+
 const pick = z.object({ id: z.string().describe("a resource id"), values: z.record(z.string(), z.unknown()).optional().describe("param values that differ from the defaults") });
 
 const handler = createMcpHandler(
@@ -48,6 +67,16 @@ const handler = createMcpHandler(
         const items = find(getIndex().items, query ?? "", opts) as unknown[];
         return text({ count: items.length, items: items.slice(0, limit ?? 20) });
       },
+    );
+
+    server.registerTool(
+      "flow",
+      {
+        title: "The flow and the decisions checklist",
+        description: "Read this first: the order of work (interview → one board per decision → install → build) and the list of decisions that always go through a board. Returns a checklist to walk and report against.",
+        inputSchema: z.object({}),
+      },
+      async () => text({ flow: FLOW, checklist: ["what the brand is, format, length, feel, action (interview)", "palette (board)", "font pair (board)", "background(s) (board)", "moves: enter / swap / text (boards, choose several)", "recipe (board)", "install the choices; name, motion.json, sound.json", "build: every chosen move in the piece; stills; render"] }),
     );
 
     server.registerTool(
@@ -141,7 +170,10 @@ const handler = createMcpHandler(
       async ({ id }) => { const c = await getStore().get<Choice>(choiceKey(id)); return text(c ? { id, ...describe(c) } : { id, choices: null }); },
     );
   },
-  { serverInfo: { name: "paper-motion", version: "0.2.3" } },
+  {
+    serverInfo: { name: "paper-motion", version: "0.2.3" },
+    instructions: FLOW,
+  },
 );
 
 export { handler as GET, handler as POST };

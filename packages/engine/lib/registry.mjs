@@ -110,11 +110,17 @@ export function llmsTxt(items, site, { full = false } = {}) {
 ## The flow (for agents)
 
 1. **Set up.** \`npx skills add solanodz/paper-motion\` (the skills) and \`npx paper-motion setup\` (the engine: Node 18+,
-   ffmpeg, Chrome). The CLI is \`npx paper-motion\` (short: \`pamo\`). Every command answers \`--help\`.
+   ffmpeg, Chrome). The CLI is \`npx paper-motion\` (short: \`pamo\`). Every command answers \`--help\`. Agents load
+   skills and MCP servers when a session starts, so after installing the skills **read
+   \`.claude/skills/make-video/SKILL.md\` now** (or \`.agents/skills/make-video/SKILL.md\`) and follow it in this
+   session; tell the user that the MCP at ${site}/mcp, if they want it, is added before opening a session.
 2. **Interview.** Follow the \`make-video\` skill. Without the skills, ask at least: what the brand is in one plain
    line; what this video is for and where it plays (format: 16:9, 9:16, 1:1); its ground, text and accent colors or
    "no brand yet"; three words for the feel and one thing it must never look like; the one action at the end.
-   Mirror it back before proposing anything.
+   Mirror it back before proposing anything. **You never choose a look for the user.** These decisions always go
+   through a board, in this order, one board each: palette · font pair · background(s) · moves by role (how things
+   enter, how one thing becomes the next, how text arrives; let them pick several with \`choose\`) · recipe. Skip a
+   board only when the brand folder already settles that decision, and say so.
 3. **Propose with boards.** For each visual decision (palette, type, background, moves, recipe) pick 2–4 options from
    this registry and share a board link: \`pamo board --url --title … --option id … --look palette,font\` prints it
    (format below): a short link (\`${site}/b/<id>\`, stored for 90 days) when the site answers, the long form
@@ -132,7 +138,8 @@ export function llmsTxt(items, site, { full = false } = {}) {
    the user re-chooses or re-tunes something you installed before, pass \`--force\`. A recipe also reads
    \`brand/motion.json\` (pace) and \`brand/sound.json\` (cues; without it the piece is silent) and the brand's name
    from \`tokens.json\` \`brand\`: write those from the interview before rendering.
-5. **Make the video.** Build \`scene.html\` (a pure function of time), check stills with \`pamo still\`, render with
+5. **Make the video.** Every move the user chose appears in the piece, and the brief says where each one plays;
+   a recipe's own moves are placeholders to swap for theirs. Build \`scene.html\` (a pure function of time), check stills with \`pamo still\`, render with
    \`pamo render scene.html --motion-blur 5\`. The test shot and the final piece are real renders, not boards.
 
 ## Choosing well: the metadata

@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "For agents" };
 const BOARD_CMD = `npx paper-motion board --url --title "Backgrounds for Kiln" --ask "Which one feels like the product?" --reply bg-1 --look cobalt,geist --option mesh-graphite --note "quiet, graphite" --option neuro-slate --note "a technical web" --option "dither-slate:colorFront=#3d6bff" --note "pixels in your accent" --option grain-slate --wait`;
 
 const STEPS: [string, string, string?][] = [
-  ["The user starts", "They paste the home page's prompt in their agent. The agent installs the skills and reads llms.txt.", "npx skills add solanodz/paper-motion"],
+  ["The user starts", "They add the MCP (or the skills) before opening a session, then paste the home page's prompt. The agent reads llms.txt and the make-video skill.", "claude mcp add --transport http paper-motion https://paper-motion.vercel.app/mcp"],
   ["Interview", "The make-video skill asks what the brand is, what the video is for, the format and the feel. It reads the brand folder when there is one."],
   ["Search", "The agent filters the registry by the metadata: mode, colors near the brand's, mood, energy, role.", `npx paper-motion search --type background --mode dark --near "#0a0f1f,#3d6bff"`],
   ["Propose a board", "Two to four options in one link. The user opens it and sees them live, in their own look: backgrounds come recolored into their palette.", BOARD_CMD],

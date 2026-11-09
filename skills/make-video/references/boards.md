@@ -23,7 +23,8 @@ pamo board --url --title "Backgrounds for Kiln" --ask "Which one feels like the 
 - `--option id[:key=value,…]`: 2 to 4, one resource type per board. Values are your adjustments (hex colors, numbers, JSON for lists).
 - `--note "…"`: one line per option saying why you propose it. Users read these.
 - `--kit`: each option is a whole kit, a space-separated list of ids (`--option "cobalt geist mesh-graphite magic-move launch"`), for "show me three directions".
-- `--wait [minutes]`: the command prints the link, keeps running and prints the reply line the moment the user chooses in the browser (10 minutes by default; exit code 3 on timeout). Use it whenever you can leave a command running; the user can still paste the line.
+- The command prints the link and **keeps running until the user chooses** in the browser, then prints the reply line (10 minutes; `--wait 3` changes it, exit code 3 on timeout, `--no-wait` returns at once). Tell the user you are waiting; never ask them to paste the line while you are.
+- `--choose 3` or `--choose 1-3`: the user may pick several options; the line lists them (`A+C · type-on · scramble`). Use it for text effects and transitions, where a piece needs more than one.
 - The link is short (`/b/<id>`, stored on the site for 90 days) when the site answers and long (the board in the fragment) otherwise; `--long` forces the long one. `pamo board --forget <id>` deletes a stored board early.
 - The command validates ids and params against the registry and prints the URL. Share it as is. Without the CLI, build the payload by hand: the format is in `https://paper-motion.vercel.app/llms.txt`.
 

@@ -31,6 +31,8 @@ Scenes load it with `paper-motion/brand` (see "Writing a scene"). When a part is
 - **Recipe:** start from one in `references/recipes.md` (launch, explainer, social loop, end card, README loop) or the user's own structure; `pamo add <recipe>` writes a working scene for it, wired to `brand/`. A recipe gives beats and timing, never a look. The user's length wins: scale the recipe's beats to it.
 - **Real material:** ask what is real and can be shown, and use what `brand/assets/` already holds: photos of the product or place, the product's UI, a real command and its output, the music, the cover art, real numbers from the Facts. A piece that shows the real thing beats any abstract illustration of it; run photos through image shaders (HalftoneDots, ImageDithering, PaperTexture, FlutedGlass) to make them the brand's.
 - **Format:** 16:9 (1920×1080), 9:16 (1080×1920) or 1:1 (1080×1080). One piece, one format; another format is another piece, made after this one.
+- **Never choose a look for the user.** Palette, font pair, background(s), the moves by role (enter, swap, text) and the recipe each go through a board, in that order, unless `brand/` already settles one; say so when you skip. Let them pick several moves where a piece needs several (`--choose 1-3`).
+- **Everything they chose gets used.** Every move the user picked appears in the piece and `brief.md` says where it plays; a recipe's own moves are placeholders to swap for theirs.
 - **Mirror back** after each round; get an explicit approval of `brief.md`.
 - When a gate is later rejected, ask what exactly was wrong (pace, type, composition, movement, transitions, sound, mood) before changing anything.
 
