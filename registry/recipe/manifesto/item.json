@@ -108,7 +108,14 @@
   "preview": {
     "video": "previews/manifesto.webm",
     "poster": "previews/manifesto.jpg",
-    "at": 10.8
+    "at": 10.8,
+    "values": {
+      "statement1": "Tools were made for hands.",
+      "statement2": "Agents have none.",
+      "statement3": "So we gave them one.",
+      "what": "Brand videos, made by your coding agent.",
+      "action": "paper-motion.app"
+    }
   },
   "mood": [
     "bold",

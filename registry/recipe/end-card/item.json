@@ -80,7 +80,11 @@
   ],
   "preview": {
     "video": "previews/end-card.webm",
-    "poster": "previews/end-card.jpg"
+    "poster": "previews/end-card.jpg",
+    "values": {
+      "line": "Brand videos, made by your coding agent.",
+      "action": "npx skills add solanodz/paper-motion"
+    }
   },
   "mood": [
     "minimal",

@@ -235,6 +235,10 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "values": {
+          "type": "object",
+          "description": "Recipes: param values the preview is rendered with (the demo brand's copy), so defaults stay neutral."
+        },
         "video": {
           "type": "string"
         },

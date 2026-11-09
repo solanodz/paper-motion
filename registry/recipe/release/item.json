@@ -119,7 +119,14 @@
   "preview": {
     "video": "previews/release.webm",
     "poster": "previews/release.jpg",
-    "at": 4.0
+    "at": 4.0,
+    "values": {
+      "title": "Boards",
+      "artist": "paper-motion",
+      "what": "release 0.2",
+      "action": "Out now · paper-motion.app",
+      "bpm": 96
+    }
   },
   "mood": [
     "calm",

@@ -169,7 +169,22 @@
   "preview": {
     "video": "previews/launch.webm",
     "poster": "previews/launch.jpg",
-    "at": 8.2
+    "at": 8.2,
+    "values": {
+      "hook": "Your agent can direct.",
+      "problem": "Motion tools were made for hands. Agents have none.",
+      "what": "Brand videos, made by your coding agent.",
+      "action": "paper-motion.app",
+      "proof1Label": "01 · named",
+      "proof1Title": "Resources with a name",
+      "proof1Body": "Moves, backgrounds, palettes, fonts, recipes.",
+      "proof2Label": "02 · yours",
+      "proof2Title": "Code you own",
+      "proof2Body": "npx paper-motion add magic-move",
+      "proof3Label": "03 · exact",
+      "proof3Title": "Every frame rendered",
+      "proof3Body": "Same input, same pixels."
+    }
   },
   "mood": [
     "bold",

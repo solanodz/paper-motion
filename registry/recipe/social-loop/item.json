@@ -96,7 +96,11 @@
   "preview": {
     "video": "previews/social-loop.webm",
     "poster": "previews/social-loop.jpg",
-    "at": 3.5
+    "at": 3.5,
+    "values": {
+      "line": "Your agent proposes. You choose. It renders.",
+      "what": "paper-motion · brand videos by coding agents"
+    }
   },
   "mood": [
     "calm",

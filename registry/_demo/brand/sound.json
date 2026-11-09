@@ -1,0 +1,28 @@
+{
+  "palette": "airy",
+  "lowpass": 2000,
+  "cues": {
+    "transition": {
+      "type": "sweep",
+      "dur": 0.7,
+      "gain": 0.06
+    },
+    "land": {
+      "type": "thud",
+      "gain": 0.08
+    },
+    "text": {
+      "type": "tick",
+      "freq": 900,
+      "gain": 0.04
+    },
+    "bed": null
+  },
+  "keys": {
+    "bank": null,
+    "style": "creamy",
+    "gain": 0.14
+  },
+  "music": null,
+  "loudness": -14
+}
