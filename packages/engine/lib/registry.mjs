@@ -156,9 +156,12 @@ ${site}/registry.json is the index; every item carries, beside id, type, title, 
   installs it that way (\`brand\` reads \`brand/tokens.json\`). So choose backgrounds by \`motion\`, \`mood\` and
   texture first; the color comes from the palette.
 - Font pairs: \`voice\` (serif, sans, display, mono). Recipes: \`duration\`, \`formats\` and \`beats\` (the structure as a
-  timeline: name, from, to, what). A recipe board shows the beats, so the user chooses a rhythm, not a name; you may add
-  one option that is a **structure of your own** for this brief (\`structure\` instead of \`id\`, format below), which you
-  then build from scratch.
+  timeline: name, from, to, what). A recipe board plays each structure as a sketch, so the user chooses a rhythm, not a
+  name; you may add one option that is a **structure of your own** for this brief (\`structure\` instead of \`id\`,
+  format below), which you then build from scratch. Give the recipe board \`choose: [1, 3]\`: picking several recipes in
+  order means **one piece made of those blocks in that order**, each block's closing beat dropped except the last; the
+  reply reads \`A+C · manifesto · three-things\`, and you build that sequence from scratch, using each recipe's scene as
+  the reference for its block.
 
 \`pamo search\` filters by them: \`pamo search --type background --mode dark --near "#0a0f1f,#eef1f8,#3d6bff"\`
 sorts backgrounds by color fit (the mean distance from each of theirs to the nearest of yours; lower is closer; pass
