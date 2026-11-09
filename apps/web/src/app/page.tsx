@@ -79,7 +79,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1400px] px-5 py-16 md:px-8 md:py-20">
+      <section className="mx-auto max-w-[1400px] px-5 pb-16 pt-12 md:px-8 md:pb-20 md:pt-14">
         <div className="flex items-end justify-between gap-6">
           <h2 className="font-serif text-[40px] leading-none tracking-[-0.02em] md:text-[54px]">In the library</h2>
           <Link href="/library" className="hidden items-center gap-2 text-[13.5px] text-muted hover:text-figure sm:flex">All {count} <IconArrow size={14} /></Link>

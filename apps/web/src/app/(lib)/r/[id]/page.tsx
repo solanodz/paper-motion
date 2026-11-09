@@ -64,7 +64,7 @@ export default async function ResourcePage({ params }: PageProps<"/r/[id]">) {
             <h2 className="border-b border-line pb-3 text-[18px] font-medium">Notes</h2>
             <ul className="mt-5 space-y-2 text-[14px] leading-relaxed text-muted">
               {r.notes.map((n) => (
-                <li key={n} className="flex gap-3"><span className="mt-[9px] h-1 w-1 shrink-0 bg-faint" /><span>{n}</span></li>
+                <li key={n} className="flex gap-3"><span className="mt-[9px] h-1 w-1 shrink-0 bg-faint" /><span>{n.split(/`([^`]+)`/).map((part, i) => (i % 2 ? <code key={i} className="rounded bg-raised px-1 py-px font-mono text-[12.5px] text-figure">{part}</code> : part))}</span></li>
               ))}
             </ul>
           </section>
