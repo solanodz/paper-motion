@@ -45,6 +45,15 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      --cols 1 stacks options full width (judge type at real size)
                                      --sequence plays the clips one after another, with their sound
                                      (for choices you hear: sound palettes, typing)
+  chain init <piece> (--board <id|link> [--option D] | --parts id:sec,id:sec,…) [--format 1920x1080]
+        [--join whip|cut|dissolve|dip] [--title "…"] [--force]
+                                     a piece made of blocks: installs each part as its own scene under
+                                     pieces/<piece>/<nn>-<id>/ (edit each CONFIG) and writes chain.json;
+                                     --board takes the structure the user chose on a board; with neither,
+                                     installs parts you added to chain.json and keeps the rest
+  chain <piece> [--out file.mp4] [--motion-blur 5] [--audio music.wav] [--no-sfx] [--dpr 1] [--check]
+                                     renders every part in the brand's look and joins them into one
+                                     video (run from the project root); --check only plans and warns
   wordmark <text> --family <name> [--css <url> | --file <font>] [--weight 400] [--tracking -0.02em]
          [--color #fff] [--size 400] [--pad 0] [--out wordmark.png]
                                      the name set in its typeface, as a transparent PNG
@@ -414,6 +423,39 @@ async function main() {
           : await composeBoard({ inputs, labels, aspect: w / h, out, tmp, duration: clip ?? undefined, cols: args.cols ? Number(args.cols) : undefined });
         console.log(`\r✓ ${path.relative(process.cwd(), r.out)} — ${files.length} options${sequence ? `, played in turn, ${clip * files.length} s` : `, ${r.W}×${r.H}`}`);
       } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+      break;
+    }
+
+    case 'chain': {
+      const sub = args._[1] === 'init' ? 'init' : 'render';
+      const piece = sub === 'init' ? args._[2] : args._[1];
+      if (!piece || args.help) { console.error('Usage: chain init <piece> [--board <id|link> [--option D] | --parts id:sec,…] [--format 1920x1080] [--join whip|cut|dissolve|dip] [--force]\n       chain <piece> [--out file.mp4] [--motion-blur 5] [--audio music.wav] [--no-sfx] [--check]'); process.exit(args.help ? 0 : 1); }
+      const chainLib = await import('../lib/chain.mjs');
+      if (sub === 'init') {
+        const { SITE } = await import('../lib/registry.mjs');
+        let src;
+        if (args.board) src = await chainLib.structureFromBoard(String(args.board), typeof args.option === 'string' ? args.option : undefined, { site: typeof args.site === 'string' ? args.site : SITE });
+        else if (typeof args.parts === 'string') src = { parts: chainLib.partsFromList(args.parts) };
+        else src = {};   // no source: sync an existing chain.json (install parts added since)
+        const r = await chainLib.initChain({ piece, title: typeof args.title === 'string' ? args.title : src.title, parts: src.parts, format: typeof args.format === 'string' ? args.format : undefined, join: typeof args.join === 'string' ? args.join : undefined, registry: args.registry, force: !!args.force });
+        console.log(`✓ ${path.relative(process.cwd(), r.dir)}/chain.json · "${r.chain.title}" · ${r.chain.parts.length} parts, ${r.chain.format}`);
+        for (const p of r.chain.parts) console.log(`  ${p.dir ?? '(no block)'}${p.name ? ` · ${p.name}` : ''}${p.seconds ? ` · ${p.seconds} s` : ''}${p.what ? `  — ${p.what}` : ''}`);
+        for (const n of r.notes) console.log(`  ! ${n}`);
+        console.log(`\nNext: write each part's text and data into its CONFIG (the "what" above is the brief), then:\n  npx paper-motion chain ${piece} --motion-blur 5`);
+        break;
+      }
+      await ensureDeps();
+      if (args.check) {
+        const r = await chainLib.checkChain({ piece });
+        for (const p of r.parts) console.log(`  ${p.dir} · ${p.join} · ${p.from}–${+(p.from + p.seconds).toFixed(2)} s of ${p.D}`);
+        for (const w of r.warnings) console.log(`  ! ${w}`);
+        console.log(`${r.total.toFixed(1)} s in all`);
+        break;
+      }
+      const blur = args['motion-blur'] ? Number(args['motion-blur'] === true ? 5 : args['motion-blur']) : 1;
+      const r = await chainLib.renderChain({ piece, out: typeof args.out === 'string' ? args.out : undefined, motionBlur: blur, dpr: Number(args.dpr ?? 1), audio: typeof args.audio === 'string' ? args.audio : undefined, sfx: !args['no-sfx'],
+        onStep: (e) => { if (e.warning) console.log(`  ! ${e.warning}`); else if (e.part) process.stdout.write(`\rpart ${e.part}/${e.of} · ${e.dir}            `); else if (e.joining) process.stdout.write('\rjoining…                              '); } });
+      console.log(`\r✓ ${path.relative(process.cwd(), r.out)} — ${r.parts} parts, ${r.total.toFixed(1)} s, ${r.W}×${r.H}`);
       break;
     }
 

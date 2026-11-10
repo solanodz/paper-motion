@@ -85,6 +85,10 @@ A skill's entrance for someone starting from nothing: it runs an interview.
 A skill's entrance for someone who already decided: it takes what they bring (fonts, colors, a brand manual, a website, a Figma or Paper file), writes it to the brand folder and asks only for what is missing.
 _Avoid_: expert mode, skip
 
+**Chain**:
+One piece made of several blocks or shots played in order, each in the brand's look, each joined to the next by a cut, whip, dissolve or dip. What a chosen structure becomes when its beats name the blocks that show them.
+_Avoid_: sequence (the board's word for several picks), montage, playlist
+
 **Board**:
 A set of labelled options (A, B, C, D) the agent shows the user to decide one thing: a palette, a background, a move, a recipe, or whole kits. It has two forms: a rendered board (a still or short clips, shown in the chat) and a live board (a paper-motion.app link where the options play in the user's look and can be tuned before choosing).
 _Avoid_: option board (the old name), mockup, moodboard, variants page

@@ -73,6 +73,17 @@ Get an explicit OK on pace, movement, look and sound.
 
 Change one or two things per round and say what changed. Keep what the user liked.
 
+**A piece made of blocks** (the user chose a structure whose beats name blocks or shots, or a few blocks in order) is a chain, not one scene written from scratch:
+
+```bash
+pamo chain init <piece> --board <id|link> --option D --format 1920x1080   # or --parts search-type:4,bar-grow:3.5,svg-logo:5
+# write each part's CONFIG in pieces/<piece>/<nn>-<id>/scene.html from its beat (chain.json lists the "what")
+pamo chain <piece> --check                                                  # windows, joins, and parts cut before their land
+pamo chain <piece> --motion-blur 5 [--audio track.wav]                      # → pieces/<piece>/renders/<piece>.mp4
+```
+
+`chain.json` holds each part's `seconds` (and `from`) and how it comes in: `join` is `whip` (default: a sideways slide with a motion smear), `cut`, `dissolve` or `dip` (out to the brand's ground and back). Every part loads `brand/`, so the piece is in the brand's colors and type; run it from the project root. A part shorter than its land (the hit the block marks) gets a warning with the length that keeps it: lengthen it rather than lose the hit. Iterate per part with `pamo still` on its own scene; after adding a part to `chain.json`, `pamo chain init <piece>` installs only what is missing.
+
 ## 6 · Gate D: render the final
 
 ```bash

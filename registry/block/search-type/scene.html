@@ -57,6 +57,7 @@ $('bg').style.opacity = 0.3;
 const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
 const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
 const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const INK = '#EDEAE3';   // the palette is always dark (a command palette), so its type is always light, whatever the brand's mode
 const wide = W / H > 1.2, tall = H > W;
 const FS = SHORT * (tall ? 0.03 : 0.026);                             // non-wide: the UI's type size in the world
 const comp = $('comp'), cw = wide ? W * 0.72 * K : FS * (tall ? 24 / 0.84 : 30 / 0.66), ch = wide ? cw * 0.58 : cw * (tall ? 1.9 : 0.85), R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
@@ -66,7 +67,7 @@ const box = (h) => `<div style="height:${h}em;border-radius:0.8em;background:${g
 $('ui').innerHTML = `<div class="side" style="background:${ground}">${line(70, figure, 0.9)}${line(85)}${line(60)}${line(75)}</div><div class="main">${line(24, figure, 0.9)}${box(14)}${box(9)}</div>`;
 $('dim').style.background = 'rgba(0,0,0,0.55)';
 const pal = $('pal'), pw = wide ? cw * 0.46 : FS * (tall ? 24 : 30);
-Object.assign(pal.style, { width: `${pw}px`, marginLeft: `${-pw / 2}px`, background: '#141414', border: `1px solid ${muted}55`, boxShadow: `0 2em 5em rgba(0,0,0,0.7)` });
+Object.assign(pal.style, { width: `${pw}px`, marginLeft: `${-pw / 2}px`, background: '#141414', color: INK, border: `1px solid ${muted}55`, boxShadow: `0 2em 5em rgba(0,0,0,0.7)` });
 $('q').style.borderBottom = `1px solid ${muted}33`;
 $('q').innerHTML = `<svg width="1.1em" height="1.1em" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6" fill="none" stroke="${muted}" stroke-width="2"/><path d="M13 13 L18 18" stroke="${muted}" stroke-width="2" stroke-linecap="round"/></svg><span style="white-space:pre"><span id="qt"></span><span class="caret" style="background:${accent}"></span></span><span id="ph" style="color:${muted}"></span><span style="margin-left:auto;color:${muted};font:400 0.75em ${B.font('mono')};border:1px solid ${muted}55;border-radius:0.4em;padding:0.2em 0.5em">⌘K</span>`;
 $('ph').textContent = CONFIG.placeholder;
@@ -105,7 +106,7 @@ s.update((t) => {
     if (m && first < 0) first = i;
     // the matched letters, lit
     const q = Q.slice(0, n), at = q ? row.name.indexOf(q) : -1;
-    row.nm.innerHTML = at >= 0 ? `${row.name.slice(0, at)}<span style="color:${figure};text-decoration:underline;text-decoration-color:${accent};text-decoration-thickness:0.12em;text-underline-offset:0.25em">${q}</span>${row.name.slice(at + q.length)}` : row.name;
+    row.nm.innerHTML = at >= 0 ? `${row.name.slice(0, at)}<span style="color:${INK};text-decoration:underline;text-decoration-color:${accent};text-decoration-thickness:0.12em;text-underline-offset:0.25em">${q}</span>${row.name.slice(at + q.length)}` : row.name;
     row.nm.style.color = muted;
   });
   rows.forEach((row, i) => {

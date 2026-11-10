@@ -71,7 +71,7 @@ export async function loadBrand(root = '/brand') {
       return layer;
     },
     /** Schedule the brand's sound for a gesture (transition, land, text) at time t. */
-    cue: (s, gesture, t, extra = {}) => { const c = pal[gesture]; if (c) s.sfx(t, c.type, { ...c, ...extra }); },
+    cue: (s, gesture, t, extra = {}) => { (s.marks ??= []).push({ gesture, t }); const c = pal[gesture]; if (c) s.sfx(t, c.type, { ...c, ...extra }); },
     /** The brand's keystroke options for keySounds(): { bank, style, gain }. */
     keys: { ...(sound?.keys?.bank ? { bank: sound.keys.bank } : {}), ...(sound?.keys?.style ? { style: sound.keys.style } : {}), gain: sound?.keys?.gain ?? 0.16 },
     /** Apply the brand's master sound settings (and its bed, if any) to a scene. */
