@@ -1,0 +1,125 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "donut-fill",
+  "type": "block",
+  "title": "Donut fill",
+  "summary": "A ring fills to its percentage as the number counts, rising from a tilted view to face-on, and a pulse rings out when it lands.",
+  "tags": [
+    "block",
+    "data",
+    "chart",
+    "percentage",
+    "ring"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "value",
+      "type": "number",
+      "default": 87,
+      "description": "the percentage",
+      "group": "main"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "default": "of renders pass on the first try",
+      "description": "label",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/donut-fill/scene.html",
+      "to": "pieces/donut-fill/scene.html"
+    },
+    {
+      "from": "registry/block/donut-fill/brief.md",
+      "to": "pieces/donut-fill/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add donut-fill --name my-donut-fill\n# edit CONFIG in pieces/my-donut-fill/scene.html, then:\nnpx paper-motion render pieces/my-donut-fill/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "stat-row",
+    "stat-compare"
+  ],
+  "preview": {
+    "video": "previews/donut-fill.webm",
+    "poster": "previews/donut-fill.jpg",
+    "at": 4.6,
+    "values": {}
+  },
+  "mood": [
+    "calm",
+    "bold"
+  ],
+  "duration": 5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 0.8,
+      "what": "arrive"
+    },
+    {
+      "name": "Fill",
+      "from": 0.7,
+      "to": 2.8,
+      "what": "fill"
+    },
+    {
+      "name": "Land",
+      "from": 2.8,
+      "to": 3.4,
+      "what": "land"
+    },
+    {
+      "name": "Hold",
+      "from": 3.4,
+      "to": 5,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "one percentage that matters",
+    "a success rate"
+  ]
+}

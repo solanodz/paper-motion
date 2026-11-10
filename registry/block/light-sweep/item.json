@@ -1,0 +1,135 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "light-sweep",
+  "type": "block",
+  "title": "Light sweep",
+  "summary": "A card turns in the light and a diagonal glint crosses its face in step with the turn, its edge catching a thin line.",
+  "tags": [
+    "block",
+    "effect",
+    "glint",
+    "shine",
+    "card",
+    "reflection"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "default": "",
+      "description": "empty takes the brand's name",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "line",
+      "type": "string",
+      "default": "Release 0.2.6",
+      "description": "line",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "corner",
+      "type": "string",
+      "default": "paper-motion.app",
+      "description": "corner",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/light-sweep/scene.html",
+      "to": "pieces/light-sweep/scene.html"
+    },
+    {
+      "from": "registry/block/light-sweep/brief.md",
+      "to": "pieces/light-sweep/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add light-sweep --name my-light-sweep\n# edit CONFIG in pieces/my-light-sweep/scene.html, then:\nnpx paper-motion render pieces/my-light-sweep/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "parallax-stack",
+    "release"
+  ],
+  "preview": {
+    "video": "previews/light-sweep.webm",
+    "poster": "previews/light-sweep.jpg",
+    "at": 1.8,
+    "values": {}
+  },
+  "mood": [
+    "luxury",
+    "calm"
+  ],
+  "duration": 4.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Turn",
+      "from": 0.2,
+      "to": 3.2,
+      "what": "turn"
+    },
+    {
+      "name": "Glint",
+      "from": 0.9,
+      "to": 2.3,
+      "what": "glint"
+    },
+    {
+      "name": "Second glint",
+      "from": 2.2,
+      "to": 3.2,
+      "what": "second glint"
+    },
+    {
+      "name": "Hold",
+      "from": 3.2,
+      "to": 4.6,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "a release or a product card",
+    "anything that should feel like an object"
+  ]
+}

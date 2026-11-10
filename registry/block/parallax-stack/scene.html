@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>parallax-stack</title>
+<!--
+  Effect · parallax stack (5.6 s). An interface pulled apart in depth, every component a solid block: the window at the back, then the sidebar, the
+  cards, a floating panel and the cursor nearest, each its own layer. The camera orbits the stack, so every layer
+  slides at its own speed; then the layers fall back into one flat screen, each landing on a spring, and the camera
+  settles face-on.
+  Orbit 0–3.4 s · Collapse 3.3–4.4 s, the camera pushing in close · Hold to 5.6 s.
+  Square: a taller window. Vertical: a portrait app (header on top, cards stacked), sized from the width.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .ly { box-sizing: border-box; }
+  i { display: block; height: 0.6em; border-radius: 999px; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  depth: 1,                              // how far apart the layers float, 1 = default
+  thickness: 1,                          // how thick each component is, 0 for flat cards
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.35;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.65) 100%)';
+
+const DIST = SHORT * 0.9, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+// 16:9 a wide desktop window; square a taller one; vertical a portrait app (header on top, cards stacked) sized from the width
+const tall = H > W, square = W === H;
+const cw = (tall ? W * 0.68 : square ? W * 0.72 : W * 0.6) * K, ch = cw * (tall ? 1.55 : square ? 0.8 : 0.6), R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K, fs = cw * (tall ? 0.022 : square ? 0.016 : 0.012);
+const line = (w, c = muted, o = 0.45) => `<i style="width:${w}%;background:${c};opacity:${o}"></i>`;
+// the layers: [html, x, y, w, h (in the window's pixels, from its top-left), depth, style]
+const L = [
+  ['', 0, 0, cw, ch, 0, { background: B.surface(0.16), border: `1.5px solid ${muted}55`, borderRadius: `${R}px`, boxShadow: `0 ${SHORT * 0.05}px ${SHORT * 0.14}px rgba(0,0,0,0.55)` }],
+  [`<div style="display:flex;flex-direction:column;gap:1.1em;padding:2.2em 1.6em">${line(70, figure, 0.9)}${line(85)}${line(60)}${line(75)}</div>`, 0, 0, cw * 0.2, ch, 0.12, { background: ground, borderRadius: `${R}px 0 0 ${R}px` }],
+  [`<div style="padding:2em 2.2em">${line(26, figure, 0.9)}</div>`, cw * 0.2, 0, cw * 0.8, ch * 0.16, 0.2, {}],
+  [`<div style="padding:1.6em;display:flex;flex-direction:column;gap:0.8em"><div style="color:${muted}">Renders</div><div style="font:400 3em ${B.font('display')};color:${figure}">1,284</div>${line(50)}</div>`, cw * 0.24, ch * 0.2, cw * 0.34, ch * 0.34, 0.32, { background: ground, border: `1px solid ${muted}33`, borderRadius: `${R * 0.8}px` }],
+  [`<div style="height:100%;border-radius:${R * 0.8}px;overflow:hidden;position:relative" id="pv"></div>`, cw * 0.62, ch * 0.2, cw * 0.34, ch * 0.34, 0.42, { border: `1px solid ${muted}33`, borderRadius: `${R * 0.8}px` }],
+  [`<div style="padding:1.6em;display:flex;flex-direction:column;gap:0.9em">${line(30, figure, 0.8)}${line(90)}${line(80)}${line(70)}</div>`, cw * 0.24, ch * 0.6, cw * 0.72, ch * 0.34, 0.26, { background: ground, border: `1px solid ${muted}33`, borderRadius: `${R * 0.8}px` }],
+  [`<div style="display:flex;align-items:center;gap:0.8em;padding:1.1em 1.3em"><div style="width:1.5em;height:1.5em;border-radius:50%;background:${ground};color:${accent};display:flex;align-items:center;justify-content:center;font-size:0.9em">✓</div><div><div style="font-weight:500">launch.mp4 is ready</div><div style="opacity:0.6;margin-top:0.2em">24 s · 18 MB</div></div></div>`, cw * 0.64, ch * 0.72, cw * 0.32, ch * 0.18, 0.62, { background: accent, color: ground, borderRadius: `${R * 0.8}px`, boxShadow: '0 1.2em 3em rgba(0,0,0,0.55)' }],
+  [`<svg width="${cw * 0.035}" height="${cw * 0.049}" viewBox="0 0 20 28"><path d="M2 2 L18 14 L10 15.5 L14.5 25 L11 26.5 L6.5 17 L2 22 Z" fill="${figure}" stroke="${ground}" stroke-width="1.5" stroke-linejoin="round"/></svg>`, cw * 0.86, ch * 0.83, cw * 0.035, cw * 0.049, 0.78, {}],
+];
+if (tall) L.splice(1, 7,
+  [`<div style="display:flex;align-items:center;justify-content:space-between;flex:1;padding:0 1.8em"><i style="width:7em;background:${figure};opacity:0.9"></i><div style="display:flex;gap:1.2em"><i style="width:3em;background:${muted};opacity:0.45"></i><i style="width:3em;background:${muted};opacity:0.45"></i><i style="width:3em;background:${muted};opacity:0.45"></i></div></div>`, 0, 0, cw, ch * 0.08, 0.12, { background: ground, borderRadius: `${R}px ${R}px 0 0`, display: 'flex' }],
+  [`<div style="padding:1.6em 0.4em">${line(40, figure, 0.9)}</div>`, cw * 0.06, ch * 0.1, cw * 0.88, ch * 0.07, 0.2, {}],
+  [`<div style="padding:1.4em;display:flex;flex-direction:column;gap:0.8em"><div style="color:${muted}">Renders</div><div style="font:400 3em ${B.font('display')};color:${figure}">1,284</div>${line(60)}</div>`, cw * 0.06, ch * 0.18, cw * 0.42, ch * 0.18, 0.32, { background: ground, border: `1px solid ${muted}33`, borderRadius: `${R * 0.8}px` }],
+  [`<div style="height:100%;border-radius:${R * 0.8}px;overflow:hidden;position:relative" id="pv"></div>`, cw * 0.52, ch * 0.18, cw * 0.42, ch * 0.18, 0.42, { border: `1px solid ${muted}33`, borderRadius: `${R * 0.8}px` }],
+  [`<div style="padding:1.6em;display:flex;flex-direction:column;gap:1.1em">${line(35, figure, 0.8)}${line(90)}${line(80)}${line(70)}${line(85)}${line(60)}</div>`, cw * 0.06, ch * 0.39, cw * 0.88, ch * 0.34, 0.26, { background: ground, border: `1px solid ${muted}33`, borderRadius: `${R * 0.8}px` }],
+  [`<div style="display:flex;align-items:center;gap:0.8em;padding:1.1em 1.3em"><div style="width:1.5em;height:1.5em;border-radius:50%;background:${ground};color:${accent};display:flex;align-items:center;justify-content:center;font-size:0.9em">✓</div><div><div style="font-weight:500">launch.mp4 is ready</div><div style="opacity:0.6;margin-top:0.2em">24 s · 18 MB</div></div></div>`, cw * 0.22, ch * 0.77, cw * 0.72, ch * 0.1, 0.62, { background: accent, color: ground, borderRadius: `${R * 0.8}px`, boxShadow: '0 1.2em 3em rgba(0,0,0,0.55)' }],
+  [`<svg width="${cw * 0.06}" height="${cw * 0.084}" viewBox="0 0 20 28"><path d="M2 2 L18 14 L10 15.5 L14.5 25 L11 26.5 L6.5 17 L2 22 Z" fill="${figure}" stroke="${ground}" stroke-width="1.5" stroke-linejoin="round"/></svg>`, cw * 0.82, ch * 0.84, cw * 0.06, cw * 0.084, 0.78, {}],
+);
+const layers = L.map(([html, x, y, w, h, z, st]) => {
+  const el = document.createElement('div'); el.className = 'ly'; el.innerHTML = html;
+  Object.assign(el.style, { width: `${w}px`, height: `${h}px`, fontSize: `${fs}px`, fontFamily: B.font('text'), color: figure, ...st });
+  // thickness: slices stacked behind the face, darker toward the back, so each component reads as a solid block
+  const solid = st.background || st.border, thick = (z === 0 ? 0.07 : 0.06) * SHORT * CONFIG.thickness, N = 6, slabs = [];
+  if (solid) for (let j = N; j >= 1; j--) {
+    const sl = document.createElement('div'); sl.className = 'ly';
+    const light = st.background === accent, shade = Math.round(40 - 22 * (j / N));
+    Object.assign(sl.style, { width: `${w}px`, height: `${h}px`, borderRadius: st.borderRadius ?? '0', background: light ? `color-mix(in srgb, ${accent} ${78 - 30 * (j / N)}%, #000)` : `rgb(${shade},${shade},${shade})`, border: `1px solid ${light ? '#00000033' : '#ffffff14'}` });
+    $('world').append(sl); slabs.push({ sl, d: (thick * j) / N });
+  }
+  $('world').append(el);
+  return { el, slabs, x: x + w / 2 - cw / 2, y: y + h / 2 - ch / 2, z: z * SHORT * 1.1 * CONFIG.depth };
+});
+if (bgId) B.shader(s, $('pv'), bgId);
+await document.fonts.ready;
+
+const T = { collapse: [3.3, 4.4] };
+s.update((t) => {
+  // the layers: apart, then each falls back flat on its own spring (nearest last)
+  layers.forEach(({ el, slabs, x, y, z }, k) => {
+    const a = T.collapse[0] + k * 0.06, c = t >= a ? spring(t - a, { stiffness: 150, damping: 15 }) : 0;
+    const flat = k * SHORT * 0.004;                                  // a hair apart even when flat, so the order holds
+    const zz = flat + Math.max(0, (z - flat) * (1 - c));
+    cam.place(el, { x, y, z: zz });
+    const o = String(progress(t, k * 0.05, k * 0.05 + 0.4));
+    el.style.opacity = o;
+    for (const { sl, d } of slabs) { cam.place(sl, { x, y, z: zz - d }); sl.style.opacity = o; }
+  });
+  // the camera: a true orbit round the stack, from high and to the side to face-on
+  const o = progress(t, 0, T.collapse[1], ease.inOutSine), f = progress(t, T.collapse[0] - 0.2, T.collapse[1] + 0.4, ease.inOutCubic);
+  const yaw = 38 - 52 * o, pitch = -18 * (1 - f) + 0 * f;
+  const yawF = yaw * (1 - f), Rr = DIST + SHORT * 0.25 * (1 - progress(t, 0, 1, ease.outCubic)) - SHORT * 0.55 * f;   // in close once the layers have landed
+  const ay = yawF * Math.PI / 180, ap = pitch * Math.PI / 180;
+  const zc = SHORT * 0.4 * CONFIG.depth * (1 - f);                     // orbit the middle of the stack
+  cam.at({ x: Rr * Math.sin(ay) * Math.cos(ap), y: -Rr * Math.sin(ap), z: zc + Rr * Math.cos(ay) * Math.cos(ap), yaw: yawF, pitch, roll: 0 });
+});
+B.cue(s, 'transition', 0.1); B.cue(s, 'land', T.collapse[0] + 0.5);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>svg-logo</title>
+<!--
+  Brand · SVG logo draw (5.4 s). The brand's own logo, from its SVG: every shape's outline traces on in the accent, one
+  after another; the shapes fill in from their centre on a spring, the outlines let go, a glint crosses the mark and
+  the name lands beside it. The camera starts close and tilted on the mark and pulls back to the lockup. Paste any
+  SVG in `svg`; each path, rect, circle, ellipse, polygon or line animates as one part.
+  Vertical/square: the lockup stacks (name under the mark), the name sized to fit the width; the camera starts on
+  the mark and settles on the stacked lockup.
+  Trace 0.3–1.7 s · Fill 1.4–2.4 s · Glint 2.5 s · Name 2.7 s · Hold to 5.4 s.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #lock { display: flex; align-items: center; }
+  #mark { position: relative; flex: none; }
+  #mark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  #glint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; }
+  #name { white-space: nowrap; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"><div id="lock"><div id="mark"></div><div id="name"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  // the logo; `currentColor` takes the brand's figure, `var(--accent)` its accent
+  svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 12 H64 L84 32 V88 H18 Z" fill="currentColor"/>
+    <path d="M64 12 V32 H84 Z" fill="var(--accent)"/>
+    <path d="M30 50 H64" stroke="var(--ground)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M30 63 H72" stroke="var(--ground)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M30 76 H52" stroke="var(--ground)" stroke-width="6" stroke-linecap="round" fill="none"/>
+  </svg>`,
+  name: '',                              // the name beside the mark; empty takes the brand's name, 'none' for the mark alone
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.4;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.35;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 25%, rgba(0,0,0,0.7) 100%)';
+const accent = B.color('accent', '#E9E4D8'), figure = B.color('figure'), ground = B.color('ground');
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const stack = W <= H, mark = $('mark'), ms = SHORT * (H > W ? 0.55 : 0.36) * K;
+if (stack) $('lock').style.flexDirection = 'column';
+Object.assign(mark.style, { width: `${ms}px`, height: `${ms}px`, color: figure, '--accent': accent, '--ground': ground });
+mark.style.setProperty('--accent', accent); mark.style.setProperty('--ground', ground);
+mark.innerHTML = CONFIG.svg;
+const glint = document.createElement('div'); glint.id = 'glint'; mark.append(glint);
+const svg = mark.querySelector('svg');
+const parts = [...svg.querySelectorAll('path, rect, circle, ellipse, polygon, polyline, line')];
+// attributes don't read CSS variables: move those colours into styles
+for (const p of parts) for (const k of ['fill', 'stroke']) { const v = p.getAttribute(k); if (v && v.includes('var(')) { p.style[k] = v; p.removeAttribute(k); } }
+// each part gets an outline twin that traces on first
+const outlines = parts.map((p) => {
+  const o = p.cloneNode(); o.removeAttribute('fill'); o.removeAttribute('stroke-width');
+  Object.assign(o.style, { fill: 'none', stroke: accent, strokeWidth: '0.9', strokeLinecap: 'round', strokeLinejoin: 'round' });
+  svg.append(o); return o;
+});
+const name = B.style($('name'), 'display', { short: SHORT * K, color: 'figure' });
+name.textContent = CONFIG.name === 'none' ? '' : CONFIG.name || B.name;
+Object.assign(name.style, stack ? { fontSize: `${ms * 0.36}px`, marginTop: `${ms * 0.12}px` } : { fontSize: `${ms * 0.36}px`, marginLeft: `${ms * 0.16}px` });
+cam.place($('lock'), { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+const lens = outlines.map((o) => o.getTotalLength());
+outlines.forEach((o, i) => { o.style.strokeDasharray = `${lens[i]}`; });
+// the centre of each part, so it can grow out of itself
+const boxes = parts.map((p) => { const b = p.getBBox(); return `${b.x + b.width / 2}px ${b.y + b.height / 2}px`; });
+if (stack) {   // the name fits the width at the camera's final distance, with a margin
+  const fin = (SHORT * 1.7) / (SHORT * 1.7 + DIST + SHORT * 0.04);
+  name.style.fontSize = `${Math.min(ms * 0.36, ms * 0.36 * (W * 0.84 / fin) / Math.max(1, name.offsetWidth))}px`;
+}
+const lh = $('lock').offsetHeight, markY = -lh / 2 + ms / 2;
+const lw = $('lock').offsetWidth, nameShift = (name.offsetWidth + ms * 0.16) / 2;
+
+const T = { trace: [0.3, 1.7], fill: [1.4, 2.4], glint: [2.5, 3.3], name: 2.7 };
+const n = parts.length;
+s.update((t) => {
+  parts.forEach((p, i) => {
+    const k = n > 1 ? i / (n - 1) : 0;
+    const a = T.trace[0] + (T.trace[1] - T.trace[0] - 0.7) * k, d = progress(t, a, a + 0.7, ease.inOutCubic);
+    outlines[i].style.strokeDashoffset = `${lens[i] * (1 - d)}`; outlines[i].style.opacity = d > 0 ? String(1 - progress(t, T.fill[0] + 0.3 + k * 0.4, T.fill[0] + 0.8 + k * 0.4)) : '0';
+    const fa = T.fill[0] + (T.fill[1] - T.fill[0] - 0.5) * k, f = t >= fa ? spring(t - fa, { stiffness: 210, damping: 14 }) : 0;
+    p.style.transformOrigin = boxes[i]; p.style.transformBox = 'view-box';
+    p.style.transform = `scale(${0.6 + 0.4 * f})`; p.style.opacity = String(Math.min(1, f * 1.6));
+  });
+  // a glint across the finished mark
+  const g = progress(t, ...T.glint, ease.inOutSine);
+  glint.style.background = `linear-gradient(115deg, transparent ${g * 140 - 30}%, rgba(255,255,255,0.55) ${g * 140 - 20}%, transparent ${g * 140 - 10}%)`;
+  glint.style.webkitMaskImage = glint.style.maskImage = `url("data:image/svg+xml;utf8,${encodeURIComponent(CONFIG.svg.replace(/var\(--[a-z]+\)|currentColor/g, '#fff'))}")`;
+  glint.style.webkitMaskSize = glint.style.maskSize = '100% 100%';
+  glint.style.opacity = String(Math.sin(g * Math.PI));
+  // the name lands beside the mark; the lockup recentres as it does
+  const nm = t >= T.name ? spring(t - T.name, { stiffness: 170, damping: 17 }) : 0;
+  name.style.opacity = String(Math.min(1, nm * 1.5)); name.style.transform = stack ? `translateY(${(1 - nm) * -ms * 0.15}px)` : `translateX(${(1 - nm) * -ms * 0.15}px)`; name.style.filter = nm < 0.9 ? `blur(${(1 - nm) * 8}px)` : 'none';
+  // the camera: close and tilted on the mark, back to the lockup
+  const p = progress(t, 0, T.name + 0.6, ease.inOutCubic);
+  const markX = -lw / 2 + ms / 2, cx = markX * (1 - nm) + 0 * nm;
+  cam.at({ x: stack ? 0 : cx, y: stack ? markY * (1 - nm) : 0, z: DIST - SHORT * 0.85 * (1 - p) + SHORT * 0.1 * nm - SHORT * 0.06 * progress(t, T.name + 0.6, D, ease.inOutSine), yaw: -18 * (1 - p), pitch: 8 * (1 - p), roll: -3 * (1 - p) });
+});
+B.cue(s, 'text', T.trace[0]); B.cue(s, 'land', T.fill[0] + 0.3); B.cue(s, 'transition', T.name);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

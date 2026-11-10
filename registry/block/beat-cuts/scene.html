@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>beat-cuts</title>
+<!--
+  Edit · beat cuts (6.4 s). The edit follows the music: every beat is a hard cut to a new shot, each landing with a
+  punch that decays before the next; the first beat of a bar hits harder and flips the frame to the accent. Give it
+  the track's tempo (`bpm`, `offset`) or its beat times (`beats`), and the shots. A strip at the bottom shows the bar
+  and beat, so the sync can be checked by eye.
+  Count-in 0–0.4 s · Cuts on every beat to 6.4 s.
+  Square and vertical: each word fits the width with a margin (and room for its punch); vertical breaks a hyphenated name onto two lines.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .shot { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; }
+  .shot .w { white-space: nowrap; line-height: 1; position: relative; }
+  #strip { position: absolute; left: 50%; bottom: 6%; display: flex; gap: 0.6em; transform: translateX(-50%); }
+  #strip i { display: block; width: 0.7em; height: 0.7em; border-radius: 50%; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="shots"></div>
+  <div id="strip"></div>
+</main>
+<script type="module">
+import { scene, progress } from 'paper-motion';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  bpm: 120, offset: 0.4,                 // the track's tempo and first beat; or `beats: [t, …]` from the track
+  beats: null,
+  shots: ['Make', 'it', 'move.', 'paper', 'motion', '↗', 'Every', 'frame', 'on', 'the', 'beat.', 'paper-motion'],
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 6.4;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const $ = (id) => document.getElementById(id);
+const accent = B.color('accent', '#E9E4D8'), ground = B.color('ground'), figure = B.color('figure'), muted = B.color('muted');
+const beat = 60 / CONFIG.bpm;
+const beats = CONFIG.beats ?? Array.from({ length: Math.floor((D - CONFIG.offset) / beat) + 1 }, (_, i) => CONFIG.offset + i * beat).filter((b) => b < D);
+const bgId = B.set.entries.find((e) => e.shader && !e.image)?.id;
+// the shots: words, on black, on the accent (first beat of each bar), or over the brand's field
+const shots = beats.map((b, i) => {
+  const el = document.createElement('div'); el.className = 'shot';
+  const down = i % 4 === 0, txt = CONFIG.shots[i % CONFIG.shots.length], last = i === beats.length - 1;
+  const field = !down && i % 4 === 2;
+  el.style.background = down ? accent : ground;
+  if (field && bgId) { const f = document.createElement('div'); f.className = 'abs'; f.style.inset = 0; f.style.opacity = 0.8; el.append(f); B.shader(s, f, bgId); }
+  const w = B.style(document.createElement('div'), 'display', { short: SHORT, color: 'figure' }); w.className = 'w';
+  w.textContent = txt; w.style.color = down ? ground : figure;
+  w.style.fontSize = `${SHORT * (last ? 0.16 : txt.length > 6 ? 0.22 : 0.32)}px`;
+  if (i % 3 === 1 && !last) { w.style.fontFamily = B.font('mono'); w.style.fontSize = `${SHORT * 0.2}px`; w.style.letterSpacing = '-0.04em'; }
+  el.append(w); $('shots').append(el);
+  return { el, w, down };
+});
+$('strip').style.fontSize = `${SHORT * 0.018}px`;
+$('strip').innerHTML = '<i></i><i></i><i></i><i></i>';
+const dots = [...$('strip').children];
+// the click track, so the sync can be heard: a thud on each beat, harder on the one
+beats.forEach((b, i) => s.sfx(b, i % 4 === 0 ? 'thud' : 'knock', { gain: i % 4 === 0 ? 1 : 0.55 }));
+await document.fonts.ready;
+// outside 16:9 every word fits the width with a margin, leaving room for its punch; vertical breaks a hyphenated name
+// at its hyphen and sets it bigger; anything still too wide shrinks
+if (W <= H) shots.forEach(({ w, down }) => {
+  const room = (W * 0.84) / (down ? 1.14 : 1.08);
+  if (H > W && /\w-\w/.test(w.textContent)) {
+    const parts = w.textContent.split(/(?<=-)/); w.textContent = ''; parts.forEach((p) => w.append(p, document.createElement('wbr')));   // a break after each hyphen
+    Object.assign(w.style, { whiteSpace: 'normal', maxWidth: `${room}px`, fontSize: `${W * 0.22}px`, lineHeight: 0.95 });
+  }
+  for (let n = 0; n < 60 && w.scrollWidth > room + 1; n++) w.style.fontSize = `${parseFloat(w.style.fontSize) * 0.96}px`;
+});
+
+s.update((t) => {
+  // cuts land on whole frames: hard, never blended by motion blur
+  const tc = Math.round(t * 30) / 30;
+  let i = -1; beats.forEach((b, k) => { if (tc >= b - 1e-6) i = k; });
+  shots.forEach(({ el }, k) => { el.style.visibility = k === i ? '' : 'hidden'; });
+  if (i < 0) { dots.forEach((d) => (d.style.background = `${muted}55`)); return; }
+  const since = Math.max(0, t - beats[i]), hit = Math.exp(-since * (shots[i].down ? 6 : 9));
+  const { w, el, down } = shots[i];
+  w.style.transform = `scale(${1 + (down ? 0.14 : 0.08) * hit}) translateY(${(down ? -0.02 : 0.015) * SHORT * hit}px)`;
+  el.style.filter = `brightness(${1 + 0.25 * hit})`;
+  // the strip: which beat of the bar
+  dots.forEach((d, k) => { d.style.background = k === i % 4 ? (down ? ground : accent) : (down ? `${ground}44` : `${muted}55`); d.style.transform = `scale(${k === i % 4 ? 1 + 0.5 * hit : 1})`; });
+});
+await s.start();
+</script>
+</body>
+</html>

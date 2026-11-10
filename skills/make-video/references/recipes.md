@@ -14,6 +14,22 @@ end; the tables mark where.
 
 A shot is one camera gesture, not a structure: a close-up with a focus pull (`focus-pull`), the camera gliding over a component (`pass-over`), a cursor that crosses a UI and clicks (`cursor-guide`), a slow push onto a word (`push-in`), an object turning to face the camera (`turn-in`). Use them on their own for a feed, or chain them before a recipe (a shot as the hook, then the recipe). They install like recipes (`pamo add <shot>`), take the brand from `brand/`, and their CONFIG names what changes: the picture, the words, where the cursor goes. All recipes and shots now share one camera: `camera()` from `paper-motion/kit` (a world, `place()`, `travel()`, `focus()`); a piece is a world the camera moves through, not a deck of cards.
 
+## Blocks (4–8 s)
+
+A block is one ready-made moment, the kind a launch, a demo or a social cut is built from. They install like shots (`pamo add <block>`), take the brand from `brand/`, and recompose for 16:9, 9:16 and 1:1 (set `format`; the layout and the camera follow). Use one where a recipe beat needs it (the proof of a product demo, the close of a launch) or chain a few for a short piece.
+
+| Group | Blocks | For |
+|---|---|---|
+| Annotation | `circle-mark`, `callout-zoom`, `pointer-label` | point at the one thing on a screen |
+| Interface | `form-fill`, `search-type`, `toggle-flip`, `drag-drop`, `toast-stack`, `device-frame`, `browser-frame` | a product being used; `browser-frame` takes a real full-page screenshot (`image`), `device-frame` any tall screen |
+| Code | `code-type`, `code-diff`, `terminal-run` | developer tools: code that writes itself, the old way against the new, a command that runs |
+| Data | `bar-grow`, `line-draw`, `donut-fill`, `stat-row`, `stat-compare` | numbers that count, charts that build |
+| Type | `marker-highlight`, `word-swap`, `kinetic-captions` | the phrase that matters, a rotating word, captions timed to a voice (`words` from the alignment) |
+| Brand | `text-mask` (the name in liquid metal), `logo-build` (the wordmark traces itself), `svg-logo` (the brand's own SVG draws on) | titles and end cards |
+| Effect and edit | `parallax-stack`, `light-sweep`, `grain-pulse`, `dither-dissolve`, `beat-cuts` | depth, a glint, texture on the beat, a dither transition, cuts on the music (`bpm` or `beats`) |
+
+Real material beats the placeholders: a screenshot in `browser-frame` and `device-frame`, the real code in `code-type`, the real command in `terminal-run`, the real numbers in the data blocks.
+
 ## Launch (20–30 s)
 
 Something new exists; show it and make people want it.

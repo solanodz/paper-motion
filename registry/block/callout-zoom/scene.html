@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>callout-zoom</title>
+<!--
+  Annotation · callout zoom (5 s). A detail too small to read on screen: a ring pulses on it, then a round lens grows
+  out of that point, travels out past the edge of the screen and shows the detail magnified, tied back to its source
+  by a thin line. The camera drifts toward the lens.
+  Arrive 0–0.9 s · Pulse 1.0 s · Lens 1.3–2.2 s · Hold 2.2–5 s.
+  Vertical: a tall screen without sidebar, the lens drops into the space below the rows; square: a squarer screen.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #comp { position: absolute; box-sizing: border-box; }
+  #screen { position: absolute; inset: 0; overflow: hidden; }
+  .ui { position: absolute; left: 0; top: 0; display: grid; grid-template-columns: 18% 1fr; }
+  .side { display: flex; flex-direction: column; gap: 1.1em; padding: 2.2em 1.6em; }
+  .main { display: flex; flex-direction: column; gap: 1.2em; padding: 2.2em; }
+  .rows { border-radius: 0.8em; padding: 0.6em 1.4em; }
+  .r { display: flex; justify-content: space-between; align-items: center; padding: 0.9em 0; }
+  i { display: block; height: 0.6em; border-radius: 999px; }
+  #lens { position: absolute; overflow: hidden; border-radius: 50%; }
+  #lens .ui { transform-origin: 0 0; }
+  #tie, #dot { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="comp"><div id="screen"><div class="ui" id="ui"></div></div><svg id="tie"><line id="line"/><circle id="ring"/></svg><div id="lens"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  rows: [['Format', '1920 × 1080'], ['Frame rate', '30 fps'], ['Motion blur', '4 samples'], ['Sound', 'from /brand'], ['Output', 'mp4 · webm']],
+  detail: 2,                             // which row the lens magnifies
+  zoom: 2.8,                             // how much the lens magnifies
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = 0.3;
+const $ = (id) => document.getElementById(id);
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const tall = H > W, square = W === H;
+const comp = $('comp'), cw = (tall ? W * 0.86 : square ? W * 0.8 : W * 0.62) * K, ch = cw * (tall ? 1.3 : square ? 0.74 : 0.6), R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+Object.assign(comp.style, { width: `${cw}px`, height: `${ch}px` });
+Object.assign($('screen').style, { borderRadius: `${R}px`, background: B.surface(0.2), border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)` });
+const ui = $('ui'); Object.assign(ui.style, { width: `${cw}px`, height: `${ch}px`, fontSize: `${cw * (tall ? 0.021 : square ? 0.0135 : 0.0095)}px` });
+if (tall) ui.style.gridTemplateColumns = '1fr';
+const line = (w, c = muted, o = 0.45) => `<i style="width:${w}%;background:${c};opacity:${o}"></i>`;
+const row = ([k, v], i) => `<div class="r" data-i="${i}" style="${i ? `border-top:1px solid ${muted}22` : ''}"><span style="font:400 1.15em ${B.font('text')};color:${muted}">${k}</span><span style="font:500 1.15em ${B.font('mono')};color:${figure}">${v}</span></div>`;
+ui.innerHTML = `<div class="side" style="background:${ground}${tall ? ';display:none' : ''}">${line(70, figure, 0.9)}${line(85)}${line(60)}${line(75)}${line(50)}</div>
+<div class="main">${line(22, figure, 0.9)}${line(48)}<div class="rows" style="background:${ground};border:1px solid ${muted}33">${CONFIG.rows.map(row).join('')}</div>${line(80)}${line(66)}${tall ? `<div style="height:3em"></div>${line(30, figure, 0.7)}${line(88)}${line(74)}${line(92)}${line(60)}<div style="height:3em"></div>${line(26, figure, 0.7)}${line(84)}${line(70)}` : ''}</div>`;
+cam.place(comp, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+
+// the source: the centre of the value in the chosen row, in the screen's own pixels
+const src = ui.querySelector(`.r[data-i="${CONFIG.detail}"] span:last-child`), pr = ui.getBoundingClientRect(), sr = src.getBoundingClientRect(), sc = cw / pr.width;
+const sx = (sr.left - pr.left + sr.width * 0.5) * sc, sy = (sr.top - pr.top + sr.height / 2) * sc;
+// the lens: grows out of the source and settles up and out past the right edge of the screen
+const r = tall ? cw * 0.23 : ch * (square ? 0.23 : 0.21), lx = sx - cw * (tall ? 0.24 : 0.3), ly = sy + ch * (tall ? 0.3 : 0.34), Z = CONFIG.zoom;
+const lens = $('lens'), inner = ui.cloneNode(true); inner.removeAttribute('id'); lens.append(inner);
+Object.assign(lens.style, { background: B.surface(0.2), border: `${SHORT * 0.004 * K}px solid ${accent}`, boxShadow: `0 ${SHORT * 0.03}px ${SHORT * 0.09}px rgba(0,0,0,0.6)` });
+const lineEl = $('line'), ring = $('ring');
+Object.assign(lineEl.style, { stroke: accent, strokeWidth: `${SHORT * 0.0025 * K}`, strokeLinecap: 'round' });
+Object.assign(ring.style, { fill: 'none', stroke: accent, strokeWidth: `${SHORT * 0.003 * K}` });
+ring.setAttribute('cx', sx); ring.setAttribute('cy', sy);
+const T = { pulse: 1.0, lens: [1.3, 2.2] };
+
+s.update((t) => {
+  const arrive = progress(t, 0, 0.9, ease.outCubic), drift = progress(t, T.lens[0], D, ease.inOutSine);
+  cam.at({ x: ((lx + sx) / 2 - cw / 2) * drift, y: ((ly + sy) / 2 - ch / 2) * drift, z: DIST + SHORT * 0.3 * (1 - arrive) - SHORT * 0.6 * drift, yaw: 8 * (1 - arrive) - 3 * drift, pitch: 3 * (1 - arrive) });
+  comp.style.opacity = String(progress(t, 0, 0.35));
+  // the pulse: a ring that tightens onto the source and stays as its anchor
+  const pin = t >= T.pulse ? spring(t - T.pulse, { stiffness: 260, damping: 16 }) : 0;
+  ring.setAttribute('r', String(Math.max(0, ch * (0.09 - 0.065 * pin))));
+  ring.style.opacity = String(progress(t, T.pulse, T.pulse + 0.15));
+  // the lens: out of the source on a spring, growing as it travels
+  const g = t >= T.lens[0] ? spring(t - T.lens[0], { stiffness: 140, damping: 15 }) : 0;
+  const cx = sx + (lx - sx) * g, cy = sy + (ly - sy) * g, rr = Math.max(0.01, r * Math.min(1.08, g));
+  Object.assign(lens.style, { left: `${cx - rr}px`, top: `${cy - rr}px`, width: `${rr * 2}px`, height: `${rr * 2}px`, opacity: String(Math.min(1, g * 4)) });
+  const z = 1 + (Z - 1) * Math.min(1, g);                                            // the magnification grows with the lens
+  inner.style.transform = `translate(${rr - sx * z}px, ${rr - sy * z}px) scale(${z})`;
+  // the tie: from the anchor ring to the lens edge
+  const dx = cx - sx, dy = cy - sy, len = Math.hypot(dx, dy) || 1, ar = ch * 0.025;
+  lineEl.setAttribute('x1', sx + dx / len * ar); lineEl.setAttribute('y1', sy + dy / len * ar);
+  lineEl.setAttribute('x2', cx - dx / len * rr); lineEl.setAttribute('y2', cy - dy / len * rr);
+  lineEl.style.opacity = String(progress(t, T.lens[0] + 0.15, T.lens[0] + 0.4) * (len > rr + ar ? 1 : 0));
+});
+B.cue(s, 'transition', 0); B.cue(s, 'text', T.pulse); B.cue(s, 'land', T.lens[0] + 0.4);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

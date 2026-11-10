@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>text-mask</title>
+<!--
+  Text · liquid metal word (5.6 s). The word itself made of liquid metal: rounded, bevelled letters with the metal
+  flowing over them. The shot starts close on the first letter and travels along the word, left to right, then pulls
+  back until the whole word reads; a line lands under it.
+  Vertical/square: a word with a hyphen or space stacks on two lines (paper- / motion) and the travel runs diagonally
+  from the first letter to the last; the line under it grows and wraps.
+  Travel 0–2.8 s · Pull back 2.6–3.9 s · Line 4.0 s · Hold to 5.6 s.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #metal { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #line { position: absolute; left: 0; right: 0; text-align: center; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="metal"></div>
+  <div id="line"></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { blurIn } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  word: '',                              // empty takes the brand's name
+  line: 'Brand videos, made by your coding agent.',
+  weight: 3,                             // extra stroke on the letters, in px at 400px type: 0 keeps the face's own weight
+  metal: { repetition: 4, softness: 0.02, shiftRed: 0.3, shiftBlue: 0.3, distortion: 0.12, contour: 0.8, angle: 70, speed: 1 },
+  background: null,                      // a calm shader-set id behind the metal, or null for the brand's first entry
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.25;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 25%, rgba(0,0,0,0.75) 100%)';
+await document.fonts.ready;
+
+// the word as a shape: drawn white on transparent in the brand's display face, cropped to the ink
+const word = CONFIG.word || B.name, fam = B.font('display');
+const probe = document.createElement('canvas').getContext('2d'); probe.font = `400 400px ${fam}`;
+// narrow frames stack the word on two lines when it has a break (a hyphen or a space)
+const cut = W > H ? -1 : word.search(/[-\s]/);
+const parts = cut > 0 && cut < word.length - 1 ? [word.slice(0, cut + 1).trim(), word.slice(cut + 1).trim()] : [word];
+const ms = parts.map((p) => probe.measureText(p)), padX = 60, padY = 80, GAP = 40;
+const lw = ms.map((m) => m.actualBoundingBoxLeft + m.actualBoundingBoxRight), lh = ms.map((m) => m.actualBoundingBoxAscent + m.actualBoundingBoxDescent);
+const iw = Math.ceil(Math.max(...lw)) + padX * 2, ih = Math.ceil(lh.reduce((a, b) => a + b, 0) + GAP * (parts.length - 1)) + padY * 2;
+const cv = document.createElement('canvas'); cv.width = iw; cv.height = ih; const cx = cv.getContext('2d');
+cx.font = `400 400px ${fam}`; cx.fillStyle = cx.strokeStyle = '#fff'; cx.lineJoin = 'miter'; cx.miterLimit = 10;   // sharp corners cx.lineWidth = CONFIG.weight;
+let ly = padY;
+const rowsY = parts.map((p, i) => {
+  const m = ms[i], x = (iw - lw[i]) / 2 + m.actualBoundingBoxLeft, y = ly + m.actualBoundingBoxAscent;
+  cx.fillText(p, x, y);
+  cx.strokeText(p, x, y);   // fuller letters: rounder bevels
+  const mid = (ly + lh[i] * 0.52) / ih; ly += lh[i] + GAP; return mid;
+});
+const shape = cv.toDataURL('image/png');
+// the metal word fills most of the frame width; its own box keeps the word's proportions
+const mw = Math.min(W * 0.88, H * 0.6 * (iw / ih)), mh = mw * (ih / iw), ox = (W - mw) / 2, oy = (H - mh) / 2 - H * 0.03;
+Object.assign($('metal').style, { width: `${mw}px`, height: `${mh}px` });
+s.shader('#metal', 'LiquidMetal', { fit: 'contain', scale: 1, shape: 'none', colorBack: '#00000000', colorTint: '#ffffff', image: shape, ...CONFIG.metal });
+const line = B.style($('line'), 'title', { short: SHORT, color: 'figure' }); line.textContent = CONFIG.line;
+Object.assign(line.style, { top: `${oy + mh + SHORT * 0.01}px`, fontSize: `${SHORT * (H > W ? 0.046 : W === H ? 0.042 : 0.035)}px`, opacity: 0.85, padding: `0 ${W * 0.05}px` });
+
+const T = { travel: [0, 2.8], pull: [2.6, 3.9] };
+s.update((t) => {
+  // along the word, close, left to right; then back to the whole word
+  const a = progress(t, ...T.travel, ease.inOutSine), b = progress(t, ...T.pull, ease.inOutCubic);
+  const z = 2.6 * (1 - b) + 1 * b - 0.3 * a * (1 - b);
+  const rowY = rowsY.length > 1 ? rowsY[0] + (rowsY[1] - rowsY[0]) * a : 0.52;   // two lines: diagonally, first letter to last
+  const fx = (ox + mw * (0.1 + 0.8 * a)) * (1 - b) + (W / 2) * b, fy = (oy + mh * rowY) * (1 - b) + (H / 2) * b;
+  $('metal').style.transform = `translate(${W / 2 - (fx - ox) * z}px, ${H / 2 - (fy - oy) * z}px) scale(${z})`;
+  blurIn(line, t, { start: T.pull[1] + 0.1, duration: 0.8 });
+  $('bg').style.transform = `translateX(${-SHORT * 0.05 * a}px) scale(${1.1 - 0.05 * b})`;
+});
+B.cue(s, 'transition', T.pull[0]); B.cue(s, 'land', T.pull[1]); B.cue(s, 'text', T.pull[1] + 0.1);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

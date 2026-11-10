@@ -1,0 +1,124 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "callout-zoom",
+  "type": "block",
+  "title": "Callout zoom",
+  "summary": "A ring pulses on a detail too small to read; a round lens grows out of it and shows it magnified, tied back by a thin line.",
+  "tags": [
+    "block",
+    "annotation",
+    "zoom",
+    "magnify",
+    "ui"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "detail",
+      "type": "number",
+      "default": 2,
+      "description": "which row the lens magnifies",
+      "group": "main"
+    },
+    {
+      "name": "zoom",
+      "type": "number",
+      "default": 2.8,
+      "description": "how much the lens magnifies",
+      "group": "main"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/callout-zoom/scene.html",
+      "to": "pieces/callout-zoom/scene.html"
+    },
+    {
+      "from": "registry/block/callout-zoom/brief.md",
+      "to": "pieces/callout-zoom/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add callout-zoom --name my-callout-zoom\n# edit CONFIG in pieces/my-callout-zoom/scene.html, then:\nnpx paper-motion render pieces/my-callout-zoom/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "circle-mark",
+    "focus-pull"
+  ],
+  "preview": {
+    "video": "previews/callout-zoom.webm",
+    "poster": "previews/callout-zoom.jpg",
+    "at": 3.6,
+    "values": {}
+  },
+  "mood": [
+    "technical",
+    "calm"
+  ],
+  "duration": 5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 0.9,
+      "what": "arrive"
+    },
+    {
+      "name": "Pulse",
+      "from": 1,
+      "to": 1.6,
+      "what": "pulse"
+    },
+    {
+      "name": "Lens",
+      "from": 1.3,
+      "to": 2.2,
+      "what": "lens"
+    },
+    {
+      "name": "Hold",
+      "from": 2.2,
+      "to": 5,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "a setting or value that is too small on screen",
+    "show a detail without cutting away"
+  ]
+}

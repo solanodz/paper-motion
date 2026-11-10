@@ -1,0 +1,126 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "search-type",
+  "type": "block",
+  "title": "Search type",
+  "summary": "A command palette opens, the query types fast, the list filters live with the matches underlined and the top result is chosen.",
+  "tags": [
+    "block",
+    "ui",
+    "search",
+    "command-palette",
+    "typing"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "placeholder",
+      "type": "string",
+      "default": "Search resources…",
+      "description": "placeholder",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "query",
+      "type": "string",
+      "default": "push",
+      "description": "query",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/search-type/scene.html",
+      "to": "pieces/search-type/scene.html"
+    },
+    {
+      "from": "registry/block/search-type/brief.md",
+      "to": "pieces/search-type/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add search-type --name my-search-type\n# edit CONFIG in pieces/my-search-type/scene.html, then:\nnpx paper-motion render pieces/my-search-type/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "code-type",
+    "form-fill"
+  ],
+  "preview": {
+    "video": "previews/search-type.webm",
+    "poster": "previews/search-type.jpg",
+    "at": 2.6,
+    "values": {}
+  },
+  "mood": [
+    "technical",
+    "playful"
+  ],
+  "duration": 5.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Open",
+      "from": 0.4,
+      "to": 1,
+      "what": "open"
+    },
+    {
+      "name": "Type",
+      "from": 0.95,
+      "to": 1.5,
+      "what": "type"
+    },
+    {
+      "name": "Choose",
+      "from": 2.3,
+      "to": 2.9,
+      "what": "choose"
+    },
+    {
+      "name": "Hold",
+      "from": 2.9,
+      "to": 5.6,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "find anything in one keystroke",
+    "a library or catalog"
+  ]
+}

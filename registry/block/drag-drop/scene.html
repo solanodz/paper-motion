@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>drag-drop</title>
+<!--
+  Component · drag and drop (5.6 s). A cursor picks up a card on a board: the card lifts (bigger, tilted, a deep
+  shadow), travels across to another column leaning into the move, a slot opens for it as the cards there step down,
+  and it drops in on a spring while the column it left closes up. The camera rides along with the card, close.
+  Pick 1.0 s · Carry 1.2–2.9 s · Drop 3.0 s · Hold to 5.6 s.
+  Vertical and square: the board narrows to the frame and gets taller (larger type, same three columns); the camera pushes in closer.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #board { position: absolute; box-sizing: border-box; }
+  .col { position: absolute; border-radius: 1em; }
+  .head { position: absolute; display: flex; align-items: center; gap: 0.6em; }
+  .card { position: absolute; left: 0; top: 0; border-radius: 0.8em; padding: 1em 1.1em; box-sizing: border-box; display: flex; flex-direction: column; gap: 0.6em; }
+  i { display: block; height: 0.55em; border-radius: 999px; }
+  #cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 50; }
+  #cursor svg { position: absolute; left: 0; top: 0; }
+  #slot { position: absolute; left: 0; top: 0; border-radius: 0.8em; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="board"><div id="slot"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  columns: [['Draft', ['Launch film', 'Release teaser', 'Explainer']], ['Rendering', ['Social loop']], ['Done', ['README loop', 'End card']]],
+  move: [0, 1, 2, 1],                    // [from column, card, to column, at position]
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.3;
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const tall = H > W, square = W === H;
+const board = $('board'), bw = (tall ? W * 0.9 : square ? W * 0.84 : W * 0.74) * K, R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+const fs = bw * (tall ? 0.023 : square ? 0.015 : 0.0125), bh = tall || square ? fs * 41.7 : bw * 0.52;
+Object.assign(board.style, { width: `${bw}px`, height: `${bh}px`, borderRadius: `${R}px`, background: B.surface(0.16), border: `1.5px solid ${muted}44`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)`, fontSize: `${fs}px`, fontFamily: B.font('text'), color: figure });
+// layout by hand, so every card's position is a function of time
+const pad = fs * 2.2, gapX = fs * 1.6, colW = (bw - pad * 2 - gapX * 2) / 3, top = pad + fs * 3.4, cardH = fs * 6.2, gapY = fs * 1.1;
+const colX = (c) => pad + c * (colW + gapX);
+const slotY = (i) => top + fs * 1.0 + i * (cardH + gapY);
+CONFIG.columns.forEach(([name, cards], c) => {
+  const col = document.createElement('div'); col.className = 'col';
+  Object.assign(col.style, { left: `${colX(c)}px`, top: `${pad}px`, width: `${colW}px`, height: `${bh - pad * 2}px`, background: `${ground}aa`, border: `1px solid ${muted}22` });
+  board.append(col);
+  const head = document.createElement('div'); head.className = 'head';
+  Object.assign(head.style, { left: `${colX(c) + fs * 1.1}px`, top: `${pad + fs * 1.1}px` });
+  head.innerHTML = `<span style="width:0.6em;height:0.6em;border-radius:50%;background:${[muted, accent, '#8fbf8f'][c]}"></span><span style="font-weight:500">${name}</span><span class="n" data-c="${c}" style="color:${muted}">${cards.length}</span>`;
+  board.append(head);
+});
+const cards = [];
+CONFIG.columns.forEach(([, list], c) => list.forEach((title, i) => {
+  const el = document.createElement('div'); el.className = 'card';
+  Object.assign(el.style, { width: `${colW - fs * 1.6}px`, height: `${cardH}px`, background: '#1b1b1b', border: `1px solid ${muted}44` });
+  el.innerHTML = `<div style="font-weight:500">${title}</div><i style="width:70%;background:${muted};opacity:0.45"></i><i style="width:45%;background:${muted};opacity:0.3"></i>`;
+  board.append(el); cards.push({ el, c, i });
+}));
+const slot = $('slot');
+Object.assign(slot.style, { width: `${colW - fs * 1.6}px`, height: `${cardH}px`, border: `1.5px dashed ${accent}88`, background: `${accent}10` });
+const [fc, fi, tc, ti] = CONFIG.move;
+const drag = cards.find((k) => k.c === fc && k.i === fi);
+drag.el.style.zIndex = 20;
+const cursor = document.createElement('div'); cursor.id = 'cursor'; const cs = fs * 2.4;
+cursor.innerHTML = `<svg width="${cs}" height="${cs * 1.4}" viewBox="0 0 20 28"><path d="M2 2 L18 14 L10 15.5 L14.5 25 L11 26.5 L6.5 17 L2 22 Z" fill="${figure}" stroke="${ground}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+board.append(cursor);
+cam.place(board, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+
+const T = { reach: [0.3, 0.95], pick: 1.0, carry: [1.2, 2.9], drop: 3.0 };
+const cx = (c) => colX(c) + fs * 0.8, from = [cx(fc), slotY(fi)], to = [cx(tc), slotY(ti)];
+const grip = [colW * 0.55, cardH * 0.45];
+s.update((t) => {
+  const lift = t >= T.pick ? spring(t - T.pick, { stiffness: 260, damping: 16 }) : 0;
+  const p = progress(t, ...T.carry, ease.inOutCubic), dropped = t >= T.drop ? spring(t - T.drop, { stiffness: 300, damping: 15 }) : 0;
+  const up = lift * (1 - Math.min(1, dropped));
+  // the carried card: an arc across, leaning into the move (tilt follows its speed)
+  const speed = Math.sin(p * Math.PI) * (p > 0 && p < 1 ? 1 : 0);
+  const x = from[0] + (to[0] - from[0]) * p, y = from[1] + (to[1] - from[1]) * p - Math.sin(p * Math.PI) * cardH * 0.9 - up * cardH * 0.12;
+  drag.el.style.transform = `translate(${x}px, ${y}px) rotate(${up * 3 + speed * 5}deg) scale(${1 + 0.06 * up})`;
+  drag.el.style.boxShadow = `0 ${fs * (0.6 + 3 * up)}px ${fs * (1.5 + 5 * up)}px rgba(0,0,0,${0.3 + 0.35 * up})`;
+  drag.el.style.borderColor = up > 0.05 ? `${accent}88` : `${muted}44`;
+  // the others: the source column closes up after the pick, the target opens a slot before the drop
+  const close = progress(t, T.pick + 0.2, T.pick + 0.7, ease.inOutCubic), open = progress(t, T.carry[0] + 0.7, T.carry[1] - 0.1, ease.inOutCubic);
+  cards.forEach(({ el, c, i }) => {
+    if (el === drag.el) return;
+    let yy = slotY(i);
+    if (c === fc && i > fi) yy -= (cardH + gapY) * close;
+    if (c === tc && i >= ti) yy += (cardH + gapY) * open;
+    el.style.transform = `translate(${cx(c)}px, ${yy}px)`;
+  });
+  slot.style.transform = `translate(${to[0]}px, ${to[1]}px) scale(${0.96 + 0.04 * open})`;
+  slot.style.opacity = String(open * (1 - progress(t, T.drop, T.drop + 0.2)));
+  // the cursor: reaches the card, then travels gripped to it, lets go after the drop
+  const r = progress(t, ...T.reach, ease.inOutCubic), start = [bw * 0.5, bh * 1.05];
+  const g = [from[0] + grip[0], from[1] + grip[1]];
+  let px = start[0] + (g[0] - start[0]) * r, py = start[1] + (g[1] - start[1]) * r;
+  if (t >= T.pick) { px = x + grip[0]; py = y + grip[1]; }
+  if (t >= T.drop + 0.15) { const l = progress(t, T.drop + 0.15, T.drop + 0.9, ease.inOutCubic); px += bw * 0.06 * l; py += bh * 0.1 * l; }
+  cursor.style.transform = `translate(${px}px, ${py}px) scale(${up > 0.5 ? 0.9 : 1})`;
+  cursor.style.opacity = String(progress(t, 0.2, 0.4));
+  // the camera rides with the card, close, leaning the way it travels
+  const arrive = progress(t, 0, 0.8, ease.outCubic), follow = progress(t, 0.4, 1.2, ease.inOutCubic);
+  const fx = x + colW * 0.4 - bw / 2, fy = y + cardH * 0.5 - bh / 2;
+  cam.at({ x: fx * follow, y: fy * follow * 0.8, z: DIST + SHORT * 0.3 * (1 - arrive) - SHORT * (tall ? 1.12 : square ? 0.75 : 0.6) * follow, yaw: (-8 * (1 - arrive) + speed * 6) * (tall ? 0.5 : 1), pitch: 3 * (1 - arrive) + 2 * follow, roll: speed * 1.2 });
+  board.style.opacity = String(progress(t, 0, 0.3));
+  // the counts follow the card
+  board.querySelectorAll('.n').forEach((n) => { const c = +n.dataset.c, base = CONFIG.columns[c][1].length; n.textContent = String(base + (t >= T.pick + 0.3 && c === fc ? -1 : 0) + (t >= T.drop && c === tc ? 1 : 0)); n.style.color = (t >= T.drop && t < T.drop + 0.6 && c === tc) ? accent : muted; });
+});
+B.cue(s, 'text', T.pick); B.cue(s, 'transition', T.carry[0]); B.cue(s, 'land', T.drop);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

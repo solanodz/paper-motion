@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>donut-fill</title>
+<!--
+  Data · donut fill (5 s). A ring fills to its percentage with a rounded head that slows as it arrives, the number at
+  its centre counting up with it; when it lands, a pulse rings out and the line under the number fades in. The camera
+  starts low and tilted, looking across the ring like a dial on a table, and rises to face it as it fills.
+  Arrive 0–0.8 s · Fill 0.7–2.8 s · Land 2.8 s · Hold to 5 s.
+  Square: as 16:9 (the dial is sized from the short side). Vertical: the dial fills the width and the line moves under
+  the ring, set large across the frame; the camera lands on the ring and settles down to frame ring and line together.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #dial { position: absolute; }
+  #svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  #mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"><div id="dial"><svg id="svg"><g id="ticks"></g><circle id="track"/><circle id="fill"/><circle id="pulse"/></svg><div id="mid"><div id="num"></div><div id="lab"></div></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { blurIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  value: 87,                             // the percentage
+  label: 'of renders pass on the first try',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.4;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.65) 100%)';
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const accent = B.color('accent', '#E9E4D8'), muted = B.color('muted');
+const size = SHORT * 0.72 * K, r = size * 0.42, sw = size * 0.075, c = size / 2;
+const dial = $('dial'); Object.assign(dial.style, { width: `${size}px`, height: `${size}px` });
+const svg = $('svg'); svg.setAttribute('width', size); svg.setAttribute('height', size);
+const track = $('track'), fill = $('fill'), pulse = $('pulse');
+for (const el of [track, fill, pulse]) { el.setAttribute('cx', c); el.setAttribute('cy', c); el.setAttribute('r', r); el.style.fill = 'none'; }
+Object.assign(track.style, { stroke: `${muted}33`, strokeWidth: sw });
+Object.assign(fill.style, { stroke: accent, strokeWidth: sw, strokeLinecap: 'round', transform: `rotate(-90deg)`, transformOrigin: `${c}px ${c}px`, filter: `drop-shadow(0 0 ${sw * 0.6}px ${accent}55)` });
+Object.assign(pulse.style, { stroke: accent, strokeWidth: sw * 0.25 });
+const ticks = $('ticks');
+const num = B.style($('num'), 'display', { short: SHORT * K, color: 'figure' }); num.style.fontSize = `${size * 0.22}px`; num.style.lineHeight = 1; num.style.fontVariantNumeric = 'tabular-nums';
+const lab = B.style($('lab'), 'body', { short: SHORT * K, color: 'muted' }); lab.textContent = CONFIG.label; Object.assign(lab.style, { fontSize: `${size * 0.035}px`, maxWidth: `${size * 0.5}px`, marginTop: `${size * 0.02}px` });
+const tall = H > W;
+if (tall) Object.assign(lab.style, { position: 'absolute', left: `${-size * 0.05}px`, right: `${-size * 0.05}px`, top: `${size * 1.02}px`, maxWidth: "none", marginTop: "0", fontSize: `${size * 0.1}px`, lineHeight: '1.25' });
+cam.place(dial, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+const L = 2 * Math.PI * r;
+
+const T = { fill: [0.7, 2.8] };
+s.update((t) => {
+  const p = progress(t, ...T.fill, ease.inOutCubic) * CONFIG.value / 100;
+  fill.style.strokeDasharray = `${L * p} ${L}`;
+  fill.style.opacity = p > 0.003 ? '1' : '0';
+  num.innerHTML = `${Math.round(progress(Math.round(t * 30) / 30, ...T.fill, ease.inOutCubic) * CONFIG.value)}<span style="font-size:0.45em;opacity:0.7">%</span>`;
+  num.style.opacity = String(progress(t, 0.5, 0.9));
+  // the landing: a pulse rings out from the ring, the line fades in
+  const pl = progress(t, T.fill[1], T.fill[1] + 0.9, ease.outCubic);
+  pulse.setAttribute('r', r + sw * 2.5 * pl); pulse.style.opacity = String(t >= T.fill[1] ? 0.8 * (1 - pl) : 0);
+  blurIn(lab, t, { start: T.fill[1] - 0.1, duration: 0.7 });
+  // the camera: low and tilted across the dial, rising to face it as it fills, then a little closer
+  const arrive = progress(t, 0, 0.8, ease.outCubic), rise = progress(t, 0.2, T.fill[1] + 0.3, ease.inOutCubic), push = progress(t, T.fill[1], D, ease.inOutSine);
+  const a = (52 * (1 - rise)) * Math.PI / 180, Rr = DIST + SHORT * 0.3 * (1 - arrive) - SHORT * 0.12 * rise - SHORT * 0.18 * push;
+  const settle = tall ? size * 0.2 * progress(t, T.fill[1] - 0.2, T.fill[1] + 1.0, ease.inOutCubic) : 0;   // vertical: down to take in the line
+  cam.at({ x: -size * 0.05 * (1 - rise), y: Rr * Math.sin(a) + settle, z: Rr * Math.cos(a), yaw: -10 * (1 - rise), pitch: -52 * (1 - rise), roll: 4 * (1 - rise) });
+  dial.style.opacity = String(progress(t, 0, 0.3));
+});
+B.cue(s, 'transition', 0.2); B.cue(s, 'text', T.fill[0]); B.cue(s, 'land', T.fill[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

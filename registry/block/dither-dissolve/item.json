@@ -1,0 +1,135 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "dither-dissolve",
+  "type": "block",
+  "title": "Dither dissolve",
+  "summary": "One shot breaks into an ordered dither, dot by dot, in a sweep across the frame; the edge lights in the accent and the next shot is under it.",
+  "tags": [
+    "block",
+    "transition",
+    "dither",
+    "dissolve",
+    "shader"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "a",
+      "type": "string",
+      "default": "Tools were made for hands.",
+      "description": "a",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "b",
+      "type": "string",
+      "default": "paper-motion",
+      "description": "b",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "bLine",
+      "type": "string",
+      "default": "Brand videos, made by your coding agent.",
+      "description": "bLine",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "cell",
+      "type": "number",
+      "default": 14,
+      "description": "the dither's dot size, in pixels at 1080p",
+      "group": "main"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/dither-dissolve/scene.html",
+      "to": "pieces/dither-dissolve/scene.html"
+    },
+    {
+      "from": "registry/block/dither-dissolve/brief.md",
+      "to": "pieces/dither-dissolve/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add dither-dissolve --name my-dither-dissolve\n# edit CONFIG in pieces/my-dither-dissolve/scene.html, then:\nnpx paper-motion render pieces/my-dither-dissolve/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "cells",
+    "crossfade"
+  ],
+  "preview": {
+    "video": "previews/dither-dissolve.webm",
+    "poster": "previews/dither-dissolve.jpg",
+    "at": 2.2,
+    "values": {}
+  },
+  "mood": [
+    "luxury",
+    "calm"
+  ],
+  "duration": 4.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Shot A",
+      "from": 0,
+      "to": 1.4,
+      "what": "shot a"
+    },
+    {
+      "name": "Dissolve",
+      "from": 1.4,
+      "to": 2.9,
+      "what": "dissolve"
+    },
+    {
+      "name": "Shot B",
+      "from": 2.9,
+      "to": 4.6,
+      "what": "shot b"
+    }
+  ],
+  "when": [
+    "a transition that only this brand has",
+    "between a statement and the name"
+  ]
+}

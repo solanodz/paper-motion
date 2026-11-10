@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>device-frame</title>
+<!--
+  Component · device frame (5.5 s). A phone with real thickness stands in space with the product on its screen; the
+  camera comes round it from the side to face it, close, while the screen scrolls on its own. Put any screen in it
+  (`image`), or the placeholder app draws in the brand's colours.
+  Arrive 0–1 s · Orbit 0.3–4 s · Scroll 1.2–4.4 s · Hold to 5.5 s.
+  Vertical: the phone takes the height (half of H); square sizes it a little larger from the short side.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .slab { position: absolute; box-sizing: border-box; }
+  #screen { position: absolute; overflow: hidden; }
+  #feed { position: absolute; left: 0; right: 0; top: 0; display: flex; flex-direction: column; gap: 1.2em; padding: 4.2em 1.4em 2em; }
+  .card { border-radius: 1em; overflow: hidden; }
+  i { display: block; height: 0.65em; border-radius: 999px; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  image: '',                             // a screenshot of the app (tall); empty draws the placeholder app
+  title: 'Renders',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.5;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.4;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 100%)';
+
+const DIST = SHORT * 0.7, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const tall = H > W, square = W === H;
+const ph = (tall ? H * 0.5 : SHORT * (square ? 0.68 : 0.6)) * K, pw = ph * 0.48, rad = pw * 0.16, depth = pw * 0.1, bezel = pw * 0.035;
+// the body: slices stacked in depth make the thickness; the front one holds the screen
+const N = 8, slabs = [];
+for (let k = 0; k < N; k++) {
+  const el = document.createElement('div'); el.className = 'slab';
+  const front = k === N - 1, edge = k === 0 || front;
+  Object.assign(el.style, { width: `${pw}px`, height: `${ph}px`, borderRadius: `${rad}px`, background: front ? '#050505' : `linear-gradient(90deg, #2a2a2a, #3b3b3b 50%, #222)`, border: `1px solid ${edge ? '#4a4a4a' : '#333'}` });
+  $('world').append(el); slabs.push(el);
+  cam.place(el, { x: 0, y: 0, z: -depth + (depth * k) / (N - 1) });
+}
+const front = slabs[N - 1];
+front.style.boxShadow = `inset 0 0 0 ${bezel * 0.25}px #1d1d1d`;
+const screen = document.createElement('div'); screen.id = 'screen';
+Object.assign(screen.style, { left: `${bezel}px`, top: `${bezel}px`, right: `${bezel}px`, bottom: `${bezel}px`, borderRadius: `${rad - bezel}px`, background: B.surface(0.12), fontSize: `${pw * 0.034}px`, fontFamily: B.font('text') });
+front.append(screen);
+const island = document.createElement('div');
+Object.assign(island.style, { position: 'absolute', left: '50%', top: `${bezel * 1.6}px`, width: `${pw * 0.28}px`, height: `${pw * 0.075}px`, transform: 'translateX(-50%)', borderRadius: '999px', background: '#000', zIndex: 2 });
+front.append(island);
+const feed = document.createElement('div'); feed.id = 'feed'; screen.append(feed);
+if (CONFIG.image) { feed.innerHTML = `<img src="${CONFIG.image}" style="width:100%;display:block">`; feed.style.padding = 0; }
+else {
+  const line = (w, c = muted, o = 0.45) => `<i style="width:${w}%;background:${c};opacity:${o}"></i>`;
+  const card = (k) => `<div class="card" style="background:${ground};border:1px solid ${muted}33"><div class="pic" style="height:${pw * 0.5}px;position:relative;background:${k % 3 === 1 ? accent : '#151515'}"></div><div style="padding:1em;display:flex;flex-direction:column;gap:0.6em">${line(55, figure, 0.85)}${line(80)}</div></div>`;
+  feed.innerHTML = `<div style="font:400 2.2em ${B.font('display')};color:${figure}">${CONFIG.title}</div>${line(45)}` + Array.from({ length: 7 }, (_, k) => card(k)).join('');
+  if (bgId) [...feed.querySelectorAll('.pic')].forEach((p, k) => { if (k % 3 !== 1) { const f = document.createElement('div'); f.style.cssText = 'position:absolute;inset:0'; p.append(f); B.shader(s, f, bgId); } });
+}
+// a glint across the glass that moves with the turn
+const glass = document.createElement('div');
+Object.assign(glass.style, { position: 'absolute', inset: 0, borderRadius: `${rad}px`, pointerEvents: 'none', zIndex: 3 });
+front.append(glass);
+await document.fonts.ready;
+
+const T = { orbit: [0.3, 4.0], scroll: [1.2, 4.4] };
+s.update((t) => {
+  const arrive = progress(t, 0, 1.0, ease.outCubic), o = progress(t, ...T.orbit, ease.inOutCubic);
+  const yaw = 48 - 58 * o;                 // from the side, round past face-on, settling a touch to the other side
+  const Rr = DIST + SHORT * 0.5 * (1 - arrive) - SHORT * 0.4 * o, a = yaw * Math.PI / 180;   // a true orbit: the phone stays on the axis
+  cam.at({ x: Rr * Math.sin(a), y: -ph * 0.02, z: Rr * Math.cos(a), yaw, pitch: 9 * (1 - o) + 2 * o, roll: -3 * (1 - o) });
+  slabs.forEach((el) => { el.style.opacity = String(progress(t, 0, 0.4)); });
+  const sc = progress(t, ...T.scroll, ease.inOutCubic);
+  feed.style.transform = `translateY(${-sc * (feed.offsetHeight - screen.offsetHeight * 1.1)}px)`;
+  glass.style.background = `linear-gradient(${115 + yaw * 0.6}deg, transparent 35%, rgba(255,255,255,${0.1 + 0.06 * (1 - o)}) 48%, transparent 60%)`;
+  glass.style.backgroundPosition = `${-yaw}% 0`;
+});
+B.cue(s, 'transition', 0.2); B.cue(s, 'land', T.orbit[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

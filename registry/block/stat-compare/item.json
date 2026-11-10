@@ -1,0 +1,123 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "stat-compare",
+  "type": "block",
+  "title": "Stat compare",
+  "summary": "The old number is struck through and falls away soft; the new one arrives from deep in the scene and lands in the accent.",
+  "tags": [
+    "block",
+    "data",
+    "number",
+    "before-after",
+    "comparison"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "default": "per launch video",
+      "description": "label",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/stat-compare/scene.html",
+      "to": "pieces/stat-compare/scene.html"
+    },
+    {
+      "from": "registry/block/stat-compare/brief.md",
+      "to": "pieces/stat-compare/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add stat-compare --name my-stat-compare\n# edit CONFIG in pieces/my-stat-compare/scene.html, then:\nnpx paper-motion render pieces/my-stat-compare/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "code-diff",
+    "before-after"
+  ],
+  "preview": {
+    "video": "previews/stat-compare.webm",
+    "poster": "previews/stat-compare.jpg",
+    "at": 4.6,
+    "values": {}
+  },
+  "mood": [
+    "bold"
+  ],
+  "duration": 5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Old",
+      "from": 0.2,
+      "to": 1.3,
+      "what": "old"
+    },
+    {
+      "name": "Strike",
+      "from": 1.4,
+      "to": 1.8,
+      "what": "strike"
+    },
+    {
+      "name": "Fall",
+      "from": 2,
+      "to": 2.7,
+      "what": "fall"
+    },
+    {
+      "name": "New",
+      "from": 2.2,
+      "to": 2.9,
+      "what": "new"
+    },
+    {
+      "name": "Hold",
+      "from": 2.9,
+      "to": 5,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "how much time or money it saves",
+    "a before and after in one figure"
+  ]
+}

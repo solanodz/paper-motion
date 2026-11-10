@@ -1,0 +1,109 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "drag-drop",
+  "type": "block",
+  "title": "Drag and drop",
+  "summary": "A cursor lifts a card on a board, carries it tilted to another column, a slot opens, it drops on a spring and the counts update.",
+  "tags": [
+    "block",
+    "ui",
+    "kanban",
+    "drag",
+    "cursor"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/drag-drop/scene.html",
+      "to": "pieces/drag-drop/scene.html"
+    },
+    {
+      "from": "registry/block/drag-drop/brief.md",
+      "to": "pieces/drag-drop/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add drag-drop --name my-drag-drop\n# edit CONFIG in pieces/my-drag-drop/scene.html, then:\nnpx paper-motion render pieces/my-drag-drop/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "toast-stack",
+    "magic-move"
+  ],
+  "preview": {
+    "video": "previews/drag-drop.webm",
+    "poster": "previews/drag-drop.jpg",
+    "at": 3.6,
+    "values": {}
+  },
+  "mood": [
+    "playful"
+  ],
+  "duration": 5.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Pick",
+      "from": 1,
+      "to": 1.6,
+      "what": "pick"
+    },
+    {
+      "name": "Carry",
+      "from": 1.2,
+      "to": 2.9,
+      "what": "carry"
+    },
+    {
+      "name": "Drop",
+      "from": 3,
+      "to": 3.6,
+      "what": "drop"
+    },
+    {
+      "name": "Hold",
+      "from": 3.6,
+      "to": 5.6,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "boards, lists, anything you rearrange",
+    "moving work from one state to another"
+  ]
+}

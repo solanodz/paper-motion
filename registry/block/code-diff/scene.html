@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>code-diff</title>
+<!--
+  Code · diff (6 s). The old way, struck out line by line, folds away; the new way opens in its place and the rest of
+  the file closes up around it on a spring. A count of what changed lands in the tab bar; the camera stays close on
+  the change and pushes in on the new line.
+  Arrive 0–0.8 s · Strike 1.1–1.9 s · Fold 2.1–2.9 s · Open 2.6–3.3 s · Count 3.4 s · Hold to 6 s.
+  Vertical/square: the editor is sized from the short side to the code's width (vertical wraps lines past 24 columns,
+  continuations indented) so the mono stays large; the camera fits the editor's width and pushes in, anchored left.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #ed { position: absolute; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
+  .tabs { display: flex; align-items: center; gap: 0.8em; padding: 0 1.4em; }
+  .tab { padding: 0.9em 1.3em; border-radius: 0.6em 0.6em 0 0; }
+  #body { position: relative; flex: 1; padding-top: 1.6em; }
+  .ln { position: relative; overflow: hidden; display: grid; grid-template-columns: 2.6em 1.6em 1fr; white-space: pre; }
+  .ln > span { line-height: 1.75em; height: 1.75em; }
+  .tx { vertical-align: top; }
+  .n { text-align: right; padding-right: 0.9em; }
+  .strike { position: absolute; left: -0.2em; right: -0.2em; top: 0.86em; height: 0.09em; transform-origin: 0 50%; }
+  #count { margin-left: 0.6em; display: flex; gap: 0.8em; font-size: 0.85em; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="ed"><div class="tabs" id="tabs"></div><div id="body"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  file: 'make-video.js',
+  before: `import { render } from 'paper-motion';
+
+const video = await ffmpeg({
+  input: frames,
+  fps: 30,
+  codec: 'libx264',
+  filters: buildFilters(opts),
+  audio: mixTracks(sfx, music),
+});
+
+await video.save('launch.mp4');`,
+  remove: [3, 9],                        // the lines (1-based, inclusive) that go
+  add: [`const video = await render('scene.html');`],
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = 0.3;
+const $ = (id) => document.getElementById(id);
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const wide = W / H > 1.2, tall = H > W;
+const MAXC = tall ? 24 : Infinity;                                    // vertical: long lines wrap to this many columns
+const FS = SHORT * (tall ? 0.03 : 0.026);                             // non-wide: the editor's type size in the world
+const COLS = Math.min(MAXC, Math.max(...[...CONFIG.before.split('\n'), ...CONFIG.add].map((l) => l.length)));
+const ed = $('ed'), cw = wide ? W * 0.66 * K : FS * (COLS * 0.6 + 7.5); let ch = wide ? cw * 0.56 : tall ? cw * 1.6 : cw * 0.8; const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const ramp = B.tokens?.ramp ?? [];
+const C = { kw: accent, str: ramp[3] ?? '#8EA3AD', num: ramp[2] ?? '#5F7A86', fn: figure, punct: muted, id: '#cfcfcf' };
+const RED = '#d0715f', GREEN = '#8fbf8f';                            // diff colours, kept soft
+Object.assign(ed.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: B.surface(0.16), border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)`, fontSize: `${wide ? cw * 0.0165 : FS}px`, fontFamily: B.font('mono') });
+$('tabs').style.background = ground; $('tabs').style.height = '3.4em';
+$('tabs').innerHTML = `<span style="display:flex;gap:0.45em;margin-right:1em">${['#ffffff33', '#ffffff22', '#ffffff18'].map((c) => `<i style="display:block;width:0.75em;height:0.75em;border-radius:50%;background:${c}"></i>`).join('')}</span><span class="tab" style="background:${B.surface(0.16)};color:${figure};font-size:0.8em;align-self:flex-end">${CONFIG.file}</span><span id="count"><span id="cm" style="color:${RED}"></span><span id="cp" style="color:${GREEN}"></span></span>`;
+
+const KW = /^(import|from|const|let|await|export|return|new|function)$/;
+const paint = (src) => {
+  let out = ''; const re = /('[^']*'|"[^"]*")|(\d+(?:\.\d+)?)|([A-Za-z_$][\w$]*)|(\s+)|(.)/g; let m;
+  while ((m = re.exec(src))) {
+    const [tok, str, num, word, sp] = m;
+    const kind = str ? 'str' : num ? 'num' : word ? (KW.test(word) ? 'kw' : src[re.lastIndex] === '(' ? 'fn' : 'id') : sp ? 'sp' : 'punct';
+    out += `<span style="color:${C[kind] ?? figure}">${tok.replace(/</g, '&lt;')}</span>`;
+  }
+  return out;
+};
+const body = $('body'), [r0, r1] = CONFIG.remove;
+const rows = [];
+// wraps a line at token boundaries past MAXC columns; continuations indent two more (punctuation may hang 2 over)
+const wrap = (src) => {
+  if (src.length <= MAXC) return src;
+  const lead = src.match(/^\s*/)[0], out = []; let cur = '';
+  for (const tok of src.match(/('[^']*'|"[^"]*")|\d+(?:\.\d+)?|[A-Za-z_$][\w$]*|\s+|./g)) {
+    const punct = /^[^\w\s'"$]$/.test(tok);
+    if (cur.length + tok.length > MAXC + (punct ? 2 : 0) && cur.trim().length) { out.push(cur.replace(/\s+$/, '')); cur = lead + '  '; if (!tok.trim()) continue; }
+    cur += tok;
+  }
+  out.push(cur); return out.join('\n');
+};
+const mkRow = (text, kind, num) => {
+  text = wrap(text);
+  const row = document.createElement('div'); row.className = 'ln'; row._k = text.split('\n').length;
+  row.innerHTML = `<span class="n" style="color:${muted}88">${num ?? ''}</span><span class="g"></span><span><span class="tx" style="position:relative;display:inline-block">${paint(text)}</span></span>`;
+  row.lastElementChild.style.height = `${1.75 * row._k}em`;
+  if (kind === 'del') { const st = document.createElement('div'); st.className = 'strike'; st.style.background = RED; row.querySelector('.tx').append(st); }
+  body.append(row); rows.push({ row, kind, num }); return row;
+};
+const before = CONFIG.before.split('\n');
+before.forEach((ln, i) => {
+  const n = i + 1;
+  if (n === r0) CONFIG.add.forEach((a) => mkRow(a, 'add', ''));
+  mkRow(ln, n >= r0 && n <= r1 ? 'del' : 'ctx', n);
+});
+// the added rows go before the removed block in the file, but read best after it while both are visible: move them
+const adds = rows.filter((r) => r.kind === 'add'), dels = rows.filter((r) => r.kind === 'del');
+dels[dels.length - 1].row.after(...adds.map((r) => r.row));
+cam.place(ed, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+const lineH = rows[0].row.offsetHeight / rows[0].row._k;
+const P = SHORT * 1.7;
+if (tall) { ch = Math.max(body.offsetTop + body.scrollHeight + lineH * 2, Math.min(cw * 1.7, (H * 0.9) / ((W * 0.94) / cw))); ed.style.height = `${ch}px`; }
+
+const T = { strike: [1.1, 1.9], fold: [2.0, 2.6], open: 2.25, count: 3.2 };
+const bodyTop = body.offsetTop + parseFloat(getComputedStyle(body).paddingTop);
+const delTop = dels[0].row.offsetTop - body.offsetTop - parseFloat(getComputedStyle(body).paddingTop);
+
+s.update((t) => {
+  // the old lines: tinted, struck one after another, then folded away bottom-first
+  dels.forEach(({ row }, i) => {
+    const k = (T.strike[1] - T.strike[0]) / dels.length;
+    const tint = progress(t, T.strike[0] - 0.2, T.strike[0] + 0.2);
+    row.style.background = tint ? `${RED}${Math.round(tint * 0x22).toString(16).padStart(2, '0')}` : 'transparent';
+    row.querySelector('.g').textContent = tint > 0.5 ? '−' : ''; row.querySelector('.g').style.color = RED;
+    const st = row.querySelector('.strike');
+    st.style.transform = `scaleX(${progress(t, T.strike[0] + i * k, T.strike[0] + (i + 1.6) * k, ease.inOutCubic)})`;
+    const fk = (T.fold[1] - T.fold[0]) / dels.length, j = dels.length - 1 - i;
+    const f = progress(t, T.fold[0] + j * fk * 0.6, T.fold[0] + j * fk * 0.6 + 0.45, ease.inOutCubic);
+    row.style.height = `${lineH * row._k * (1 - f)}px`;
+    row.style.opacity = String(1 - 0.5 * tint - 0.5 * f);
+  });
+  // the new line: opens on a spring, slides in from the gutter, glows green and settles
+  adds.forEach(({ row }, i) => {
+    const o = t >= T.open + i * 0.08 ? spring(t - T.open - i * 0.08, { stiffness: 170, damping: 15 }) : 0;
+    row.style.height = `${lineH * row._k * Math.max(0, Math.min(1.15, o))}px`;
+    row.style.background = `${GREEN}${Math.round(Math.min(1, o) * 0x24).toString(16).padStart(2, '0')}`;
+    row.style.boxShadow = o ? `inset 0.18em 0 0 ${GREEN}` : 'none';
+    row.lastElementChild.style.transform = `translateX(${(1 - Math.min(1, o)) * -2}em)`;
+    row.lastElementChild.style.opacity = String(Math.min(1, o * 1.4));
+    row.querySelector('.g').textContent = '+'; row.querySelector('.g').style.color = GREEN;
+  });
+  // the numbers close up once the change has landed
+  const renum = t >= T.fold[1];
+  let n = 0;
+  rows.forEach(({ row, kind, num }) => { if (kind === 'del') return; n++; row.querySelector('.n').textContent = renum ? String(n) : (num ?? ''); });
+  // the count in the tab bar
+  const c = progress(t, T.count, T.count + 0.4, ease.outBack);
+  $('cm').textContent = `−${dels.length}`; $('cp').textContent = `+${adds.length}`;
+  $('count').style.opacity = String(Math.min(1, c * 1.5)); $('count').style.transform = `translateY(${(1 - c) * 0.6}em)`;
+  // the camera: close on the change all along, pushing in once the new line has landed
+  const arrive = progress(t, 0, 0.8, ease.outCubic), push = progress(t, T.open, D, ease.inOutCubic);
+  const blockH = Math.max(lineH, dels.reduce((a, { row }) => a + row.offsetHeight, 0) + adds.reduce((a, { row }) => a + row.offsetHeight, 0));
+  const fy = bodyTop + delTop + blockH / 2 - ch / 2;
+  if (!wide) {
+    // fit the editor's width, then push in on the change, the editor's left edge held near the frame's left
+    const sFit = (W * 0.94) / cw, sNow = sFit * (0.72 + 0.28 * arrive) * (1 + (tall ? 0.1 : 0.1) * push), half = H / (2 * sNow);
+    const x = Math.min(0, -cw / 2 + (W / 2) / sNow - FS * 0.8);
+    const lo = -ch / 2 + half - H * 0.05 / sNow, hi = ch / 2 - half + H * 0.05 / sNow;
+    const y = lo <= hi ? Math.min(hi, Math.max(lo, fy)) : (fy + (lo + hi) / 2) / 2;
+    cam.at({ x, y, z: P / sNow - P, yaw: -6 * (1 - arrive) + 1.5 * push, pitch: 3 * (1 - arrive) });
+  } else
+  cam.at({ x: -cw * (0.14 + 0.16 * push), y: fy, z: DIST + SHORT * 0.3 * (1 - arrive) - SHORT * 0.7 - SHORT * 0.75 * push, yaw: -7 * (1 - arrive) + 2 * push, pitch: 3 * (1 - arrive) });
+  ed.style.opacity = String(progress(t, 0, 0.3));
+});
+B.cue(s, 'transition', 0); B.cue(s, 'text', T.strike[0]); B.cue(s, 'transition', T.fold[0]); B.cue(s, 'land', T.open + 0.2);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

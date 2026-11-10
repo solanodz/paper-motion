@@ -1,0 +1,119 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "parallax-stack",
+  "type": "block",
+  "title": "Parallax stack",
+  "summary": "An interface pulled apart into solid layers in depth; the camera orbits so each slides at its own speed, then they fall flat into one screen.",
+  "tags": [
+    "block",
+    "effect",
+    "parallax",
+    "3d",
+    "ui",
+    "layers"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "depth",
+      "type": "number",
+      "default": 1,
+      "description": "how far apart the layers float, 1 = default",
+      "group": "main"
+    },
+    {
+      "name": "thickness",
+      "type": "number",
+      "default": 1,
+      "description": "how thick each component is, 0 for flat cards",
+      "group": "main"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/parallax-stack/scene.html",
+      "to": "pieces/parallax-stack/scene.html"
+    },
+    {
+      "from": "registry/block/parallax-stack/brief.md",
+      "to": "pieces/parallax-stack/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add parallax-stack --name my-parallax-stack\n# edit CONFIG in pieces/my-parallax-stack/scene.html, then:\nnpx paper-motion render pieces/my-parallax-stack/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "device-frame",
+    "dive-in"
+  ],
+  "preview": {
+    "video": "previews/parallax-stack.webm",
+    "poster": "previews/parallax-stack.jpg",
+    "at": 2.4,
+    "values": {}
+  },
+  "mood": [
+    "luxury",
+    "bold"
+  ],
+  "duration": 5.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Orbit",
+      "from": 0,
+      "to": 3.4,
+      "what": "orbit"
+    },
+    {
+      "name": "Collapse",
+      "from": 3.3,
+      "to": 4.4,
+      "what": "collapse"
+    },
+    {
+      "name": "Hold",
+      "from": 4.4,
+      "to": 5.6,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "reveal how a product is built",
+    "an opener that turns flat into deep"
+  ]
+}

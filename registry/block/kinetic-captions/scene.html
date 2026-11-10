@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>kinetic-captions</title>
+<!--
+  Text · kinetic captions (6.6 s, vertical). Captions timed to a voice, a few words at a time: each word pops in as it
+  is spoken, the word being said sits on an accent pill that slides from word to word, key words land bigger, and the
+  next phrase replaces it on a clean cut. Feed it word timings (`words`: [{ w, t }], as the engine's alignment
+  writes them) and the voice track; without timings it spaces the script evenly.
+  Horizontal: the same band reads as one line of captions; square: type a little smaller so long words clear the edges.
+  Pages follow the words · Hold to 6.6 s.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #cap { position: absolute; left: 6%; right: 6%; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; align-items: baseline; gap: 0.12em 0.28em; text-align: center; }
+  .w { position: relative; display: inline-block; white-space: nowrap; }
+  .w span { position: relative; z-index: 1; }
+  #pill { position: absolute; border-radius: 0.22em; z-index: 0; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="cap"></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  script: 'Your agent writes the brief. You pick the look. It renders every frame. That is paper-motion.',
+  words: null,                           // [{ w, t }] word timings from the voice; null spaces the script evenly
+  emphasis: ['every', 'frame.', 'paper-motion.'],   // words that land bigger, in the accent
+  perPage: 24,                           // most characters on one page of captions
+  format: [1080, 1920],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 6.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.55;
+$('vig').style.background = 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.65) 100%)';
+const accent = B.color('accent', '#E9E4D8'), ground = B.color('ground'), figure = B.color('figure');
+
+// the words and when each is said: from the voice's timings, or an even, natural pace
+const list = CONFIG.words?.filter((x) => x.w.trim()).map((x) => ({ w: x.w.trim(), t: x.t }))
+  ?? (() => { let t = 0.35; return CONFIG.script.split(/\s+/).map((w) => { const o = { w, t }; t += 0.13 + w.length * 0.035 + (/[.,!?]$/.test(w) ? 0.28 : 0); return o; }); })();
+// pages: break at the end of a sentence or when the page would run long
+const pages = []; let cur = [];
+const lenOf = (ids) => ids.reduce((a, k) => a + list[k].w.length + 1, 0);
+list.forEach((x, i) => { if (cur.length && lenOf([...cur, i]) > CONFIG.perPage) { pages.push(cur); cur = []; } cur.push(i); if (/[.!?]$/.test(x.w)) { pages.push(cur); cur = []; } });
+if (cur.length) pages.push(cur);
+const pageEnd = (p) => (pages[p + 1] ? list[pages[p + 1][0]].t - 0.02 : D);
+
+const cap = $('cap'), fs = SHORT * (W === H ? 0.095 : 0.115);   // square: a little smaller so the longest word clears the edges
+Object.assign(cap.style, { top: `${H * 0.56}px`, height: `${H * 0.22}px`, fontSize: `${fs}px` });
+B.style(cap, 'display', { short: SHORT, color: 'figure' }); cap.style.fontSize = `${fs}px`; cap.style.lineHeight = 1.05;
+const pill = document.createElement('div'); pill.id = 'pill'; pill.style.background = accent; cap.append(pill);
+const els = list.map((x) => {
+  const el = document.createElement('div'); el.className = 'w';
+  const big = CONFIG.emphasis.includes(x.w);
+  el.innerHTML = `<span>${x.w}</span>`;
+  if (big) { el.style.fontSize = '1.25em'; el.firstChild.style.color = accent; }
+  cap.append(el); return { el, big };
+});
+await document.fonts.ready;
+
+s.update((t) => {
+  let p = 0; while (p < pages.length - 1 && t >= list[pages[p + 1][0]].t - 0.02) p++;
+  const ids = new Set(pages[p]);
+  // the page's words are laid out together; the others leave the flow
+  els.forEach(({ el }, i) => { el.style.display = ids.has(i) ? '' : 'none'; });
+  const out = 0;                                                    // pages change on a clean cut, no exit move
+  let active = -1;
+  els.forEach(({ el, big }, i) => {
+    if (!ids.has(i)) return;
+    // the whole phrase is there from the page's start, dim; each word lights and hops as it is said
+    const a = list[i].t, k = t >= a ? spring(t - a, { stiffness: 380, damping: big ? 11 : 16 }) : 0;
+    const inPage = 1;
+    el.style.opacity = String((0.32 * inPage + 0.68 * Math.min(1, k * 2)) * (1 - out));
+    el.style.transform = `translateY(${(1 - inPage) * 0.3 - Math.sin(Math.min(1, k) * Math.PI) * 0.12 - out * 0.4}em) scale(${1 + (big ? 0.06 : 0.03) * Math.sin(Math.min(1, k) * Math.PI)})`;
+    if (t >= a) active = i;
+  });
+  // the pill sits behind the word being said, sliding to the next
+  if (active >= 0 && !els[active].big) {
+    const el = els[active].el, k = spring(t - list[active].t, { stiffness: 420, damping: 22 });
+    pill.style.opacity = String(Math.min(1, k * 3) * (1 - out));
+    Object.assign(pill.style, { left: `${el.offsetLeft - fs * 0.08}px`, top: `${el.offsetTop + fs * 0.06}px`, width: `${el.offsetWidth + fs * 0.16}px`, height: `${el.offsetHeight - fs * 0.04}px` });
+    pill.style.transform = `scale(${0.85 + 0.15 * k})`;
+    els.forEach(({ el: e, big }, i) => { if (!big && ids.has(i)) e.firstChild.style.color = i === active ? ground : figure; });
+  } else { pill.style.opacity = '0'; els.forEach(({ el: e, big }, i) => { if (!big && ids.has(i)) e.firstChild.style.color = figure; }); }
+  $('bg').style.transform = `scale(${1.1 + 0.06 * progress(t, 0, D)})`;
+});
+pages.forEach((pg) => B.cue(s, 'text', list[pg[0]].t));
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>logo-build</title>
+<!--
+  Brand · logo build (5 s). The wordmark builds itself: each letter's outline traces on in turn, the fill rises inside
+  the outlines from the baseline, the strokes let go, and the domain lands under it. The camera starts close on the
+  first letters and travels back along the word as it builds.
+  Vertical/square: a wordmark with a hyphen or space stacks on two lines (paper- / motion), sized to the width; the
+  camera starts on the first letters of the top line.
+  Trace 0.2–1.7 s · Fill 1.3–2.5 s · Domain 2.7 s · Hold to 5 s.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #mark { position: absolute; }
+  #svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  #meas { position: absolute; visibility: hidden; white-space: pre; }
+  #dom { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"><div id="mark"><svg id="svg"><defs id="defs"></defs><g id="fills"></g><g id="strokes"></g></svg><div id="dom"></div></div></div>
+  <div id="meas"></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  word: '',                              // empty takes the brand's wordmark
+  domain: 'paper-motion.app',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.35;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.65) 100%)';
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const figure = B.color('figure'), accent = B.color('accent', '#E9E4D8'), muted = B.color('muted');
+const text = CONFIG.word || B.tokens?.wordmark?.text || B.name;
+const family = B.font('display');
+await document.fonts.ready;
+// measure each letter's place with the brand's display font
+const meas = $('meas'); Object.assign(meas.style, { fontFamily: family, fontSize: '100px' });
+// narrow frames stack the wordmark on two lines when it has a break (a hyphen or a space)
+const cut = W > H ? -1 : text.search(/[-\s]/);
+const rows = cut > 0 && cut < text.length - 1 ? [text.slice(0, cut + 1).trim(), text.slice(cut + 1).trim()] : [text];
+const LH = 1.08;
+meas.innerHTML = rows.map((r) => `<div>${[...r].map((c) => `<span>${c}</span>`).join('')}</div>`).join('');
+Object.assign(meas.style, { textAlign: 'center', lineHeight: LH });
+let fs = 100 * (W * 0.8 * K) / meas.offsetWidth;
+if (rows.length > 1) fs = Math.min(fs, 100 * (H * 0.5 * K) / (100 * LH * rows.length));
+meas.style.fontSize = `${fs}px`;
+const spans = rows.flatMap((r, ri) => [...meas.children[ri].children].map((sp) => Object.assign(sp, { row: ri })));
+const chars = rows.join('');
+const mw = meas.offsetWidth, base = fs * 0.95, mh = fs * (rows.length > 1 ? LH * (rows.length - 1) + 1.2 : 1.2);
+const mark = $('mark'); Object.assign(mark.style, { width: `${mw}px`, height: `${mh}px` });
+const svg = $('svg'); svg.setAttribute('width', mw); svg.setAttribute('height', mh);
+const NS = 'http://www.w3.org/2000/svg';
+const letters = spans.map((sp, i) => {
+  const x = sp.offsetLeft, w = sp.offsetWidth, ch = chars[i], by = base + sp.row * fs * LH;
+  const mk = (cls) => { const t = document.createElementNS(NS, 'text'); t.textContent = ch; t.setAttribute('x', x); t.setAttribute('y', by); Object.assign(t.style, { fontFamily: family, fontSize: `${fs}px` }); return t; };
+  const clip = document.createElementNS(NS, 'clipPath'); clip.id = `c${i}`; const r = document.createElementNS(NS, 'rect'); r.setAttribute('x', x - fs * 0.1); r.setAttribute('width', w + fs * 0.2); clip.append(r); $('defs').append(clip);
+  const fill = mk(); fill.style.fill = figure; fill.setAttribute('clip-path', `url(#c${i})`); $('fills').append(fill);
+  const st = mk(); Object.assign(st.style, { fill: 'none', stroke: accent, strokeWidth: `${fs * 0.012}`, strokeLinejoin: 'round', strokeDasharray: `${fs * 4} ${fs * 4}` }); $('strokes').append(st);
+  return { fill, st, r, x, w, by, blank: !ch.trim() };
+});
+const dom = $('dom'); Object.assign(dom.style, { top: `${mh + fs * 0.05}px`, fontFamily: B.font('mono'), fontSize: `${fs * (rows.length > 1 ? 0.17 : 0.13)}px`, color: muted, letterSpacing: '0.04em' });
+dom.textContent = CONFIG.domain;
+cam.place(mark, { x: 0, y: 0, z: 0 });
+
+// where the camera starts: the first letters (of the top line, when stacked)
+const two = rows.length > 1, sx = two ? (letters[0].x + letters[1].x + letters[1].w) / 2 - mw / 2 : -mw * 0.38, sy = two ? fs * 0.6 - mh / 2 : -mh * 0.05;
+const T = { trace: [0.2, 1.7], fill: [1.3, 2.5], dom: 2.7 };
+const n = letters.length;
+s.update((t) => {
+  letters.forEach(({ fill, st, r, by }, i) => {
+    const k = i / Math.max(1, n - 1);
+    const a = T.trace[0] + (T.trace[1] - T.trace[0] - 0.6) * k, d = progress(t, a, a + 0.6, ease.inOutCubic);
+    st.style.strokeDashoffset = `${fs * 4 * (1 - d)}`;
+    const fa = T.fill[0] + (T.fill[1] - T.fill[0] - 0.5) * k, f = progress(t, fa, fa + 0.5, ease.inOutCubic);
+    r.setAttribute('y', by - fs * 0.9 * f - 1); r.setAttribute('height', fs * 1.3 * f + 2);     // rises from the baseline
+    st.style.opacity = String(d > 0 ? 1 - 0.85 * progress(t, fa + 0.3, fa + 0.9) : 0);
+  });
+  const dp = t >= T.dom ? spring(t - T.dom, { stiffness: 200, damping: 16 }) : 0;
+  dom.style.opacity = String(Math.min(1, dp * 1.5)); dom.style.transform = `translateY(${(1 - dp) * fs * 0.1}px)`; dom.style.letterSpacing = `${0.04 + 0.2 * (1 - Math.min(1, dp))}em`;
+  // the camera: close on the first letters, travelling back along the word as it builds
+  const p = progress(t, 0, T.fill[1] + 0.3, ease.inOutCubic), settle = progress(t, T.fill[1], D, ease.outCubic);
+  cam.at({ x: sx * (1 - p), y: sy * (1 - p) + fs * 0.08 * settle, z: DIST - SHORT * 0.9 * (1 - p) + SHORT * 0.05 * settle, yaw: -4 * (1 - p), pitch: 1 * (1 - p), roll: -1.5 * (1 - p) });
+});
+B.cue(s, 'text', T.trace[0]); B.cue(s, 'transition', T.fill[0]); B.cue(s, 'land', T.dom);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

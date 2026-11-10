@@ -33,7 +33,7 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoos
   return (
     <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
       <div className="relative aspect-video overflow-hidden bg-black [container-type:inline-size]">
-        {(res?.type === "recipe" || res?.type === "shot") && (res as { beats?: Beat[] }).beats?.length
+        {(res?.type === "recipe" || res?.type === "shot" || res?.type === "block") && (res as { beats?: Beat[] }).beats?.length
           ? <ScriptPlayer beats={(res as { beats?: Beat[] }).beats!} duration={(res as { duration?: number }).duration} theme={theme} title={res.title} compact />
           : res ? <ResourceStage resource={res} values={values} theme={theme} compact /> : null}
         <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-md bg-ground/80 px-2 font-mono text-[13px] text-figure backdrop-blur">{o.label}</span>
@@ -46,7 +46,7 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoos
         </div>
         {o.note ? <p className="mt-2 text-[13px] leading-snug text-muted">{o.note}</p> : null}
         {o.values && Object.keys(o.values).length ? <p className="mt-1.5 font-mono text-[11px] text-faint">{Object.keys(o.values).length} setting{Object.keys(o.values).length > 1 ? "s" : ""} adjusted by your agent</p> : null}
-        {(res?.type === "recipe" || res?.type === "shot") && (res as { beats?: Beat[] }).beats?.length ? <div className="mt-3"><BeatsStrip beats={(res as { beats?: Beat[] }).beats!} duration={(res as { duration?: number }).duration} compact /></div> : null}
+        {(res?.type === "recipe" || res?.type === "shot" || res?.type === "block") && (res as { beats?: Beat[] }).beats?.length ? <div className="mt-3"><BeatsStrip beats={(res as { beats?: Beat[] }).beats!} duration={(res as { duration?: number }).duration} compact /></div> : null}
         {res?.type === "background" && theme?.palette ? <p className="mt-1.5 font-mono text-[11px] text-faint">recolored to your palette</p> : null}
         {tuned ? <p className="mt-1.5 font-mono text-[11px] text-paper">tuned by you</p> : null}
         <div className="mt-4 flex gap-2">
@@ -200,7 +200,7 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
   // recipes picked in order become one script: the sequence the agent will build
   const sequence = useMemo(() => {
     if (!board || !multi || picked.length < 2) return null;
-    const parts = picked.map((l) => board.options.find((o) => o.label === l)).filter(Boolean).map((o) => (o!.structure ? { ...o!.structure } : o!.id && (res[o!.id]?.type === "recipe" || res[o!.id]?.type === "shot") ? { id: o!.id, title: res[o!.id].title, duration: (res[o!.id] as { duration?: number }).duration, beats: (res[o!.id] as { beats?: Beat[] }).beats } : null)).filter(Boolean) as { id?: string; title?: string; duration?: number; beats?: Beat[] }[];
+    const parts = picked.map((l) => board.options.find((o) => o.label === l)).filter(Boolean).map((o) => (o!.structure ? { ...o!.structure } : o!.id && (res[o!.id]?.type === "recipe" || res[o!.id]?.type === "shot" || res[o!.id]?.type === "block") ? { id: o!.id, title: res[o!.id].title, duration: (res[o!.id] as { duration?: number }).duration, beats: (res[o!.id] as { beats?: Beat[] }).beats } : null)).filter(Boolean) as { id?: string; title?: string; duration?: number; beats?: Beat[] }[];
     return parts.length >= 2 && parts.every((p) => p.beats?.length) ? composeScripts(parts) : null;
   }, [board, multi, picked, res]);
   const togglePick = (o: Option) => { setNone(false); setPicked((p) => { const next = p.includes(o.label) ? p.filter((l) => l !== o.label) : p.length >= hi ? p : [...p, o.label]; savePicks(next, tuned); return next; }); };

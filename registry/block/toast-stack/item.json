@@ -1,0 +1,98 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "toast-stack",
+  "type": "block",
+  "title": "Toast stack",
+  "summary": "Notifications arrive in a corner one after another and push the older ones back into a stack; the last carries the accent.",
+  "tags": [
+    "block",
+    "ui",
+    "notification",
+    "toast",
+    "progress"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/toast-stack/scene.html",
+      "to": "pieces/toast-stack/scene.html"
+    },
+    {
+      "from": "registry/block/toast-stack/brief.md",
+      "to": "pieces/toast-stack/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add toast-stack --name my-toast-stack\n# edit CONFIG in pieces/my-toast-stack/scene.html, then:\nnpx paper-motion render pieces/my-toast-stack/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "terminal-run",
+    "drag-drop"
+  ],
+  "preview": {
+    "video": "previews/toast-stack.webm",
+    "poster": "previews/toast-stack.jpg",
+    "at": 4.6,
+    "values": {}
+  },
+  "mood": [
+    "playful",
+    "minimal"
+  ],
+  "duration": 5.2,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Toasts",
+      "from": 0.7,
+      "to": 4,
+      "what": "toasts"
+    },
+    {
+      "name": "Hold",
+      "from": 4,
+      "to": 5.2,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "a process that reports as it goes",
+    "a run of quick wins"
+  ]
+}

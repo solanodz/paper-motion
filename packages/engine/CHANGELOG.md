@@ -2,6 +2,11 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
+## 0.2.7 · unreleased
+
+- A new resource type, **blocks**: 29 ready-made 4–8 s moments (annotations, interfaces, code, data, type, brand, effects), installed like recipes and customized through their `CONFIG`; each recomposes for 16:9, 9:16 and 1:1.
+- `pamo registry previews` renders blocks; `pamo add --set` writes their values into `CONFIG`.
+
 ## 0.2.6 · 2026-11-10
 
 - `camera()` in `paper-motion/kit`: a 3D world for a piece (`place`, `at`, `travel` with keyframes, `focus` with depth of field and gradual exits). Every recipe is rebuilt on it: a corridor the camera travels (launch, manifesto), a column it descends (three-things), a line it dollies along with a pull-back recap (explainer), a window it tilts into and punches (product-demo), a slab it swings around (before-after), a sleeve it orbits (release).
