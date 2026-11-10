@@ -1,4 +1,4 @@
-export type Beat = { name: string; from: number; to: number; what: string };
+export type Beat = { name: string; from: number; to: number; what: string; id?: string };
 
 /**
  * A recipe's structure as a strip: one bar per beat, proportional to its length, the names above, the seconds below.
