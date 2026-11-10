@@ -7,6 +7,25 @@
   },
   "entries": [
     {
+      "id": "mesh-graphite",
+      "source": "paper-motion.app",
+      "shader": "MeshGradient",
+      "props": {
+        "colors": [
+          "#050505",
+          "#3a3a3a",
+          "#cfcfcf",
+          "#121212"
+        ],
+        "distortion": 0.85,
+        "swirl": 0.35,
+        "speed": 0.45,
+        "grainMixer": 0.12,
+        "grainOverlay": 0.08
+      },
+      "loop": 1.5
+    },
+    {
       "id": "mesh-sage",
       "source": "paper-motion.app",
       "shader": "MeshGradient",

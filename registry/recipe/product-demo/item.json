@@ -144,7 +144,14 @@
   "preview": {
     "video": "previews/product-demo.webm",
     "poster": "previews/product-demo.jpg",
-    "at": 5.0
+    "at": 5.0,
+    "values": {
+      "what": "Brand videos, made by your coding agent.",
+      "shot1Caption": "The library: every resource has a name.",
+      "shot2Caption": "A board: your agent proposes, you choose.",
+      "shot3Caption": "The kit: every choice adds up.",
+      "action": "paper-motion.app"
+    }
   },
   "mood": [
     "technical",

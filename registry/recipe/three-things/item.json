@@ -180,7 +180,17 @@
   "preview": {
     "video": "previews/three-things.webm",
     "poster": "previews/three-things.jpg",
-    "at": 6.0
+    "at": 6.0,
+    "values": {
+      "intro": "Three things to know.",
+      "thing1Title": "Named",
+      "thing1Body": "Resources your agent picks by name.",
+      "thing2Title": "Yours",
+      "thing2Body": "Installed as code you own.",
+      "thing3Title": "Exact",
+      "thing3Body": "Every frame rendered. Same pixels every time.",
+      "action": "paper-motion.app"
+    }
   },
   "mood": [
     "technical",

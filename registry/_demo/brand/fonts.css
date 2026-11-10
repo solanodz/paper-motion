@@ -1,0 +1,2 @@
+/* the demo brand's own faces, served from the demo folder during preview renders */
+@font-face { font-family: 'Geist Serif'; font-weight: 400; src: url('/fonts/GeistSerif-Regular.woff2') format('woff2'); }

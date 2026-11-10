@@ -124,7 +124,12 @@
   "preview": {
     "video": "previews/before-after.webm",
     "poster": "previews/before-after.jpg",
-    "at": 10.5
+    "at": 10.5,
+    "values": {
+      "beforeLine": "Forty minutes in a timeline, one guess.",
+      "afterLine": "One board. You choose. It renders.",
+      "action": "paper-motion.app"
+    }
   },
   "mood": [
     "bold",

@@ -153,7 +153,20 @@
   "preview": {
     "video": "previews/explainer.webm",
     "poster": "previews/explainer.jpg",
-    "at": 6.0
+    "at": 6.0,
+    "values": {
+      "question": "How does paper-motion work?",
+      "step1Label": "01",
+      "step1Title": "Interview",
+      "step1Body": "Your agent asks what the brand is and what the video is for.",
+      "step2Label": "02",
+      "step2Title": "Boards",
+      "step2Body": "It proposes options you open and choose in the browser.",
+      "step3Label": "03",
+      "step3Title": "Render",
+      "step3Body": "It installs your choices and renders every frame.",
+      "action": "paper-motion.app"
+    }
   },
   "mood": [
     "technical",

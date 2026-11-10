@@ -658,7 +658,11 @@ async function main() {
             if (it.type === 'recipe') {
               // a recipe renders whole, wired to the demo brand in registry/_demo/brand (served as /brand)
               const here = process.cwd(), copy = path.join(reg.dir, '_demo', `.${it.id}.recipe.html`);
-              fs.copyFileSync(path.join(reg.dir, 'recipe', it.id, 'scene.html'), copy);
+              // the demo brand's copy goes in through the same generator `pamo add --set` uses (preview.values)
+              const { apply: applyValues } = await import('../lib/customize.mjs');
+              const sceneFile = { path: 'scene.html', content: fs.readFileSync(path.join(reg.dir, 'recipe', it.id, 'scene.html'), 'utf8') };
+              const out = applyValues({ ...it, files: [sceneFile] }, it.preview?.values ?? {});
+              fs.writeFileSync(copy, out.files[0].content);
               process.chdir(path.join(reg.dir, '_demo'));
               try { await withServer(copy, (url) => renderVideo({ url: url('?render'), out: mp4, sfx: false, crf: 18, motionBlur: Number(args['motion-blur'] ?? 3) })); }
               finally { process.chdir(here); fs.rmSync(copy, { force: true }); }

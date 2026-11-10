@@ -67,7 +67,11 @@
   "preview": {
     "video": "previews/readme-loop.webm",
     "poster": "previews/readme-loop.jpg",
-    "at": 3.5
+    "at": 3.5,
+    "values": {
+      "line": "Brand videos, made by your coding agent.",
+      "command": "npx skills add solanodz/paper-motion"
+    }
   },
   "mood": [
     "technical",
