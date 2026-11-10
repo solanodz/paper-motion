@@ -48,12 +48,12 @@ $('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 3
 
 const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
 const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
-const muted = B.color('muted'), figure = B.color('figure');
+const muted = B.color('muted'), figure = '#F2EFE8';   // the card is always dark metal, so its type is always light, whatever the brand's mode
 // 16:9 a wide card; square a narrower, taller one; vertical a portrait card whose title is set big and may wrap
 const tall = H > W, square = W === H;
 const card = $('card'), cw = (tall ? W * 0.72 : square ? W * 0.72 : SHORT * 1.05) * K, ch = cw * (tall ? 1.45 : square ? 0.75 : 0.62), R = cw * 0.05;
 Object.assign(card.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, padding: `${cw * 0.06}px`, background: 'linear-gradient(140deg, #232323 0%, #0c0c0c 55%, #1a1a1a 100%)', border: '1px solid #ffffff22' });
-const top = B.style($('top'), 'display', { short: SHORT * K, color: 'figure' }); top.textContent = CONFIG.title || B.name; top.style.fontSize = `${tall ? cw * 0.2 : square ? cw * 0.13 : ch * 0.17}px`; if (tall) Object.assign(top.style, { overflowWrap: 'break-word', lineHeight: 1 });
+const top = B.style($('top'), 'display', { short: SHORT * K, color: 'figure' }); top.style.color = figure; top.textContent = CONFIG.title || B.name; top.style.fontSize = `${tall ? cw * 0.2 : square ? cw * 0.13 : ch * 0.17}px`; if (tall) Object.assign(top.style, { overflowWrap: 'break-word', lineHeight: 1 });
 $('bot').innerHTML = `<div style="display:flex;justify-content:space-between;${tall ? 'flex-direction:column;gap:0.5em' : 'align-items:flex-end'};font:400 ${tall ? cw * 0.058 : square ? cw * 0.042 : ch * 0.055}px ${B.font('mono')};color:${muted}"><span style="color:${figure}">${CONFIG.line}</span><span>${CONFIG.corner}</span></div>`;
 const shadow = $('shadow');
 Object.assign(shadow.style, { position: 'absolute', width: `${cw * 0.9}px`, height: `${ch * 0.25}px`, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(0,0,0,0.75), transparent 70%)', filter: `blur(${SHORT * 0.02}px)` });

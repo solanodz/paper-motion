@@ -1,0 +1,262 @@
+// A chain: several blocks (or shots, recipes) rendered in the brand's look and joined into one piece.
+//
+//   pieces/<piece>/chain.json         what plays, how long, and how each part comes in
+//   pieces/<piece>/01-search-type/    each part is an ordinary installed scene: edit its CONFIG
+//
+// chain.json:
+//   { "title": "…", "format": "1920x1080", "join": "whip",
+//     "parts": [ { "id": "search-type", "dir": "01-search-type", "name": "Búsqueda", "seconds": 2.5 },
+//                { "id": "bar-grow", "dir": "02-bar-grow", "seconds": 3.2, "join": "dissolve", "from": 0 } ] }
+//
+// `join` on a part is how it comes in (the first part's is ignored); the chain's `join` is the default.
+//   cut       a straight cut
+//   whip      the frame slides out sideways with a motion smear and the next slides in (0.35 s, the default)
+//   dissolve  a cross-fade (0.5 s)
+//   dip       out to the brand's ground color and back in (0.5 s)
+// Each part plays from `from` (default 0) for `seconds` (default: the whole scene). A part cut before its
+// land (the beat a block declares with B.cue(s, 'land', t)) gets a warning with the length that keeps it.
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawn, spawnSync } from 'node:child_process';
+
+export const JOINS = { cut: 0, whip: 0.35, dissolve: 0.5, dip: 0.5 };
+const OVERLAP = new Set(['whip', 'dissolve']);   // joins that need the outgoing part to run on under the next
+const LAND_HOLD = 0.6;                           // seconds after a land for the hit to read
+
+const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
+const pad = (i) => String(i + 1).padStart(2, '0');
+
+/** Where a piece lives: a name (pieces/<name>) or a folder that holds chain.json. */
+export function pieceDir(piece, cwd = process.cwd()) {
+  const asDir = path.resolve(cwd, piece);
+  if (fs.existsSync(path.join(asDir, 'chain.json')) || piece.includes(path.sep) || piece.startsWith('.')) return asDir;
+  return path.join(cwd, 'pieces', piece);
+}
+
+/** Parts from a structure (a board option): one part per beat, its block from the beat's id. */
+export function partsFromStructure(st) {
+  return st.beats.map((b) => ({ id: b.id ?? null, name: b.name, seconds: +(b.to - b.from).toFixed(2), what: b.what }));
+}
+
+/** Parts from "search-type:2.5,browser-frame:3,bar-grow". */
+export function partsFromList(list) {
+  return String(list).split(',').map((x) => x.trim()).filter(Boolean).map((x) => {
+    const [id, sec] = x.split(':');
+    return { id, ...(sec ? { seconds: Number(sec) } : {}) };
+  });
+}
+
+/** A board's structure option, from a short id, a /b/<id> link or a long link (#fragment). */
+export async function structureFromBoard(ref, option, { site }) {
+  const { decodeBoard } = await import('./live-board.js');
+  let board;
+  if (String(ref).includes('#')) board = await decodeBoard(String(ref).slice(String(ref).indexOf('#') + 1));
+  else {
+    const id = String(ref).replace(/\/$/, '').split('/').pop();
+    const res = await fetch(`${site}/api/boards/${id}`);
+    if (!res.ok) throw new Error(`board ${id}: ${res.status} from ${site} (expired, or a long link is needed)`);
+    board = (await res.json()).board;
+  }
+  const opts = board?.options ?? [];
+  // --option takes the letter from the reply line (D), or a structure's title; without it, the board's structure
+  const letter = option && /^[a-z]$/i.test(option) ? option.toUpperCase() : null;
+  const i = letter ? opts.findIndex((o, k) => (o.label ?? String.fromCharCode(65 + k)) === letter)
+    : option ? opts.findIndex((o) => o.structure?.title === option) : opts.findIndex((o) => o.structure);
+  const o = opts[i];
+  if (!o) throw new Error(`board: no option ${option ?? 'with a structure'} (it has ${opts.length})`);
+  if (o.structure) return { title: o.structure.title, parts: partsFromStructure(o.structure) };
+  return { title: board.title, parts: [{ id: o.id }] };   // a single block or recipe chosen: a chain of one
+}
+
+/**
+ * Installs each part as its own scene under pieces/<piece>/<nn>-<id>/ (in the requested format) and writes
+ * chain.json. Parts with no block (a beat the agent didn't name) are listed with id null for the agent to fill.
+ * Without parts, it syncs an existing chain.json: parts whose scene is missing are installed, the rest is kept.
+ */
+export async function initChain({ cwd = process.cwd(), piece, title, parts, format, join, registry, force = false }) {
+  const { add, getItem, resolveRegistry } = await import('./registry.mjs');
+  const reg = resolveRegistry(registry);
+  const dir = pieceDir(piece, cwd), rel = path.relative(path.join(cwd, 'pieces'), dir), file = path.join(dir, 'chain.json');
+  const old = readJson(file, null);
+  if (old && parts && !force) throw new Error(`${path.relative(cwd, file)} exists: run init without --board/--parts to install parts you added, or --force to start over`);
+  if (!old && !parts) throw new Error(`no ${path.relative(cwd, file)} yet: give --board or --parts`);
+  const base = parts ? null : old;
+  format = format ?? base?.format ?? '1920x1080'; join = join ?? base?.join ?? 'whip';
+  if (!JOINS.hasOwnProperty(join)) throw new Error(`join "${join}": use ${Object.keys(JOINS).join(', ')}`);
+  const out = [], notes = [];
+  for (const [i, p] of (parts ?? old.parts).entries()) {
+    if (!p.id) { out.push({ ...p, id: null, dir: null }); notes.push(`part ${i + 1} "${p.name ?? '?'}" has no block yet: set its id in chain.json and run chain init ${piece} again`); continue; }
+    const sub = p.dir && p.dir.endsWith(`-${p.id}`) ? p.dir : `${pad(i)}-${p.id}`;
+    if (base && fs.existsSync(path.join(dir, sub, 'scene.html'))) { out.push({ ...p, dir: sub }); continue; }   // installed already: your edits stay
+    const it = await getItem(p.id, reg);
+    if (it.install?.kind !== 'scene') throw new Error(`${p.id} is a ${it.type}, not a scene (chains take blocks, shots and recipes)`);
+    const hasFormat = (it.params ?? []).some((x) => x.name === 'format');
+    await add([p.id], { cwd, registry, force, name: path.join(rel, sub), set: hasFormat ? [`format=${format}`] : [] });
+    if (!hasFormat && format !== '1920x1080') notes.push(`${p.id} has no format param: it renders at its own size`);
+    const { id, name, seconds, what, dir: _, ...rest } = p;   // rest: from, join, anything the agent added
+    out.push({ id, dir: sub, ...(name ? { name } : {}), ...(seconds ? { seconds } : {}), ...(what ? { what } : {}), ...rest });
+  }
+  const chain = { ...(base ?? {}), title: title ?? base?.title ?? piece, format, join, parts: out };
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(chain, null, 2) + '\n');
+  return { dir, chain, notes };
+}
+
+function run(bin, argv) {
+  return new Promise((res, rej) => {
+    const p = spawn(bin, argv, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    p.stderr.on('data', (d) => { err += d; });
+    p.on('error', rej);
+    p.on('close', (c) => (c === 0 ? res() : rej(new Error(`${bin} failed (${c}): ${err.trim().split('\n').slice(-6).join('\n')}`))));
+  });
+}
+const FF = () => process.env.PAPER_MOTION_FFMPEG || 'ffmpeg';
+function probe(file) {
+  const r = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration:stream=codec_type', '-of', 'json', file], { encoding: 'utf8' });
+  const j = JSON.parse(r.stdout || '{}');
+  return { duration: Number(j.format?.duration ?? 0), audio: (j.streams ?? []).some((s) => s.codec_type === 'audio') };
+}
+
+/** What a scene declares: its config and the gestures it marks (land, transition, text). */
+async function sceneInfo(browser, url) {
+  const { openScene } = await import('./browser.mjs');
+  const s = await openScene(browser, url);
+  const marks = await s.page.evaluate(() => window.__pm.marks ?? []);
+  await s.close();
+  return { config: s.config, marks };
+}
+
+/** Checks a chain and works out each part's window, without rendering. */
+export function plan(chain, infos) {
+  const warnings = [];
+  const parts = chain.parts.map((p, i) => {
+    const info = infos[i], D = info.config.duration, from = p.from ?? 0;
+    const join = i === 0 ? 'cut' : (p.join ?? chain.join ?? 'whip');
+    if (!JOINS.hasOwnProperty(join)) throw new Error(`part ${i + 1}: join "${join}" (use ${Object.keys(JOINS).join(', ')})`);
+    let seconds = p.seconds ?? D - from;
+    if (from + seconds > D + 1e-6) { warnings.push(`${p.dir}: ${seconds} s from ${from} runs past its end (${D} s); it plays ${+(D - from).toFixed(2)} s`); seconds = D - from; }
+    const lands = info.marks.filter((m) => m.gesture === 'land').map((m) => m.t).filter((t) => t >= from);
+    const land = lands.length ? Math.max(...lands) : null;
+    if (land !== null && from + seconds < land + LAND_HOLD) warnings.push(`${p.dir}: cut at ${seconds} s loses its land at ${+(land - from).toFixed(2)} s; give it at least ${+(land - from + LAND_HOLD).toFixed(1)} s`);
+    return { ...p, from, seconds, join, D };
+  });
+  // the outgoing part runs on under an overlapping join, as far as it can
+  for (const [i, p] of parts.entries()) {
+    const next = parts[i + 1], d = next && OVERLAP.has(next.join) ? JOINS[next.join] : 0;
+    p.to = Math.min(p.D, p.from + p.seconds + d);
+  }
+  return { parts, warnings, total: parts.reduce((a, p) => a + p.seconds, 0) };
+}
+
+/**
+ * Renders every part in the brand's look and joins them into one file.
+ * Must run from the project root (where brand/ is): scenes load the brand from /brand.
+ */
+export async function renderChain({ cwd = process.cwd(), piece, out, motionBlur = 1, dpr = 1, audio, sfx = true, onStep = () => {} }) {
+  return withChain({ cwd, piece }, async ({ dir, url, parts, warnings, total, config }) => {
+    const { renderVideo } = await import('./render.mjs');
+    for (const w of warnings) onStep({ warning: w });
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-chain-'));
+    try {
+      const files = [];
+      for (const [i, p] of parts.entries()) {
+        onStep({ part: i + 1, of: parts.length, dir: p.dir });
+        const f = path.join(tmp, `${pad(i)}.mov`);
+        await renderVideo({ url: url(p), out: f, format: 'prores', from: p.from, to: p.to, sfx, motionBlur, dpr });
+        files.push(f);
+      }
+      const tokens = readJson(path.join(cwd, 'brand/tokens.json'), {}), sound = readJson(path.join(cwd, 'brand/sound.json'), {});
+      const ground = (tokens.colors?.ground?.hex ?? '#000000').replace('#', '0x');
+      const { width: W, height: H, fps } = config;
+      out = path.resolve(cwd, out ?? path.join(dir, 'renders', `${path.basename(dir)}.mp4`));
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      onStep({ joining: true });
+      const j = await join({ files, parts, out, ground, fps, music: audio, lufs: sound.loudness ?? -16 });
+      return { out, total: j.seconds, planned: total, parts: parts.length, warnings, W, H };
+    } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+  });
+}
+
+/** Plans a chain without rendering: each part's window, its join, and the warnings. */
+export const checkChain = ({ cwd = process.cwd(), piece }) => withChain({ cwd, piece }, async (r) => r);
+
+// Serves the project, opens each part once to read its size, duration and marks, and plans the chain.
+async function withChain({ cwd, piece }, fn) {
+  const dir = pieceDir(piece, cwd), chain = readJson(path.join(dir, 'chain.json'), null);
+  if (!chain) throw new Error(`no chain.json in ${path.relative(cwd, dir) || '.'} (pamo chain init first)`);
+  if (!chain.parts?.length) throw new Error('chain.json has no parts');
+  const missing = chain.parts.filter((p) => !p.id || !p.dir || !fs.existsSync(path.join(dir, p.dir, 'scene.html')));
+  if (missing.length) throw new Error(`parts without a scene: ${missing.map((p) => p.name ?? p.id ?? '?').join(', ')} (set their id in chain.json and run chain init again)`);
+  if (!fs.existsSync(path.join(cwd, 'brand'))) throw new Error('no brand/ here: run chain from the project root');
+  const { startServer } = await import('./server.mjs');
+  const { launch } = await import('./browser.mjs');
+  const server = await startServer({ root: cwd });
+  const url = (p) => `http://127.0.0.1:${server.port}/${path.relative(cwd, path.join(dir, p.dir, 'scene.html')).split(path.sep).map(encodeURIComponent).join('/')}?render`;
+  try {
+    const browser = await launch(), infos = [];
+    try { for (const p of chain.parts) infos.push(await sceneInfo(browser, url(p))); } finally { await browser.close(); }
+    const sizes = new Set(infos.map((x) => `${x.config.width}x${x.config.height}`));
+    if (sizes.size > 1) throw new Error(`parts come in different sizes (${[...sizes].join(', ')}): set the same format in each CONFIG`);
+    return await fn({ dir, chain, url, config: infos[0].config, ...plan(chain, infos) });
+  } finally { await server.close(); }
+}
+
+/** The ffmpeg graph: each part's join applied in turn, sound carried along, loudness set once at the end. */
+async function join({ files, parts, out, ground, fps, music, lufs }) {
+  const lens = files.map((f) => probe(f));
+  const inputs = files.flatMap((f) => ['-i', f]);
+  const g = [];
+  // every part gets a sound track (silent if it declares none) so the audio chain lines up
+  const A = lens.map((l, i) => {
+    if (l.audio) { g.push(`[${i}:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:${l.duration.toFixed(3)},asetpts=PTS-STARTPTS[a${i}]`); return `[a${i}]`; }
+    g.push(`anullsrc=r=48000:cl=stereo,atrim=0:${l.duration.toFixed(3)}[a${i}]`); return `[a${i}]`;
+  });
+  // a dip fades the parts on either side into the ground color
+  const V = parts.map((p, i) => {
+    const f = [`fps=${fps}`, 'format=yuv444p10le', 'settb=AVTB', 'setpts=PTS-STARTPTS'];
+    const half = JOINS.dip / 2;
+    if (parts[i + 1]?.join === 'dip') f.push(`fade=t=out:st=${(lens[i].duration - half).toFixed(3)}:d=${half}:color=${ground}`);
+    if (p.join === 'dip') f.push(`fade=t=in:st=0:d=${half}:color=${ground}`);
+    g.push(`[${i}:v]${f.join(',')}[v${i}]`);
+    return `[v${i}]`;
+  });
+  let v = V[0], a = A[0], len = lens[0].duration;
+  const smears = [];
+  for (let i = 1; i < parts.length; i++) {
+    const j = parts[i].join, d = JOINS[j];
+    if (OVERLAP.has(j)) {
+      const off = Math.max(0, len - d);
+      g.push(`${v}${V[i]}xfade=transition=${j === 'whip' ? 'slideleft' : 'fade'}:duration=${d}:offset=${off.toFixed(3)}[x${i}]`);
+      g.push(`${a}${A[i]}acrossfade=d=${d}:c1=tri:c2=tri[y${i}]`);
+      if (j === 'whip') smears.push([off + d * 0.12, off + d * 0.88]);
+      len = off + lens[i].duration;
+    } else {
+      g.push(`${v}${V[i]}concat=n=2:v=1:a=0[x${i}]`);
+      g.push(`${a}${A[i]}concat=n=2:v=0:a=1[y${i}]`);
+      len += lens[i].duration;
+    }
+    v = `[x${i}]`; a = `[y${i}]`;
+  }
+  // the whip's smear: a horizontal blur over the middle of each slide
+  if (smears.length) {
+    const on = smears.map(([s, e]) => `between(t\\,${s.toFixed(3)}\\,${e.toFixed(3)})`).join('+');
+    g.push(`${v}split[sa][sb];[sb]gblur=sigma=${48}:sigmaV=0.5[sc];[sa][sc]overlay=enable='${on}'[vs]`);
+    v = '[vs]';
+  }
+  const extra = [];
+  if (music) {
+    extra.push('-i', path.resolve(music));
+    const m = files.length;
+    g.push(`[${m}:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim=0:${len.toFixed(3)},afade=t=out:st=${Math.max(0, len - 1).toFixed(3)}:d=1[mu]`);
+    g.push(`${a}[mu]amix=inputs=2:normalize=0[am]`);
+    a = '[am]';
+  }
+  g.push(`${a}loudnorm=I=${lufs}:TP=-2:LRA=11,aresample=48000[aout]`);
+  g.push(`${v}scale=out_color_matrix=bt709:out_range=tv,format=yuv420p[vout]`);
+  await run(FF(), ['-hide_banner', '-y', ...inputs, ...extra, '-filter_complex', g.join(';'), '-map', '[vout]', '-map', '[aout]',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-x264-params', 'aq-mode=3', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709',
+    '-c:a', 'aac', '-b:a', '320k', '-movflags', '+faststart', '-t', len.toFixed(3), out]);
+  return { out, seconds: len };
+}

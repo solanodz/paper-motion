@@ -144,6 +144,11 @@ export function llmsTxt(items, site, { full = false } = {}) {
 5. **Make the video.** Every move the user chose appears in the piece, and the brief says where each one plays;
    a recipe's own moves are placeholders to swap for theirs. Build \`scene.html\` (a pure function of time), check stills with \`pamo still\`, render with
    \`pamo render scene.html --motion-blur 5\`. The test shot and the final piece are real renders, not boards.
+   When the user chose a structure whose beats name blocks or shots (or several blocks in order), chain them instead:
+   \`npx paper-motion chain init <piece> --board <id> --option D\` installs each beat's block under
+   \`pieces/<piece>/<nn>-<id>/\` and writes \`chain.json\` (seconds per part; \`join\`: whip, cut, dissolve or dip);
+   write each part's \`CONFIG\` from its beat, then \`npx paper-motion chain <piece> --motion-blur 5\` renders every
+   part in the brand's look and joins them into one video. It warns when a part is cut before its land.
 
 ## Choosing well: the metadata
 

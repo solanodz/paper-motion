@@ -66,7 +66,8 @@ const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
 const wide = W / H > 1.2, tall = H > W;
 const FS = SHORT * (tall ? 0.031 : 0.026);                            // non-wide: the terminal's type size in the world
 const term = $('term'), cw = wide ? W * 0.62 * K : FS * (tall ? 31 * 0.6 + 4.2 : 44 * 0.6 + 4.2); let ch = wide ? cw * 0.58 : cw * 0.7; const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
-const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+// a terminal is always dark, so its type is always light, whatever the brand's mode
+const ground = B.color('ground'), muted = B.color('muted'), figure = '#EDEAE3', accent = B.color('accent', '#E9E4D8');
 const GREEN = '#8fbf8f';
 Object.assign(term.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: '#070707', border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.55)`, fontSize: `${wide ? cw * 0.022 : FS}px`, fontFamily: B.font('mono'), color: figure });
 $('bar').style.height = '2.6em'; $('bar').style.borderBottom = `1px solid ${muted}22`;

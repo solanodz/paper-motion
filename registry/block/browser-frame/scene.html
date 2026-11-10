@@ -51,15 +51,16 @@ $('bg').style.opacity = 0.35;
 const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
 const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
 const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const INK = '#EDEAE3';   // the browser chrome and the page's cards are always dark, so their type is always light, whatever the brand's mode
 // 16:9 a desktop window; square a taller one; vertical a narrow portrait window; outside 16:9 the page is shown larger, sidebar cropped, so it reads
 const tall = H > W, square = W === H;
 const L = tall ? { cw: W * 0.9, ch: H * 0.64, page: 1.8, crop: 0.17, fs: 0.026, url: 0.82 } : square ? { cw: W * 0.86, ch: W * 0.66, page: 1.22, crop: 0.17, fs: 0.017, url: 0.7 } : { cw: W * 0.74, ch: W * 0.74 * 0.6, page: 1, crop: 0, fs: 0.0125, url: 0.6 };
 const win = $('win'), cw = L.cw * K, ch = L.ch * K, R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
-Object.assign(win.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: '#0b0b0b', border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.05}px ${SHORT * 0.14}px rgba(0,0,0,0.6)`, fontSize: `${cw * L.fs}px`, fontFamily: B.font('text'), color: figure });
+Object.assign(win.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: '#0b0b0b', border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.05}px ${SHORT * 0.14}px rgba(0,0,0,0.6)`, fontSize: `${cw * L.fs}px`, fontFamily: B.font('text'), color: INK });
 Object.assign($('bar').style, { height: '3.4em', background: '#141414', borderBottom: `1px solid ${muted}33` });
 $('dots').innerHTML = ['#ff5f57', '#febc2e', '#28c840'].map((c) => `<i style="display:inline-block;width:0.8em;height:0.8em;border-radius:50%;margin-right:0.45em;background:${c};opacity:0.75"></i>`).join('');
 Object.assign($('url').style, { background: '#0b0b0b', border: `1px solid ${muted}33`, color: muted });
-$('url').innerHTML = `<svg width="0.9em" height="0.9em" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="${muted}" stroke-width="1.5"/><path d="M5 7 V5 a3 3 0 0 1 6 0 V7" fill="none" stroke="${muted}" stroke-width="1.5"/></svg><span style="white-space:pre;color:${figure}"><span id="u"></span><span class="caret" style="background:${accent}"></span></span>`;
+$('url').innerHTML = `<svg width="0.9em" height="0.9em" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="${muted}" stroke-width="1.5"/><path d="M5 7 V5 a3 3 0 0 1 6 0 V7" fill="none" stroke="${muted}" stroke-width="1.5"/></svg><span style="white-space:pre;color:${INK}"><span id="u"></span><span class="caret" style="background:${accent}"></span></span>`;
 $('prog').style.background = accent;
 $('url').style.maxWidth = `${L.url * 100}%`;
 // no screenshot yet: a stand-in page drawn in the brand's colours (a header, a hero, rows of cards), so the scene works at once
@@ -72,7 +73,7 @@ const standIn = () => {
   box(60, 600, 220, 64, accent, 32);
   for (let row = 0; row < 6; row++) for (let col = 0; col < 3; col++) {
     const l = 60 + col * 450, t = 800 + row * 400; box(l, t, 420, 260, '#161616', 18); box(l + 24, t + 24, 372, 150, (row + col) % 3 === 1 ? accent : '#222', 12);
-    box(l + 24, t + 196, 220, 18, figure, 9); box(l + 24, t + 226, 300, 14, muted, 7);
+    box(l + 24, t + 196, 220, 18, INK, 9); box(l + 24, t + 226, 300, 14, muted, 7);
   }
   return c.toDataURL('image/png');
 };

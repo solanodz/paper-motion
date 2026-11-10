@@ -124,6 +124,7 @@ class Scene {
       seek: async (t) => { await this.seek(t); await nextFrame(); await nextFrame(); return true; },
       cues: this.cues,
       audio: this.audio,
+      marks: this.marks ?? [],   // gestures a scene declared (B.cue): where its hits land, for cutting it short
     };
     document.documentElement.dataset.pmReady = '1';
     if (!RENDER) mountPlayer(this, startT);

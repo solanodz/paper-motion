@@ -2,6 +2,12 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
+## Unreleased
+
+- **Chains**: \`pamo chain init <piece>\` installs the blocks of a chosen structure (\`--board <id> --option D\`, or \`--parts id:sec,…\`) as one scene each under \`pieces/<piece>/\` with a \`chain.json\`; \`pamo chain <piece>\` renders them in the brand's look and joins them into one video (\`whip\`, \`cut\`, \`dissolve\`, \`dip\`), keeping each part's sound and setting the loudness once. \`--check\` warns when a part is cut before its land.
+- Scenes expose the gestures they cue (\`B.cue\`) as \`window.__pm.marks\`.
+- Blocks with a dark panel keep their type light in light brands (`search-type`, `browser-frame`, `terminal-run`, `light-sweep`); `drag-drop`'s cards follow the brand's mode.
+
 ## 0.2.7 · 2026-11-10
 
 - A new resource type, **blocks**: 29 ready-made 4–8 s moments (annotations, interfaces, code, data, type, brand, effects), installed like recipes and customized through their `CONFIG`; each recomposes for 16:9, 9:16 and 1:1.

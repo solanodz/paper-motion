@@ -71,7 +71,7 @@ CONFIG.columns.forEach(([name, cards], c) => {
 const cards = [];
 CONFIG.columns.forEach(([, list], c) => list.forEach((title, i) => {
   const el = document.createElement('div'); el.className = 'card';
-  Object.assign(el.style, { width: `${colW - fs * 1.6}px`, height: `${cardH}px`, background: '#1b1b1b', border: `1px solid ${muted}44` });
+  Object.assign(el.style, { width: `${colW - fs * 1.6}px`, height: `${cardH}px`, background: B.tokens?.mode === 'light' ? ground : '#1b1b1b', border: `1px solid ${muted}44` });   // cards sit a step off the board in either mode
   el.innerHTML = `<div style="font-weight:500">${title}</div><i style="width:70%;background:${muted};opacity:0.45"></i><i style="width:45%;background:${muted};opacity:0.3"></i>`;
   board.append(el); cards.push({ el, c, i });
 }));
