@@ -4,19 +4,21 @@
 <meta charset="utf-8">
 <title>three-things</title>
 <!--
-  Recipe · three things (22 s). Three traits, features or reasons, each with its own mechanic.
-  Intro 0–2.5 s (the name and "three things") · One 2.5–8 s (the card rises in, its words follow) · Two 8–13.5 s
-  (pushes the first up) · Three 13.5–19 s (flips in, 3D) · Close 19–22 s (the wordmark and the action).
-  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first; swap the moves for the
-  ones the user picked (pamo add <id>) and put real material (a screenshot, a photo) in a card's `image` when there is some.
+  Recipe · three things (22 s). Three traits, features or reasons.
+  One idea: the three cards hang in a column in space, one under the other, each turned a little the other way.
+  The camera starts on the name above them, then DESCENDS the column, orbiting as it goes (yaw swings left, right,
+  left), so every card is met from its own angle and the previous one leaves above, out of focus. The close is the
+  camera coming to rest under the last card, straight.
+  Intro 0–2.5 s · One 2.5–8 s · Two 8–13.5 s · Three 13.5–19 s · Close 19–22 s.
+  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first; put real material
+  (a screenshot, a photo) in a card's `image` when there is some.
 -->
 <style>
   #stage { overflow: hidden; }
   .abs { position: absolute; box-sizing: border-box; }
-  .frame { position: absolute; inset: 0; }
-  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8%; box-sizing: border-box; }
-  .card { position: absolute; inset: 0; box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
-  .card .words { display: flex; flex-direction: column; justify-content: center; }
+  .place { display: flex; flex-direction: column; align-items: center; text-align: center; box-sizing: border-box; }
+  .card { box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
+  .card .words { display: flex; flex-direction: column; justify-content: center; text-align: left; }
   .card .pic { position: relative; overflow: hidden; }
   .card .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 </style>
@@ -25,13 +27,15 @@
 <main id="stage">
   <div id="bg" class="abs" style="inset:0"></div>
   <div id="vig" class="abs" style="inset:0"></div>
-  <div id="f1" class="frame"><div class="center"><div id="name"></div><div id="intro"></div></div></div>
-  <div id="f2" class="frame"><div id="slot" class="abs"></div></div>
-  <div id="f3" class="frame"><div class="center"><div id="mark"></div><div id="action"></div></div></div>
+  <div id="world">
+    <div id="p-intro" class="place"><div id="name"></div><div id="intro"></div></div>
+    <div id="p-close" class="place"><div id="mark"></div><div id="action"></div></div>
+  </div>
 </main>
 <script type="module">
 import { scene, progress, ease } from 'paper-motion';
-import { wordRise, blurIn, popIn, push, flip3D, crossfade } from 'paper-motion/moves';
+import { wordRise, blurIn, popIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
 import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
@@ -52,76 +56,79 @@ const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 22, tall = H > W;
 const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 if (bgId) B.shader(s, '#bg', bgId);
-document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;
-document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)';
+const bg = document.querySelector('#bg'); bg.style.opacity = CONFIG.backgroundOpacity;
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 100%)';
 const $ = (id) => document.getElementById(id);
 
-const name = B.style($('name'), 'display', { short: SHORT }), intro = B.style($('intro'), 'title', { short: SHORT, color: 'muted' });
-const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'figure' });
-Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.028}px`, letterSpacing: '0em' });
+// the column: one place per beat, a step of STEP down; the camera reads each from DIST in front
+const STEP = SHORT * 1.15, DIST = SHORT * 0.7, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const name = B.style($('name'), 'display', { short: SHORT * K }), intro = B.style($('intro'), 'title', { short: SHORT * K, color: 'muted' });
+const mark = B.style($('mark'), 'display', { short: SHORT * K }), action = B.style($('action'), 'body', { short: SHORT * K, color: 'figure' });
+Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * K * 0.028}px`, letterSpacing: '0em' });
 intro.style.marginTop = action.style.marginTop = `${SHORT * 0.03}px`;
 name.textContent = mark.textContent = B.name; intro.textContent = CONFIG.intro; action.textContent = CONFIG.action;
-
-// the three cards in one slot; each has words on one side and the brand's material (or a picture) on the other
-const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080);
-const slot = $('slot'), cw = tall ? W * 0.84 : Math.min(W * 0.72, SHORT * 1.4), ch = tall ? H * 0.62 : cw * 0.56;
-Object.assign(slot.style, { left: `${(W - cw) / 2}px`, top: `${(H - ch) / 2}px`, width: `${cw}px`, height: `${ch}px` });
+for (const id of ['p-intro', 'p-close']) $(id).style.width = `${W * 0.9}px`;
+const Y = (i) => i * STEP;
+cam.place($('p-intro'), { y: Y(0) });
+const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+const cw = (tall ? W * 0.84 : SHORT * 1.1) * K, ch = (tall ? H * 0.5 : cw * 0.52);
 const cards = CONFIG.things.map((p, i) => {
   const c = document.createElement('div');
   c.className = 'card';
-  Object.assign(c.style, { borderRadius: `${R}px`, background: B.color('surface', '#111'), border: `1.5px solid ${B.color('muted')}55`, gridTemplateColumns: tall ? '1fr' : i % 2 ? '1fr 1fr' : '1fr 1fr', direction: i % 2 ? 'rtl' : 'ltr' });
+  Object.assign(c.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: B.surface(), border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.03}px ${SHORT * 0.1}px rgba(0,0,0,0.5)`, gridTemplateColumns: tall ? '1fr' : '1fr 1fr', direction: i % 2 ? 'rtl' : 'ltr' });
   c.innerHTML = `<div class="words" style="direction:ltr;padding:${cw * 0.06}px"><div data-part="label"></div><div data-part="title"></div><div data-part="body"></div></div><div class="pic" data-part="pic"></div>`;
   const [label, title, body] = [...c.querySelector('.words').children];
-  B.style(label, 'caption', { short: SHORT, color: 'muted' }).textContent = p.label;
-  B.style(title, 'display', { short: SHORT * 0.7, color: 'figure' }).textContent = p.title;
-  B.style(body, 'body', { short: SHORT, color: 'muted' }).textContent = p.body;
+  B.style(label, 'caption', { short: SHORT * K, color: 'muted' }).textContent = p.label;
+  B.style(title, 'display', { short: SHORT * K * 0.7, color: 'figure' }).textContent = p.title;
+  B.style(body, 'body', { short: SHORT * K, color: 'muted' }).textContent = p.body;
   title.style.marginTop = `${SHORT * 0.02}px`; body.style.marginTop = `${SHORT * 0.02}px`;
-  Object.assign(body.style, { fontSize: `${SHORT * 0.03}px`, lineHeight: 1.35, maxWidth: '24ch' });
+  Object.assign(body.style, { fontSize: `${SHORT * K * 0.03}px`, lineHeight: 1.35, maxWidth: '24ch' });
   const pic = c.querySelector('.pic');
   if (p.image) { const img = document.createElement('img'); img.src = p.image; pic.append(img); }
   else { pic.style.background = i === 1 ? B.color('accent', '#E9E4D8') : B.color('ground'); if (bgId && i !== 1) B.shader(s, pic, bgId); }
   if (tall) pic.style.display = 'none';
-  slot.append(c);
+  $('world').append(c);
+  // one under the other, each turned the other way and a touch nearer or farther
+  cam.place(c, { y: Y(1 + i), x: [-1, 1, -1][i] * SHORT * 0.05, z: [0, -SHORT * 0.08, SHORT * 0.04][i], yaw: [12, -14, 10][i], pitch: [-3, 2, -2][i] });
   return c;
 });
+cam.place($('p-close'), { y: Y(4) });
 await document.fonts.ready;
 for (const el of [name, mark]) { el.style.whiteSpace = 'nowrap'; const k = (W * 0.84) / el.scrollWidth; if (k < 1) el.style.fontSize = `${parseFloat(el.style.fontSize) * k}px`; }
 
-// timeline: three mechanics for three things, never the same treatment twice
-const T = { cards: [2.2, 3.0], swap1: [7.6, 8.5], swap2: [13.1, 14.1], close: [18.8, 19.5] };
-const frames = [$('f1'), $('f2'), $('f3')];
-const RESET = ['transform', 'opacity', 'filter', 'clipPath', 'zIndex', 'transformOrigin', 'backfaceVisibility'];
-const clean = (els) => els.forEach((e) => RESET.forEach((k) => { e.style[k] = ''; }));
+// the descent: the camera swings around the column as it drops from card to card
+const T = { one: 2.5, two: 8, three: 13.5, close: 19 };
+const at = (i, extra = {}) => ({ y: Y(i), z: DIST, ...extra });
+const path = [
+  [0, at(0, { x: 0, yaw: 0, pitch: 0 })],
+  [T.one - 0.5, at(0, { pitch: 3 })],
+  [T.one + 1.0, at(1, { x: -SHORT * 0.04, yaw: 14, pitch: -2 }), ease.inOutCubic],
+  [T.two - 0.6, at(1, { yaw: 17 })],
+  [T.two + 1.0, at(2, { x: SHORT * 0.05, z: DIST - SHORT * 0.08, yaw: -16, pitch: 2 }), ease.inOutCubic],
+  [T.three - 0.6, at(2, { z: DIST - SHORT * 0.08, yaw: -19 })],
+  [T.three + 1.0, at(3, { x: -SHORT * 0.04, z: DIST + SHORT * 0.04, yaw: 12, pitch: -2 }), ease.inOutCubic],
+  [T.close - 0.6, at(3, { z: DIST + SHORT * 0.04, yaw: 15 })],
+  [T.close + 1.1, at(4, { x: 0, yaw: 0, pitch: 0 }), ease.inOutQuart],
+  [D, at(4, { z: DIST * 0.92 }), ease.inOutSine],
+];
 const words = cards.map((c) => [...c.querySelector('.words').children]);
 s.update((t) => {
-  if (t >= T.swap1[1]) push(cards[0], cards[1], 1, { dir: 'up' });
-  if (t >= T.swap2[1]) flip3D(cards[1], cards[2], 1);
-  clean([...frames, ...cards, ...words.flat()]);
-  frames.forEach((f, i) => { f.style.opacity = 0; f.style.zIndex = i + 1; });
-  cards.forEach((c, i) => { c.style.opacity = 0; c.style.zIndex = i + 1; });
-
+  cam.travel(t, path);
+  cam.focus(DIST, SHORT * 0.9, 10, { fade: SHORT * 0.62 });   // a column: places leave through the top and bottom edges, so they fade sooner
+  bg.style.transform = `scale(${1.08 + 0.08 * progress(t, 0, D)}) translateY(${-SHORT * 0.05 * progress(t, 0, D)}px)`;
   wordRise(name, t, { start: 0.2, each: B.pace.stagger, duration: 0.9 });
   blurIn(intro, t, { start: 0.9, duration: 0.9 });
-  if (t < T.cards[0]) frames[0].style.opacity = 1;
-  else if (t < T.cards[1]) crossfade(frames[0], frames[1], progress(t, ...T.cards));
-  else if (t < T.close[0]) frames[1].style.opacity = 1;
-  if (t >= T.cards[0] && t < T.close[1]) {
-    if (t < T.swap1[0]) {
-      // one: the card rises, its words follow
-      const rise = progress(t, T.cards[0], T.cards[1] + 0.4, ease.outCubic);
-      cards[0].style.opacity = String(rise); cards[0].style.transform = `translateY(${(1 - rise) * SHORT * 0.06}px)`;
-      wordRise(words[0][1], t, { start: T.cards[1], each: B.pace.stagger, duration: 0.8 }); blurIn(words[0][2], t, { start: T.cards[1] + 0.5, duration: 0.7 });
-    } else if (t < T.swap1[1]) push(cards[0], cards[1], progress(t, ...T.swap1), { dir: 'up' });
-    else if (t < T.swap2[0]) { cards[1].style.opacity = 1; popIn(words[1][1], t, { start: T.swap1[1] + 0.1 }); blurIn(words[1][2], t, { start: T.swap1[1] + 0.6, duration: 0.7 }); }
-    else if (t < T.swap2[1]) flip3D(cards[1], cards[2], progress(t, ...T.swap2));
-    else { cards[2].style.opacity = 1; wordRise(words[2][1], t, { start: T.swap2[1] + 0.1, each: B.pace.stagger, duration: 0.8 }); blurIn(words[2][2], t, { start: T.swap2[1] + 0.6, duration: 0.7 }); }
-  }
-  if (t >= T.close[0] && t < T.close[1]) crossfade(frames[1], frames[2], progress(t, ...T.close));
-  else if (t >= T.close[1]) frames[2].style.opacity = 1;
-  wordRise(mark, t, { start: T.close[1] - 0.2, each: B.pace.stagger, duration: 0.9 });
-  blurIn(action, t, { start: T.close[1] + 0.6, duration: 0.8 });
+  // three ways in for three things: words rise, pop, rise again with a longer stagger
+  const starts = [T.one, T.two, T.three];
+  wordRise(words[0][1], t, { start: starts[0], each: B.pace.stagger, duration: 0.8 }); blurIn(words[0][2], t, { start: starts[0] + 0.5, duration: 0.7 });
+  popIn(words[1][1], t, { start: starts[1] }); blurIn(words[1][2], t, { start: starts[1] + 0.5, duration: 0.7 });
+  wordRise(words[2][1], t, { start: starts[2], each: B.pace.stagger * 2, duration: 1.0 }); blurIn(words[2][2], t, { start: starts[2] + 0.6, duration: 0.7 });
+  wordRise(mark, t, { start: T.close - 0.1, each: B.pace.stagger, duration: 0.9 });
+  blurIn(action, t, { start: T.close + 0.7, duration: 0.8 });
 });
-B.cue(s, 'land', 0.2); B.cue(s, 'land', T.cards[1]); B.cue(s, 'transition', T.swap1[0]); B.cue(s, 'transition', T.swap2[0]); B.cue(s, 'land', T.swap2[1]); B.cue(s, 'land', T.close[1]);
+B.cue(s, 'land', 0.2); B.cue(s, 'transition', T.one); B.cue(s, 'land', T.one + 0.6); B.cue(s, 'transition', T.two); B.cue(s, 'land', T.two + 0.6);
+B.cue(s, 'transition', T.three); B.cue(s, 'land', T.three + 0.6); B.cue(s, 'transition', T.close); B.cue(s, 'land', T.close + 0.8);
 B.sound(s);
 await s.start();
 </script>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>push-in</title>
+<!--
+  Shot · push in (4 s). One word or the wordmark, and a slow push of the camera onto it: it grows from a line in the
+  distance to the whole frame, the field behind it sliding slower (parallax), and the focus staying on the word.
+  Far 0–0.6 s · Push 0.6–3.2 s · Hold 3.2–4 s.
+  Look, fonts and sound come from /brand. Edit CONFIG: the word (empty takes the brand's name), where the push
+  stops, a small line that lands as it stops. Ask your agent to make it the opening of a piece.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .place { display: flex; flex-direction: column; align-items: center; text-align: center; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world">
+    <div id="p-word" class="place"><div id="word"></div><div id="line"></div></div>
+  </div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { blurIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  word: '',                              // the word; empty takes the brand's name
+  line: 'paper-motion.app',              // a small line that lands as the push stops; empty for none
+  closeness: 0.9,                       // where the push stops: 1 fills the frame, 0.5 leaves air
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 4;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const bg = document.querySelector('#bg'); bg.style.opacity = 0.5;
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.6) 100%)';
+const $ = (id) => document.getElementById(id);
+
+const FAR = SHORT * 5, NEAR = SHORT * 0.5 / CONFIG.closeness, K = 1 + NEAR / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const word = B.style($('word'), 'display', { short: SHORT * K }), line = B.style($('line'), 'body', { short: SHORT * K, color: 'muted' });
+Object.assign(line.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * K * 0.026}px`, marginTop: `${SHORT * 0.03}px` });
+word.textContent = CONFIG.word || B.name; line.textContent = CONFIG.line;
+$('p-word').style.width = `${W * 0.9 * K}px`;
+cam.place($('p-word'), { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+word.style.whiteSpace = 'nowrap'; { const k = (W * 0.84 * K * CONFIG.closeness) / word.scrollWidth; word.style.fontSize = `${parseFloat(word.style.fontSize) * k * 1.45}px`; }   // the word fills the frame when the push stops
+
+const T = { push: [0.6, 3.2] };
+s.update((t) => {
+  const p = progress(t, ...T.push, ease.inOutQuart);
+  cam.at({ x: SHORT * 0.04 * (1 - p), y: 0, z: FAR + (NEAR - FAR) * p, yaw: 4 * (1 - p), pitch: 0 });
+  cam.focus(cam.pos.z, SHORT * 1.6, 5);
+  bg.style.transform = `scale(${1.25 - 0.18 * p})`;                              // the field pushes slower: parallax
+  word.style.opacity = String(progress(t, 0, 0.5));
+  blurIn(line, t, { start: T.push[1] - 0.1, duration: 0.6 });
+});
+B.cue(s, 'transition', T.push[0]); B.cue(s, 'land', T.push[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

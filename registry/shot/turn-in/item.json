@@ -1,0 +1,156 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "turn-in",
+  "type": "shot",
+  "title": "Turn in",
+  "summary": "An object arrives edge-first and turns to face the camera with a spring's overshoot; the camera answers with a small counter-move, in 3 s.",
+  "tags": [
+    "shot",
+    "camera",
+    "object",
+    "reveal",
+    "3d",
+    "card",
+    "cover"
+  ],
+  "params": [
+    {
+      "name": "image",
+      "type": "string",
+      "default": "",
+      "description": "the object's picture (path); empty draws a card in the brand's colors",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "default": "Boards",
+      "description": "on the drawn card",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "default": "01",
+      "description": "small, above the title",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "ratio",
+      "type": "number",
+      "default": 1.0,
+      "min": 0.5,
+      "max": 2,
+      "step": 0.05,
+      "description": "width / height: 1 a cover, 1.6 a card, 0.6 a phone",
+      "group": "main"
+    },
+    {
+      "name": "from",
+      "type": "enum",
+      "default": "left",
+      "options": [
+        "left",
+        "right"
+      ],
+      "description": "the edge it arrives from",
+      "group": "main",
+      "control": "segmented"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/shot/turn-in/scene.html",
+      "to": "pieces/turn-in/scene.html"
+    },
+    {
+      "from": "registry/shot/turn-in/brief.md",
+      "to": "pieces/turn-in/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add turn-in --name my-shot\n# edit CONFIG in pieces/my-shot/scene.html, then:\nnpx paper-motion render pieces/my-shot/scene.html --motion-blur 6",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "The turn is a spring (`spring()` from paper-motion): stiffness and damping in the scene set the overshoot."
+  ],
+  "related": [
+    "flip-3d",
+    "release"
+  ],
+  "preview": {
+    "video": "previews/turn-in.webm",
+    "poster": "previews/turn-in.jpg",
+    "at": 1.9,
+    "values": {
+      "title": "Boards",
+      "label": "01"
+    }
+  },
+  "mood": [
+    "bold",
+    "playful",
+    "technical"
+  ],
+  "duration": 3,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 1.4,
+      "what": "edge-first, turning to face the camera"
+    },
+    {
+      "name": "Settle",
+      "from": 1.4,
+      "to": 2.2,
+      "what": "overshoot and rest; the words land"
+    },
+    {
+      "name": "Hold",
+      "from": 2.2,
+      "to": 3,
+      "what": "still"
+    }
+  ],
+  "when": [
+    "revealing a cover, a card, a screenshot",
+    "the first second of a product shot"
+  ]
+}

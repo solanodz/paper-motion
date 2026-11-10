@@ -5,10 +5,14 @@ material always come from the brand. Times below are for the brand's pace (`moti
 calm brand, compress ×0.75 for a fast one; when the user asks for a length, theirs wins and the beats scale to fit.
 Every recipe works in 16:9, 9:16 and 1:1; the notes say what changes.
 
-Beats name a gesture and the brand cue it carries (`B.cue(s, 'transition' | 'land' | 'text', t)`). The moves a recipe's scene imports are placeholders: swap them for the ones the user chose on their boards, all of them, and note in the brief where each plays.
+Beats name a gesture and the brand cue it carries (`B.cue(s, 'transition' | 'land' | 'text', t)`). The moves a recipe's scene imports are placeholders: swap them for the ones the user chose on their boards, all of them, and note in the brief where each plays. Recipes combine: when the user picks several on the board, the piece is their blocks in that order, one close at the end, a transition from the repertoire between blocks.
 
 Every recipe carries the **what** (what the brand is, in plain words) in its first third and **one action** at the
 end; the tables mark where.
+
+## Shots (3–6 s)
+
+A shot is one camera gesture, not a structure: a close-up with a focus pull (`focus-pull`), the camera gliding over a component (`pass-over`), a cursor that crosses a UI and clicks (`cursor-guide`), a slow push onto a word (`push-in`), an object turning to face the camera (`turn-in`). Use them on their own for a feed, or chain them before a recipe (a shot as the hook, then the recipe). They install like recipes (`pamo add <shot>`), take the brand from `brand/`, and their CONFIG names what changes: the picture, the words, where the cursor goes. All recipes and shots now share one camera: `camera()` from `paper-motion/kit` (a world, `place()`, `travel()`, `focus()`); a piece is a world the camera moves through, not a deck of cards.
 
 ## Launch (20–30 s)
 

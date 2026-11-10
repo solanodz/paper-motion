@@ -32,7 +32,9 @@ The flow, in order:
    the end. Mirror it back.
 2. You NEVER choose a look for the user. Each of these decisions is a board (tool \`board\`), one at a time, in this
    order: palette · font pair · background(s) · moves by role (how things enter, how one thing becomes the next, how
-   text arrives; pass choose: [1, 3] so they can pick several) · recipe. Use \`search\` to pick 2–4 fitting options,
+   text arrives; pass choose: [1, 3] so they can pick several) · recipe or shots (choose: [1, 3] too: several recipes
+   or shots in order are one piece made of those blocks; shots are 3–6 s camera gestures; add one structure of your own
+   as an option). Use \`search\` to pick 2–4 fitting options,
    \`resource\` to read params before tuning one, \`recolor\` to show a background in their palette. Share the link,
    say you are waiting; \`board\` returns their choice. Never ask them to paste anything.
 3. Install what they chose with \`npx paper-motion add <id> [--set …]\` in their project (the \`add\` field of each
@@ -50,10 +52,10 @@ const handler = createMcpHandler(
       "search",
       {
         title: "Search the registry",
-        description: "Finds resources (component transitions, transitions, text effects, camera moves, backgrounds, palettes, font pairs, recipes) by words and by the choosing metadata. Returns the index entries: id, type, title, summary, tags, when, mood, energy, role, colors, mode, motion and the names of their params. Pass `near` with the brand's ground, figure and accent to sort backgrounds and palettes by color fit (lower `fit` is closer).",
+        description: "Finds resources (component transitions, transitions, text effects, camera moves, backgrounds, palettes, font pairs, recipes, shots: 3–6 s camera pieces) by words and by the choosing metadata. Returns the index entries: id, type, title, summary, tags, when, mood, energy, role, colors, mode, motion and the names of their params. Pass `near` with the brand's ground, figure and accent to sort backgrounds and palettes by color fit (lower `fit` is closer).",
         inputSchema: z.object({
           query: z.string().optional().describe("free words, matched against id, title, summary, tags, when and mood"),
-          type: z.enum(["component", "transition", "text", "camera", "background", "palette", "font-pair", "recipe"]).optional(),
+          type: z.enum(["component", "transition", "text", "camera", "background", "palette", "font-pair", "recipe", "shot"]).optional(),
           mode: z.enum(["light", "dark"]).optional(),
           mood: z.enum(["calm", "bold", "playful", "technical", "editorial", "warm", "minimal", "luxury", "raw"]).optional(),
           motion: z.enum(["still", "gentle", "lively"]).optional().describe("backgrounds only"),
@@ -122,7 +124,7 @@ const handler = createMcpHandler(
       "board",
       {
         title: "Propose options as a board",
-        description: "Creates a live board (2–4 options the user opens in a browser, sees in their own look, tunes and chooses), returns its short link and, by default, WAITS until the user chooses (up to `waitMinutes`, default 4; call again or use board_choice after a timeout). Share the link, tell the user you are waiting, and never ask them to paste anything: the choice arrives here. The result carries `choices`: the picked options with their ids and `--set` values, and `line`, the same reply line the user could paste. `choose` lets them pick several (3, or [1, 3]); use it for text effects and transitions. One resource type per board; `kit` boards take whole kits per option.",
+        description: "Creates a live board (2–4 options the user opens in a browser, sees in their own look, tunes and chooses), returns its short link and, by default, WAITS until the user chooses (up to `waitMinutes`, default 4; call again or use board_choice after a timeout). Share the link, tell the user you are waiting, and never ask them to paste anything: the choice arrives here. The result carries `choices`: the picked options with their ids and `--set` values, and `line`, the same reply line the user could paste. `choose` lets them pick several (3, or [1, 3]); use it for text effects, transitions and recipes: several recipes picked in order are one piece made of those blocks in that order. One resource type per board; `kit` boards take whole kits per option.",
         inputSchema: z.object({
           title: z.string().describe("what the user is deciding, in their words"),
           ask: z.string().optional(),

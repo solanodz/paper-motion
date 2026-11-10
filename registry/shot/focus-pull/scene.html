@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>focus-pull</title>
+<!--
+  Shot · focus pull (4 s). A close-up: a detail is sharp and large, a title stands behind it, soft; the focus pulls
+  from the detail to the title as the camera eases back a step. One gesture, one thing said.
+  Detail 0–1.6 s · Pull 1.6–2.6 s · Title 2.6–4 s.
+  Look, fonts and sound come from /brand. Edit CONFIG: the detail (a word, a number, or a picture), the title.
+  Ask your agent to put your own material in `detail.image`, change the words, or chain this shot into a piece.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .place { display: flex; flex-direction: column; align-items: center; text-align: center; box-sizing: border-box; }
+  #detail { overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  #detail img { width: 100%; height: 100%; object-fit: cover; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world">
+    <div id="p-title" class="place"><div id="title"></div><div id="line"></div></div>
+    <div id="detail"></div>
+  </div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { wordRise, blurIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  detail: { text: '0.2s', image: '' },   // the thing in focus first: a word or number, or a picture (path)
+  title: 'Every frame, on time.',        // what comes into focus behind it
+  line: '',                              // a small line under the title; empty for none
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 4;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = 0.35;
+const $ = (id) => document.getElementById(id);
+
+const DIST = SHORT * 0.5, K = 1 + DIST / (SHORT * 1.6);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.6 });
+// the detail: close, a little to the left; the title a step behind, to the right
+const detail = $('detail'), ds = SHORT * 0.36 * K;
+Object.assign(detail.style, { width: `${ds}px`, height: `${ds}px`, borderRadius: `${(B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K}px`, background: B.surface(), border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.03}px ${SHORT * 0.1}px rgba(0,0,0,0.5)` });
+if (CONFIG.detail.image) { const img = document.createElement('img'); img.src = CONFIG.detail.image; detail.append(img); }
+else { const t = document.createElement('div'); B.style(t, 'display', { short: SHORT * K * 0.9 }); t.textContent = CONFIG.detail.text; t.style.fontFamily = B.font('mono'); t.style.letterSpacing = '-0.02em'; detail.append(t); }
+cam.place(detail, { x: -SHORT * 0.34 * K, y: SHORT * 0.02, z: SHORT * 0.12, yaw: 8 });
+const title = B.style($('title'), 'display', { short: SHORT * K }), line = B.style($('line'), 'body', { short: SHORT * K, color: 'muted' });
+title.textContent = CONFIG.title; line.textContent = CONFIG.line; line.style.marginTop = `${SHORT * 0.02}px`;
+$('p-title').style.width = `${W * 0.42 * K}px`; $('p-title').style.alignItems = 'flex-start'; $('p-title').style.textAlign = 'left';
+title.style.maxWidth = '10ch';
+cam.place($('p-title'), { x: SHORT * 0.36 * K, y: -SHORT * 0.01, z: -SHORT * 0.3, yaw: -6 });
+await document.fonts.ready;
+
+// the focus plane moves from the detail to the title while the camera eases back a step and turns to face it
+const T = { pull: [1.6, 2.6] };
+s.update((t) => {
+  const p = progress(t, ...T.pull, ease.inOutCubic);
+  cam.at({ x: -SHORT * 0.08 * K * (1 - p) + SHORT * 0.06 * K * p, y: 0, z: DIST + SHORT * 0.12 * (1 - p) + SHORT * 0.1 * p, yaw: 6 * (1 - p) - 3 * p, pitch: 1 - 2 * p });
+  const focalZ = (SHORT * 0.12) * (1 - p) + (-SHORT * 0.3) * p;              // where the sharp plane is, in world z
+  cam.focus(cam.pos.z - focalZ, SHORT * 0.22, 14, { fade: Infinity });
+  cam.place(detail, { x: -SHORT * 0.34 * K, y: SHORT * 0.02, z: SHORT * 0.12, yaw: 8, scale: 1 + 0.02 * progress(t, 0, D) });   // a breath on the detail
+  wordRise(title, t, { start: 0.2, each: B.pace.stagger, duration: 0.8 });   // the title is there from the start, soft, and sharpens
+  blurIn(line, t, { start: T.pull[1], duration: 0.6 });
+});
+B.cue(s, 'land', 0.2); B.cue(s, 'transition', T.pull[0]); B.cue(s, 'text', T.pull[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

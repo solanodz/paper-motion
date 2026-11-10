@@ -1,0 +1,134 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "push-in",
+  "type": "shot",
+  "title": "Push in",
+  "summary": "One word or the wordmark and a slow push of the camera onto it, the field sliding slower behind; a small line lands as it stops, in 4 s.",
+  "tags": [
+    "shot",
+    "camera",
+    "push",
+    "wordmark",
+    "opening",
+    "title"
+  ],
+  "params": [
+    {
+      "name": "word",
+      "type": "string",
+      "default": "",
+      "description": "the word; empty takes the brand's name",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "line",
+      "type": "string",
+      "default": "paper-motion.app",
+      "description": "a small line that lands as the push stops",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "closeness",
+      "type": "number",
+      "default": 0.62,
+      "min": 0.3,
+      "max": 1,
+      "step": 0.01,
+      "description": "where the push stops: 1 fills the frame, 0.5 leaves air",
+      "group": "main"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/shot/push-in/scene.html",
+      "to": "pieces/push-in/scene.html"
+    },
+    {
+      "from": "registry/shot/push-in/brief.md",
+      "to": "pieces/push-in/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add push-in --name my-shot\n# edit CONFIG in pieces/my-shot/scene.html, then:\nnpx paper-motion render pieces/my-shot/scene.html --motion-blur 6",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Parallax comes from the field scaling slower than the camera approaches."
+  ],
+  "related": [
+    "zoom-through",
+    "end-card"
+  ],
+  "preview": {
+    "video": "previews/push-in.webm",
+    "poster": "previews/push-in.jpg",
+    "at": 3.4,
+    "values": {
+      "line": "paper-motion.app"
+    }
+  },
+  "mood": [
+    "bold",
+    "minimal",
+    "calm"
+  ],
+  "duration": 4,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Far",
+      "from": 0,
+      "to": 0.6,
+      "what": "the word small in the distance"
+    },
+    {
+      "name": "Push",
+      "from": 0.6,
+      "to": 3.2,
+      "what": "the camera pushes in; the field lags"
+    },
+    {
+      "name": "Hold",
+      "from": 3.2,
+      "to": 4,
+      "what": "the word holds; the line lands"
+    }
+  ],
+  "when": [
+    "the opening of a piece on the name",
+    "one word that deserves the whole frame"
+  ]
+}

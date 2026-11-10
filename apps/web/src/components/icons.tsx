@@ -43,7 +43,7 @@ export const IconRecipe = (p: P) => (
 
 export const TYPE_ICONS: Record<string, (p: P) => React.ReactElement> = {
   component: IconComponent, transition: IconTransition, text: IconText, camera: IconCamera,
-  background: IconBackground, palette: IconPalette, "font-pair": IconFont, recipe: IconRecipe,
+  background: IconBackground, palette: IconPalette, "font-pair": IconFont, recipe: IconRecipe, shot: IconCamera,
 };
 
 /** Search: a square lens and its handle. */

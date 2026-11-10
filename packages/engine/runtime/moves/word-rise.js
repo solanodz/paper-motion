@@ -5,6 +5,8 @@ import { words } from '../kit.js';
 export function wordRise(el, t, { start = 0, each = 0.08, duration = 0.5, curve = ease.outExpo } = {}) {
   words(el).forEach((w, i) => {
     const q = curve(progress(t, start + i * each, start + i * each + duration));
-    w.style.transform = `translateY(${(1 - q) * 110}%)`;
+    // fully below the mask line, and hidden until it moves: tall glyphs overflow a tight line-height box
+    w.style.transform = `translateY(${(1 - q) * 125}%)`;
+    w.style.opacity = q > 0.001 ? 1 : 0;
   });
 }

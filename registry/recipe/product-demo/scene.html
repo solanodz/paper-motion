@@ -5,8 +5,11 @@
 <title>product-demo</title>
 <!--
   Recipe · product demo (22 s). The real product, seen: three screens of its UI under one camera.
-  What 0–3 s (name and what it is) · Shots 3–19 s (three screenshots in one window: the camera drifts, punches into a
-  detail, snap-scrolls to the next, whips to the third; each shot has a caption) · Close 19–22 s (wordmark, action).
+  One idea: the window is an object in space and the camera is a real camera. It arrives from the name, at an angle
+  (the screen tilted in perspective), straightens as the first screen settles, PUNCHES IN to the detail each caption
+  points at (`focus`), pulls back and swings a few degrees for each new screen, and leaves toward the close. Inside
+  the window the screens still snap-scroll and whip from one to the next.
+  What 0–3 s · Shots 3–19 s · Close 19–22 s.
   Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first: put the real
   screenshots in (paths relative to this file, or under brand/assets/); with no image a shot draws a placeholder UI in
   the brand's colors, so the structure can be judged before the material exists.
@@ -14,8 +17,7 @@
 <style>
   #stage { overflow: hidden; }
   .abs { position: absolute; box-sizing: border-box; }
-  .frame { position: absolute; inset: 0; }
-  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8%; box-sizing: border-box; }
+  .place { display: flex; flex-direction: column; align-items: center; text-align: center; box-sizing: border-box; }
   .shot { position: absolute; inset: 0; overflow: hidden; box-sizing: border-box; }
   .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; display: block; }
   .mock { position: absolute; inset: 0; display: grid; grid-template-columns: 22% 1fr; }
@@ -32,13 +34,17 @@
 <main id="stage">
   <div id="bg" class="abs" style="inset:0"></div>
   <div id="vig" class="abs" style="inset:0"></div>
-  <div id="f1" class="frame"><div class="center"><div id="name"></div><div id="what"></div></div></div>
-  <div id="f2" class="frame"><div id="window" class="abs"><div id="chrome" class="chrome"></div><div id="screen" class="abs"></div></div><div id="caption" class="abs"></div></div>
-  <div id="f3" class="frame"><div class="center"><div id="mark"></div><div id="action"></div></div></div>
+  <div id="world">
+    <div id="p-what" class="place"><div id="name"></div><div id="what"></div></div>
+    <div id="window"><div id="chrome" class="chrome"></div><div id="screen" class="abs"></div></div>
+    <div id="p-close" class="place"><div id="mark"></div><div id="action"></div></div>
+  </div>
+  <div id="caption" class="abs"></div>
 </main>
 <script type="module">
 import { scene, progress, ease, noise } from 'paper-motion';
-import { wordRise, blurIn, maskReveal, drift, punch, snapScroll, whipPan, flash } from 'paper-motion/moves';
+import { wordRise, blurIn, snapScroll, whipPan } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
 import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
@@ -60,22 +66,29 @@ const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 22;
 const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 if (bgId) B.shader(s, '#bg', bgId);
-document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;
-document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)';
+const bg = document.querySelector('#bg'); bg.style.opacity = CONFIG.backgroundOpacity;
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 100%)';
 const $ = (id) => document.getElementById(id);
 
-const name = B.style($('name'), 'display', { short: SHORT }), what = B.style($('what'), 'title', { short: SHORT, color: 'muted' });
-const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'figure' });
-Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.028}px`, letterSpacing: '0em' });
+// the stage in space: the words to the left, the window in the middle, the close to the right
+const STEP = W * 1.15, DIST = SHORT * 0.6, K = 1 + DIST / (SHORT * 1.7);   // STEP: past the edge of the frame at this distance
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const name = B.style($('name'), 'display', { short: SHORT * K }), what = B.style($('what'), 'title', { short: SHORT * K, color: 'muted' });
+const mark = B.style($('mark'), 'display', { short: SHORT * K }), action = B.style($('action'), 'body', { short: SHORT * K, color: 'figure' });
+Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * K * 0.028}px`, letterSpacing: '0em' });
 what.style.marginTop = action.style.marginTop = `${SHORT * 0.03}px`;
 name.textContent = mark.textContent = B.name;
 what.textContent = CONFIG.what || ((B.identity['In one line'] ?? '').split('\n')[0] || '');
 action.textContent = CONFIG.action;
+for (const id of ['p-what', 'p-close']) $(id).style.width = `${W * 0.9}px`;
+cam.place($('p-what'), { x: -STEP, yaw: 10 });
+cam.place($('p-close'), { x: STEP, yaw: -10 });
 
-// the window: one frame, three screens inside it
-const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080);
-const win = $('window'), ww = Math.min(W * 0.74, SHORT * 1.45), chromeH = CONFIG.chrome === 'none' ? 0 : SHORT * 0.036, wh = ww * 0.58 + chromeH;
-Object.assign(win.style, { left: `${(W - ww) / 2}px`, top: `${(H - wh) / 2 - SHORT * 0.02}px`, width: `${ww}px`, height: `${wh}px`, borderRadius: `${R}px`, overflow: 'hidden', background: B.color('surface', '#111'), border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.03}px ${SHORT * 0.08}px rgba(0,0,0,0.45)` });
+// the window: one object, three screens inside it
+const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+const win = $('window'), ww = W * 0.72 * K, chromeH = CONFIG.chrome === 'none' ? 0 : SHORT * 0.036 * K, wh = ww * 0.58 + chromeH;
+Object.assign(win.style, { width: `${ww}px`, height: `${wh}px`, borderRadius: `${R}px`, overflow: 'hidden', background: B.surface(), border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)` });
+cam.place(win, { x: 0, y: -SHORT * 0.02 * K });
 const chrome = $('chrome');
 Object.assign(chrome.style, { height: `${chromeH}px`, fontSize: `${chromeH * 0.42}px`, background: B.color('ground') });
 if (chromeH) chrome.innerHTML = `<b style="background:${B.color('muted')}"></b><b style="background:${B.color('muted')}"></b><b style="background:${B.color('muted')}"></b>`;
@@ -102,63 +115,71 @@ function mock(i, host) {
 const shots = CONFIG.shots.map((sh, i) => {
   const el = document.createElement('div');
   el.className = 'shot';
-  el.style.background = B.color('surface', '#111');
+  el.style.background = B.surface();
   if (sh.image) { const img = document.createElement('img'); img.src = sh.image; el.append(img); } else mock(i, el);
-  el.style.transformOrigin = `${(sh.focus?.[0] ?? 0.5) * 100}% ${(sh.focus?.[1] ?? 0.5) * 100}%`;
   $('screen').append(el);
   return el;
 });
 const caption = B.style($('caption'), 'body', { short: SHORT, color: 'figure' });
-Object.assign(caption.style, { left: `${(W - ww) / 2}px`, width: `${ww}px`, top: `${(H - wh) / 2 - SHORT * 0.02 + wh + SHORT * 0.035}px`, textAlign: 'center', fontSize: `${SHORT * 0.03}px`, lineHeight: 1.35 });
+Object.assign(caption.style, { left: `${W * 0.1}px`, right: `${W * 0.1}px`, bottom: `${H * 0.07}px`, textAlign: 'center', fontSize: `${SHORT * 0.036}px`, lineHeight: 1.3, textShadow: '0 2px 18px rgba(0,0,0,0.8)' });
 await document.fonts.ready;
 for (const el of [name, mark]) { el.style.whiteSpace = 'nowrap'; const k = (W * 0.84) / el.scrollWidth; if (k < 1) el.style.fontSize = `${parseFloat(el.style.fontSize) * k}px`; }
 
-// timeline
-const T = { shots: [2.6, 3.4], punch1: 6.2, swap1: [8.6, 9.8], punch2: 12.0, swap2: [14.4, 15.3], punch3: 17.0, close: [18.8, 19.3] };
-const frames = [$('f1'), $('f2'), $('f3')];
-const RESET = ['transform', 'opacity', 'filter', 'clipPath', 'zIndex', 'transformOrigin', 'backfaceVisibility'];
-const clean = (els) => els.forEach((e) => RESET.forEach((k) => { if (k !== 'transformOrigin' || !e.classList.contains('shot')) e.style[k] = ''; }));
+// the camera: arrives at an angle, straightens, punches into each focus, swings for each new screen, leaves right
+const T = { win: 2.4, punch1: 5.4, swap1: [8.6, 9.8], punch2: 11.6, swap2: [14.4, 15.3], punch3: 17.0, close: 18.8 };
+const focusAt = (i, depth) => { const [fx, fy] = CONFIG.shots[i].focus ?? [0.5, 0.5]; return { x: (fx - 0.5) * ww * 0.7, y: (fy - 0.5) * (wh - chromeH) * 0.7 + chromeH / 2 - SHORT * 0.02 * K, z: DIST * depth }; };
+const front = { x: 0, y: -SHORT * 0.02 * K, z: DIST };
+const path = [
+  [0, { x: -STEP, y: 0, z: DIST, yaw: 6, pitch: 0 }],
+  [T.win - 0.6, { x: -STEP, yaw: 8 }],
+  [T.win + 1.1, { ...front, x: -SHORT * 0.06, z: DIST * 1.25, yaw: 22, pitch: 5 }, ease.inOutCubic],   // the screen, tilted
+  [T.win + 2.3, { ...front, yaw: 0, pitch: 0 }, ease.outCubic],                                        // it straightens
+  [T.punch1 + 0.9, focusAt(0, 0.55), ease.inOutQuart],                                               // punch in
+  [T.swap1[0], focusAt(0, 0.55)],
+  [T.swap1[1], { ...front, z: DIST * 1.1, yaw: -9, pitch: -2 }, ease.inOutCubic],                      // back and a swing
+  [T.swap1[1] + 0.8, { ...front, yaw: 0, pitch: 0 }, ease.outCubic],
+  [T.punch2 + 0.9, focusAt(1, 0.5), ease.inOutQuart],
+  [T.swap2[0], focusAt(1, 0.5)],
+  [T.swap2[1], { ...front, z: DIST * 1.1, yaw: 9, pitch: 2 }, ease.inOutCubic],
+  [T.swap2[1] + 0.8, { ...front, yaw: 0, pitch: 0 }, ease.outCubic],
+  [T.punch3 + 0.9, focusAt(2, 0.55), ease.inOutQuart],
+  [T.close - 0.2, focusAt(2, 0.55)],
+  [T.close + 1.2, { x: STEP, y: 0, z: DIST, yaw: -4, pitch: 0 }, ease.inOutQuart],                  // leave toward the close
+  [D, { x: STEP, z: DIST * 0.92, yaw: 0 }, ease.inOutSine],
+];
+const RESET = ['transform', 'opacity', 'filter', 'clipPath', 'zIndex'];
+const clean = (els) => els.forEach((e) => RESET.forEach((k) => { e.style[k] = ''; }));
 const captionAt = (t) => (t < T.swap1[0] + 0.5 ? 0 : t < T.swap2[0] + 0.4 ? 1 : 2);
 let shown = -1;
 s.update((t) => {
+  cam.travel(t, path);
+  cam.focus(cam.pos.z, SHORT * 1.2, 8, { fade: SHORT * 1.6 });   // wide presence: the words and the window overlap while the camera travels          // the window stays sharp wherever the camera is; the far words soften
+  bg.style.transform = `scale(${1.1 + 0.06 * progress(t, 0, D)}) translateX(${-SHORT * 0.06 * progress(t, 0, D)}px)`;
+  // inside the screen: the screens change under the camera
   if (t >= T.swap1[1]) snapScroll(shots[0], shots[1], 1, { duration: 1.2 });
   if (t >= T.swap2[1]) whipPan(shots[1], shots[2], 1, { duration: 0.9 });
-  clean([...frames, ...shots]);
-  frames.forEach((f, i) => { f.style.opacity = 0; f.style.zIndex = i + 1; });
+  clean(shots);
   shots.forEach((c, i) => { c.style.opacity = 0; c.style.zIndex = i + 1; });
-
-  // 1 · the name and what it is
+  if (t < T.swap1[0]) shots[0].style.opacity = 1;
+  else if (t < T.swap1[1]) snapScroll(shots[0], shots[1], progress(t, ...T.swap1), { duration: 1.2 });
+  else if (t < T.swap2[0]) shots[1].style.opacity = 1;
+  else if (t < T.swap2[1]) whipPan(shots[1], shots[2], progress(t, ...T.swap2), { duration: 0.9 });
+  else shots[2].style.opacity = 1;
+  // the words
   wordRise(name, t, { start: 0.2, each: B.pace.stagger, duration: 0.9 });
   blurIn(what, t, { start: 0.9, duration: 0.9 });
-  // 2 · the window rises in; inside it the camera lives on the product
-  if (t < T.shots[0]) frames[0].style.opacity = 1;
-  else if (t < T.shots[1]) maskReveal(frames[0], frames[1], progress(t, ...T.shots), { from: 'bottom' });
-  else if (t < T.close[0]) frames[1].style.opacity = 1;
-  if (t >= T.shots[0] && t < T.close[1]) {
-    const rise = progress(t, T.shots[0], T.shots[1] + 0.3, ease.outCubic);
-    win.style.transform = `translateY(${(1 - rise) * SHORT * 0.05}px)`;
-    if (t < T.swap1[0]) { shots[0].style.opacity = 1; drift(shots[0], t, { amount: 0.05, duration: 9 }); punch(shots[0], t, { hits: [T.punch1], amount: 0.1 }); }
-    else if (t < T.swap1[1]) snapScroll(shots[0], shots[1], progress(t, ...T.swap1), { duration: 1.2 });
-    else if (t < T.swap2[0]) { shots[1].style.opacity = 1; drift(shots[1], t - T.swap1[1], { amount: 0.05, duration: 9 }); punch(shots[1], t, { hits: [T.punch2], amount: 0.1 }); }
-    else if (t < T.swap2[1]) whipPan(shots[1], shots[2], progress(t, ...T.swap2), { duration: 0.9 });
-    else { shots[2].style.opacity = 1; drift(shots[2], t - T.swap2[1], { amount: 0.05, duration: 9 }); punch(shots[2], t, { hits: [T.punch3], amount: 0.1 }); }
-    const c = captionAt(t);
-    if (c !== shown) { caption.textContent = CONFIG.shots[c]?.caption ?? ''; shown = c; }
-    const starts = [T.shots[1], T.swap1[1], T.swap2[1]];
-    blurIn(caption, t, { start: starts[c] + 0.2, duration: 0.7 });
-    const outAt = [T.swap1[0], T.swap2[0], T.close[0]][c];
-    const out = progress(t, outAt - 0.35, outAt);
-    if (out > 0) caption.style.opacity = String((1 - out) * Number(caption.style.opacity || 1));
-  } else win.style.transform = '';
-  // 3 · a flash into the close
-  if (t >= T.close[0] && t < T.close[1]) flash(frames[1], frames[2], progress(t, ...T.close));
-  else if (t >= T.close[1]) frames[2].style.opacity = 1;
-  wordRise(mark, t, { start: T.close[1], each: B.pace.stagger, duration: 0.9 });
-  blurIn(action, t, { start: T.close[1] + 0.8, duration: 0.8 });
+  const c = captionAt(t);
+  if (c !== shown) { caption.textContent = CONFIG.shots[c]?.caption ?? ''; shown = c; }
+  const starts = [T.win + 1.6, T.swap1[1] + 0.3, T.swap2[1] + 0.3], outAt = [T.swap1[0], T.swap2[0], T.close][c];
+  blurIn(caption, t, { start: starts[c], duration: 0.7 });
+  const out = progress(t, outAt - 0.35, outAt);
+  if (out > 0) caption.style.opacity = String((1 - out) * Number(caption.style.opacity || 1));
+  wordRise(mark, t, { start: T.close + 0.1, each: B.pace.stagger, duration: 0.9 });
+  blurIn(action, t, { start: T.close + 0.8, duration: 0.8 });
 });
-B.cue(s, 'land', 0.2); B.cue(s, 'transition', T.shots[0]); B.cue(s, 'land', T.shots[1]);
-for (const h of [T.punch1, T.punch2, T.punch3]) B.cue(s, 'text', h);
-B.cue(s, 'transition', T.swap1[0]); B.cue(s, 'transition', T.swap2[0]); B.cue(s, 'transition', T.close[0]); B.cue(s, 'land', T.close[1]);
+B.cue(s, 'land', 0.2); B.cue(s, 'transition', T.win); B.cue(s, 'land', T.win + 2.3);
+for (const h of [T.punch1, T.punch2, T.punch3]) B.cue(s, 'text', h + 0.9);
+B.cue(s, 'transition', T.swap1[0]); B.cue(s, 'transition', T.swap2[0]); B.cue(s, 'transition', T.close); B.cue(s, 'land', T.close + 1.2);
 B.sound(s);
 await s.start();
 </script>

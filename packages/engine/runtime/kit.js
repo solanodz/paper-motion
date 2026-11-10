@@ -96,3 +96,76 @@ export function copy(el) {
 }
 
 export const partsOf = (el) => new Map([...el.querySelectorAll('[data-part]')].map((e) => [e.dataset.part, e]));
+
+// ── a 3D camera over a world ────────────────────────────────────
+// A recipe is a world the camera moves through, not a deck of cards. `stage` gets the perspective; `world` holds
+// children placed in space with `place()`; the camera's position is applied to the world as its inverse.
+//   const cam = camera(stage, world, { perspective: 2000 });
+//   cam.place(title, { z: -1200, yaw: 8 });
+//   s.update((t) => { cam.travel(t, [[0, { z: 1400 }], [3, { z: -200, yaw: 6 }, ease.inOutCubic]]); cam.focus(0, 900); });
+// Rules: never set opacity < 1 on `world` (it flattens its children); fade the placed elements instead.
+const CAM = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, zoom: 1 };
+export function camera(stage, world, { perspective = 2000, origin = '50% 50%' } = {}) {
+  Object.assign(stage.style, { perspective: `${perspective}px`, perspectiveOrigin: origin });
+  Object.assign(world.style, { position: 'absolute', inset: 0, transformStyle: 'preserve-3d', transformOrigin: '50% 50%' });
+  const placed = [];
+  let pos = { ...CAM };
+  const P = perspective;
+  const cam = {
+    /** Where the camera is (the last `at`/`travel`). */
+    get pos() { return pos; },
+    /** Puts an element in the world, centred on its own box: { x, y, z, yaw, pitch, roll, scale }. */
+    place(el, p = {}) {
+      const q = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, scale: 1, ...p };
+      Object.assign(el.style, { position: 'absolute', left: '50%', top: '50%', transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' });
+      el.style.transform = `translate(-50%, -50%) translate3d(${q.x}px, ${q.y}px, ${q.z}px) rotateY(${q.yaw}deg) rotateX(${q.pitch}deg) rotateZ(${q.roll}deg) scale(${q.scale})`;
+      el._pmPlace = q;
+      if (!placed.includes(el)) placed.push(el);
+      return el;
+    },
+    /** Moves the camera: the world gets the inverse transform. Fields missing keep the current value. */
+    at(p) {
+      pos = { ...pos, ...p };
+      world.style.transform = `scale(${pos.zoom}) rotateZ(${-pos.roll}deg) rotateX(${-pos.pitch}deg) rotateY(${-pos.yaw}deg) translate3d(${-pos.x}px, ${-pos.y}px, ${-pos.z}px)`;
+      return pos;
+    },
+    /** Keyframes for the camera: [[t, { x, y, z, yaw, pitch, roll, zoom }, ease?], …]. Fields carry over between frames. */
+    travel(t, frames) {
+      const full = [];
+      let acc = { ...CAM, ...frames[0][1] };
+      for (const [time, p, e] of frames) { acc = { ...acc, ...p }; full.push([time, acc, e]); }
+      if (t <= full[0][0]) return cam.at(full[0][1]);
+      for (let i = 1; i < full.length; i++) {
+        const [t1, v1, e = ease.inOutCubic] = full[i], [t0, v0] = full[i - 1];
+        if (t <= t1) { const q = e(clamp((t - t0) / (t1 - t0))); return cam.at(Object.fromEntries(Object.keys(CAM).map((k) => [k, lerp(v0[k], v1[k], q)]))); }
+      }
+      return cam.at(full[full.length - 1][1]);
+    },
+    /**
+     * Depth of field and presence. Blur follows DEPTH: distance from the focal plane `z` ahead of the camera (sharp
+     * within a third of `range`, up to `max` px). Presence follows DISTANCE in 3D from the point the camera looks at:
+     * a place is whole within `fade`·0.4 and gone by `fade` (default `range`·0.85), so the next place is never
+     * peeking into frame while the camera rests, and while it travels the two overlap instead of leaving an empty
+     * frame. A place passing the lens softens and fades over the last stretch: it finishes its exit, never cuts.
+     * `fade: Infinity` keeps everything present (a focus pull where only the blur should change).
+     */
+    focus(z = 0, range = 800, max = 12, { fade = range * 0.85 } = {}) {
+      const fx = pos.x, fy = pos.y, fz = pos.z - z;          // the point in focus
+      for (const el of placed) {
+        const q = el._pmPlace;
+        const blur = clamp((Math.abs(q.z - fz) - range * 0.33) / range) * max;
+        const dist = Math.hypot(q.x - fx, q.y - fy, q.z - fz);
+        const present = fade === Infinity ? 1 : 1 - clamp((dist - fade * 0.4) / Math.max(1, fade * 0.6));
+        const toLens = pos.z - q.z;                          // distance left before it passes the camera
+        const near = clamp((toLens - P * 0.03) / (P * 0.1));   // the last stretch before the lens, whatever the focus range
+        const b = Math.max(blur, (1 - near) * max, (1 - present) * max * 0.6);
+        el.style.filter = b > 0.3 ? `blur(${b.toFixed(1)}px)` : 'none';
+        const o = Math.min(near, present);
+        el.style.opacity = String(o);
+        el.style.visibility = o < 0.005 ? 'hidden' : '';
+      }
+    },
+  };
+  cam.at({});
+  return cam;
+}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyLine } from "@/components/copy-button";
 import { BeatsStrip } from "@/components/beats-strip";
+import { ScriptPlayer } from "@/components/script-player";
 import { Playground } from "@/components/playground/playground";
 import { ResourceCard } from "@/components/resource-card";
 import { getIndex, getResource, typeTitle } from "@/lib/registry";
@@ -61,7 +62,11 @@ export default async function ResourcePage({ params }: PageProps<"/r/[id]">) {
       {r.beats?.length ? (
         <section className="mt-12">
           <h2 className="border-b border-line pb-3 text-[18px] font-medium">Structure</h2>
-          <div className="mt-5"><BeatsStrip beats={r.beats} duration={r.duration} /></div>
+          <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="relative aspect-video overflow-hidden rounded-xl border border-line bg-black"><ScriptPlayer beats={r.beats} duration={r.duration} title={r.title} /></div>
+            <BeatsStrip beats={r.beats} duration={r.duration} />
+          </div>
+          <p className="mt-3 text-[12.5px] text-faint">The script, sketched: the beats in order and their length, in the brand's colors and type. The clip above is the engine's render of the same recipe.</p>
         </section>
       ) : null}
 
