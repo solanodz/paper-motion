@@ -7,8 +7,9 @@ import { recolor, setArgs } from "@/lib/customize.mjs";
 import { kit } from "@/lib/kit";
 import { buildTheme, loadResource, type Res, type Theme } from "@/lib/theme";
 import { ResourceStage } from "@/components/playground/resource-stage";
-import { BeatsStrip, type Beat } from "@/components/beats-strip";
+import type { Beat } from "@/components/beats-strip";
 import { ScriptPlayer } from "@/components/script-player";
+import { ClipReel, type Segment } from "@/components/clip-reel";
 import { composeScripts } from "@/lib/compose";
 import { copyText } from "@/components/playground/code-view";
 import { IconAgent, IconArrow, IconCheck, IconCopy, IconKit, TYPE_ICONS } from "@/components/icons";
@@ -20,6 +21,7 @@ type Option = { label: string; id?: string; values?: Values; items?: Pick[]; not
 type Board = { v: number; kind: "resource" | "kit"; title: string; ask?: string; reply?: string; look?: { palette?: Pick; font?: Pick }; choose?: number | [number, number]; options: Option[] };
 type Full = Res & { title: string; type: string; summary?: string; install: { kind: string; entry?: Record<string, unknown> }; preview?: { video?: string; poster?: string } };
 
+const MOVE_TYPES = ["component", "transition", "text", "camera", "background", "palette", "font-pair"];
 const enc = (o: object) => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
 /** An option's values in the look: a background is recolored into the look's palette first, the agent's values on top. */
@@ -33,7 +35,7 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoos
   return (
     <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
       <div className="relative aspect-video overflow-hidden bg-black [container-type:inline-size]">
-        {(res?.type === "recipe" || res?.type === "shot" || res?.type === "block") && (res as { beats?: Beat[] }).beats?.length
+        {(res?.type === "recipe" || res?.type === "shot" || res?.type === "block") && !res.preview?.video && (res as { beats?: Beat[] }).beats?.length
           ? <ScriptPlayer beats={(res as { beats?: Beat[] }).beats!} duration={(res as { duration?: number }).duration} theme={theme} title={res.title} compact />
           : res ? <ResourceStage resource={res} values={values} theme={theme} compact /> : null}
         <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-md bg-ground/80 px-2 font-mono text-[13px] text-figure backdrop-blur">{o.label}</span>
@@ -46,8 +48,9 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoos
         </div>
         {o.note ? <p className="mt-2 text-[13px] leading-snug text-muted">{o.note}</p> : null}
         {o.values && Object.keys(o.values).length ? <p className="mt-1.5 font-mono text-[11px] text-faint">{Object.keys(o.values).length} setting{Object.keys(o.values).length > 1 ? "s" : ""} adjusted by your agent</p> : null}
-        {(res?.type === "recipe" || res?.type === "shot" || res?.type === "block") && (res as { beats?: Beat[] }).beats?.length ? <div className="mt-3"><BeatsStrip beats={(res as { beats?: Beat[] }).beats!} duration={(res as { duration?: number }).duration} compact /></div> : null}
+        {(res?.type === "recipe" || res?.type === "shot" || res?.type === "block") && (res as { beats?: Beat[] }).beats?.length ? <p className="mt-3 flex gap-3 font-mono text-[11px] text-faint"><span className="min-w-0 flex-1 truncate">{(res as { beats?: Beat[] }).beats!.map((b) => b.name).join(" · ")}</span><span className="shrink-0">{(res as { duration?: number }).duration} s</span></p> : null}
         {res?.type === "background" && theme?.palette ? <p className="mt-1.5 font-mono text-[11px] text-faint">recolored to your palette</p> : null}
+        {res?.preview?.video && !MOVE_TYPES.includes(res.type) && theme ? <p className="mt-1.5 font-mono text-[11px] text-faint">sample render · built in your look</p> : null}
         {tuned ? <p className="mt-1.5 font-mono text-[11px] text-paper">tuned by you</p> : null}
         <div className="mt-4 flex gap-2">
           <button type="button" onClick={onChoose} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
@@ -60,13 +63,18 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoos
   );
 }
 
+/** A structure's beats as reel segments: a beat that names a block, shot or recipe plays its clip. */
+const beatSegments = (beats: Beat[], res: Record<string, Full>): Segment[] =>
+  beats.map((b) => ({ name: b.name, what: b.what, seconds: Math.max(0.5, b.to - b.from), src: b.id && res[b.id]?.preview?.video ? `/${res[b.id].preview!.video}` : undefined }));
+
 /** An option that is a structure the agent proposes for this brief, instead of a recipe: its beats, built from scratch if chosen. */
-function StructureOption({ o, theme, chosen, multi, onChoose }: { o: Option; theme: Theme; chosen: boolean; multi: boolean; onChoose: () => void }) {
+function StructureOption({ o, res, theme, chosen, multi, onChoose }: { o: Option; res: Record<string, Full>; theme: Theme; chosen: boolean; multi: boolean; onChoose: () => void }) {
   const st = o.structure!;
+  const segments = beatSegments(st.beats, res);
   return (
     <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
       <div className="relative aspect-video overflow-hidden bg-black">
-        <ScriptPlayer beats={st.beats} duration={st.duration} theme={theme} title={st.title} compact />
+        {segments.some((x) => x.src) ? <ClipReel segments={segments} theme={theme} /> : <ScriptPlayer beats={st.beats} duration={st.duration} theme={theme} title={st.title} compact />}
         <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-md bg-ground/80 px-2 font-mono text-[13px] text-figure backdrop-blur">{o.label}</span>
       </div>
       <div className="flex flex-1 flex-col p-4">
@@ -164,7 +172,7 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
   useEffect(() => {
     if (!board) return;
     const ids = new Set<string>();
-    for (const o of board.options) { if (o.id) ids.add(o.id); for (const i of o.items ?? []) ids.add(i.id); }
+    for (const o of board.options) { if (o.id) ids.add(o.id); for (const i of o.items ?? []) ids.add(i.id); for (const b of o.structure?.beats ?? []) if (b.id) ids.add(b.id); }
     for (const l of [board.look?.palette, board.look?.font]) if (l) ids.add(l.id);
     for (const id of ids) if (!res[id]) loadResource(id).then((r) => setRes((x) => ({ ...x, [id]: r as Full })));
   }, [board, res]);
@@ -200,8 +208,10 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
   // recipes picked in order become one script: the sequence the agent will build
   const sequence = useMemo(() => {
     if (!board || !multi || picked.length < 2) return null;
-    const parts = picked.map((l) => board.options.find((o) => o.label === l)).filter(Boolean).map((o) => (o!.structure ? { ...o!.structure } : o!.id && (res[o!.id]?.type === "recipe" || res[o!.id]?.type === "shot" || res[o!.id]?.type === "block") ? { id: o!.id, title: res[o!.id].title, duration: (res[o!.id] as { duration?: number }).duration, beats: (res[o!.id] as { beats?: Beat[] }).beats } : null)).filter(Boolean) as { id?: string; title?: string; duration?: number; beats?: Beat[] }[];
-    return parts.length >= 2 && parts.every((p) => p.beats?.length) ? composeScripts(parts) : null;
+    const parts = picked.map((l) => board.options.find((o) => o.label === l)).filter(Boolean).map((o) => (o!.structure ? { ...o!.structure } : o!.id && (res[o!.id]?.type === "recipe" || res[o!.id]?.type === "shot" || res[o!.id]?.type === "block") ? { id: o!.id, video: res[o!.id].preview?.video, title: res[o!.id].title, duration: (res[o!.id] as { duration?: number }).duration, beats: (res[o!.id] as { beats?: Beat[] }).beats } : null)).filter(Boolean) as { id?: string; video?: string; title?: string; duration?: number; beats?: Beat[] }[];
+    if (parts.length < 2 || !parts.every((p) => p.beats?.length)) return null;
+    const segments: Segment[] = parts.flatMap((p) => (p.video ? [{ name: p.title ?? p.id ?? "", what: "", seconds: p.duration ?? Math.max(...p.beats!.map((b) => b.to)), src: `/${p.video}` }] : beatSegments(p.beats!, res)));
+    return { ...composeScripts(parts), segments };
   }, [board, multi, picked, res]);
   const togglePick = (o: Option) => { setNone(false); setPicked((p) => { const next = p.includes(o.label) ? p.filter((l) => l !== o.label) : p.length >= hi ? p : [...p, o.label]; savePicks(next, tuned); return next; }); };
   const sendPicks = () => {
@@ -255,15 +265,15 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
       <div className={`mt-10 grid gap-5 ${cols}`}>
         {board.options.map((o) => (board.kind === "kit"
           ? <KitOption key={o.label} o={o} res={res} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
-          : o.structure ? <StructureOption key={o.label} o={o} theme={theme} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
+          : o.structure ? <StructureOption key={o.label} o={o} res={res} theme={theme} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
           : <ResourceOption key={o.label} o={o} res={o.id ? res[o.id] : undefined} theme={theme} fragment={fragment} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} tuned={tuned[o.label]} onChoose={() => (multi ? togglePick(o) : choose(o))} />))}
       </div>
       {multi && sequence ? (
         <div className="mt-6 overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3 text-[13px]"><span className="text-muted">Your sequence · <span className="text-figure">{sequence.title}</span></span><span className="font-mono text-[12px] text-faint">{sequence.duration} s</span></div>
+          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3 text-[13px]"><span className="text-muted">Your sequence · <span className="text-figure">{sequence.title}</span></span><span className="font-mono text-[12px] text-faint">{+sequence.segments.reduce((a, x) => a + x.seconds, 0).toFixed(1)} s</span></div>
           <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="relative aspect-video bg-black"><ScriptPlayer beats={sequence.beats} duration={sequence.duration} theme={theme} title="sequence" compact /></div>
-            <div className="p-5"><BeatsStrip beats={sequence.beats} duration={sequence.duration} /></div>
+            <div className="relative aspect-video bg-black">{sequence.segments.some((x) => x.src) ? <ClipReel segments={sequence.segments} theme={theme} /> : <ScriptPlayer beats={sequence.beats} duration={sequence.duration} theme={theme} title="sequence" compact />}</div>
+            <ol className="space-y-2 p-5 text-[13px]">{sequence.segments.map((x, k) => <li key={k} className="flex gap-3"><span className="w-5 shrink-0 font-mono text-[11px] leading-5 text-faint">{k + 1}</span><span className="min-w-0 flex-1"><span className="text-figure">{x.name}</span>{x.what ? <span className="text-muted"> · {x.what}</span> : null}</span><span className="shrink-0 font-mono text-[11px] leading-5 text-faint">{+x.seconds.toFixed(1)} s</span></li>)}</ol>
           </div>
         </div>
       ) : null}

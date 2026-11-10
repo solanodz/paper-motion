@@ -16,8 +16,9 @@ const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palet
  *   look?: { palette?: { id: string, values?: object }, font?: { id: string, values?: object } },
  *   choose?: number | [number, number],   // how many options the user may pick: 1 (default), 3, or [min, max]
  *   options: Array<{ label: string, id?: string, values?: object, items?: Array<{ id: string, values?: object }>, note?: string,
- *     structure?: { title: string, duration: number, beats: Array<{ name: string, from: number, to: number, what: string }> } }> }} Board
+ *     structure?: { title: string, duration: number, beats: Array<{ name: string, from: number, to: number, what: string, id?: string }> } }> }} Board
  * An option with `structure` (recipe boards only) is a structure the agent proposes for this brief instead of a recipe.
+ * A beat's `id` names the block or shot that shows it, so the board plays that clip for the beat instead of a sketch.
  */
 
 /** Checks a board's shape; returns a list of problems (empty when valid). `index` (registry items by id) adds id checks. */
@@ -43,6 +44,7 @@ export function validateBoard(b, index) {
         if (!(Number(st.duration) > 0)) errs.push(`${at}.structure.duration (seconds) is required`);
         if (!Array.isArray(st.beats) || st.beats.length < 2 || st.beats.length > 8) errs.push(`${at}.structure.beats: 2 to 8 beats`);
         for (const [j, bt] of (st.beats ?? []).entries()) if (!bt?.name || typeof bt.from !== 'number' || typeof bt.to !== 'number' || bt.to <= bt.from || !bt.what) errs.push(`${at}.structure.beats[${j}] needs name, from < to (seconds) and what`);
+        for (const [j, bt] of (st.beats ?? []).entries()) if (bt?.id != null && (typeof bt.id !== 'string' || (index && !index[bt.id]))) errs.push(`${at}.structure.beats[${j}].id "${bt.id}" is not in the registry`);
       } else if (!o.id) errs.push(`${at}.id is required`);
       else if (index && !index[o.id]) errs.push(`${at}.id "${o.id}" is not in the registry`);
     } else {

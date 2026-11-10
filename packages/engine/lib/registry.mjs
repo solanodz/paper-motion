@@ -161,7 +161,8 @@ ${site}/registry.json is the index; every item carries, beside id, type, title, 
 - Font pairs: \`voice\` (serif, sans, display, mono). Recipes, shots and blocks: \`duration\`, \`formats\` and \`beats\` (the structure as a
   timeline: name, from, to, what). A recipe board plays each structure as a sketch, so the user chooses a rhythm, not a
   name; you may add one option that is a **structure of your own** for this brief (\`structure\` instead of \`id\`,
-  format below), which you then build from scratch. Give the recipe board \`choose: [1, 3]\`: picking several recipes in
+  format below), which you then build from scratch. Give each of its beats the \`id\` of the block or shot that shows
+  it: the board then plays those clips in order, so the user watches the structure instead of reading it. Give the recipe board \`choose: [1, 3]\`: picking several recipes in
   order means **one piece made of those blocks in that order**, each block's closing beat dropped except the last; the
   reply reads \`A+C · manifesto · three-things\`, and you build that sequence from scratch, using each recipe's scene as
   the reference for its block.
@@ -203,9 +204,9 @@ A recipe board may hold one option that is a structure of your own for this brie
 
 \`\`\`json
 { "label": "D", "structure": { "title": "Three cuts", "duration": 18, "beats": [
-    { "name": "Hook", "from": 0, "to": 2, "what": "one line over the field" },
-    { "name": "Proof", "from": 2, "to": 12, "what": "three shots of the product" },
-    { "name": "Close", "from": 12, "to": 18, "what": "the wordmark and the action" } ] } }
+    { "name": "Hook", "from": 0, "to": 2, "what": "one line over the field", "id": "word-swap" },
+    { "name": "Proof", "from": 2, "to": 12, "what": "three shots of the product", "id": "browser-frame" },
+    { "name": "Close", "from": 12, "to": 18, "what": "the wordmark and the action", "id": "svg-logo" } ] } }
 \`\`\`
 
 Short links: \`POST ${site}/api/boards\` with \`{ "board": … }\` returns \`{ id, url }\`; \`GET /api/boards/<id>/choice\`
