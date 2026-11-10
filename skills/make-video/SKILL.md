@@ -23,6 +23,27 @@ Read `brand/`. Each file is a decision you build on, not a question to ask again
 
 Scenes load it with `paper-motion/brand` (see "Writing a scene"). When a part is missing, either offer its skill (`identity`, `visual-system`, `motion-style`, `sound-kit`, `shader-set`) or settle it inside this piece's intake with one question and a recommendation; never block on it. With no brand folder at all, the full intake below decides everything for this piece.
 
+## The studio: the user follows the piece stage by stage
+
+When the user can open a browser, run the piece through the **studio**: a local page where they see every stage of this piece, approve it or ask for changes, and edit by hand what needs no judgment (the brief, the words on screen, lengths, joins, order). You hand each stage over and wait for their decision; it arrives on its own, never ask them to paste anything.
+
+```bash
+pamo studio &                                   # once; the user opens http://127.0.0.1:4317 (say so)
+pamo piece init <piece> --title "…" --what "…" --who "…" --format "…" --tone "…" --action "…"
+pamo piece review <piece> brief                 # waits; prints what they did, one paper-motion: line each
+```
+
+| Stage | What you do before `piece review <piece> <stage>` |
+|---|---|
+| brief | fill the five fields from the intake (`init`, or write `piece.json`) |
+| look | the boards for palette, type, backgrounds and moves; install the choices |
+| structure | a structure board whose beats name their blocks; `pamo chain init <piece> --board <id> --option <letter>`; write each part's CONFIG |
+| parts | `pamo chain <piece> --drafts`: each part alone, quick, in the brand |
+| assembly | `pamo chain <piece> --draft`: the parts joined, quick |
+| final | `pamo chain <piece> --motion-blur 5` (and other formats if asked) |
+
+Read every line `piece review` prints and act on it before the next review: `changes: "…"` on a stage or a part is a request (mark the stage yours with `pamo piece working <piece> <stage>`, fix it, re-render: `pamo chain <piece> --drafts --only <dir>` for one part, then review again); `brief action="…"`, `url="…" (re-rendered)`, `seconds=…`, `order …` are edits the user already made (the studio wrote them into `piece.json`, the part's CONFIG or `chain.json`, and re-rendered the part): build on them, never undo them. A line ending `join again` means the assembly is stale: `pamo chain <piece> --draft`, then review assembly again. `pamo piece status <piece>` shows where everything stands and what you haven't read. Without a browser, the gates below are the same stages run in the chat.
+
 ## 2 · Intake: recipe, format, brief (mandatory)
 
 **Do not build anything until the brief is approved.** Call `interview` with the question bank in `references/intake.md` (it skips what the brand already settles, and what the user already answered to the short interview in `llms.txt`: the one-line what, purpose and format, colors, feel, the action; never ask those twice) and write `brief.md` from its template. Visual decisions in the intake (palette, type, backgrounds, the moves to use, the recipe) go through **boards**: when the user can open a browser, a live board (`pamo board --url`, see `references/boards.md`), a link they open to compare the options in their own look, tune one and choose; otherwise a rendered board. You propose, they choose; never pick a look for them from a description.

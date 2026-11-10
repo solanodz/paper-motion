@@ -52,8 +52,19 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      --board takes the structure the user chose on a board; with neither,
                                      installs parts you added to chain.json and keeps the rest
   chain <piece> [--out file.mp4] [--motion-blur 5] [--audio music.wav] [--no-sfx] [--dpr 1] [--check]
+        [--drafts [--only dir,…]] [--draft]
                                      renders every part in the brand's look and joins them into one
-                                     video (run from the project root); --check only plans and warns
+                                     video (run from the project root); --check only plans and warns;
+                                     --drafts renders each part alone, quickly, for the studio's Parts
+                                     stage; --draft joins a quick version for its Assembly stage
+  piece init <piece> [--title "…"] [--what "…"] [--who "…"] [--format "…"] [--tone "…"] [--action "…"]
+                                     start tracking a piece stage by stage (pieces/<piece>/piece.json)
+  piece review <piece> <stage> [--wait 30] [--no-wait]
+                                     hand a stage to the user in the studio (brief, look, structure,
+                                     parts, assembly, final) and wait for their decision; prints it
+  piece working <piece> <stage>      mark a stage as yours again (after changes were asked)
+  piece status <piece>               where the piece is, and what the user did that you haven't read
+  studio [--port 4317]               the local studio: the user follows each piece, approves, edits
   wordmark <text> --family <name> [--css <url> | --file <font>] [--weight 400] [--tracking -0.02em]
          [--color #fff] [--size 400] [--pad 0] [--out wordmark.png]
                                      the name set in its typeface, as a transparent PNG
@@ -452,10 +463,66 @@ async function main() {
         console.log(`${r.total.toFixed(1)} s in all`);
         break;
       }
+      if (args.drafts) {
+        const only = typeof args.only === 'string' ? args.only.split(',').map((x) => x.trim()) : undefined;
+        const r = await chainLib.renderDrafts({ piece, only, onStep: (e) => { if (e.warning) console.log(`  ! ${e.warning}`); else process.stdout.write(`\rdraft ${e.part}/${e.of} · ${e.dir}            `); } });
+        console.log(`\r✓ ${r.rendered.length} draft${r.rendered.length === 1 ? '' : 's'} in ${path.relative(process.cwd(), path.join(chainLib.pieceDir(piece), 'drafts')) || '.'}${r.rendered.length ? '' : ' (every part is approved; --only <dir> to redo one)'}          `);
+        break;
+      }
       const blur = args['motion-blur'] ? Number(args['motion-blur'] === true ? 5 : args['motion-blur']) : 1;
-      const r = await chainLib.renderChain({ piece, out: typeof args.out === 'string' ? args.out : undefined, motionBlur: blur, dpr: Number(args.dpr ?? 1), audio: typeof args.audio === 'string' ? args.audio : undefined, sfx: !args['no-sfx'],
+      const r = await chainLib.renderChain({ draft: !!args.draft, piece, out: typeof args.out === 'string' ? args.out : undefined, motionBlur: blur, dpr: Number(args.dpr ?? 1), audio: typeof args.audio === 'string' ? args.audio : undefined, sfx: !args['no-sfx'],
         onStep: (e) => { if (e.warning) console.log(`  ! ${e.warning}`); else if (e.part) process.stdout.write(`\rpart ${e.part}/${e.of} · ${e.dir}            `); else if (e.joining) process.stdout.write('\rjoining…                              '); } });
       console.log(`\r✓ ${path.relative(process.cwd(), r.out)} — ${r.parts} parts, ${r.total.toFixed(1)} s, ${r.W}×${r.H}`);
+      break;
+    }
+
+    case 'piece': {
+      const sub = args._[1], piece = args._[2];
+      if (!['init', 'review', 'working', 'status'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …]\n       piece review <piece> <stage> [--wait 30] [--no-wait]\n       piece working <piece> <stage>\n       piece status <piece>'); process.exit(args.help ? 0 : 1); }
+      const P = await import('../lib/piece.mjs');
+      const { pieceDir } = await import('../lib/chain.mjs');
+      const dir = pieceDir(piece), port = Number(args.port ?? 4317), studioUrl = `http://127.0.0.1:${port}/?p=${encodeURIComponent(path.basename(dir))}`;
+      if (sub === 'init') {
+        const brief = Object.fromEntries(P.BRIEF_KEYS.filter((k) => typeof args[k] === 'string').map((k) => [k, args[k]]));
+        const p = P.initPiece({ piece, title: typeof args.title === 'string' ? args.title : undefined, brief, force: !!args.force });
+        console.log(`✓ ${path.relative(process.cwd(), dir)}/piece.json · "${p.title}" · stage ${p.stage}`);
+        const missing = P.BRIEF_KEYS.filter((k) => !p.brief[k]);
+        if (missing.length) console.log(`  brief still empty: ${missing.join(', ')} (pass them, or write piece.json)`);
+        console.log(`\nNext: npx paper-motion piece review ${piece} brief   (the user reads and edits it in the studio)`);
+        break;
+      }
+      if (sub === 'status') {
+        const p = P.readPiece(dir); if (!p) { console.error(`no piece.json in ${path.relative(process.cwd(), dir)}`); process.exit(1); }
+        for (const s of P.STAGES) console.log(`${s === p.stage ? '›' : ' '} ${s.padEnd(10)} ${p.stages[s].status}${p.stages[s].note ? `  “${p.stages[s].note}”` : ''}`);
+        for (const [d, x] of Object.entries(p.parts)) console.log(`    ${d.padEnd(22)} ${x.status}${x.note ? `  “${x.note}”` : ''}`);
+        const fresh = p.events.filter((e) => e.n > (p.seen ?? 0));
+        if (fresh.length) { console.log(`\n${fresh.length} unread:`); for (const e of fresh) console.log(P.eventLine(p, e)); }
+        break;
+      }
+      const stage = args._[3];
+      if (!P.STAGES.includes(stage)) { console.error(`piece ${sub}: give a stage (${P.STAGES.join(', ')})`); process.exit(1); }
+      if (sub === 'working') { P.updatePiece(dir, (p) => { p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working' }; }); console.log(`✓ ${stage}: working`); break; }
+      // review: hand the stage over and wait for the user's decision in the studio
+      P.toReview(dir, stage);
+      const up = await fetch(`http://127.0.0.1:${port}/api/pieces`).then((r) => r.ok).catch(() => false);
+      let own = null;
+      if (!up) { const { startStudio } = await import('../lib/studio.mjs'); own = await startStudio({ port, log: () => {} }); }
+      console.log(`${stage} is ready for the user: ${studioUrl}${own ? '\n(studio started for this wait; keep one running with: npx paper-motion studio)' : ''}`);
+      if (args['no-wait']) { const r = P.unseen(dir); for (const e of r.events) console.log(P.eventLine(r.piece, e)); if (own) await own.close(); break; }
+      console.log('Waiting for their decision…');
+      const r = await P.awaitDecision(dir, stage, { timeout: Number(args.wait ?? 30) * 60 * 1000 });
+      if (own) await own.close();
+      for (const l of r.lines) console.log(l);
+      if (!r.done) { console.log(`(no decision yet: run piece review ${piece} ${stage} again, or piece status ${piece})`); process.exit(3); }
+      break;
+    }
+
+    case 'studio': {
+      const { startStudio, listPieces } = await import('../lib/studio.mjs');
+      const s = await startStudio({ port: Number(args.port ?? 4317) });
+      const list = listPieces(process.cwd());
+      console.log(`studio: http://127.0.0.1:${s.port}/${list.length === 1 ? `?p=${encodeURIComponent(list[0].piece)}` : ''}  (${list.length} piece${list.length === 1 ? '' : 's'}; ctrl-c to stop)`);
+      await new Promise(() => {});
       break;
     }
 

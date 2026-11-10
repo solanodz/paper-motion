@@ -4,8 +4,10 @@ All notable changes to the `paper-motion` npm package. Dates are release dates o
 
 ## Unreleased
 
-- **Chains**: \`pamo chain init <piece>\` installs the blocks of a chosen structure (\`--board <id> --option D\`, or \`--parts id:sec,…\`) as one scene each under \`pieces/<piece>/\` with a \`chain.json\`; \`pamo chain <piece>\` renders them in the brand's look and joins them into one video (\`whip\`, \`cut\`, \`dissolve\`, \`dip\`), keeping each part's sound and setting the loudness once. \`--check\` warns when a part is cut before its land.
-- Scenes expose the gestures they cue (\`B.cue\`) as \`window.__pm.marks\`.
+- **Studio**: `pamo studio` serves a local page where the user follows a piece stage by stage (brief, look, structure, parts, assembly, final), watches each stage's renders, approves or asks for changes, and edits the brief, the words on screen (a part's CONFIG texts, re-rendered on the spot), lengths, joins and order (drag and drop). `pieces/<piece>/piece.json` holds the stages and what the user did; `pamo piece init | review | working | status` is the agent's side (`review` hands a stage over and waits for the decision).
+- `pamo chain <piece> --drafts [--only dir]` renders each part alone, quickly, for review; `--draft` joins a quick version.
+- **Chains**: `pamo chain init <piece>` installs the blocks of a chosen structure (`--board <id> --option D`, or `--parts id:sec,…`) as one scene each under `pieces/<piece>/` with a `chain.json`; `pamo chain <piece>` renders them in the brand's look and joins them into one video (`whip`, `cut`, `dissolve`, `dip`), keeping each part's sound and setting the loudness once. `--check` warns when a part is cut before its land.
+- Scenes expose the gestures they cue (`B.cue`) as `window.__pm.marks`.
 - Blocks with a dark panel keep their type light in light brands (`search-type`, `browser-frame`, `terminal-run`, `light-sweep`); `drag-drop`'s cards follow the brand's mode.
 
 ## 0.2.7 · 2026-11-10
