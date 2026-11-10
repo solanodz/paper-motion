@@ -2,7 +2,7 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
-## 0.2.7 · unreleased
+## 0.2.7 · 2026-11-10
 
 - A new resource type, **blocks**: 29 ready-made 4–8 s moments (annotations, interfaces, code, data, type, brand, effects), installed like recipes and customized through their `CONFIG`; each recomposes for 16:9, 9:16 and 1:1.
 - `pamo registry previews` renders blocks; `pamo add --set` writes their values into `CONFIG`.
