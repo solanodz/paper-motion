@@ -32,6 +32,7 @@
     "bin/",
     "lib/",
     "runtime/",
+    "studio/",
     "templates/",
     "examples/",
     "!examples/**/renders/",

@@ -85,6 +85,10 @@ A skill's entrance for someone starting from nothing: it runs an interview.
 A skill's entrance for someone who already decided: it takes what they bring (fonts, colors, a brand manual, a website, a Figma or Paper file), writes it to the brand folder and asks only for what is missing.
 _Avoid_: expert mode, skip
 
+**Studio**:
+The local page where the user follows one piece through its stages (brief, look, structure, parts, assembly, final), approves each or asks for changes, and edits by hand what needs no judgment. The agent hands each stage over and reads back what the user did.
+_Avoid_: dashboard, editor, review app
+
 **Chain**:
 One piece made of several blocks or shots played in order, each in the brand's look, each joined to the next by a cut, whip, dissolve or dip. What a chosen structure becomes when its beats name the blocks that show them.
 _Avoid_: sequence (the board's word for several picks), montage, playlist

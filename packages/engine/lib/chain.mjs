@@ -100,6 +100,12 @@ export async function initChain({ cwd = process.cwd(), piece, title, parts, form
   const chain = { ...(base ?? {}), title: title ?? base?.title ?? piece, format, join, parts: out };
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(file, JSON.stringify(chain, null, 2) + '\n');
+  const { readPiece, updatePiece } = await import('./piece.mjs');
+  if (readPiece(dir)) updatePiece(dir, (p) => {
+    const keep = new Set(out.map((x) => x.dir).filter(Boolean));
+    for (const d of Object.keys(p.parts)) if (!keep.has(d)) delete p.parts[d];
+    for (const d of keep) p.parts[d] ??= { status: 'queued' };
+  });
   return { dir, chain, notes };
 }
 
@@ -154,7 +160,8 @@ export function plan(chain, infos) {
  * Renders every part in the brand's look and joins them into one file.
  * Must run from the project root (where brand/ is): scenes load the brand from /brand.
  */
-export async function renderChain({ cwd = process.cwd(), piece, out, motionBlur = 1, dpr = 1, audio, sfx = true, onStep = () => {} }) {
+export async function renderChain({ cwd = process.cwd(), piece, out, motionBlur = 1, dpr = 1, audio, sfx = true, draft = false, onStep = () => {} }) {
+  if (draft) { dpr = 0.5; motionBlur = 1; }
   return withChain({ cwd, piece }, async ({ dir, url, parts, warnings, total, config }) => {
     const { renderVideo } = await import('./render.mjs');
     for (const w of warnings) onStep({ warning: w });
@@ -170,12 +177,41 @@ export async function renderChain({ cwd = process.cwd(), piece, out, motionBlur 
       const tokens = readJson(path.join(cwd, 'brand/tokens.json'), {}), sound = readJson(path.join(cwd, 'brand/sound.json'), {});
       const ground = (tokens.colors?.ground?.hex ?? '#000000').replace('#', '0x');
       const { width: W, height: H, fps } = config;
-      out = path.resolve(cwd, out ?? path.join(dir, 'renders', `${path.basename(dir)}.mp4`));
+      out = path.resolve(cwd, out ?? path.join(dir, 'renders', `${path.basename(dir)}${draft ? '-draft' : ''}.mp4`));
       fs.mkdirSync(path.dirname(out), { recursive: true });
       onStep({ joining: true });
       const j = await join({ files, parts, out, ground, fps, music: audio, lufs: sound.loudness ?? -16 });
       return { out, total: j.seconds, planned: total, parts: parts.length, warnings, W, H };
     } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+  });
+}
+
+/**
+ * Renders parts on their own, quickly (half resolution, no motion blur), to pieces/<piece>/drafts/<dir>.mp4: what
+ * the user reviews part by part in the studio. Skips approved parts unless named in `only`. Tracks status in piece.json.
+ */
+export async function renderDrafts({ cwd = process.cwd(), piece, only, onStep = () => {} }) {
+  const { readPiece, updatePiece } = await import('./piece.mjs');
+  return withChain({ cwd, piece }, async ({ dir, url, parts, warnings }) => {
+    const { renderVideo } = await import('./render.mjs');
+    for (const w of warnings) onStep({ warning: w });
+    const tracked = !!readPiece(dir), mark = (d, patch) => tracked && updatePiece(dir, (p) => { p.parts[d] = { ...(p.parts[d] ?? {}), ...patch }; });
+    const todo = parts.filter((p) => (only?.length ? only.some((o) => p.dir === o || p.id === o || p.dir.startsWith(`${o}-`)) : (readPiece(dir)?.parts?.[p.dir]?.status ?? 'queued') !== 'approved'));
+    for (const p of todo) mark(p.dir, { status: 'queued' });
+    fs.mkdirSync(path.join(dir, 'drafts'), { recursive: true });
+    const done = [];
+    for (const [i, p] of todo.entries()) {
+      onStep({ part: i + 1, of: todo.length, dir: p.dir });
+      mark(p.dir, { status: 'rendering' });
+      const out = path.join(dir, 'drafts', `${p.dir}.mp4`);
+      try {
+        await renderVideo({ url: url(p), out, from: p.from, to: p.from + p.seconds, dpr: 0.5, motionBlur: 1, crf: 26 });
+      } catch (e) { mark(p.dir, { status: 'review', error: String(e.message ?? e).slice(0, 300) }); throw e; }
+      const v = (readPiece(dir)?.parts?.[p.dir]?.v ?? 0) + 1;
+      mark(p.dir, { status: 'review', v, error: undefined, note: undefined });
+      done.push(out);
+    }
+    return { rendered: done, warnings };
   });
 }
 

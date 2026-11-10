@@ -149,6 +149,12 @@ export function llmsTxt(items, site, { full = false } = {}) {
    \`pieces/<piece>/<nn>-<id>/\` and writes \`chain.json\` (seconds per part; \`join\`: whip, cut, dissolve or dip);
    write each part's \`CONFIG\` from its beat, then \`npx paper-motion chain <piece> --motion-blur 5\` renders every
    part in the brand's look and joins them into one video. It warns when a part is cut before its land.
+6. **Let the user follow it in the studio.** \`npx paper-motion studio\` serves a local page (http://127.0.0.1:4317)
+   where the user sees the piece stage by stage (brief, look, structure, parts, assembly, final), approves each or
+   asks for changes, and edits the brief, the words on screen, lengths, joins and order by hand.
+   \`npx paper-motion piece init <piece>\` starts it; \`npx paper-motion piece review <piece> <stage>\` hands a stage
+   over and waits, then prints what they did (one \`paper-motion: piece …\` line each). Quick renders for review:
+   \`chain <piece> --drafts\` (each part) and \`chain <piece> --draft\` (joined).
 
 ## Choosing well: the metadata
 
