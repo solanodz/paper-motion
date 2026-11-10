@@ -1,0 +1,139 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "cursor-guide",
+  "type": "shot",
+  "title": "Cursor guide",
+  "summary": "A cursor crosses a component on a curve, hovers the control that matters, clicks; the component answers and the camera leans in, in 5 s.",
+  "tags": [
+    "shot",
+    "cursor",
+    "click",
+    "ui",
+    "guide",
+    "camera"
+  ],
+  "params": [
+    {
+      "name": "image",
+      "type": "string",
+      "default": "",
+      "description": "the component (path); empty draws a placeholder UI",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "button",
+      "type": "string",
+      "default": "Render",
+      "description": "the control it clicks (drawn when there is no image)",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "answer",
+      "type": "string",
+      "default": "Rendering 720 frames…",
+      "description": "what the click reveals",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/shot/cursor-guide/scene.html",
+      "to": "pieces/cursor-guide/scene.html"
+    },
+    {
+      "from": "registry/shot/cursor-guide/brief.md",
+      "to": "pieces/cursor-guide/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add cursor-guide --name my-shot\n# edit CONFIG in pieces/my-shot/scene.html, then:\nnpx paper-motion render pieces/my-shot/scene.html --motion-blur 6",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "`target` in CONFIG places the control as 0–1 across and down the component; with a real screenshot the drawn button hides and the cursor goes there."
+  ],
+  "related": [
+    "product-demo",
+    "punch"
+  ],
+  "preview": {
+    "video": "previews/cursor-guide.webm",
+    "poster": "previews/cursor-guide.jpg",
+    "at": 2.6,
+    "values": {
+      "button": "Render",
+      "answer": "Rendering 720 frames…"
+    }
+  },
+  "mood": [
+    "technical",
+    "playful",
+    "minimal"
+  ],
+  "duration": 5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 1.4,
+      "what": "the cursor crosses the component on a curve"
+    },
+    {
+      "name": "Hover",
+      "from": 1.4,
+      "to": 2.4,
+      "what": "the control lifts under it"
+    },
+    {
+      "name": "Click",
+      "from": 2.4,
+      "to": 2.8,
+      "what": "it presses; the camera leans in"
+    },
+    {
+      "name": "Answer",
+      "from": 2.8,
+      "to": 5,
+      "what": "a panel opens and fills"
+    }
+  ],
+  "when": [
+    "showing where to click in a real UI",
+    "a feature in one gesture"
+  ]
+}

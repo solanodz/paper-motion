@@ -1,0 +1,136 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "pass-over",
+  "type": "shot",
+  "title": "Pass over",
+  "summary": "The camera glides across a component at a low angle, close and tilted at the edges, straight at the centre; a caption rides the pass, in 5 s.",
+  "tags": [
+    "shot",
+    "camera",
+    "glide",
+    "component",
+    "ui",
+    "caption"
+  ],
+  "params": [
+    {
+      "name": "image",
+      "type": "string",
+      "default": "",
+      "description": "the component (path); empty draws a placeholder UI",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "caption",
+      "type": "string",
+      "default": "One board. Every choice adds up.",
+      "description": "the line that rides the pass",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "direction",
+      "type": "enum",
+      "default": "right",
+      "options": [
+        "right",
+        "left"
+      ],
+      "description": "enter from the left and leave right, or the reverse",
+      "group": "main",
+      "control": "segmented"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/shot/pass-over/scene.html",
+      "to": "pieces/pass-over/scene.html"
+    },
+    {
+      "from": "registry/shot/pass-over/brief.md",
+      "to": "pieces/pass-over/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add pass-over --name my-shot\n# edit CONFIG in pieces/my-shot/scene.html, then:\nnpx paper-motion render pieces/my-shot/scene.html --motion-blur 6",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Only the camera moves; the component is still. Swap `image` for a real screenshot and the pass reads as a product shot."
+  ],
+  "related": [
+    "product-demo",
+    "drift"
+  ],
+  "preview": {
+    "video": "previews/pass-over.webm",
+    "poster": "previews/pass-over.jpg",
+    "at": 2.5,
+    "values": {
+      "caption": "One board. Every choice adds up."
+    }
+  },
+  "mood": [
+    "calm",
+    "technical",
+    "luxury"
+  ],
+  "duration": 5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Enter",
+      "from": 0,
+      "to": 1.2,
+      "what": "low and close at one edge"
+    },
+    {
+      "name": "Cross",
+      "from": 1.2,
+      "to": 3.8,
+      "what": "high and straight over the centre; the caption lands"
+    },
+    {
+      "name": "Leave",
+      "from": 3.8,
+      "to": 5,
+      "what": "low again at the far edge"
+    }
+  ],
+  "when": [
+    "a product surface worth looking at",
+    "a quiet establishing shot before the words"
+  ]
+}

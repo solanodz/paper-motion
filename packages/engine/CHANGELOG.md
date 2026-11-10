@@ -2,6 +2,12 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
+## 0.2.6 · unreleased
+
+- `camera()` in `paper-motion/kit`: a 3D world for a piece (`place`, `at`, `travel` with keyframes, `focus` with depth of field and gradual exits). Every recipe is rebuilt on it: a corridor the camera travels (launch, manifesto), a column it descends (three-things), a line it dollies along with a pull-back recap (explainer), a window it tilts into and punches (product-demo), a slab it swings around (before-after), a sleeve it orbits (release).
+- A new resource type, **shots**: 3–6 s camera gestures (`focus-pull`, `pass-over`, `cursor-guide`, `push-in`, `turn-in`), installed like recipes, chained before one or used alone.
+- `scramble` measures letters by layout width, so it works inside a 3D world.
+
 ## 0.2.5 · unreleased
 
 - Recipes declare `beats` (the structure as a timeline); boards draw them, and a recipe board may hold a structure of the agent's own (`--option "@Title | 18 | Hook 0-2 …"`), which `parseReply` returns as `structure`.

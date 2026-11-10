@@ -12,8 +12,8 @@ const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = path.resolve(ENGINE, '..', '..');
 // until the paper-motion.app domain is connected, the live site is the vercel URL
 export const SITE = (process.env.PAPER_MOTION_SITE ?? 'https://paper-motion.vercel.app').replace(/\/$/, '');
-const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palette', 'font-pair', 'recipe'];
-const TYPE_TITLES = { component: 'Component transitions', transition: 'Transitions', text: 'Text effects', camera: 'Camera and energy', background: 'Backgrounds', palette: 'Palettes', 'font-pair': 'Font pairs', recipe: 'Recipes' };
+const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palette', 'font-pair', 'recipe', 'shot'];
+const TYPE_TITLES = { component: 'Component transitions', transition: 'Transitions', text: 'Text effects', camera: 'Camera and energy', background: 'Backgrounds', palette: 'Palettes', 'font-pair': 'Font pairs', recipe: 'Recipes', shot: 'Shots' };
 
 /** The registry to use: an explicit folder or URL, $PAPER_MOTION_REGISTRY, this repo's registry/ when present, else the site. */
 export function resolveRegistry(given) {
@@ -119,7 +119,9 @@ export function llmsTxt(items, site, { full = false } = {}) {
    "no brand yet"; three words for the feel and one thing it must never look like; the one action at the end.
    Mirror it back before proposing anything. **You never choose a look for the user.** These decisions always go
    through a board, in this order, one board each: palette · font pair · background(s) · moves by role (how things
-   enter, how one thing becomes the next, how text arrives; let them pick several with \`choose\`) · recipe. Skip a
+   enter, how one thing becomes the next, how text arrives; let them pick several with \`choose\`) · recipe or shots
+   (shots are 3–6 s camera gestures: a close-up, a pass over a component, a cursor that clicks; they chain before a
+   recipe or stand alone). Skip a
    board only when the brand folder already settles that decision, and say so.
 3. **Propose with boards.** For each visual decision (palette, type, background, moves, recipe) pick 2–4 options from
    this registry and share a board link: \`pamo board --url --title … --option id … --look palette,font\` prints it
@@ -155,7 +157,7 @@ ${site}/registry.json is the index; every item carries, beside id, type, title, 
   reply line carries the resulting values. Without a board, \`pamo add <background> --palette <palette-id|brand>\`
   installs it that way (\`brand\` reads \`brand/tokens.json\`). So choose backgrounds by \`motion\`, \`mood\` and
   texture first; the color comes from the palette.
-- Font pairs: \`voice\` (serif, sans, display, mono). Recipes: \`duration\`, \`formats\` and \`beats\` (the structure as a
+- Font pairs: \`voice\` (serif, sans, display, mono). Recipes and shots: \`duration\`, \`formats\` and \`beats\` (the structure as a
   timeline: name, from, to, what). A recipe board plays each structure as a sketch, so the user chooses a rhythm, not a
   name; you may add one option that is a **structure of your own** for this brief (\`structure\` instead of \`id\`,
   format below), which you then build from scratch. Give the recipe board \`choose: [1, 3]\`: picking several recipes in

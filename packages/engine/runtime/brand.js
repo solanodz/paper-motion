@@ -5,6 +5,7 @@
 //   const s = scene({ ..., background: B.color('ground') });
 //   B.style(title, 'display'); B.shader(s, '#bg', 'mesh-ground'); B.cue(s, 'transition', 2.4); B.sound(s);
 import { PACE } from './moves.js';
+import { mixColor } from './core.js';
 
 const get = (p, json) => fetch(p).then((r) => (r.ok ? (json ? r.json() : r.text()) : null)).catch(() => null);
 const sections = (md) => Object.fromEntries((md ?? '').split(/^## /m).slice(1).map((b) => { const i = b.indexOf('\n'); return [b.slice(0, i).trim(), b.slice(i + 1).trim()]; }));
@@ -33,6 +34,15 @@ export async function loadBrand(root = '/brand') {
     name: wm.text ?? tokens?.brand ?? 'brand',
     /** A color by role (ground, figure, muted, surface, accent…), with a fallback. */
     color: (role, fallback = '#888888') => C[role]?.hex ?? fallback,
+    /**
+     * The surface for cards and panels, lifted toward the figure when the brand's own surface is too close to the
+     * ground to read (a black brand with a near-black surface would draw black cards on black).
+     */
+    surface: (lift = 0.14) => {
+      const g = C.ground?.hex ?? '#000000', s = C.surface?.hex ?? g, f = C.figure?.hex ?? '#ffffff';
+      const lum = (h) => { const n = parseInt(h.slice(1, 7), 16); return (0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255; };
+      return Math.abs(lum(s) - lum(g)) < 0.06 ? mixColor(g, f, lift) : s;
+    },
     ramp: tokens?.ramp ?? [C.ground?.hex, C.surface?.hex, C.accent?.hex].filter(Boolean),
     /** CSS font-family for a font key (display, text, mono). */
     font: fam,

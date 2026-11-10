@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>cursor-guide</title>
+<!--
+  Shot · cursor guide (5 s). A cursor crosses a component, hovers the thing that matters, clicks it; the component
+  answers (the button presses, a panel opens) and the camera leans in with the click.
+  Arrive 0–1.4 s · Hover 1.4–2.4 s · Click 2.4–2.8 s · Answer 2.8–5 s.
+  Look, fonts and sound come from /brand. Edit CONFIG: the component (a screenshot, or the drawn placeholder), where
+  the target sits (0–1 across, 0–1 down), the label the click reveals. Ask your agent to point it at your real UI.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #comp { overflow: hidden; }
+  #comp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .ui { position: absolute; inset: 0; display: grid; grid-template-columns: 24% 1fr; }
+  .ui .side { display: flex; flex-direction: column; gap: 6%; padding: 7% 14%; }
+  .ui i { display: block; height: 0.55em; border-radius: 999px; opacity: 0.45; }
+  .ui .main { display: flex; flex-direction: column; gap: 5%; padding: 6%; position: relative; }
+  .ui .box { border-radius: 0.6em; }
+  #target { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 0.6em; }
+  #answer { position: absolute; border-radius: 0.8em; display: flex; flex-direction: column; justify-content: center; }
+  #cursor { position: absolute; width: 0; height: 0; }
+  #cursor svg { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world">
+    <div id="comp"><div id="target"></div><div id="answer"></div><div id="cursor"></div></div>
+  </div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { blurIn, popIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  image: '',                             // the component (path); empty draws a placeholder UI in the brand's colors
+  target: [0.78, 0.2],                   // where the cursor goes, 0–1 across and down
+  button: 'Render',                      // the control it clicks (drawn when there is no image)
+  answer: 'Rendering 720 frames…',       // what the click reveals
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = 0.35;
+const $ = (id) => document.getElementById(id);
+
+const DIST = SHORT * 0.6, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const comp = $('comp'), cw = W * 0.7 * K, ch = cw * 0.6, R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+Object.assign(comp.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: B.surface(0.2), border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)` });
+if (CONFIG.image) { const img = document.createElement('img'); img.src = CONFIG.image; comp.prepend(img); }
+else {
+  const ui = document.createElement('div'); ui.className = 'ui'; ui.style.fontSize = `${cw * 0.012}px`;
+  const line = (w, c = B.color('muted')) => `<i style="width:${w}%;background:${c}"></i>`;
+  const box = (h) => `<div class="box" style="height:${h}px;background:${B.color('ground')};border:1px solid ${B.color('muted')}33"></div>`;
+  ui.innerHTML = `<div class="side" style="background:${B.color('ground')}">${line(60, B.color('figure'))}${line(80)}${line(55)}${line(70)}</div><div class="main">${line(30, B.color('figure'))}${box(ch * 0.3)}${box(ch * 0.22)}</div>`;
+  comp.prepend(ui);
+}
+// the target: a button where the cursor is headed
+const [tx, ty] = CONFIG.target, target = $('target'), tw = cw * 0.14, th = ch * 0.09;
+Object.assign(target.style, { left: `${tx * cw - tw / 2}px`, top: `${ty * ch - th / 2}px`, width: `${tw}px`, height: `${th}px`, background: B.color('accent', '#E9E4D8'), color: B.color('ground'), fontFamily: B.font('text'), fontSize: `${th * 0.42}px`, fontWeight: 500 });
+target.textContent = CONFIG.button; if (CONFIG.image) target.style.opacity = 0;
+const answer = $('answer'), aw = cw * 0.34, ah = ch * 0.18;
+Object.assign(answer.style, { left: `${Math.min(tx * cw - aw / 2, cw - aw - cw * 0.04)}px`, top: `${ty * ch + th / 2 + ch * 0.03}px`, width: `${aw}px`, height: `${ah}px`, padding: `${ah * 0.22}px ${aw * 0.07}px`, background: B.surface(0.16), border: `1.5px solid ${B.color('figure')}33`, boxShadow: `0 ${SHORT * 0.02}px ${SHORT * 0.06}px rgba(0,0,0,0.5)` });
+const aText = document.createElement('div'); B.style(aText, 'body', { short: SHORT * K, color: 'figure' }); aText.textContent = CONFIG.answer; aText.style.fontSize = `${ah * 0.3}px`; answer.append(aText);
+const bar = document.createElement('div'); Object.assign(bar.style, { marginTop: `${ah * 0.14}px`, height: `${ah * 0.08}px`, width: '100%', background: `${B.color('muted')}44`, borderRadius: '999px', overflow: 'hidden' });
+const fill = document.createElement('div'); Object.assign(fill.style, { height: '100%', width: '0%', background: B.color('accent', '#E9E4D8') }); bar.append(fill); answer.append(bar);
+// the cursor: an arrow in the brand's figure color
+const cursor = $('cursor'), cs = SHORT * 0.05 * K;
+cursor.innerHTML = `<svg width="${cs}" height="${cs * 1.4}" viewBox="0 0 20 28"><path d="M2 2 L18 14 L10 15.5 L14.5 25 L11 26.5 L6.5 17 L2 22 Z" fill="${B.color('figure')}" stroke="${B.color('ground')}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+cam.place(comp, { x: 0, y: 0, z: 0, yaw: -4 });
+await document.fonts.ready;
+
+// the path: from off the component to the button, with a human curve; the click; the answer
+const T = { arrive: [0.2, 1.4], hover: 1.4, click: 2.4, answer: 2.8 };
+const start = [cw * 0.1, ch * 0.95], end = [tx * cw, ty * ch];
+s.update((t) => {
+  const p = progress(t, ...T.arrive, ease.inOutCubic);
+  const bend = Math.sin(p * Math.PI) * ch * 0.12;                                      // a curved path, not a straight line
+  const settle = t >= T.hover ? Math.sin(Math.min(1, (t - T.hover) / 0.5) * Math.PI) * cw * 0.004 : 0;
+  const x = start[0] + (end[0] - start[0]) * p + settle, y = start[1] + (end[1] - start[1]) * p - bend;
+  cursor.style.transform = `translate(${x}px, ${y}px) scale(${t >= T.click && t < T.click + 0.25 ? 0.88 : 1})`;
+  cursor.style.opacity = String(progress(t, 0, 0.2));
+  // hover: the button lifts; click: it presses and the camera leans in
+  const hover = progress(t, T.hover, T.hover + 0.3, ease.outCubic), press = t >= T.click ? 1 - spring(t - T.click, { stiffness: 320, damping: 14 }) : 0;
+  target.style.transform = `translateY(${-hover * th * 0.08}px) scale(${1 + hover * 0.03 - press * 0.08})`;
+  target.style.filter = hover ? `brightness(${1 + hover * 0.08})` : 'none';
+  const lean = progress(t, T.click, T.click + 0.9, ease.outCubic);
+  cam.at({ x: (tx - 0.5) * cw * 0.5 * lean, y: (ty - 0.5) * ch * 0.5 * lean, z: DIST - SHORT * 0.24 * lean, yaw: -4 + 4 * lean, pitch: 0 });
+  // the answer opens under the button and fills
+  const open = progress(t, T.answer, T.answer + 0.5, ease.outBack);
+  answer.style.opacity = String(Math.min(1, open * 1.5)); answer.style.transform = `translateY(${(1 - open) * -ah * 0.3}px) scale(${0.9 + 0.1 * open})`;
+  fill.style.width = `${progress(t, T.answer + 0.3, D - 0.2, ease.inOutSine) * 100}%`;
+});
+B.cue(s, 'text', T.hover); B.cue(s, 'land', T.click); B.cue(s, 'transition', T.answer);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

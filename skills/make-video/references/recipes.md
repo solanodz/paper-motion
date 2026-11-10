@@ -10,6 +10,10 @@ Beats name a gesture and the brand cue it carries (`B.cue(s, 'transition' | 'lan
 Every recipe carries the **what** (what the brand is, in plain words) in its first third and **one action** at the
 end; the tables mark where.
 
+## Shots (3–6 s)
+
+A shot is one camera gesture, not a structure: a close-up with a focus pull (`focus-pull`), the camera gliding over a component (`pass-over`), a cursor that crosses a UI and clicks (`cursor-guide`), a slow push onto a word (`push-in`), an object turning to face the camera (`turn-in`). Use them on their own for a feed, or chain them before a recipe (a shot as the hook, then the recipe). They install like recipes (`pamo add <shot>`), take the brand from `brand/`, and their CONFIG names what changes: the picture, the words, where the cursor goes. All recipes and shots now share one camera: `camera()` from `paper-motion/kit` (a world, `place()`, `travel()`, `focus()`); a piece is a world the camera moves through, not a deck of cards.
+
 ## Launch (20–30 s)
 
 Something new exists; show it and make people want it.

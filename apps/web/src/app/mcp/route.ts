@@ -32,8 +32,9 @@ The flow, in order:
    the end. Mirror it back.
 2. You NEVER choose a look for the user. Each of these decisions is a board (tool \`board\`), one at a time, in this
    order: palette · font pair · background(s) · moves by role (how things enter, how one thing becomes the next, how
-   text arrives; pass choose: [1, 3] so they can pick several) · recipe (choose: [1, 3] too: several recipes in order
-   are one piece made of those blocks; add one structure of your own as an option). Use \`search\` to pick 2–4 fitting options,
+   text arrives; pass choose: [1, 3] so they can pick several) · recipe or shots (choose: [1, 3] too: several recipes
+   or shots in order are one piece made of those blocks; shots are 3–6 s camera gestures; add one structure of your own
+   as an option). Use \`search\` to pick 2–4 fitting options,
    \`resource\` to read params before tuning one, \`recolor\` to show a background in their palette. Share the link,
    say you are waiting; \`board\` returns their choice. Never ask them to paste anything.
 3. Install what they chose with \`npx paper-motion add <id> [--set …]\` in their project (the \`add\` field of each
@@ -51,10 +52,10 @@ const handler = createMcpHandler(
       "search",
       {
         title: "Search the registry",
-        description: "Finds resources (component transitions, transitions, text effects, camera moves, backgrounds, palettes, font pairs, recipes) by words and by the choosing metadata. Returns the index entries: id, type, title, summary, tags, when, mood, energy, role, colors, mode, motion and the names of their params. Pass `near` with the brand's ground, figure and accent to sort backgrounds and palettes by color fit (lower `fit` is closer).",
+        description: "Finds resources (component transitions, transitions, text effects, camera moves, backgrounds, palettes, font pairs, recipes, shots: 3–6 s camera pieces) by words and by the choosing metadata. Returns the index entries: id, type, title, summary, tags, when, mood, energy, role, colors, mode, motion and the names of their params. Pass `near` with the brand's ground, figure and accent to sort backgrounds and palettes by color fit (lower `fit` is closer).",
         inputSchema: z.object({
           query: z.string().optional().describe("free words, matched against id, title, summary, tags, when and mood"),
-          type: z.enum(["component", "transition", "text", "camera", "background", "palette", "font-pair", "recipe"]).optional(),
+          type: z.enum(["component", "transition", "text", "camera", "background", "palette", "font-pair", "recipe", "shot"]).optional(),
           mode: z.enum(["light", "dark"]).optional(),
           mood: z.enum(["calm", "bold", "playful", "technical", "editorial", "warm", "minimal", "luxury", "raw"]).optional(),
           motion: z.enum(["still", "gentle", "lively"]).optional().describe("backgrounds only"),

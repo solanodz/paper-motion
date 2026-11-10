@@ -4,47 +4,51 @@
 <meta charset="utf-8">
 <title>launch</title>
 <!--
-  Recipe · launch (24 s). Something new exists; show it and make people want it.
-  Hook 0–2 s · Problem 2–6 s · Reveal 6–9 s (the name and what it is) · Proof 9–20 s (three moments, each its own
-  mechanic: here three cards joined by component transitions) · Close 20–24 s (wordmark and the action).
-  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first; swap the moves for
-  the ones the user picked (pamo add <id>) and replace the proof cards with real material when there is some.
+  Recipe · launch (24 s). Something new exists: hook, problem, reveal, three proofs, close.
+  One idea carries it: the words and the cards stand in a corridor of space and ONE camera travels through them,
+  front to back. Each beat is a place; the previous one slides past the lens and out of focus as the camera arrives
+  at the next. Angles change on the way (yaw, a little pitch), the proofs stand at different sides of the path, and
+  the close is the camera coming to rest.
+  Hook 0–2.4 s · Problem 2.4–5.8 s · Reveal 5.8–9 s · Proof 9–19.6 s · Close 19.6–24 s.
+  Look, fonts, pace and sound come from /brand (serve from the project root). Edit CONFIG first; put real material
+  in the proof cards when there is some (a screenshot, a number).
 -->
 <style>
   #stage { overflow: hidden; }
   .abs { position: absolute; box-sizing: border-box; }
-  .frame { position: absolute; inset: 0; }
-  .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8%; box-sizing: border-box; }
-  .card { position: absolute; inset: 0; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; }
-  .card [data-part] { align-self: flex-start; }
+  .place { display: flex; flex-direction: column; align-items: center; text-align: center; box-sizing: border-box; }
+  .card { box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; text-align: left; overflow: hidden; }
 </style>
 </head>
 <body>
 <main id="stage">
   <div id="bg" class="abs" style="inset:0"></div>
   <div id="vig" class="abs" style="inset:0"></div>
-  <div id="f1" class="frame"><div class="center"><div id="hook"></div><div id="problem"></div></div></div>
-  <div id="f2" class="frame"><div class="center"><div id="name"></div><div id="what"></div></div></div>
-  <div id="f3" class="frame"><div id="slot" class="abs"></div></div>
-  <div id="f4" class="frame"><div class="center"><div id="mark"></div><div id="action"></div></div></div>
+  <div id="world">
+    <div id="p-hook" class="place"><div id="hook"></div></div>
+    <div id="p-problem" class="place"><div id="problem"></div></div>
+    <div id="p-reveal" class="place"><div id="name"></div><div id="what"></div></div>
+    <div id="p-close" class="place"><div id="mark"></div><div id="action"></div></div>
+  </div>
 </main>
 <script type="module">
 import { scene, progress, ease } from 'paper-motion';
-import { wordRise, blurIn, popIn, zoomThrough, flash, flipLift, whipPan } from 'paper-motion/moves';
+import { wordRise, blurIn, popIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
 import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
-  background: null,                         // a shader-set id (pamo add mesh-sage), or null for the brand's first entry
-  backgroundOpacity: 0.55,                 // the shader behind the type; 1 for a field with no words over it
-  hook: 'Something new is here.',           // the boldest claim, already moving
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  backgroundOpacity: 0.5,                // the field behind the corridor; the type stays readable
+  hook: 'Something new is here.',
   problem: 'The situation it changes, in the brand’s words.',
-  what: null,                               // what it is in plain words; null reads IDENTITY.md "In one line"
-  proof: [                                  // three moments that show it working; claims only from IDENTITY.md's Facts
+  what: null,                            // what the brand is, in plain words; null reads IDENTITY.md
+  proof: [
     { label: '01 · fast', title: 'Fact one', body: 'A real number or a real result.' },
     { label: '02 · simple', title: 'Fact two', body: 'What it replaces, in one line.' },
     { label: '03 · yours', title: 'Fact three', body: 'Who it is for, and why now.' },
   ],
-  action: 'your.site',                      // where to get it, when it is out
+  action: 'your.site',
   format: [1920, 1080],
 };
 
@@ -53,84 +57,89 @@ const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 24;
 const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 if (bgId) B.shader(s, '#bg', bgId);
-document.querySelector('#bg').style.opacity = CONFIG.backgroundOpacity;   // the material sits behind the type, never over it
-document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)';
+const bg = document.querySelector('#bg'); bg.style.opacity = CONFIG.backgroundOpacity;
+document.querySelector('#vig').style.background = 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 100%)';
 const $ = (id) => document.getElementById(id);
 
-const hook = B.style($('hook'), 'display', { short: SHORT }), problem = B.style($('problem'), 'title', { short: SHORT, color: 'muted' });
-const name = B.style($('name'), 'display', { short: SHORT }), what = B.style($('what'), 'title', { short: SHORT, color: 'muted' });
-const mark = B.style($('mark'), 'display', { short: SHORT }), action = B.style($('action'), 'body', { short: SHORT, color: 'figure' });
-Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * 0.028}px`, letterSpacing: '0em' });
-problem.style.marginTop = what.style.marginTop = action.style.marginTop = `${SHORT * 0.03}px`;
+// the corridor: one place per beat, a step of STEP along -z; the camera looks from DIST in front of each place
+const STEP = SHORT * 1.3, DIST = SHORT * 0.65, K = 1 + DIST / (SHORT * 1.7);   // K: type sized up for the distance
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const hook = B.style($('hook'), 'display', { short: SHORT * K }), problem = B.style($('problem'), 'title', { short: SHORT * K, color: 'muted' });
+const name = B.style($('name'), 'display', { short: SHORT * K }), what = B.style($('what'), 'title', { short: SHORT * K, color: 'muted' });
+const mark = B.style($('mark'), 'display', { short: SHORT * K }), action = B.style($('action'), 'body', { short: SHORT * K, color: 'figure' });
+Object.assign(action.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * K * 0.028}px`, letterSpacing: '0em', marginTop: `${SHORT * 0.03}px` });
+what.style.marginTop = `${SHORT * 0.03}px`;
+for (const el of [hook, problem, name, what]) el.style.maxWidth = '18ch';
 hook.textContent = CONFIG.hook; problem.textContent = CONFIG.problem;
 name.textContent = mark.textContent = B.name;
 what.textContent = CONFIG.what ?? ((B.identity['In one line'] ?? '').split('\n')[0] || '');
 action.textContent = CONFIG.action;
+for (const el of ['p-hook', 'p-problem', 'p-reveal', 'p-close']) $(el).style.width = `${W * 0.9}px`;
 
-// the proof cards: three states of one component, stacked in a slot
-const slot = $('slot'), cw = Math.min(W * 0.62, SHORT * 1.25), ch = cw * 0.6;
-Object.assign(slot.style, { left: `${(W - cw) / 2}px`, top: `${(H - ch) / 2}px`, width: `${cw}px`, height: `${ch}px` });
+// the places: the words straight ahead, the proofs on alternating sides of the path, each turned toward it
+const Z = (i) => -i * STEP;
+cam.place($('p-hook'), { z: Z(0) });
+cam.place($('p-problem'), { z: Z(1), x: SHORT * 0.08, yaw: -5 });
+cam.place($('p-reveal'), { z: Z(2) });
+const R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+const cw = SHORT * 0.92 * K, ch = cw * 0.58;
 const cards = CONFIG.proof.map((p, i) => {
   const c = document.createElement('div');
   c.className = 'card';
-  const light = i % 2 === 1;
-  Object.assign(c.style, { padding: `${cw * 0.07}px`, borderRadius: `${(B.tokens?.shape?.radius ?? 12) * (SHORT / 1080)}px`, background: light ? B.color('accent', '#E9E4D8') : B.color('surface', '#111'), color: light ? B.color('ground') : B.color('figure'), border: `1.5px solid ${light ? 'transparent' : B.color('muted') + '55'}` });
+  const light = i === 1;
+  Object.assign(c.style, { width: `${cw}px`, height: `${ch}px`, padding: `${cw * 0.07}px`, borderRadius: `${R}px`, background: light ? B.color('accent', '#E9E4D8') : B.surface(), color: light ? B.color('ground') : B.color('figure'), border: `1.5px solid ${light ? 'transparent' : B.color('muted') + '55'}`, boxShadow: `0 ${SHORT * 0.03}px ${SHORT * 0.1}px rgba(0,0,0,0.45)` });
   c.innerHTML = `<div data-part="label"></div><div data-part="title"></div><div data-part="body"></div>`;
-  B.style(c.children[0], 'caption', { short: SHORT, color: light ? 'ground' : 'muted' }).textContent = p.label;
-  B.style(c.children[1], 'title', { short: SHORT, color: light ? 'ground' : 'figure' }).textContent = p.title;
-  B.style(c.children[2], 'body', { short: SHORT, color: light ? 'ground' : 'muted' }).textContent = p.body;
+  B.style(c.children[0], 'caption', { short: SHORT * K, color: light ? 'ground' : 'muted' }).textContent = p.label;
+  B.style(c.children[1], 'title', { short: SHORT * K, color: light ? 'ground' : 'figure' }).textContent = p.title;
+  B.style(c.children[2], 'body', { short: SHORT * K, color: light ? 'ground' : 'muted' }).textContent = p.body;
   c.children[1].style.marginTop = `${SHORT * 0.02}px`; c.children[2].style.marginTop = 'auto';
-  Object.assign(c.children[2].style, { fontSize: `${SHORT * 0.03}px`, lineHeight: 1.35, maxWidth: '26ch' });   // readable on a phone
-  slot.append(c);
+  Object.assign(c.children[2].style, { fontSize: `${SHORT * K * 0.03}px`, lineHeight: 1.35, maxWidth: '26ch' });
+  $('world').append(c);
+  // left of the path, right of the path, left again; each card turned a little toward the camera's way in
+  cam.place(c, { z: Z(3 + i), x: [-1, 1, -0.6][i] * SHORT * 0.22, y: [0, 0.05, -0.04][i] * SHORT, yaw: [14, -16, 10][i], pitch: [0, 2, -2][i] });
   return c;
 });
+cam.place($('p-close'), { z: Z(6) });
 await document.fonts.ready;
 for (const el of [hook, name, mark]) { el.style.whiteSpace = 'nowrap'; const k = (W * 0.84) / el.scrollWidth; if (k < 1) el.style.fontSize = `${parseFloat(el.style.fontSize) * k}px`; }
 
-// timeline
-const T = { problem: 2.4, reveal: [5.8, 6.9], proof: 9.0, swap1: [12.4, 13.6], swap2: [16.0, 16.9], close: [19.6, 20.15] };
-const frames = [$('f1'), $('f2'), $('f3'), $('f4')];
-const RESET = ['transform', 'opacity', 'filter', 'clipPath', 'zIndex', 'transformOrigin', 'backfaceVisibility'];
-const clean = (els) => els.forEach((e) => RESET.forEach((k) => { e.style[k] = ''; }));
+// the camera's path: at rest in front of each place, travelling between them; the angle changes on the way
+const T = { problem: 2.4, reveal: 5.8, proof: 9.0, card2: 12.6, card3: 16.2, close: 19.6 };
+const at = (i, extra = {}) => ({ z: Z(i) + DIST, ...extra });
+const path = [
+  [0, at(0, { x: 0, y: 0, yaw: 3, pitch: -1, zoom: 1 })],
+  [T.problem - 0.6, at(0, { yaw: 3 })],
+  [T.problem + 0.9, at(1, { x: SHORT * 0.08, yaw: -4, pitch: 1 }), ease.inOutCubic],
+  [T.reveal - 0.5, at(1, { yaw: -4 })],
+  [T.reveal + 1.0, at(2, { x: 0, yaw: 0, pitch: 0 }), ease.inOutCubic],
+  [T.proof - 0.5, at(2)],
+  [T.proof + 0.9, at(3, { x: -SHORT * 0.16, y: 0, yaw: 10, pitch: 0 }), ease.inOutCubic],
+  [T.card2 - 0.6, at(3, { yaw: 12 })],
+  [T.card2 + 0.9, at(4, { x: SHORT * 0.14, y: SHORT * 0.04, yaw: -12, pitch: 2 }), ease.inOutCubic],
+  [T.card3 - 0.6, at(4, { yaw: -14 })],
+  [T.card3 + 0.9, at(5, { x: -SHORT * 0.08, y: -SHORT * 0.03, yaw: 7, pitch: -2 }), ease.inOutCubic],
+  [T.close - 0.6, at(5, { yaw: 8 })],
+  [T.close + 1.2, at(6, { x: 0, y: 0, yaw: 0, pitch: 0 }), ease.inOutQuart],
+  [D, at(6, { z: Z(6) + DIST * 0.92 }), ease.inOutSine],
+];
 s.update((t) => {
-  // close finished moves first (they hide their layers at p = 1), then reset and play what is current
-  if (t >= T.swap1[1]) flipLift(cards[0], cards[1], 1, { duration: 1.2 });
-  if (t >= T.swap2[1]) whipPan(cards[1], cards[2], 1, { duration: 0.9 });
-  clean([...frames, ...cards, ...cards.flatMap((c) => [...c.children])]);
-  frames.forEach((f, i) => { f.style.opacity = 0; f.style.zIndex = i + 1; });
-  cards.forEach((c, i) => { c.style.opacity = 0; c.style.zIndex = i + 1; });
-
-  // 1 · hook, then problem
+  cam.travel(t, path);
+  cam.focus(DIST, SHORT * 0.9, 10);
+  // the field drifts with the journey, slower than the world: depth without a third layer
+  bg.style.transform = `scale(${1.08 + 0.1 * progress(t, 0, D)}) translateX(${-SHORT * 0.03 * progress(t, 0, D)}px)`;
+  // each place wakes as the camera arrives
   wordRise(hook, t, { start: 0.2, each: B.pace.stagger, duration: 0.9 });
-  const hookOut = progress(t, T.problem - 0.4, T.problem, ease.inCubic);
-  hook.style.filter = hookOut > 0.01 ? `blur(${hookOut * 12}px)` : 'none';
-  hook.style.opacity = 1 - hookOut;
-  blurIn(problem, t, { start: T.problem, duration: 0.9 });
-  // 2 · the camera dives through the problem and lands on the reveal
-  if (t < T.reveal[0]) frames[0].style.opacity = 1;
-  else if (t < T.reveal[1]) zoomThrough(frames[0], frames[1], progress(t, ...T.reveal));
-  else if (t < T.proof) frames[1].style.opacity = 1;
-  wordRise(name, t, { start: T.reveal[1] - 0.2, each: B.pace.stagger, duration: 0.8 });
-  blurIn(what, t, { start: T.reveal[1] + 0.5, duration: 0.8 });
-  // 3 · proof: the card rises in, flips to the second, whips to the third
-  if (t >= T.proof && t < T.close[1]) {
-    frames[2].style.opacity = 1;
-    const rise = progress(t, T.proof, T.proof + 0.7, ease.outCubic);
-    frames[2].style.transform = `translateY(${(1 - rise) * SHORT * 0.06}px)`;
-    if (t < T.swap1[0]) { cards[0].style.opacity = rise; popIn(cards[0].children[1], t, { start: T.proof + 0.2 }); }
-    else if (t < T.swap1[1]) flipLift(cards[0], cards[1], progress(t, ...T.swap1), { duration: 1.2 });
-    else if (t < T.swap2[0]) cards[1].style.opacity = 1;
-    else if (t < T.swap2[1]) whipPan(cards[1], cards[2], progress(t, ...T.swap2), { duration: 0.9 });
-    else cards[2].style.opacity = 1;
-  }
-  // 4 · a flash hides the cut to the close
-  if (t >= T.close[0] && t < T.close[1]) flash(frames[2], frames[3], progress(t, ...T.close));
-  else if (t >= T.close[1]) frames[3].style.opacity = 1;
-  wordRise(mark, t, { start: T.close[1], each: B.pace.stagger, duration: 0.9 });
-  blurIn(action, t, { start: T.close[1] + 0.8, duration: 0.8 });
+  blurIn(problem, t, { start: T.problem - 0.1, duration: 0.9 });
+  wordRise(name, t, { start: T.reveal - 0.05, each: B.pace.stagger, duration: 0.9 });
+  blurIn(what, t, { start: T.reveal + 0.5, duration: 0.8 });
+  const starts = [T.proof - 0.1, T.card2 - 0.1, T.card3 - 0.1];
+  cards.forEach((c, i) => { popIn(c.children[1], t, { start: starts[i] }); blurIn(c.children[2], t, { start: starts[i] + 0.35, duration: 0.6 }); });
+  wordRise(mark, t, { start: T.close - 0.1, each: B.pace.stagger, duration: 0.9 });
+  blurIn(action, t, { start: T.close + 0.7, duration: 0.8 });
 });
-B.cue(s, 'land', 0.2); B.cue(s, 'text', T.problem); B.cue(s, 'transition', T.reveal[0]); B.cue(s, 'land', T.reveal[1]);
-B.cue(s, 'land', T.proof); B.cue(s, 'transition', T.swap1[0]); B.cue(s, 'transition', T.swap2[0]); B.cue(s, 'transition', T.close[0]); B.cue(s, 'land', T.close[1]);
+B.cue(s, 'land', 0.2); B.cue(s, 'transition', T.problem); B.cue(s, 'text', T.problem + 0.5); B.cue(s, 'transition', T.reveal); B.cue(s, 'land', T.reveal + 0.6);
+B.cue(s, 'transition', T.proof); B.cue(s, 'land', T.proof + 0.5); B.cue(s, 'transition', T.card2); B.cue(s, 'land', T.card2 + 0.5); B.cue(s, 'transition', T.card3); B.cue(s, 'land', T.card3 + 0.5);
+B.cue(s, 'transition', T.close); B.cue(s, 'land', T.close + 0.8);
 B.sound(s);
 await s.start();
 </script>

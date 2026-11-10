@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>pass-over</title>
+<!--
+  Shot · pass over (5 s). The camera glides across a component at a low angle, like a hand passing over a table:
+  it enters from one side, close and tilted, straightens as it crosses the centre, and leaves the other side. The
+  component stays still; only the camera moves. A caption rides the pass.
+  Enter 0–1.2 s · Cross 1.2–3.8 s · Leave 3.8–5 s.
+  Look, fonts and sound come from /brand. Edit CONFIG: the component (a screenshot, or the drawn placeholder), the
+  caption. Ask your agent to point it at your real UI, flip the direction, or chain it before a recipe.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #comp { overflow: hidden; }
+  #comp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+  .ui { position: absolute; inset: 0; display: grid; grid-template-columns: 22% 1fr; }
+  .ui .side { display: flex; flex-direction: column; gap: 6%; padding: 7% 14%; }
+  .ui i { display: block; height: 0.55em; border-radius: 999px; opacity: 0.45; }
+  .ui .main { display: flex; flex-direction: column; gap: 4%; padding: 5%; }
+  .ui .row { display: grid; gap: 3%; }
+  .ui .box { border-radius: 0.6em; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world">
+    <div id="comp"></div>
+  </div>
+  <div id="caption" class="abs"></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { blurIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  image: '',                             // the component (path); empty draws a placeholder UI
+  caption: 'One board. Every choice adds up.',
+  direction: 'right',                    // 'right' (enter left, leave right) or 'left'
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5, dir = CONFIG.direction === 'left' ? -1 : 1;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = 0.35;
+const $ = (id) => document.getElementById(id);
+
+const DIST = SHORT * 0.55, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const comp = $('comp'), cw = W * 0.7 * K, ch = cw * 0.56, R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+Object.assign(comp.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: B.surface(), border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)` });
+if (CONFIG.image) { const img = document.createElement('img'); img.src = CONFIG.image; comp.append(img); }
+else {
+  const ui = document.createElement('div'); ui.className = 'ui'; ui.style.fontSize = `${cw * 0.012}px`;
+  const line = (w, c = B.color('muted')) => `<i style="width:${w}%;background:${c}"></i>`;
+  const box = (h, c = B.color('ground')) => `<div class="box" style="height:${h}px;background:${c};border:1px solid ${B.color('muted')}33"></div>`;
+  ui.innerHTML = `<div class="side" style="background:${B.color('ground')}">${line(60, B.color('figure'))}${line(80)}${line(55)}${line(70)}${line(40)}</div><div class="main">${line(28, B.color('figure'))}<div class="row" style="grid-template-columns:1fr 1fr 1fr">${box(ch * 0.2)}${box(ch * 0.2, B.color('accent'))}${box(ch * 0.2)}</div>${box(ch * 0.38)}</div>`;
+  comp.append(ui);
+}
+cam.place(comp, { x: 0, y: 0, z: 0, pitch: -8 });           // the component lies back a little, a table
+const caption = B.style($('caption'), 'title', { short: SHORT, color: 'figure' });
+Object.assign(caption.style, { left: `${W * 0.07}px`, bottom: `${H * 0.09}px`, maxWidth: `${W * 0.6}px`, textAlign: 'left', textShadow: '0 2px 24px rgba(0,0,0,0.75)' });
+caption.textContent = CONFIG.caption;
+await document.fonts.ready;
+
+// the pass: low and close at the edge, high and straight at the centre, low again at the far edge
+const T = { enter: 1.2, leave: 3.8 };
+s.update((t) => {
+  const p = progress(t, 0, D, ease.inOutSine);
+  const x = (-cw * 0.42 + cw * 0.84 * p) * dir;
+  const arc = Math.sin(p * Math.PI);                                           // 0 at the edges, 1 at the centre
+  cam.at({ x: x * 0.8, y: ch * 0.02 - ch * 0.04 * arc, z: DIST * 0.95 + DIST * 0.3 * arc, yaw: dir * (-16 + 32 * p), pitch: -4 + 2 * arc, roll: dir * (2 - 4 * p) * 0.5 });
+  cam.focus(cam.pos.z, SHORT * 1.4, 6);
+  blurIn(caption, t, { start: T.enter, duration: 0.8 });
+  const out = progress(t, T.leave, T.leave + 0.8, ease.inCubic);
+  if (out > 0) caption.style.opacity = String(Math.min(Number(caption.style.opacity || 1), 1 - out));
+});
+B.cue(s, 'transition', 0.1); B.cue(s, 'text', T.enter); B.cue(s, 'transition', T.leave);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

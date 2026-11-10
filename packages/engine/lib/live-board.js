@@ -9,7 +9,7 @@
 export const BOARD_VERSION = 1;
 export const MAX_PAYLOAD = 8 * 1024;
 const LABELS = ['A', 'B', 'C', 'D'];
-const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palette', 'font-pair', 'recipe'];
+const TYPES = ['component', 'transition', 'text', 'camera', 'background', 'palette', 'font-pair', 'recipe', 'shot'];
 
 /**
  * @typedef {{ v: 1, kind: 'resource'|'kit', title: string, ask?: string, reply?: string,

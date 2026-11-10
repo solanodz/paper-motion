@@ -1,0 +1,142 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "focus-pull",
+  "type": "shot",
+  "title": "Focus pull",
+  "summary": "A close-up: a detail sharp and large, a title soft behind it; the focus pulls to the title as the camera eases back, in 4 s.",
+  "tags": [
+    "shot",
+    "close-up",
+    "focus",
+    "depth",
+    "camera",
+    "title"
+  ],
+  "params": [
+    {
+      "name": "detailText",
+      "type": "string",
+      "default": "0.2s",
+      "description": "the detail in focus first: a word or a number",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "detailImage",
+      "type": "string",
+      "default": "",
+      "description": "or a picture for the detail (path)",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "default": "Every frame, on time.",
+      "description": "what comes into focus behind it",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "line",
+      "type": "string",
+      "default": "",
+      "description": "a small line under the title",
+      "group": "advanced",
+      "control": "text"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/shot/focus-pull/scene.html",
+      "to": "pieces/focus-pull/scene.html"
+    },
+    {
+      "from": "registry/shot/focus-pull/brief.md",
+      "to": "pieces/focus-pull/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add focus-pull --name my-shot\n# edit CONFIG in pieces/my-shot/scene.html, then:\nnpx paper-motion render pieces/my-shot/scene.html --motion-blur 6",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "The depth of field is real: `cam.focus()` from paper-motion/kit blurs by distance from the focal plane."
+  ],
+  "related": [
+    "push-in",
+    "launch"
+  ],
+  "preview": {
+    "video": "previews/focus-pull.webm",
+    "poster": "previews/focus-pull.jpg",
+    "at": 3.2,
+    "values": {
+      "detailText": "0.2s",
+      "title": "Every frame, on time.",
+      "line": "paper-motion renders what your agent directs."
+    }
+  },
+  "mood": [
+    "calm",
+    "editorial",
+    "technical"
+  ],
+  "duration": 4,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Detail",
+      "from": 0,
+      "to": 1.6,
+      "what": "the detail sharp, the title soft"
+    },
+    {
+      "name": "Pull",
+      "from": 1.6,
+      "to": 2.6,
+      "what": "focus travels to the title; the camera eases back"
+    },
+    {
+      "name": "Title",
+      "from": 2.6,
+      "to": 4,
+      "what": "the title sharp, the detail soft"
+    }
+  ],
+  "when": [
+    "one number or one word deserves a close-up",
+    "opening a piece on a detail before the name"
+  ]
+}

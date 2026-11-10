@@ -6,7 +6,8 @@ export function scramble(el, t, { start = 0, duration = 1.4, fps = 30, rate = 2,
   const cs = chars(el);
   if (!el._labText) {
     el._labText = cs.map((c) => c.textContent);
-    cs.forEach((c) => { c.style.width = `${c.getBoundingClientRect().width}px`; c.style.textAlign = 'center'; });
+    // layout width, not the on-screen rect: inside a 3D world the rect is scaled by perspective
+    cs.forEach((c) => { c.style.width = `${c.offsetWidth}px`; c.style.textAlign = 'center'; });
     const r = rng(seed); el._labJit = cs.map(() => r.next());
   }
   const n = cs.length, tick = Math.floor((t * fps) / rate);
