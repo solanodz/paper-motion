@@ -1,0 +1,114 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "kinetic-captions",
+  "type": "block",
+  "title": "Kinetic captions",
+  "summary": "Captions timed to a voice: the phrase sits dim, each word lights as it is said, key words land bigger, phrases change on a clean cut.",
+  "tags": [
+    "block",
+    "text",
+    "captions",
+    "subtitles",
+    "voice",
+    "social"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "script",
+      "type": "string",
+      "default": "Your agent writes the brief. You pick the look. It renders every frame. That is paper-motion.",
+      "description": "script",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "perPage",
+      "type": "number",
+      "default": 24,
+      "description": "most characters on one page of captions",
+      "group": "main"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1080x1920",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/kinetic-captions/scene.html",
+      "to": "pieces/kinetic-captions/scene.html"
+    },
+    {
+      "from": "registry/block/kinetic-captions/brief.md",
+      "to": "pieces/kinetic-captions/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add kinetic-captions --name my-kinetic-captions\n# edit CONFIG in pieces/my-kinetic-captions/scene.html, then:\nnpx paper-motion render pieces/my-kinetic-captions/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "word-swap",
+    "marker-highlight"
+  ],
+  "preview": {
+    "video": "previews/kinetic-captions.webm",
+    "poster": "previews/kinetic-captions.jpg",
+    "at": 4.6,
+    "values": {}
+  },
+  "mood": [
+    "playful",
+    "minimal"
+  ],
+  "duration": 6.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Captions",
+      "from": 0.35,
+      "to": 6.2,
+      "what": "each word lights as it is said; phrases change on a cut"
+    },
+    {
+      "name": "Hold",
+      "from": 6.2,
+      "to": 6.6,
+      "what": "the last phrase holds"
+    }
+  ],
+  "when": [
+    "voice-over videos for social",
+    "talking points in vertical"
+  ]
+}

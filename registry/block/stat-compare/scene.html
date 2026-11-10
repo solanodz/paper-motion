@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>stat-compare</title>
+<!--
+  Data · stat compare (5 s). One number, then the number that replaces it. The old figure is struck through, tips
+  and falls out of frame, soft; the new one arrives from deep in the scene on a spring and lands in the accent, while
+  the line above it changes from how it was to how it is now. The camera answers the landing with a small push.
+  Vertical: each figure stacks its words (40 / min) and grows to fill the width; square: the figures fit the width.
+  Old 0.2–1.3 s · Strike 1.4–1.8 s · Fall 2.0–2.7 s · New 2.2–2.9 s · Hold to 5 s.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #p { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #cap { position: relative; }
+  #cap > div { white-space: nowrap; }
+  #cap .b { position: absolute; left: 50%; top: 0; transform: translateX(-50%); }
+  #nums { position: relative; }
+  #old, #new { white-space: nowrap; line-height: 1; }
+  #new { position: absolute; left: 50%; top: 0; }
+  #strike { position: absolute; left: -4%; right: -4%; top: 54%; transform-origin: 0 50%; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"><div id="p"><div id="cap"><div class="a"></div><div class="b"></div></div><div id="nums"><div id="old"><span id="oldt"></span><div id="strike"></div></div><div id="new"></div></div><div id="label"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { wordRise, blurIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  before: { caption: 'By hand', value: '40 min' },
+  after: { caption: 'With paper-motion', value: '2 min' },
+  label: 'per launch video',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const bg = $('bg'); bg.style.opacity = 0.45;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.65) 100%)';
+function $(id) { return document.getElementById(id); }
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const accent = B.color('accent', '#E9E4D8'), muted = B.color('muted');
+const tall = H > W, big0 = SHORT * K * 0.3; let big = big0;
+const oldT = B.style($('oldt'), 'display', { short: SHORT * K, color: 'figure' }), nw = B.style($('new'), 'display', { short: SHORT * K, color: 'figure' });
+for (const el of [oldT, nw]) el.style.fontSize = `${big}px`;
+oldT.textContent = CONFIG.before.value; nw.textContent = CONFIG.after.value; nw.style.color = accent;
+const capA = B.style($('cap').children[0], 'body', { short: SHORT * K, color: 'muted' }), capB = B.style($('cap').children[1], 'body', { short: SHORT * K, color: 'figure' });
+for (const el of [capA, capB]) Object.assign(el.style, { fontFamily: B.font('mono'), fontSize: `${SHORT * K * (tall ? 0.045 : 0.032)}px`, letterSpacing: '0.02em' });
+capA.textContent = CONFIG.before.caption; capB.textContent = CONFIG.after.caption;
+const label = B.style($('label'), 'title', { short: SHORT * K, color: 'muted' });
+label.textContent = CONFIG.label; label.style.fontSize = `${SHORT * K * (tall ? 0.075 : 0.05)}px`; label.style.marginTop = `${SHORT * (tall ? 0.04 : 0.02)}px`;
+$('cap').style.marginBottom = `${SHORT * (tall ? 0.05 : 0.03)}px`;
+const strike = $('strike'); Object.assign(strike.style, { height: `${big * 0.035}px`, background: '#d0715f', borderRadius: '999px' });
+$('p').style.width = `${W}px`;
+cam.place($('p'), { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+// the figures fit the frame at the closest push (a margin each side): only narrow frames shrink them
+const closest = (SHORT * 1.7) / (SHORT * 1.7 + DIST - SHORT * 0.25);
+const strikes = [strike];
+if (tall) {   // one word per line, and one strike per line
+  for (const el of [$('old'), nw]) Object.assign(el.style, { width: 'min-content', whiteSpace: 'normal' });
+  const s2 = strike.cloneNode(); $('old').append(s2); strikes.push(s2);
+  strike.style.top = '27%'; s2.style.top = '77%';
+}
+const widest = Math.max($('old').offsetWidth, nw.offsetWidth);
+big = Math.min(big0 * (tall ? 1.6 : 1), big0 * (W * 0.84 / closest) / widest);
+for (const el of [oldT, nw]) el.style.fontSize = `${big}px`;
+strikes.forEach((e) => { e.style.height = `${big * 0.035}px`; });
+
+const T = { old: 0.2, strike: [1.4, 1.8], fall: [1.95, 2.45], nw: 2.4 };
+const old = $('old');
+s.update((t) => {
+  wordRise(oldT, t, { start: T.old, each: B.pace.stagger, duration: 0.8 });
+  blurIn(capA, t, { start: T.old + 0.3, duration: 0.6 });
+  blurIn(label, t, { start: T.old + 0.5, duration: 0.7 });
+  strikes.forEach((e, i) => { e.style.transform = `scaleX(${progress(t, T.strike[0] + i * 0.12, T.strike[1] + i * 0.12, ease.inOutCubic)})`; });
+  // the old number tips and falls, going soft as it goes
+  const f = progress(t, ...T.fall, ease.inCubic);
+  old.style.transform = `translateY(${f * SHORT * 0.7}px) rotate(${f * 9}deg)`;
+  old.style.filter = f > 0.02 ? `blur(${f * 14}px)` : 'none';
+  old.style.opacity = String(Math.max(0, 1 - f * 1.8));
+  // the new one comes from deep in the scene: small, soft and far, landing full size with a spring
+  const n = t >= T.nw ? spring(t - T.nw, { stiffness: 120, damping: 12 }) : 0;
+  nw.style.transform = `translateX(-50%) scale(${0.18 + 0.82 * n})`;
+  nw.style.filter = n < 0.95 ? `blur(${(1 - Math.min(1, n)) * 18}px)` : 'none';
+  nw.style.opacity = String(Math.min(1, n * 2.5));
+  // the caption swaps as the numbers do
+  const c = progress(t, T.fall[0], T.nw + 0.3, ease.inOutCubic);
+  capA.style.opacity = String(Math.min(progress(t, T.old + 0.3, T.old + 0.9), 1 - Math.min(1, c * 2))); capA.style.transform = `translateY(${-c * 0.6}em)`;
+  capB.style.opacity = String(Math.max(0, c * 2 - 1)); capB.style.transform = `translateX(-50%) translateY(${(1 - c) * 0.6}em)`;
+  // the camera: a slow drift, then a small push that answers the landing
+  const arrive = progress(t, 0, 1.2, ease.outCubic), push = progress(t, T.nw + 0.2, D, ease.outCubic);
+  const kick = t >= T.nw + 0.3 ? Math.sin(Math.min(1, (t - T.nw - 0.3) / 0.35) * Math.PI) : 0;
+  cam.at({ x: SHORT * 0.02 * (1 - push), y: 0, z: DIST + SHORT * 0.25 * (1 - arrive) - SHORT * 0.22 * push - SHORT * 0.03 * kick, yaw: 5 * (1 - arrive) - 3 * push * 0.3, pitch: 0 });
+  bg.style.transform = `scale(${1.1 + 0.08 * progress(t, 0, D)})`;
+});
+B.cue(s, 'text', T.old); B.cue(s, 'transition', T.strike[0]); B.cue(s, 'land', T.nw + 0.3);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

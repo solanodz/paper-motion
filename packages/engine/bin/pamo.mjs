@@ -647,15 +647,15 @@ async function main() {
         const only = typeof args.only === 'string' ? args.only.split(',') : null;
         const out = path.resolve(args.out ?? path.join(reg.dir, '..', 'apps', 'web', 'public', 'previews'));
         fs.mkdirSync(out, { recursive: true });
-        const items = loadItems(reg.dir).filter((i) => ['component', 'transition', 'text', 'camera', 'recipe', 'shot'].includes(i.type) && (!only || only.includes(i.id)));
-        const POSTER = { component: 1.5, transition: 1.4, text: 2.6, camera: 0.9, recipe: 2.5, shot: 1.8 };
+        const items = loadItems(reg.dir).filter((i) => ['component', 'transition', 'text', 'camera', 'recipe', 'shot', 'block'].includes(i.type) && (!only || only.includes(i.id)));
+        const POSTER = { component: 1.5, transition: 1.4, text: 2.6, camera: 0.9, recipe: 2.5, shot: 1.8, block: 2.5 };
         const demo = path.join(reg.dir, '_demo', 'index.html');
         const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-previews-'));
         try {
           for (const [k, it] of items.entries()) {
             process.stdout.write(`\r${k + 1}/${items.length} ${it.id.padEnd(16)}`);
             const mp4 = path.join(tmp, `${it.id}.mp4`);
-            if (it.type === 'recipe' || it.type === 'shot') {
+            if (it.type === 'recipe' || it.type === 'shot' || it.type === 'block') {
               // a recipe renders whole, wired to the demo brand in registry/_demo/brand (served as /brand)
               const here = process.cwd(), copy = path.join(reg.dir, '_demo', `.${it.id}.recipe.html`);
               // the demo brand's copy goes in through the same generator `pamo add --set` uses (preview.values)

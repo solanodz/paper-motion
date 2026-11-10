@@ -138,6 +138,9 @@ function fontTokens(item, values) {
 }
 
 /** A recipe's CONFIG object from flat values (proof1Title… → proof[0].title, "1920x1080" → [1920, 1080]). */
+// resources whose file is a whole scene, customized through its CONFIG
+const SCENE_TYPES = ['recipe', 'shot', 'block'];
+
 function recipeConfig(values) {
   const cfg = {}, groups = {};
   for (const [k, v] of Object.entries(values)) {
@@ -182,7 +185,7 @@ export function apply(item, values) {
   const files = (item.files ?? []).map((f) => {
     if (f.content === undefined) return f;
     if (MOVE_TYPES.includes(item.type)) return { ...f, content: moveFile(item, f.content, v) };
-    if ((item.type === 'recipe' || item.type === 'shot') && /scene\.html$/.test(f.path)) return { ...f, content: recipeScene(f.content, v) };
+    if (SCENE_TYPES.includes(item.type) && /scene\.html$/.test(f.path)) return { ...f, content: recipeScene(f.content, v) };
     return f;
   });
   let entry = item.install?.entry;
@@ -227,7 +230,7 @@ export function code(item, values, { showAll = false, site = 'https://paper-moti
       { key: 'tokens', label: 'tokens.json', lang: 'json', code: JSON.stringify(e, null, 2) },
       { key: 'css', label: 'CSS variables', lang: 'css', code: `${Object.values(f).map((x) => `@import url('${x.css}');`).filter((x, i, a) => a.indexOf(x) === i).join('\n')}\n\n:root {\n${Object.entries(f).map(([r, x]) => `  --font-${r}: '${x.family}', ${cat(x.family)};`).join('\n')}\n  --display-weight: ${e.type.display.weight};\n  --display-tracking: ${e.type.display.tracking};\n}` },
     ];
-  } else if (item.type === 'recipe' || item.type === 'shot') {
+  } else if (SCENE_TYPES.includes(item.type)) {
     const scene = out.files.find((f) => /scene\.html$/.test(f.path));
     tabs = [{ key: 'scene', label: 'scene.html', lang: 'html', code: scene?.content ?? '' }];
   }

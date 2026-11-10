@@ -1,0 +1,153 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "form-fill",
+  "type": "block",
+  "title": "Form fill",
+  "summary": "A cursor fills a form field by field, each check pops on, the button works and then opens into a new, black screen.",
+  "tags": [
+    "block",
+    "ui",
+    "form",
+    "cursor",
+    "typing",
+    "onboarding"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "default": "New brand",
+      "description": "title",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "button",
+      "type": "string",
+      "default": "Create brand",
+      "description": "button",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "done",
+      "type": "string",
+      "default": "Created",
+      "description": "done",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/form-fill/scene.html",
+      "to": "pieces/form-fill/scene.html"
+    },
+    {
+      "from": "registry/block/form-fill/brief.md",
+      "to": "pieces/form-fill/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add form-fill --name my-form-fill\n# edit CONFIG in pieces/my-form-fill/scene.html, then:\nnpx paper-motion render pieces/my-form-fill/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "search-type",
+    "toggle-flip"
+  ],
+  "preview": {
+    "video": "previews/form-fill.webm",
+    "poster": "previews/form-fill.jpg",
+    "at": 5.6,
+    "values": {}
+  },
+  "mood": [
+    "minimal",
+    "warm"
+  ],
+  "duration": 7.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 0.7,
+      "what": "arrive"
+    },
+    {
+      "name": "Field 1",
+      "from": 1.25,
+      "to": 2.25,
+      "what": "field 1"
+    },
+    {
+      "name": "Field 2",
+      "from": 2.85,
+      "to": 3.95,
+      "what": "field 2"
+    },
+    {
+      "name": "Submit",
+      "from": 4.55,
+      "to": 5.1499999999999995,
+      "what": "submit"
+    },
+    {
+      "name": "Done",
+      "from": 5.35,
+      "to": 5.949999999999999,
+      "what": "done"
+    },
+    {
+      "name": "Opens",
+      "from": 5.8,
+      "to": 6.6,
+      "what": "opens"
+    },
+    {
+      "name": "Hold",
+      "from": 6.6,
+      "to": 7.6,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "sign-up or setup flows",
+    "show how little it takes to start"
+  ]
+}

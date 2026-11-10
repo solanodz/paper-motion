@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>form-fill</title>
+<!--
+  Component · form fill (6.5 s). A cursor fills a form: it clicks a field (the focus ring lights), the value types
+  itself, a check pops on; the next field; then the button presses, works and turns into done. The camera stays close
+  on whatever the cursor is doing and pulls back a step for the button.
+  Arrive 0–0.7 s · Field 1 1.25–2.25 s · Field 2 2.85–3.95 s · Submit 4.55 s · Done 5.35 s · Opens 5.8–6.6 s, from the button to a full black screen · Hold to 7.6 s.
+  Vertical and square: the card is narrowed to the frame width, the camera rides each field centred and turns less.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #card { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; gap: 1.5em; padding: 2.6em; }
+  .f { display: flex; flex-direction: column; gap: 0.6em; }
+  .box { position: relative; height: 3.2em; border-radius: 0.7em; display: flex; align-items: center; padding: 0 1.1em; }
+  .ck { position: absolute; right: 1em; top: 50%; width: 1.5em; height: 1.5em; margin-top: -0.75em; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .caret { display: inline-block; width: 0.1em; height: 1.2em; margin-left: 0.05em; vertical-align: -0.2em; }
+  #btn { position: relative; height: 3.4em; border-radius: 0.7em; display: flex; align-items: center; justify-content: center; gap: 0.6em; margin-top: 0.6em; overflow: hidden; }
+  #cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 5; }
+  #cursor svg { position: absolute; left: 0; top: 0; }
+  .spin { width: 1.1em; height: 1.1em; border-radius: 50%; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="card"></div></div>
+  <div id="wipe" class="abs"></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  title: 'New brand',
+  fields: [['Name', 'paper-motion'], ['Website', 'paper-motion.app']],
+  button: 'Create brand',
+  done: 'Created',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 7.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.35;
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const GREEN = '#8fbf8f';
+const card = $('card'), cw = Math.min(SHORT * 0.95, W * 0.82) * K, narrow = W <= H, R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+Object.assign(card.style, { width: `${cw}px`, borderRadius: `${R * 1.4}px`, background: B.surface(0.18), border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)`, fontSize: `${cw * 0.03}px`, fontFamily: B.font('text'), color: figure });
+card.innerHTML = `<div style="font:400 2em ${B.font('display')}">${CONFIG.title}</div>` +
+  CONFIG.fields.map(([l]) => `<div class="f"><div style="color:${muted};font-size:0.85em">${l}</div><div class="box" style="background:${ground};border:1.5px solid ${muted}44"><span class="v"></span><span class="caret" style="background:${accent}"></span><div class="ck" style="background:${GREEN};color:${ground}">✓</div></div></div>`).join('') +
+  `<div id="btn" style="background:${accent};color:${ground};font-weight:500"><span class="spin" style="border:0.16em solid ${ground}44;border-top-color:${ground}"></span><span class="lab">${CONFIG.button}</span></div>`;
+const cursor = document.createElement('div'); cursor.id = 'cursor'; const cs = cw * 0.045;
+cursor.innerHTML = `<svg width="${cs}" height="${cs * 1.4}" viewBox="0 0 20 28"><path d="M2 2 L18 14 L10 15.5 L14.5 25 L11 26.5 L6.5 17 L2 22 Z" fill="${figure}" stroke="${ground}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+card.append(cursor);
+cam.place(card, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+
+const boxes = [...card.querySelectorAll('.box')], btn = $('btn');
+const ch = card.offsetHeight;
+const center = (el) => [el.offsetLeft + el.offsetWidth / 2, el.offsetTop + el.offsetHeight / 2];
+const at = (el, fx = 0.72) => [el.offsetLeft + el.offsetWidth * fx, el.offsetTop + el.offsetHeight * 0.55];
+// the cursor's path: from below, to each field, to the button
+const P = [[cw * 0.9, ch * 1.05], at(boxes[0]), at(boxes[1]), at(btn, 0.5)];
+const T = { moves: [[0.6, 1.2], [2.3, 2.8], [4.0, 4.5]], clicks: [1.25, 2.85, 4.55], types: [[1.35, 2.2], [2.95, 3.9]], checks: [2.25, 3.95], done: 5.35 };
+const camAt = (el, z) => { const [x, y] = center(el); return { x: x - cw / 2, y: y - ch / 2, z }; };
+const near = DIST - SHORT * (narrow ? 0.64 : 0.88), mid = DIST - SHORT * 0.62;
+// on a field the camera rides along it as the value types; between fields it swings, leaning the other way each time
+// in narrow frames the field fills the width, so it is ridden centred and the turns are gentler (yaw slides the framing)
+const along = (el, fx, z, { yaw, ...extra }) => ({ x: el.offsetLeft + el.offsetWidth * (narrow ? 0.46 + fx * 0.1 : fx) - cw / 2, y: el.offsetTop + el.offsetHeight / 2 - ch / 2, z, yaw: narrow ? yaw * 0.35 : yaw, ...extra });
+const path = [
+  [0, { x: 0, y: 0, z: DIST + SHORT * 0.35, yaw: -14, pitch: 6, roll: -2 }],
+  [0.9, { x: 0, y: 0, z: DIST - SHORT * 0.1, yaw: -6, pitch: 2, roll: 0 }, ease.outCubic],
+  [1.4, along(boxes[0], 0.3, near, { yaw: -8, pitch: 1, roll: -1 }), ease.inOutCubic],
+  [2.3, along(boxes[0], 0.55, near, { yaw: -4, pitch: 0, roll: 0 }), ease.inOutSine],
+  [3.0, along(boxes[1], 0.3, near, { yaw: 8, pitch: -1, roll: 1.2 }), ease.inOutCubic],
+  [3.95, along(boxes[1], 0.6, near, { yaw: 4, pitch: 0, roll: 0 }), ease.inOutSine],
+  [4.6, { ...camAt(btn, mid), yaw: -3, pitch: -2, roll: 0 }, ease.inOutCubic],
+  [5.6, { ...camAt(btn, mid - SHORT * 0.08), yaw: -1, pitch: -1 }, ease.inOutSine],
+  [6.6, { ...camAt(btn, DIST - SHORT * 1.05), yaw: 0, pitch: 0 }, ease.inCubic],     // into the button as it opens
+  [D, { ...camAt(btn, DIST - SHORT * 1.1), yaw: 0, pitch: 0 }],
+];
+T.open = [5.9, 6.7];
+const wipe = $('wipe'); wipe.style.zIndex = 10; wipe.style.pointerEvents = 'none';
+
+s.update((t) => {
+  cam.travel(t, path);
+  card.style.opacity = String(progress(t, 0, 0.35));
+  // the cursor: a curved hop between targets, a small press at each click
+  let seg = 0; while (seg < 2 && t >= T.moves[seg][1]) seg++;
+  const [m0, m1] = T.moves[seg], p = progress(t, m0, m1, ease.inOutCubic), a = P[seg], b = P[seg + 1];
+  const bend = Math.sin(p * Math.PI) * ch * 0.06;
+  const press = T.clicks.some((c) => t >= c && t < c + 0.18) ? 0.86 : 1;
+  cursor.style.transform = `translate(${a[0] + (b[0] - a[0]) * p}px, ${a[1] + (b[1] - a[1]) * p - bend}px) scale(${press})`;
+  cursor.style.opacity = String(progress(t, 0.4, 0.7));
+  // the fields: focus ring, typing, check
+  boxes.forEach((bx, i) => {
+    const focus = t >= T.clicks[i] && (i === 1 ? true : t < T.clicks[i + 1]);
+    const ring = t >= T.clicks[i] ? spring(t - T.clicks[i], { stiffness: 260, damping: 18 }) : 0;
+    bx.style.borderColor = focus ? accent : t >= T.checks[i] ? `${GREEN}88` : `${muted}44`;
+    bx.style.boxShadow = focus ? `0 0 0 ${0.25 * ring}em ${accent}33` : 'none';
+    const v = CONFIG.fields[i][1], n = Math.round(v.length * progress(t, ...T.types[i]));
+    bx.querySelector('.v').textContent = v.slice(0, n);
+    const caret = bx.querySelector('.caret');
+    caret.style.opacity = focus && (t < T.types[i][1] || Math.sin(t * 10) > 0) && !(i === 1 && t > T.clicks[2]) ? '1' : '0';
+    const c = t >= T.checks[i] ? spring(t - T.checks[i], { stiffness: 380, damping: 13 }) : 0;
+    bx.querySelector('.ck').style.transform = `scale(${c})`;
+    if (i === 1 && t > T.clicks[2]) { bx.style.borderColor = `${GREEN}88`; bx.style.boxShadow = 'none'; }
+  });
+  // the button: press, work, done
+  const hit = t >= T.clicks[2] ? spring(t - T.clicks[2], { stiffness: 320, damping: 12 }) : 1;
+  btn.style.transform = `scale(${t >= T.clicks[2] ? 1 - 0.05 * (1 - hit) : 1})`;
+  const working = t >= T.clicks[2] + 0.05 && t < T.done, done = progress(t, T.done, T.done + 0.35, ease.outCubic);
+  const spin = btn.querySelector('.spin'), lab = btn.querySelector('.lab');
+  spin.style.display = working ? '' : 'none'; spin.style.transform = `rotate(${t * 720}deg)`;
+  lab.textContent = t >= T.done ? `✓ ${CONFIG.done}` : working ? 'Creating…' : CONFIG.button;
+  btn.style.background = done ? GREEN : accent;
+  lab.style.transform = `translateY(${(1 - done) * (t >= T.done ? 0.6 : 0)}em)`;
+  // the new screen: grows out of the button to the whole frame, its colour going from the button's to black
+  const o = progress(t, ...T.open, ease.inOutCubic);
+  if (t >= T.open[0]) {
+    const sr = $('stage').getBoundingClientRect(), br = btn.getBoundingClientRect(), k = sr.width / W;
+    const L = (br.left - sr.left) / k, Tp = (br.top - sr.top) / k, Wd = br.width / k, Ht = br.height / k;
+    const r = parseFloat(getComputedStyle(btn).borderRadius) * (br.width / btn.offsetWidth) / k;
+    Object.assign(wipe.style, { left: `${L * (1 - o)}px`, top: `${Tp * (1 - o)}px`, width: `${Wd + (W - Wd) * o}px`, height: `${Ht + (H - Ht) * o}px`, borderRadius: `${r * (1 - o)}px`, opacity: String(progress(t, T.open[0], T.open[0] + 0.12)) });
+    const c = progress(t, T.open[0] + 0.05, T.open[0] + 0.5);
+    wipe.style.background = c >= 1 ? ground : `color-mix(in srgb, ${GREEN} ${Math.round((1 - c) * 100)}%, ${ground})`;
+    wipe.style.boxShadow = `0 0 ${SHORT * 0.08 * (1 - o)}px rgba(0,0,0,0.6)`;
+  } else wipe.style.opacity = '0';
+});
+T.clicks.forEach((c) => B.cue(s, 'text', c)); B.cue(s, 'land', T.done);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

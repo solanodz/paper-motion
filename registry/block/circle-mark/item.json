@@ -1,0 +1,111 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "circle-mark",
+  "type": "block",
+  "title": "Circle mark",
+  "summary": "A hand-drawn ring closes around the number that matters on a screen; the rest dims, the marked card lifts and the camera leans in close.",
+  "tags": [
+    "block",
+    "annotation",
+    "highlight",
+    "ui",
+    "callout"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "mark",
+      "type": "number",
+      "default": 1,
+      "description": "which stat gets the ring",
+      "group": "main"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/circle-mark/scene.html",
+      "to": "pieces/circle-mark/scene.html"
+    },
+    {
+      "from": "registry/block/circle-mark/brief.md",
+      "to": "pieces/circle-mark/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add circle-mark --name my-circle-mark\n# edit CONFIG in pieces/my-circle-mark/scene.html, then:\nnpx paper-motion render pieces/my-circle-mark/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "callout-zoom",
+    "pointer-label"
+  ],
+  "preview": {
+    "video": "previews/circle-mark.webm",
+    "poster": "previews/circle-mark.jpg",
+    "at": 3.4,
+    "values": {}
+  },
+  "mood": [
+    "minimal",
+    "technical"
+  ],
+  "duration": 4.5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 0.9,
+      "what": "arrive"
+    },
+    {
+      "name": "Draw",
+      "from": 1,
+      "to": 1.7,
+      "what": "draw"
+    },
+    {
+      "name": "Hold",
+      "from": 1.7,
+      "to": 4.5,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "point at one figure on a dashboard",
+    "the proof moment of a product demo"
+  ]
+}

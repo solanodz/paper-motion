@@ -40,10 +40,14 @@ export const IconFont = (p: P) => (
 export const IconRecipe = (p: P) => (
   <svg {...base(p)}><rect x="1.75" y="5.75" width="4.5" height="8.5" /><rect x="7.75" y="4.25" width="4.5" height="11.5" fill="currentColor" /><rect x="13.75" y="5.75" width="4.5" height="8.5" /></svg>
 );
+/** Block: a frame holding a ready-made piece, one part lit. */
+export const IconBlock = (p: P) => (
+  <svg {...base(p)}><rect x="2.75" y="3.75" width="14.5" height="12.5" /><path d="M5.75 7.25h5M5.75 10h3" /><rect x="10.75" y="9.75" width="4" height="3.5" fill="currentColor" stroke="none" /></svg>
+);
 
 export const TYPE_ICONS: Record<string, (p: P) => React.ReactElement> = {
   component: IconComponent, transition: IconTransition, text: IconText, camera: IconCamera,
-  background: IconBackground, palette: IconPalette, "font-pair": IconFont, recipe: IconRecipe, shot: IconCamera,
+  background: IconBackground, palette: IconPalette, "font-pair": IconFont, recipe: IconRecipe, shot: IconCamera, block: IconBlock,
 };
 
 /** Search: a square lens and its handle. */

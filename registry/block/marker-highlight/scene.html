@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>marker-highlight</title>
+<!--
+  Text · marker highlight (4.8 s). A sentence lands word by word; then a marker sweeps behind the words that matter,
+  a little tilted and uneven like a real one, and those words turn dark as it passes under them. The camera drifts in
+  and settles on the marked words.
+  Vertical/square: the sentence wraps onto three lines and the final push goes in until the widest line fills the width with a margin.
+  Words 0.2–1.2 s · Sweep 1.6–2.3 s · Hold to 4.8 s.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #p { display: flex; justify-content: center; text-align: center; }
+  #line { line-height: 1.12; }
+  .w { display: inline-block; white-space: pre; }
+  .hit { position: relative; display: inline-block; white-space: nowrap; }
+  .mk { position: absolute; z-index: 0; }
+  .ink { position: relative; z-index: 1; }
+  .dark { position: absolute; left: 0; top: 0; z-index: 2; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"><div id="p"><div id="line"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  before: 'Your agent directs',
+  mark: 'every frame.',                  // the words the marker sweeps
+  after: '',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 4.8;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.4;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 100%)';
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const accent = B.color('accent', '#E9E4D8'), ground = B.color('ground');
+const line = B.style($('line'), 'display', { short: SHORT * K, color: 'figure' });
+const wide = W > H;
+line.style.fontSize = `${SHORT * K * (H > W ? 0.1 : 0.13)}px`; line.style.maxWidth = `${W * (H > W ? 0.9 : 0.86)}px`;
+const words = (txt) => txt.split(/(\s+)/).filter(Boolean).map((w) => `<span class="w">${w}</span>`).join('');
+line.innerHTML = `${words(CONFIG.before)} <span class="hit"><span class="mk"></span><span class="ink">${words(CONFIG.mark)}</span><span class="dark">${CONFIG.mark}</span></span>${CONFIG.after ? ' ' + words(CONFIG.after) : ''}`;
+$('p').style.width = `${W}px`;
+const mk = line.querySelector('.mk'), dark = line.querySelector('.dark'), hit = line.querySelector('.hit');
+// the marker: an uneven band, slightly tilted, ends rough
+mk.style.background = accent;
+dark.style.color = ground;
+cam.place($('p'), { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+const ws = [...line.querySelectorAll('.ink .w, #line > .w')].filter((w) => w.textContent.trim());
+const allW = [...line.querySelectorAll('.w')].filter((w) => w.textContent.trim());
+// where the marked words sit, to settle the camera on them
+const pr = $('p').getBoundingClientRect(), hr = hit.getBoundingClientRect(), sc = W / pr.width;
+const hx = (hr.left - pr.left + hr.width / 2) * sc - W / 2, hy = (hr.top - pr.top + hr.height / 2) * sc - $('p').offsetHeight / 2;
+// one shape for the marker and for the dark words: an uneven band, tilted, growing from its left end
+const em = parseFloat(getComputedStyle(line).fontSize), hw = hit.offsetWidth, hh = hit.offsetHeight, PAD = em * 0.4;
+const SHAPE = [[0.01, 0.14], [0.3, 0.06], [0.62, 0.1], [0.99, 0.03], [1, 0.88], [0.7, 0.95], [0.35, 0.9], [0, 0.97]];
+const bx = -0.08 * em, by = 0.1 * em, bw = hw + 0.16 * em, bh = hh + 0.02 * em, th = -1.4 * Math.PI / 180;
+const shape = (m) => SHAPE.map(([u, v]) => {
+  const dx = u * bw * m, dy = (v - 0.5) * bh;
+  return [bx + dx * Math.cos(th) - dy * Math.sin(th), by + bh / 2 + dx * Math.sin(th) + dy * Math.cos(th)];
+});
+Object.assign(mk.style, { left: `${-PAD}px`, top: `${-PAD}px`, width: `${hw + PAD * 2}px`, height: `${hh + PAD * 2}px` });
+Object.assign(dark.style, { width: `${hw}px`, height: `${hh}px` });
+
+// narrow frames: push in only as far as the widest line still fits with a margin
+const P = SHORT * 1.7, lk = line.offsetWidth / line.getBoundingClientRect().width, rows = new Map();
+for (const w of allW) { const b = w.getBoundingClientRect(), k = Math.round(b.top * lk / (em * 0.5)); const r = rows.get(k) ?? [Infinity, -Infinity]; rows.set(k, [Math.min(r[0], b.left), Math.max(r[1], b.right)]); }
+const lw = Math.max(hw + 0.4 * em, ...[...rows.values()].map(([a, b]) => (b - a) * lk));
+const pre = H > W ? SHORT * 0.22 : 0;   // vertical starts closer: the sentence is narrow
+const zEnd = wide ? DIST - SHORT * 0.62 : P * lw / (W * 0.88) - P;
+const T = { words: 0.2, each: 0.11, sweep: [1.6, 2.3] };
+s.update((t) => {
+  allW.forEach((w, i) => {
+    const a = T.words + i * T.each, p = progress(t, a, a + 0.6, ease.outCubic);
+    w.style.transform = `translateY(${(1 - p) * 0.5}em)`; w.style.opacity = String(p); w.style.filter = p < 1 ? `blur(${(1 - p) * 8}px)` : 'none';
+  });
+  const m = progress(t, ...T.sweep, ease.inOutCubic);
+  const pts = shape(Math.max(0.001, m));
+  mk.style.clipPath = `polygon(${pts.map(([x, y]) => `${(x + PAD).toFixed(2)}px ${(y + PAD).toFixed(2)}px`).join(', ')})`;
+  dark.style.clipPath = `polygon(${pts.map(([x, y]) => `${x.toFixed(2)}px ${y.toFixed(2)}px`).join(', ')})`;   // dark exactly where the marker is
+  dark.style.opacity = m > 0 ? '1' : '0'; mk.style.opacity = m > 0 ? '1' : '0';
+  // the camera: a slow drift in, then onto the marked words as the marker lands
+  const arrive = progress(t, 0, 1.2, ease.outCubic), land = progress(t, T.sweep[0], D, ease.inOutCubic);
+  cam.at({ x: hx * 0.85 * land, y: wide ? 0 : hy * 0.4 * land, z: DIST - pre + SHORT * 0.3 * (1 - arrive) - (DIST - pre - zEnd) * land, yaw: -6 * (1 - arrive) + 2 * land, pitch: 0, roll: -0.6 * land });
+  $('bg').style.transform = `scale(${1.08 + 0.08 * progress(t, 0, D)})`;
+});
+B.cue(s, 'text', T.words); B.cue(s, 'land', T.sweep[0] + 0.3);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

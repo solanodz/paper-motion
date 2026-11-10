@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "device-frame",
+  "type": "block",
+  "title": "Device frame",
+  "summary": "A phone with real thickness, the product scrolling on its screen; the camera orbits round it from the side to face-on.",
+  "tags": [
+    "block",
+    "ui",
+    "phone",
+    "mockup",
+    "3d",
+    "mobile"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "image",
+      "type": "string",
+      "default": "",
+      "description": "a screenshot of the app (tall); empty draws the placeholder app",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "default": "Renders",
+      "description": "title",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/device-frame/scene.html",
+      "to": "pieces/device-frame/scene.html"
+    },
+    {
+      "from": "registry/block/device-frame/brief.md",
+      "to": "pieces/device-frame/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add device-frame --name my-device-frame\n# edit CONFIG in pieces/my-device-frame/scene.html, then:\nnpx paper-motion render pieces/my-device-frame/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "browser-frame",
+    "parallax-stack"
+  ],
+  "preview": {
+    "video": "previews/device-frame.webm",
+    "poster": "previews/device-frame.jpg",
+    "at": 4.8,
+    "values": {}
+  },
+  "mood": [
+    "luxury",
+    "calm"
+  ],
+  "duration": 5.5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 1,
+      "what": "arrive"
+    },
+    {
+      "name": "Orbit",
+      "from": 0.3,
+      "to": 4,
+      "what": "orbit"
+    },
+    {
+      "name": "Scroll",
+      "from": 1.2,
+      "to": 4.4,
+      "what": "scroll"
+    },
+    {
+      "name": "Hold",
+      "from": 4.4,
+      "to": 5.5,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "a mobile app",
+    "any screen that deserves an object"
+  ]
+}

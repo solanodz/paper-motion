@@ -36,7 +36,8 @@
         "palette",
         "font-pair",
         "recipe",
-        "shot"
+        "shot",
+        "block"
       ]
     },
     "title": {

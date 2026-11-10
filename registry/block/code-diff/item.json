@@ -1,0 +1,145 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "code-diff",
+  "type": "block",
+  "title": "Code diff",
+  "summary": "The old lines strike through and fold away, one new line opens in their place, the numbers close up and a −7 +1 count lands.",
+  "tags": [
+    "block",
+    "code",
+    "diff",
+    "before-after",
+    "developer"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "file",
+      "type": "string",
+      "default": "make-video.js",
+      "description": "file",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "fps",
+      "type": "number",
+      "default": 30,
+      "description": "fps",
+      "group": "main"
+    },
+    {
+      "name": "codec",
+      "type": "string",
+      "default": "libx264",
+      "description": "codec",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/code-diff/scene.html",
+      "to": "pieces/code-diff/scene.html"
+    },
+    {
+      "from": "registry/block/code-diff/brief.md",
+      "to": "pieces/code-diff/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add code-diff --name my-code-diff\n# edit CONFIG in pieces/my-code-diff/scene.html, then:\nnpx paper-motion render pieces/my-code-diff/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "code-type",
+    "before-after"
+  ],
+  "preview": {
+    "video": "previews/code-diff.webm",
+    "poster": "previews/code-diff.jpg",
+    "at": 5.6,
+    "values": {}
+  },
+  "mood": [
+    "technical",
+    "bold"
+  ],
+  "duration": 6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 0.8,
+      "what": "arrive"
+    },
+    {
+      "name": "Strike",
+      "from": 1.1,
+      "to": 1.9,
+      "what": "strike"
+    },
+    {
+      "name": "Fold",
+      "from": 2.1,
+      "to": 2.9,
+      "what": "fold"
+    },
+    {
+      "name": "Open",
+      "from": 2.6,
+      "to": 3.3,
+      "what": "open"
+    },
+    {
+      "name": "Count",
+      "from": 3.4,
+      "to": 4,
+      "what": "count"
+    },
+    {
+      "name": "Hold",
+      "from": 4,
+      "to": 6,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "the old way against the new",
+    "a refactor in one line"
+  ]
+}

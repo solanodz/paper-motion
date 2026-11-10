@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>stat-row</title>
+<!--
+  Data · stat row (5.6 s). Three numbers side by side, each counting up in turn with its label rising under it and a
+  thin rule drawing between them. The camera travels along the row close, meeting each number as it counts, then
+  pulls back to show all three at once.
+  Counts 0.5, 1.4, 2.3 s · Pull back 3.0–4.6 s · Hold to 5.6 s.
+  Vertical: the row becomes a column with horizontal rules, and the camera travels down it instead of across.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #row { position: absolute; display: flex; align-items: flex-start; }
+  .st { flex: 1; display: flex; flex-direction: column; align-items: flex-start; }
+  .rule { width: 1.5px; align-self: stretch; transform-origin: 50% 0; }
+  .num { line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"><div id="row"></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { blurIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  stats: [[36, '', 'brands made'], [1284, '', 'videos rendered'], [2, ' min', 'from brief to mp4']],
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.4;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.65) 100%)';
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const accent = B.color('accent', '#E9E4D8'), muted = B.color('muted');
+const tall = H > W;
+const rw = W * (tall ? 0.8 : 0.86) * K, row = $('row');
+Object.assign(row.style, { width: `${rw}px`, gap: `${rw * 0.04}px` });
+if (tall) { row.style.flexDirection = 'column'; row.style.alignItems = 'center'; }
+const items = CONFIG.stats.map(([v, unit, label], i) => {
+  if (i) { const r = document.createElement('div'); r.className = 'rule'; r.style.background = `${muted}66`; row.append(r); }
+  const st = document.createElement('div'); st.className = 'st';
+  const num = B.style(document.createElement('div'), 'display', { short: SHORT * K, color: i === 1 ? 'figure' : 'figure' }); num.className = 'num'; num.style.fontSize = `${rw * (tall ? 0.22 : 0.085)}px`;
+  const lab = B.style(document.createElement('div'), 'body', { short: SHORT * K, color: 'muted' }); lab.textContent = label; Object.assign(lab.style, { fontSize: `${rw * (tall ? 0.04 : 0.017)}px`, marginTop: `${rw * 0.012}px`, fontFamily: B.font('mono') });
+  st.append(num, lab); row.append(st);
+  if (tall) st.style.alignItems = 'center';
+  return { st, num, lab, v, unit };
+});
+items[1].num.style.color = accent;
+cam.place(row, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+const rules = [...row.querySelectorAll('.rule')];
+if (tall) rules.forEach((r) => Object.assign(r.style, { width: '28%', height: '1.5px', alignSelf: 'center', transformOrigin: '50% 50%' }));
+const fmt = (n) => n.toLocaleString('en-US');
+
+const T = { counts: [0.5, 1.4, 2.3], back: [3.0, 4.6] };
+const rh = row.offsetHeight;
+items.forEach(({ num, v, unit }) => { num.innerHTML = `${fmt(v)}<span style="font-size:0.5em">${unit}</span>`; });   // measure at full size
+const rr = row.getBoundingClientRect(), k0 = rw / rr.width;
+const rhFull = row.offsetHeight;
+const centers = tall
+  ? items.map(({ num }) => num.offsetTop + num.offsetHeight * 0.7 - rhFull / 2)
+  : items.map(({ num }) => { const b = num.getBoundingClientRect(); return (b.left - rr.left + b.width / 2) * k0 - rw / 2; });
+s.update((t) => {
+  items.forEach(({ num, lab, v, unit, st }, i) => {
+    const a = T.counts[i], tq = Math.round(t * 30) / 30, p = progress(tq, a, a + 0.9, ease.outCubic);   // one value per frame: no blurred digits
+    num.innerHTML = `${fmt(Math.round(v * p))}<span style="font-size:0.5em;opacity:0.7">${unit}</span>`;
+    num.style.opacity = String(progress(t, a - 0.2, a + 0.1));
+    num.style.transform = `translateY(${(1 - progress(t, a - 0.2, a + 0.4, ease.outCubic)) * 0.3}em)`;
+    blurIn(lab, t, { start: a + 0.3, duration: 0.6 });
+  });
+  rules.forEach((r, i) => { r.style.transform = `${tall ? 'scaleX' : 'scaleY'}(${progress(t, T.counts[i + 1] - 0.3, T.counts[i + 1] + 0.2, ease.inOutCubic)})`; });
+  // the camera: along the row, meeting each number as it counts, then back to see all three
+  let along = centers[0];
+  for (let i = 1; i < centers.length; i++) along += (centers[i] - centers[i - 1]) * progress(t, T.counts[i] - 0.75, T.counts[i] + 0.1, ease.inOutSine);
+  const back = progress(t, ...T.back, ease.inOutCubic), arrive = progress(t, 0, 0.7, ease.outCubic);
+  if (tall) return cam.at({ x: 0, y: along * (1 - back), z: DIST + SHORT * 0.25 * (1 - arrive) - SHORT * 0.75 * (1 - back) - SHORT * 0.5 * back, yaw: 0, pitch: -3 * (1 - back) + 1 * back, roll: 1.5 * (1 - back) });
+  cam.at({ x: along * (1 - back), y: rh * (0.05 + 0.3 * back), z: DIST + SHORT * 0.25 * (1 - arrive) - SHORT * 0.75 * (1 - back) + SHORT * (W === H ? 0.02 : 0.1) * back, yaw: -3 * (1 - back) + 1 * back, pitch: 2 * (1 - back), roll: 0 });
+});
+T.counts.forEach((a) => B.cue(s, 'text', a)); B.cue(s, 'land', T.back[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

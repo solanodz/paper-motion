@@ -1,0 +1,130 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "bar-grow",
+  "type": "block",
+  "title": "Bar grow",
+  "summary": "Bars grow with a short overshoot as the camera passes low along the chart; the winner takes the accent and its number counts up.",
+  "tags": [
+    "block",
+    "data",
+    "chart",
+    "bars",
+    "growth"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "default": "Renders per week",
+      "description": "title",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "winner",
+      "type": "number",
+      "default": 6,
+      "description": "which bar (0-based) takes the accent",
+      "group": "main"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/bar-grow/scene.html",
+      "to": "pieces/bar-grow/scene.html"
+    },
+    {
+      "from": "registry/block/bar-grow/brief.md",
+      "to": "pieces/bar-grow/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add bar-grow --name my-bar-grow\n# edit CONFIG in pieces/my-bar-grow/scene.html, then:\nnpx paper-motion render pieces/my-bar-grow/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "line-draw",
+    "stat-row"
+  ],
+  "preview": {
+    "video": "previews/bar-grow.webm",
+    "poster": "previews/bar-grow.jpg",
+    "at": 5.2,
+    "values": {}
+  },
+  "mood": [
+    "bold"
+  ],
+  "duration": 5.5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 0.8,
+      "what": "arrive"
+    },
+    {
+      "name": "Baseline",
+      "from": 0.5,
+      "to": 1,
+      "what": "baseline"
+    },
+    {
+      "name": "Bars",
+      "from": 0.9,
+      "to": 2.4,
+      "what": "bars"
+    },
+    {
+      "name": "Winner",
+      "from": 2.5,
+      "to": 3.1,
+      "what": "winner"
+    },
+    {
+      "name": "Hold",
+      "from": 3.1,
+      "to": 5.5,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "growth over time",
+    "one standout number"
+  ]
+}

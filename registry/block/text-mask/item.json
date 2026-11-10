@@ -1,0 +1,134 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "text-mask",
+  "type": "block",
+  "title": "Liquid metal word",
+  "summary": "The name in rounded, sharp-edged liquid metal; the camera travels along the letters close, then pulls back to the whole word.",
+  "tags": [
+    "block",
+    "brand",
+    "wordmark",
+    "liquid-metal",
+    "3d",
+    "title"
+  ],
+  "params": [
+    {
+      "name": "word",
+      "type": "string",
+      "default": "",
+      "description": "empty takes the brand's name",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "line",
+      "type": "string",
+      "default": "Brand videos, made by your coding agent.",
+      "description": "line",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "weight",
+      "type": "number",
+      "default": 3,
+      "description": "extra stroke on the letters, in px at 400px type: 0 keeps the face's own weight",
+      "group": "main"
+    },
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/text-mask/scene.html",
+      "to": "pieces/text-mask/scene.html"
+    },
+    {
+      "from": "registry/block/text-mask/brief.md",
+      "to": "pieces/text-mask/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add text-mask --name my-text-mask\n# edit CONFIG in pieces/my-text-mask/scene.html, then:\nnpx paper-motion render pieces/my-text-mask/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "logo-build",
+    "liquid-metal"
+  ],
+  "preview": {
+    "video": "previews/text-mask.webm",
+    "poster": "previews/text-mask.jpg",
+    "at": 5.2,
+    "values": {}
+  },
+  "mood": [
+    "bold",
+    "luxury"
+  ],
+  "duration": 5.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Travel",
+      "from": 0,
+      "to": 2.8,
+      "what": "travel"
+    },
+    {
+      "name": "Pull back",
+      "from": 2.6,
+      "to": 3.9,
+      "what": "pull back"
+    },
+    {
+      "name": "Line",
+      "from": 4,
+      "to": 4.6,
+      "what": "line"
+    },
+    {
+      "name": "Hold",
+      "from": 4.6,
+      "to": 5.6,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "a title card with weight",
+    "the opening or close on the name"
+  ]
+}

@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>grain-pulse</title>
+<!--
+  Effect · grain pulse (4.6 s). Texture on the beat: at each cut the film grain swells, the colour channels split for a
+  moment and the frame punches in a little, then all of it settles back to a quiet grain until the next hit. Here it
+  carries three hard cuts and the name.
+  Hits 0.3, 1.2, 2.1, 3.0 s · Hold to 4.6 s.
+  Square and vertical: each word fits the width with a margin; vertical sets them bigger and breaks a long name.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .w { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap; }
+  #grain { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: overlay; image-rendering: pixelated; pointer-events: none; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="frame" class="abs" style="inset:0"><div id="bg" class="abs" style="inset:0"></div><div id="words"></div></div>
+  <canvas id="grain"></canvas>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  words: ['Fast.', 'Simple.', 'Yours.'],
+  last: '',                              // the last word; empty takes the brand's name
+  grain: 0.1,                            // the quiet grain between hits
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 4.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.5;
+const all = [...CONFIG.words, CONFIG.last || B.name];
+const els = all.map((w, i) => {
+  const d = document.createElement('div'); d.className = 'w';
+  const t = B.style(document.createElement('div'), 'display', { short: SHORT, color: 'figure' });
+  t.textContent = w; t.style.fontSize = `${SHORT * (i === all.length - 1 ? 0.17 : 0.24)}px`;
+  d.append(t); $('words').append(d); return { d, t };
+});
+// the grain: noise drawn small, a new field every frame, seeded by the frame so renders repeat
+const gc = $('grain'), gw = 480, gh = 270; gc.width = gw; gc.height = gh; const gx = gc.getContext('2d');
+const img = gx.createImageData(gw, gh);
+const rand = (seed) => () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+await document.fonts.ready;
+// outside 16:9 the type is fitted to the width with a margin (room for the punch): vertical sets it bigger and lets the
+// name break onto two lines; anything still too wide shrinks
+if (W <= H) {
+  const tall = H > W, room = W * 0.8;
+  els.forEach(({ t }, k) => {
+    const last = k === all.length - 1;
+    if (tall) { t.style.fontSize = `${W * (last ? 0.24 : 0.3)}px`; if (last) Object.assign(t.style, { whiteSpace: 'normal', maxWidth: `${room}px`, lineHeight: 0.95 }); }
+    for (let n = 0; n < 60 && t.scrollWidth > room + 1; n++) t.style.fontSize = `${parseFloat(t.style.fontSize) * 0.96}px`;
+  });
+  const words = els.slice(0, -1), same = Math.min(...words.map(({ t }) => parseFloat(t.style.fontSize)));   // the beat words share one size
+  words.forEach(({ t }) => { t.style.fontSize = `${same}px`; });
+}
+
+const T = { hits: [0.3, 1.2, 2.1, 3.0] };
+s.update((t) => {
+  // which shot, and how fresh the last hit is
+  const tc = Math.round(t * 30) / 30;                               // cuts land on whole frames: hard, never blended
+  let i = -1; T.hits.forEach((h, k) => { if (tc >= h - 1e-6) i = k; });
+  const since = i >= 0 ? Math.max(0, t - T.hits[i]) : 9, hit = Math.exp(-since * 7);
+  els.forEach(({ d }, k) => { d.style.visibility = k === i ? '' : 'hidden'; });
+  const cur = els[i];
+  if (cur) {
+    const split = SHORT * 0.012 * hit;
+    cur.t.style.textShadow = split > 0.3 ? `${split}px 0 rgba(255,40,40,0.85), ${-split}px 0 rgba(40,170,255,0.85)` : 'none';
+    cur.t.style.transform = `scale(${1 + 0.06 * hit}) translateY(${(1 - Math.min(1, since / 0.12)) * SHORT * 0.01}px)`;
+    cur.t.style.filter = hit > 0.5 ? `blur(${(hit - 0.5) * 3}px)` : 'none';
+  }
+  // the whole frame: a punch and a brief lift in exposure on each hit, a slow drift between
+  $('frame').style.transform = `scale(${1.02 + 0.05 * hit + 0.02 * progress(t, 0, D)})`;
+  $('frame').style.filter = `brightness(${1 + 0.35 * hit}) contrast(${1 + 0.1 * hit})`;
+  $('bg').style.transform = `translateX(${SHORT * 0.02 * Math.sin(t * 0.9)}px)`;
+  // grain: quiet, swelling on the hit
+  const r = rand(Math.round(t * 30) + 1), a = CONFIG.grain + 0.45 * hit;
+  for (let p = 0; p < gw * gh; p++) { const v = r() * 255; img.data[p * 4] = img.data[p * 4 + 1] = img.data[p * 4 + 2] = v; img.data[p * 4 + 3] = 255; }
+  gx.putImageData(img, 0, 0);
+  gc.style.opacity = String(Math.min(1, a * 2));
+});
+T.hits.forEach((h) => B.cue(s, 'land', h));
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

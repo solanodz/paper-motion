@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>circle-mark</title>
+<!--
+  Annotation · circle mark (4.5 s). A hand-drawn ring closes around the thing that matters on a screen: the stroke
+  overshoots its own start like a marker, the rest of the screen dims, the marked part lifts, and the camera leans in.
+  Arrive 0–0.9 s · Draw 1.0–1.7 s · Hold 1.7–4.5 s.
+  Vertical: a phone-width dashboard, no sidebar, a tall body; square: a squarer window. The lean stops where the ring fits.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #comp { position: absolute; overflow: hidden; box-sizing: border-box; }
+  .ui { position: absolute; inset: 0; display: grid; grid-template-columns: 18% 1fr; }
+  .side { display: flex; flex-direction: column; gap: 1.1em; padding: 2.2em 1.6em; }
+  .main { display: flex; flex-direction: column; gap: 1.6em; padding: 2.2em; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4em; }
+  .card { border-radius: 0.8em; padding: 1.4em; display: flex; flex-direction: column; gap: 0.6em; }
+  i { display: block; height: 0.6em; border-radius: 999px; }
+  #dim { position: absolute; inset: 0; pointer-events: none; }
+  #ink { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="comp"><div class="ui" id="ui"></div><div id="dim"></div><svg id="ink"><path id="ring"/></svg></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  stats: [['Renders', '1,284'], ['Avg. time', '2 min'], ['Brands', '36']],
+  mark: 1,                               // which stat gets the ring
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 4.5;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+document.querySelector('#bg').style.opacity = 0.3;
+const $ = (id) => document.getElementById(id);
+
+const DIST = SHORT * 0.6, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const tall = H > W, square = W === H;
+const comp = $('comp'), cw = (tall ? W * 0.86 : square ? W * 0.84 : W * 0.72) * K, ch = cw * (tall ? 1.5 : square ? 0.84 : 0.58), R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+Object.assign(comp.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: B.surface(0.2), border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)` });
+const ui = $('ui'); ui.style.fontSize = `${cw * (tall ? 0.021 : square ? 0.016 : 0.011)}px`;
+if (tall) { ui.style.gridTemplateColumns = '1fr'; }
+const line = (w, c = muted, o = 0.45) => `<i style="width:${w}%;background:${c};opacity:${o}"></i>`;
+const card = (label, value, i) => `<div class="card" data-i="${i}" style="background:${ground};border:1px solid ${muted}33"><div style="font:400 1.1em ${B.font('text')};color:${muted}">${label}</div><div style="font:400 3.2em ${B.font('display')};color:${figure};line-height:1">${value}</div>${line(40 + i * 12)}</div>`;
+ui.innerHTML = `<div class="side" style="background:${ground}${tall ? ';display:none' : ''}">${line(70, figure, 0.9)}${line(85)}${line(60)}${line(75)}${line(50)}</div>
+<div class="main">${line(24, figure, 0.9)}<div class="row">${CONFIG.stats.map(([l, v], i) => card(l, v, i)).join('')}</div>
+<div class="card" style="flex:1;background:${ground};border:1px solid ${muted}33">${line(30, figure, 0.7)}${line(90)}${line(82)}${line(88)}${line(64)}${tall ? `<div style="height:2em"></div>${line(26, figure, 0.7)}${line(86)}${line(92)}${line(70)}<div style="height:2em"></div>${line(34, figure, 0.7)}${line(80)}${line(88)}${line(58)}` : ''}</div></div>`;
+cam.place(comp, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+
+// the ring: an ellipse drawn by hand around the marked card, a little wider than it, overshooting its start
+const target = ui.querySelector(`.card[data-i="${CONFIG.mark}"]`);
+const cr = target.getBoundingClientRect(), pr = comp.getBoundingClientRect();
+const sc = cw / pr.width;                                            // layout px per screen px (the camera scales the stage)
+const cx = (cr.left - pr.left + cr.width / 2) * sc, cy = (cr.top - pr.top + cr.height / 2) * sc;
+const rx = cr.width * sc * 0.56, ry = cr.height * sc * 0.8;
+const pts = [], a0 = -2.3, turn = Math.PI * 2 + 0.55;
+for (let k = 0; k <= 90; k++) {
+  const u = k / 90, a = a0 + turn * u;
+  const wob = 1 + 0.035 * Math.sin(a * 3 + 1.2) + 0.05 * u;          // uneven and spiralling a touch outward, like a hand
+  pts.push(`${(cx + Math.cos(a) * rx * wob).toFixed(1)},${(cy + Math.sin(a) * ry * wob - u * ry * 0.06).toFixed(1)}`);
+}
+const ring = $('ring');
+ring.setAttribute('d', `M${pts.join(' L')}`);
+Object.assign(ring.style, { fill: 'none', stroke: accent, strokeWidth: `${SHORT * 0.0075 * K}`, strokeLinecap: 'round', strokeLinejoin: 'round' });
+const L = ring.getTotalLength(); ring.style.strokeDasharray = `${L}`;
+const dim = $('dim');
+dim.style.background = 'rgba(0,0,0,0.55)';
+const hole = `radial-gradient(ellipse ${rx * 1.15}px ${ry * 1.15}px at ${cx}px ${cy}px, transparent 70%, black 100%)`;
+dim.style.webkitMaskImage = dim.style.maskImage = hole;
+const T = { draw: [1.0, 1.75] };
+const tx = cx - cw / 2, ty = cy - ch / 2;
+// how close the lean goes: the original depth, unless the ring would no longer fit the frame
+const fit = Math.min(W * 0.84 / (rx * 2.3), H * 0.8 / (ry * 2.3)), zEnd = Math.min(DIST - SHORT * 0.4, Math.max(DIST - SHORT * 0.95, SHORT * 1.7 / fit - SHORT * 1.7));
+
+s.update((t) => {
+  // arrive: from farther and turned, settling face-on; then a slow lean toward the mark as it is drawn
+  const arrive = progress(t, 0, 0.9, ease.outCubic), lean = progress(t, T.draw[0] - 0.1, T.draw[1] + 0.6, ease.inOutCubic);
+  cam.at({ x: tx * lean, y: ty * lean, z: DIST + SHORT * 0.35 * (1 - arrive) + (zEnd - DIST) * lean, yaw: -10 * (1 - arrive) + 2 * Math.sin(t * 0.6) * arrive, pitch: 4 * (1 - arrive) });
+  comp.style.opacity = String(progress(t, 0, 0.35));
+  // the stroke: fast in the middle, slowing as it closes past its start
+  const d = progress(t, ...T.draw, ease.inOutQuad);
+  ring.style.strokeDashoffset = `${L * (1 - d)}`;
+  ring.style.opacity = d > 0 ? '1' : '0';
+  dim.style.opacity = String(progress(t, T.draw[0] + 0.1, T.draw[1] + 0.2, ease.outCubic));
+  // the marked card lifts a step when the ring closes
+  const lift = t > T.draw[1] - 0.1 ? spring(t - (T.draw[1] - 0.1), { stiffness: 220, damping: 13 }) : 0;
+  target.style.transform = `translateY(${-lift * ch * 0.012}px) scale(${1 + lift * 0.035})`;
+  target.style.boxShadow = lift ? `0 ${ch * 0.02 * lift}px ${ch * 0.05}px rgba(0,0,0,${0.5 * lift})` : 'none';
+  target.style.borderColor = lift > 0.05 ? `${accent}66` : `${muted}33`;
+});
+B.cue(s, 'transition', 0); B.cue(s, 'text', T.draw[0]); B.cue(s, 'land', T.draw[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

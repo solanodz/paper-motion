@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>toggle-flip</title>
+<!--
+  Component · toggle flip (5.2 s). A cursor flips a switch: the knob slides over on a spring (squashing as it goes),
+  and the whole interface answers, a circle of the new theme spreading out from the switch until everything has
+  turned. The camera is close on the switch for the click and pulls back to watch the change sweep the screen.
+  Reach 0.4–1.1 s · Click 1.2 s · Sweep 1.35–2.5 s · Hold to 5.2 s.
+  Vertical: a phone-shaped settings screen without sidebar, larger type; square: a squarer window. The pull-back stops where the whole screen fits.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #comp { position: absolute; box-sizing: border-box; }
+  .theme { position: absolute; inset: 0; overflow: hidden; display: grid; grid-template-columns: 22% 1fr; }
+  .side { display: flex; flex-direction: column; gap: 1.1em; padding: 2.2em 1.6em; }
+  .main { display: flex; flex-direction: column; gap: 1.2em; padding: 2.2em 2.6em; }
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 1.1em 1.3em; border-radius: 0.8em; }
+  .sw { position: relative; width: 3.6em; height: 2em; border-radius: 999px; flex: none; }
+  .kn { position: absolute; top: 0.25em; left: 0.25em; width: 1.5em; height: 1.5em; border-radius: 999px; }
+  i { display: block; height: 0.6em; border-radius: 999px; }
+  #cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 20; }
+  #cursor svg { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="comp"></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  title: 'Appearance',
+  toggle: 'Light mode',
+  rows: [['Motion blur', true], ['Sound from /brand', true]],
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.2;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.3;
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const tall = H > W, square = W === H;
+const comp = $('comp'), cw = (tall ? W * 0.86 : square ? W * 0.84 : W * 0.66) * K, ch = cw * (tall ? 1.45 : square ? 0.78 : 0.58), FS = tall ? 0.032 : square ? 0.019 : 0.0135, R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+Object.assign(comp.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)`, fontSize: `${cw * FS}px`, fontFamily: B.font('text') });
+// the two themes, the same layout in each; the light one is revealed by a growing circle
+const themes = { dark: { bg: B.surface(0.18), side: ground, row: ground, ink: figure, sub: muted, line: muted, on: accent, off: '#333', kn: ground }, light: { bg: accent, side: '#ddd7c9', row: '#f3efe6', ink: '#111', sub: '#6b6b6b', line: '#555', on: '#111', off: '#bbb', kn: accent } };
+const build = (k, lightOn) => {
+  const c = themes[k], el = document.createElement('div'); el.className = 'theme';
+  const line = (w, o = 0.45) => `<i style="width:${w}%;background:${c.line};opacity:${o}"></i>`;
+  const sw = (on, main) => `<div class="sw${main ? ' main-sw' : ''}" style="background:${on ? c.on : c.off}"><div class="kn" style="background:${on ? c.kn : '#fff'};transform:translateX(${on ? 1.6 : 0}em)"></div></div>`;
+  const row = (label, on, main) => `<div class="row" style="background:${c.row};border:1px solid ${c.line}22"><div><div style="color:${c.ink};font-weight:500;font-size:1.1em">${label}</div>${main ? `<div style="color:${c.sub};margin-top:0.3em">Switch the whole interface</div>` : ''}</div>${sw(on, main)}</div>`;
+  if (tall) el.style.gridTemplateColumns = '1fr';
+  el.innerHTML = `<div class="side" style="background:${c.side}${tall ? ';display:none' : ''}">${line(70, 0.9)}${line(85)}${line(60)}${line(75)}</div><div class="main" style="background:${c.bg}"><div style="font:400 2.1em ${B.font('display')};color:${c.ink}">${CONFIG.title}</div>${row(CONFIG.toggle, lightOn, true)}${CONFIG.rows.map(([l, on]) => row(l, on)).join('')}<div style="flex:1;border-radius:0.8em;background:${c.row};border:1px solid ${c.line}22;padding:1.3em;display:flex;flex-direction:column;gap:0.8em">${line(30, 0.8)}${line(80)}${line(66)}</div></div>`;
+  el.style.borderRadius = `${R}px`;
+  comp.append(el); return el;
+};
+const dark = build('dark', false), light = build('light', true);
+const cursor = document.createElement('div'); cursor.id = 'cursor'; const cs = cw * (tall || square ? FS * 2.6 : 0.035);
+cursor.innerHTML = `<svg width="${cs}" height="${cs * 1.4}" viewBox="0 0 20 28"><path d="M2 2 L18 14 L10 15.5 L14.5 25 L11 26.5 L6.5 17 L2 22 Z" fill="${figure}" stroke="${ground}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+comp.append(cursor);
+cam.place(comp, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+
+// the switch, in the comp's own pixels
+const sw = dark.querySelector('.main-sw'), knob = sw.querySelector('.kn');
+const off = (el) => { let x = 0, y = 0, e = el; while (e && e !== comp) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return [x, y]; };
+const [sx, sy] = off(sw), sw0 = sw.offsetWidth, sh0 = sw.offsetHeight;
+const kx = sx + sw0 / 2, ky = sy + sh0 / 2;
+const em = cw * FS, far = Math.hypot(Math.max(kx, cw - kx), Math.max(ky, ch - ky));
+// the pull-back: as far as the original, or farther if the whole screen would not fit the frame
+const P = SHORT * 1.7, zBack = Math.max(DIST - SHORT * 0.42, P * cw / (W * 0.82) - P, P * ch / (H * 0.86) - P);
+const T = { reach: [0.4, 1.1], click: 1.2, sweep: [1.35, 2.5] };
+s.update((t) => {
+  // the knob: slides on a spring, stretching while it travels
+  const k = t >= T.click ? spring(t - T.click, { stiffness: 260, damping: 15 }) : 0;
+  const vel = t >= T.click ? Math.max(0, Math.sin(Math.min(1, (t - T.click) / 0.25) * Math.PI)) : 0;
+  knob.style.transform = `translateX(${1.6 * k}em) scaleX(${1 + 0.35 * vel})`;
+  knob.style.transformOrigin = k < 0.5 ? '0 50%' : '100% 50%';
+  sw.style.background = k > 0.5 ? accent : '#333';
+  // the sweep: the light theme in a circle growing out of the switch
+  const r = progress(t, ...T.sweep, ease.inOutCubic) * far * 1.05;
+  light.style.clipPath = `circle(${r}px at ${kx}px ${ky}px)`;
+  light.style.visibility = t >= T.sweep[0] ? '' : 'hidden';
+  // the cursor: in to the switch, a press, then out of the way
+  const p = progress(t, ...T.reach, ease.inOutCubic), out = progress(t, T.click + 0.4, T.click + 1.2, ease.inOutCubic);
+  const x = cw * 0.85 + (kx + em * 0.5 - cw * 0.85) * p + cw * 0.06 * out, y = ch * 1.05 + (ky - ch * 1.05) * p + ch * 0.12 * out;
+  cursor.style.transform = `translate(${x}px, ${y}px) scale(${t >= T.click && t < T.click + 0.16 ? 0.86 : 1})`;
+  cursor.style.opacity = String(progress(t, 0.3, 0.5));
+  cursor.querySelector('path').setAttribute('fill', r > Math.hypot(x - kx, y - ky) ? '#111' : figure);
+  cursor.querySelector('path').setAttribute('stroke', r > Math.hypot(x - kx, y - ky) ? accent : ground);
+  // the camera: close on the switch for the click, then back to watch the change spread
+  const arrive = progress(t, 0, 0.8, ease.outCubic), close = progress(t, 0.3, 1.1, ease.inOutCubic), back = progress(t, T.sweep[0] - 0.05, T.sweep[1] + 0.8, ease.inOutCubic);
+  const focus = close * (1 - back);
+  cam.at({ x: (kx - cw / 2) * focus, y: (ky - ch / 2) * focus, z: DIST + SHORT * 0.3 * (1 - arrive) - SHORT * 0.95 * focus + (zBack - DIST) * back, yaw: -8 * (1 - arrive) - 4 * focus + 3 * back, pitch: 3 * (1 - arrive) + 2 * focus, roll: 0 });
+  comp.style.opacity = String(progress(t, 0, 0.3));
+});
+B.cue(s, 'text', T.click); B.cue(s, 'transition', T.sweep[0]); B.cue(s, 'land', T.sweep[1]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

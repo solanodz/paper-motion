@@ -1,0 +1,132 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "pointer-label",
+  "type": "block",
+  "title": "Pointer label",
+  "summary": "A short line lands on the screen, a curved arrow draws from it to a control, and the control answers with a pulse.",
+  "tags": [
+    "block",
+    "annotation",
+    "arrow",
+    "label",
+    "ui"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "default": "One click renders it all.",
+      "description": "the line the arrow starts from",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "button",
+      "type": "string",
+      "default": "Render",
+      "description": "the control the arrow points at",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/pointer-label/scene.html",
+      "to": "pieces/pointer-label/scene.html"
+    },
+    {
+      "from": "registry/block/pointer-label/brief.md",
+      "to": "pieces/pointer-label/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add pointer-label --name my-pointer-label\n# edit CONFIG in pieces/my-pointer-label/scene.html, then:\nnpx paper-motion render pieces/my-pointer-label/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "circle-mark",
+    "cursor-guide"
+  ],
+  "preview": {
+    "video": "previews/pointer-label.webm",
+    "poster": "previews/pointer-label.jpg",
+    "at": 3.2,
+    "values": {}
+  },
+  "mood": [
+    "warm",
+    "minimal"
+  ],
+  "duration": 5,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Arrive",
+      "from": 0,
+      "to": 0.9,
+      "what": "arrive"
+    },
+    {
+      "name": "Label",
+      "from": 1,
+      "to": 1.6,
+      "what": "label"
+    },
+    {
+      "name": "Arrow",
+      "from": 1.4,
+      "to": 2.2,
+      "what": "arrow"
+    },
+    {
+      "name": "Answer",
+      "from": 2.3,
+      "to": 2.9,
+      "what": "answer"
+    },
+    {
+      "name": "Hold",
+      "from": 2.9,
+      "to": 5,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "say what a button does",
+    "one-click moments"
+  ]
+}

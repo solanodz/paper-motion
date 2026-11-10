@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>line-draw</title>
+<!--
+  Data · line draw (5.5 s). A trend line draws itself left to right with a dot riding its tip and the area under it
+  filling behind; the camera travels with the tip, close, and when the line reaches its peak a label pops there and
+  the camera eases back to show the whole climb.
+  Arrive 0–0.7 s · Draw 0.6–3.4 s · Peak 3.4 s · Pull back 3.4–5.2 s.
+  Vertical/square: the panel takes most of the frame width and gets deeper (vertical: a tall panel, so the climb is
+  steeper), type is floored from the short side, and the pull-back lands centred with the whole panel in frame.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #panel { position: absolute; box-sizing: border-box; }
+  #svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  #tag { position: absolute; white-space: nowrap; border-radius: 0.5em; padding: 0.35em 0.7em; }
+  .tick { position: absolute; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="panel"><div id="title"></div><svg id="svg"><defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop id="s0" offset="0"/><stop id="s1" offset="1"/></linearGradient><clipPath id="clip"><rect id="clipr"/></clipPath></defs><g id="grid"></g><path id="area" clip-path="url(#clip)"/><path id="guide"/><path id="line"/><circle id="halo"/><circle id="dot"/></svg><div id="tag"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { blurIn } from 'paper-motion/moves';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  title: 'Brands made with paper-motion',
+  points: [12, 14, 13, 18, 17, 22, 26, 24, 31, 38, 36, 51],
+  labels: ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
+  tag: '+42% this month',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.5;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.35;
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const wide = W / H > 1.2, tall = H > W;
+const panel = $('panel'), cw = wide ? W * 0.72 * K : W * 0.82 * K, ch = cw * (wide ? 0.5 : tall ? 1.3 : 0.72), R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+Object.assign(panel.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: B.surface(0.16), border: `1.5px solid ${muted}44`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)`, fontSize: `${wide ? cw * 0.016 : SHORT * K * 0.024}px` });
+const title = B.style($('title'), 'title', { short: SHORT * K, color: 'figure' });
+Object.assign(title.style, { position: 'absolute', left: `${cw * 0.05}px`, top: `${ch * 0.07}px`, fontSize: `${wide ? ch * 0.06 : SHORT * K * 0.045}px` });
+title.textContent = CONFIG.title;
+// the plot area and the curve through the points (Catmull-Rom as cubic Béziers)
+const x0 = cw * 0.07, x1 = cw * 0.93, y0 = ch * (tall ? 0.88 : 0.84), y1 = ch * (wide ? 0.26 : tall ? 0.2 : 0.3);
+const pts = CONFIG.points, max = Math.max(...pts) * 1.05, min = Math.min(...pts) * 0.8;
+const P = pts.map((v, i) => [x0 + (x1 - x0) * (i / (pts.length - 1)), y0 - (y0 - y1) * ((v - min) / (max - min))]);
+let d = `M${P[0]}`;
+for (let i = 0; i < P.length - 1; i++) {
+  const a = P[i - 1] ?? P[i], b = P[i], c = P[i + 1], e = P[i + 2] ?? c;
+  d += ` C${b[0] + (c[0] - a[0]) / 6},${b[1] + (c[1] - a[1]) / 6} ${c[0] - (e[0] - b[0]) / 6},${c[1] - (e[1] - b[1]) / 6} ${c}`;
+}
+const line = $('line'), area = $('area');
+line.setAttribute('d', d); area.setAttribute('d', `${d} L${x1},${y0} L${x0},${y0} Z`);
+Object.assign(line.style, { fill: 'none', stroke: accent, strokeWidth: `${SHORT * 0.006 * K}`, strokeLinecap: 'round', strokeLinejoin: 'round' });
+$('s0').setAttribute('stop-color', accent); $('s0').setAttribute('stop-opacity', '0.28'); $('s1').setAttribute('stop-color', accent); $('s1').setAttribute('stop-opacity', '0');
+area.style.fill = 'url(#fill)';
+const clipr = $('clipr'); clipr.setAttribute('y', 0); clipr.setAttribute('height', ch); clipr.setAttribute('x', x0);
+const grid = $('grid');
+for (let g = 0; g <= 3; g++) { const y = y0 - (y0 - y1) * (g / 3); grid.insertAdjacentHTML('beforeend', `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="${muted}" stroke-opacity="${g ? 0.15 : 0.5}" stroke-width="1"/>`); }
+CONFIG.labels.forEach((l, i) => { const t = document.createElement('div'); t.className = 'tick'; t.textContent = l; Object.assign(t.style, { left: `${x0 + (x1 - x0) * (i / (CONFIG.labels.length - 1))}px`, top: `${y0 + ch * 0.03}px`, transform: 'translateX(-50%)', font: `400 0.9em ${B.font('mono')}`, color: muted }); panel.append(t); });
+const dot = $('dot'), halo = $('halo'), guide = $('guide');
+dot.setAttribute("r", SHORT * 0.009 * K); dot.style.fill = accent;
+halo.style.fill = 'none'; halo.style.stroke = accent; halo.style.strokeWidth = `${SHORT * 0.003 * K}`;
+const peak = P[P.length - 1];
+guide.setAttribute('d', `M${x0},${peak[1]} L${peak[0]},${peak[1]}`);
+Object.assign(guide.style, { stroke: accent, strokeOpacity: 0.45, strokeWidth: '1.5', strokeDasharray: '6 8', fill: 'none' });
+const tag = $('tag'); tag.textContent = CONFIG.tag;
+Object.assign(tag.style, { background: accent, color: ground, font: `500 1.25em ${B.font('mono')}`, boxShadow: `0 ${SHORT * 0.01}px ${SHORT * 0.03}px rgba(0,0,0,0.4)` });
+cam.place(panel, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+const L = line.getTotalLength(); line.style.strokeDasharray = `${L}`;
+const tw = tag.offsetWidth, th = tag.offsetHeight;
+Object.assign(tag.style, { left: `${peak[0] - tw - ch * 0.04}px`, top: `${peak[1] - th - ch * 0.04}px` });
+const GL = guide.getTotalLength(); guide.style.strokeDashoffset = '0';
+
+const T = { draw: [0.6, 3.4], peak: 3.4 };
+s.update((t) => {
+  blurIn(title, t, { start: 0.3, duration: 0.6 });
+  const p = progress(t, ...T.draw, ease.inOutSine);
+  line.style.strokeDashoffset = `${L * (1 - p)}`;
+  const tip = line.getPointAtLength(Math.max(0.01, L * p));
+  clipr.setAttribute('width', Math.max(0, tip.x - x0));
+  dot.setAttribute('cx', tip.x); dot.setAttribute('cy', tip.y); dot.style.opacity = String(progress(t, T.draw[0], T.draw[0] + 0.2));
+  // the peak: a ring rings out from the dot, the guide draws back to the axis, the tag pops
+  const ring = progress(t, T.peak, T.peak + 0.9, ease.outCubic);
+  halo.setAttribute('cx', tip.x); halo.setAttribute('cy', tip.y); halo.setAttribute('r', SHORT * K * (0.012 + 0.05 * ring));
+  halo.style.opacity = String(t >= T.peak ? 1 - ring : 0);
+  const g = progress(t, T.peak + 0.1, T.peak + 0.6, ease.outCubic);
+  guide.style.clipPath = `inset(0 0 0 ${(1 - g) * 100}%)`; guide.style.opacity = g ? '1' : '0';
+  const pop = t >= T.peak + 0.15 ? spring(t - T.peak - 0.15, { stiffness: 260, damping: 13 }) : 0;
+  tag.style.transform = `scale(${pop})`; tag.style.transformOrigin = '100% 100%';
+  // the camera: close on the tip as it travels, then back to see the whole climb
+  const arrive = progress(t, 0, 0.7, ease.outCubic), back = progress(t, T.peak, D - 0.3, ease.inOutCubic), follow = progress(t, 0.2, 1.0, ease.inOutCubic) * (1 - back);
+  if (!wide) cam.at({ x: (tip.x - cw / 2) * follow, y: (tip.y - ch / 2) * follow, z: DIST + SHORT * 0.3 * (1 - arrive) - SHORT * (tall ? 1.2 : 1.3) * follow - SHORT * 0.25 * back, yaw: -6 * (1 - arrive) + 4 * follow, pitch: 2 * follow });
+  else
+  cam.at({ x: (tip.x - cw / 2) * follow + (cw * 0.1) * back, y: (tip.y - ch / 2) * follow + (-ch * 0.02) * back, z: DIST + SHORT * 0.3 * (1 - arrive) - SHORT * 1.3 * follow - SHORT * 0.4 * back, yaw: -6 * (1 - arrive) + 4 * follow, pitch: 2 * follow });
+  panel.style.opacity = String(progress(t, 0, 0.3));
+});
+B.cue(s, 'transition', 0); B.cue(s, 'text', T.draw[0]); B.cue(s, 'land', T.peak);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

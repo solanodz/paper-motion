@@ -1,0 +1,119 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "word-swap",
+  "type": "block",
+  "title": "Word swap",
+  "summary": "One word in a sentence keeps changing, rolling out and in, while the rest of the sentence makes room for each new width.",
+  "tags": [
+    "block",
+    "text",
+    "rotating",
+    "headline",
+    "kinetic"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "before",
+      "type": "string",
+      "default": "Make a ",
+      "description": "before",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "after",
+      "type": "string",
+      "default": " video.",
+      "description": "after",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/word-swap/scene.html",
+      "to": "pieces/word-swap/scene.html"
+    },
+    {
+      "from": "registry/block/word-swap/brief.md",
+      "to": "pieces/word-swap/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add word-swap --name my-word-swap\n# edit CONFIG in pieces/my-word-swap/scene.html, then:\nnpx paper-motion render pieces/my-word-swap/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "marker-highlight",
+    "kinetic-captions"
+  ],
+  "preview": {
+    "video": "previews/word-swap.webm",
+    "poster": "previews/word-swap.jpg",
+    "at": 3,
+    "values": {}
+  },
+  "mood": [
+    "playful"
+  ],
+  "duration": 5.6,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Sentence",
+      "from": 0.2,
+      "to": 0.8,
+      "what": "sentence"
+    },
+    {
+      "name": "Swaps",
+      "from": 1.4,
+      "to": 4,
+      "what": "swaps"
+    },
+    {
+      "name": "Hold",
+      "from": 4,
+      "to": 5.6,
+      "what": "hold"
+    }
+  ],
+  "when": [
+    "many uses for one product",
+    "a headline with options"
+  ]
+}

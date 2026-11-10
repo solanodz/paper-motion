@@ -1,0 +1,91 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "beat-cuts",
+  "type": "block",
+  "title": "Beat cuts",
+  "summary": "Every beat of the music is a hard cut to a new shot with a punch that decays; the first beat of a bar hits harder in the accent.",
+  "tags": [
+    "block",
+    "edit",
+    "music",
+    "beat",
+    "cuts",
+    "rhythm"
+  ],
+  "params": [
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/beat-cuts/scene.html",
+      "to": "pieces/beat-cuts/scene.html"
+    },
+    {
+      "from": "registry/block/beat-cuts/brief.md",
+      "to": "pieces/beat-cuts/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.2.6"
+  },
+  "usage": "npx paper-motion add beat-cuts --name my-beat-cuts\n# edit CONFIG in pieces/my-beat-cuts/scene.html, then:\nnpx paper-motion render pieces/my-beat-cuts/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow."
+  ],
+  "related": [
+    "grain-pulse",
+    "cut"
+  ],
+  "preview": {
+    "video": "previews/beat-cuts.webm",
+    "poster": "previews/beat-cuts.jpg",
+    "at": 2.45,
+    "values": {}
+  },
+  "mood": [
+    "bold",
+    "playful"
+  ],
+  "duration": 6.4,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Count-in",
+      "from": 0,
+      "to": 0.4,
+      "what": "count-in"
+    },
+    {
+      "name": "Cuts on every beat",
+      "from": 0.4,
+      "to": 6.4,
+      "what": "cuts on every beat"
+    }
+  ],
+  "when": [
+    "an edit that follows a track",
+    "a fast social teaser"
+  ]
+}

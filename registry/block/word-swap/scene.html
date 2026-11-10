@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>word-swap</title>
+<!--
+  Text · word swap (5.6 s). One word in a sentence keeps changing: the old one rolls up and out, soft, the new one
+  rolls in from below, and the slot it sits in eases to the new word's width so the rest of the sentence slides to
+  make room. The camera breathes in a little on each change.
+  Vertical: three lines, the changing word on its own; square: two lines (the word stays on the first). Type fits the width.
+  Sentence 0.2 s · Swaps 1.4, 2.4, 3.4 s · Hold to 5.6 s.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #p { display: flex; justify-content: center; }
+  #line { white-space: nowrap; display: flex; align-items: flex-start; }
+  #slot { position: relative; display: inline-block; overflow: hidden; vertical-align: bottom; }
+  #slot span { position: absolute; left: 0; top: 0; white-space: nowrap; }
+  #ghost { position: absolute; visibility: hidden; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="world"><div id="p"><div id="line"><span id="pre"></span><span id="slot"></span><span id="post"></span></div><span id="ghost"></span></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  before: 'Make a ',
+  words: ['launch', 'release', 'demo', 'brand'],
+  after: ' video.',
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.4;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 100%)';
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const accent = B.color('accent', '#E9E4D8');
+const line = B.style($('line'), 'display', { short: SHORT * K, color: 'figure' });
+const tall = H > W, square = W === H;
+let fs = SHORT * K * 0.14; line.style.fontSize = `${fs}px`;
+$('pre').textContent = tall ? CONFIG.before.trim() : CONFIG.before; $('post').textContent = W > H ? CONFIG.after : CONFIG.after.trim();
+if (tall) Object.assign(line.style, { flexDirection: 'column', alignItems: 'center' });
+if (square) { Object.assign(line.style, { flexWrap: 'wrap', justifyContent: 'center', width: `${W}px` }); Object.assign($('post').style, { flexBasis: '100%', textAlign: 'center' }); }
+$('pre').style.whiteSpace = $('post').style.whiteSpace = 'pre';
+const slot = $('slot'), ghost = $('ghost');
+Object.assign(ghost.style, { font: getComputedStyle(line).font, letterSpacing: getComputedStyle(line).letterSpacing });
+const words = CONFIG.words.map((w) => { const el = document.createElement('span'); el.textContent = w; el.style.color = accent; slot.append(el); return el; });
+$('p').style.width = `${W}px`;
+cam.place($('p'), { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+const measure = (txt) => { ghost.textContent = txt; return ghost.offsetWidth; };
+if (W <= H) {   // narrow frames: the widest line fits the width at the closest the camera gets
+  const longest = CONFIG.words.reduce((a, w) => (measure(w) > measure(a) ? w : a));
+  const lines = tall ? [CONFIG.before.trim(), longest, CONFIG.after.trim()] : [CONFIG.before + longest, CONFIG.after.trim()];
+  const closest = (SHORT * 1.7) / (SHORT * 1.7 + DIST - SHORT * 0.29);
+  fs = Math.min(fs * 2, fs * (W * 0.84 / closest) / Math.max(...lines.map(measure)));
+  line.style.fontSize = `${fs}px`; ghost.style.fontSize = `${fs}px`;
+}
+const widths = CONFIG.words.map(measure);
+const lh = fs * 1.2; slot.style.height = `${lh}px`; line.style.lineHeight = `${lh}px`;   // one line height for all three parts: one baseline
+words.forEach((el) => { el.style.lineHeight = `${lh}px`; });
+
+const T = { in: 0.2, swaps: [1.4, 2.4, 3.4], dur: 0.55 };
+s.update((t) => {
+  // which word, and how far through the change to the next
+  let i = 0; while (i < T.swaps.length && t >= T.swaps[i]) i++;
+  const from = Math.max(0, i - 1), at = T.swaps[i - 1] ?? -1, p = i ? progress(t, at, at + T.dur, ease.inOutCubic) : 1;
+  words.forEach((el, k) => {
+    let y = 1.2, o = 0, b = 0;
+    if (i === 0 && k === 0) { const e = progress(t, T.in, T.in + 0.7, ease.outCubic); y = 1 - e; o = e; b = (1 - e) * 10; }
+    else if (k === i) { y = 1 - p; o = p; b = (1 - p) * 10; }                   // the new one rolls in from below
+    else if (k === from && i > 0) { y = -p; o = 1 - p; b = p * 10; }              // the old one rolls up and out
+    el.style.transform = `translateY(${y * lh}px)`; el.style.opacity = String(o); el.style.filter = b > 0.3 ? `blur(${b}px)` : 'none';
+  });
+  // the slot eases to the new word's width, on a spring, so the sentence slides to make room
+  const wOld = widths[from], wNew = widths[i] ?? widths[from];
+  const sp = i ? spring(Math.max(0, t - at), { stiffness: 170, damping: 17 }) : 1;
+  slot.style.width = `${wOld + (wNew - wOld) * (i ? sp : 1)}px`;
+  for (const id of ['pre', 'post']) $(id).style.opacity = String(progress(t, T.in, T.in + 0.6));
+  // the camera: a slow drift in, a small breath on each change
+  const arrive = progress(t, 0, 1.0, ease.outCubic), drift = progress(t, 0, D, ease.inOutSine);
+  const breath = T.swaps.reduce((k, a) => k + (t >= a ? Math.sin(Math.min(1, (t - a) / 0.6) * Math.PI) : 0), 0);
+  cam.at({ x: 0, y: 0, z: DIST + SHORT * 0.3 * (1 - arrive) - SHORT * 0.25 * drift - SHORT * 0.035 * breath, yaw: -5 * (1 - arrive) + 3 * Math.sin(t * 0.7) * arrive, pitch: 0, roll: 0 });
+  $('bg').style.transform = `scale(${1.08 + 0.08 * drift})`;
+});
+B.cue(s, 'text', T.in); T.swaps.forEach((a) => B.cue(s, 'transition', a));
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

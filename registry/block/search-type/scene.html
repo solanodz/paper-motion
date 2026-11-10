@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>search-type</title>
+<!--
+  Component · search type (5.6 s). A command palette springs open over a dimmed screen; a query types itself and the
+  list filters live, rows folding away as they stop matching, the matched letters lit in the accent; the top result
+  is chosen and flashes. The camera stays close on the palette and follows the list as it shortens.
+  Open 0.4 s · Type 0.95–1.5 s · Choose 2.3 s · Hold to 5.6 s.
+  Vertical/square: the app behind is a narrower, taller window sized from the short side, the palette takes most of
+  its width (larger type), and the camera fits the palette to the frame width, then keeps pushing in.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #comp { position: absolute; box-sizing: border-box; overflow: hidden; }
+  .ui { position: absolute; inset: 0; display: grid; grid-template-columns: 18% 1fr; }
+  .side { display: flex; flex-direction: column; gap: 1.1em; padding: 2.2em 1.6em; }
+  .main { display: flex; flex-direction: column; gap: 1.4em; padding: 2.2em; }
+  i { display: block; height: 0.6em; border-radius: 999px; }
+  #dim { position: absolute; inset: 0; }
+  #pal { position: absolute; left: 50%; top: 14%; border-radius: 1em; overflow: hidden; transform-origin: 50% 0; }
+  #q { display: flex; align-items: center; gap: 0.8em; padding: 1.2em 1.4em; font-size: 1.25em; }
+  .caret { display: inline-block; width: 0.08em; height: 1.1em; vertical-align: -0.15em; }
+  .r { overflow: hidden; }
+  .ri { display: flex; align-items: center; justify-content: space-between; padding: 0 1.4em; height: 2.9em; margin: 0 0.5em; border-radius: 0.6em; }
+  .kind { font-size: 0.85em; padding: 0.2em 0.6em; border-radius: 999px; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="comp"><div class="ui" id="ui"></div><div id="dim"></div><div id="pal"><div id="q"></div><div id="list"></div></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, spring } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  placeholder: 'Search resources…',
+  query: 'push',
+  items: [['magic-move', 'component'], ['push-in', 'shot'], ['word-rise', 'text'], ['pass-over', 'shot'], ['push', 'transition'], ['punch', 'camera'], ['dither-dissolve', 'transition'], ['focus-pull', 'shot']],
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 5.6;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.3;
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const wide = W / H > 1.2, tall = H > W;
+const FS = SHORT * (tall ? 0.03 : 0.026);                             // non-wide: the UI's type size in the world
+const comp = $('comp'), cw = wide ? W * 0.72 * K : FS * (tall ? 24 / 0.84 : 30 / 0.66), ch = wide ? cw * 0.58 : cw * (tall ? 1.9 : 0.85), R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+Object.assign(comp.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: B.surface(0.2), border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.04}px ${SHORT * 0.12}px rgba(0,0,0,0.5)`, fontSize: `${wide ? cw * 0.0125 : FS}px`, fontFamily: B.font('text'), color: figure });
+const line = (w, c = muted, o = 0.45) => `<i style="width:${w}%;background:${c};opacity:${o}"></i>`;
+const box = (h) => `<div style="height:${h}em;border-radius:0.8em;background:${ground};border:1px solid ${muted}33"></div>`;
+$('ui').innerHTML = `<div class="side" style="background:${ground}">${line(70, figure, 0.9)}${line(85)}${line(60)}${line(75)}</div><div class="main">${line(24, figure, 0.9)}${box(14)}${box(9)}</div>`;
+$('dim').style.background = 'rgba(0,0,0,0.55)';
+const pal = $('pal'), pw = wide ? cw * 0.46 : FS * (tall ? 24 : 30);
+Object.assign(pal.style, { width: `${pw}px`, marginLeft: `${-pw / 2}px`, background: '#141414', border: `1px solid ${muted}55`, boxShadow: `0 2em 5em rgba(0,0,0,0.7)` });
+$('q').style.borderBottom = `1px solid ${muted}33`;
+$('q').innerHTML = `<svg width="1.1em" height="1.1em" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6" fill="none" stroke="${muted}" stroke-width="2"/><path d="M13 13 L18 18" stroke="${muted}" stroke-width="2" stroke-linecap="round"/></svg><span style="white-space:pre"><span id="qt"></span><span class="caret" style="background:${accent}"></span></span><span id="ph" style="color:${muted}"></span><span style="margin-left:auto;color:${muted};font:400 0.75em ${B.font('mono')};border:1px solid ${muted}55;border-radius:0.4em;padding:0.2em 0.5em">⌘K</span>`;
+$('ph').textContent = CONFIG.placeholder;
+const list = $('list'); list.style.padding = '0.5em 0';
+const rows = CONFIG.items.map(([name, kind]) => {
+  const r = document.createElement('div'); r.className = 'r';
+  r.innerHTML = `<div class="ri"><span class="nm" style="font:500 1.05em ${B.font('mono')}"></span><span class="kind" style="color:${muted};border:1px solid ${muted}44">${kind}</span></div>`;
+  list.append(r); return { r, ri: r.firstChild, nm: r.querySelector('.nm'), name };
+});
+cam.place(comp, { x: 0, y: 0, z: 0 });
+await document.fonts.ready;
+const rowH = rows[0].r.offsetHeight;
+
+const T = { open: 0.4, type: [0.95, 1.5], choose: 2.3 };
+const Q = CONFIG.query;
+const typedAt = (u) => Math.round(Q.length * progress(u, ...T.type));
+// when each row last changed between matching and not, so the fold animates from there
+const charT = Array.from({ length: Q.length + 1 }, (_, n) => n === 0 ? -1 : T.type[0] + (T.type[1] - T.type[0]) * ((n - 0.5) / Q.length));
+const matches = (name, n) => name.includes(Q.slice(0, n));
+s.update((t) => {
+  const o = t >= T.open ? spring(t - T.open, { stiffness: 230, damping: 17 }) : 0;
+  pal.style.transform = `translateY(${(1 - o) * -1.2}em) scale(${0.92 + 0.08 * o})`; pal.style.opacity = String(Math.min(1, o * 2));
+  $('dim').style.opacity = String(progress(t, T.open, T.open + 0.3));
+  const n = typedAt(t);
+  $('qt').textContent = Q.slice(0, n); $('ph').style.display = n ? 'none' : ''; $('ph').style.marginLeft = '-0.6em';
+  $('q').querySelector('.caret').style.opacity = t < T.type[1] || Math.sin(t * 9) > 0 ? '1' : '0';
+  let first = -1;
+  rows.forEach((row, i) => {
+    const m = matches(row.name, n);
+    // fold height from the moment its status last flipped
+    let since = -10, was = true;
+    for (let k = 1; k <= n; k++) { const mk = matches(row.name, k); if (mk !== was) { since = charT[k]; was = mk; } }
+    const f = progress(t, since, since + 0.3, ease.inOutCubic);
+    const h = m ? 1 : 1 - f;
+    row.r.style.height = `${rowH * (since < 0 ? 1 : h)}px`; row.r.style.opacity = String(since < 0 ? 1 : (m ? 1 : 1 - f));
+    if (m && first < 0) first = i;
+    // the matched letters, lit
+    const q = Q.slice(0, n), at = q ? row.name.indexOf(q) : -1;
+    row.nm.innerHTML = at >= 0 ? `${row.name.slice(0, at)}<span style="color:${figure};text-decoration:underline;text-decoration-color:${accent};text-decoration-thickness:0.12em;text-underline-offset:0.25em">${q}</span>${row.name.slice(at + q.length)}` : row.name;
+    row.nm.style.color = muted;
+  });
+  rows.forEach((row, i) => {
+    const sel = i === first && n > 0;
+    // the choice: the row brightens a step and presses, the words stay light
+    const press = sel && t >= T.choose ? spring(t - T.choose, { stiffness: 320, damping: 14 }) : 0;
+    const glow = sel && t >= T.choose ? Math.max(0, 1 - (t - T.choose) / 0.8) : 0;
+    row.ri.style.background = sel ? (t >= T.choose ? `color-mix(in srgb, #ffffff ${Math.round(8 + 10 * glow)}%, #141414)` : '#222') : 'transparent';
+    row.ri.style.boxShadow = 'none';
+    row.ri.style.transform = sel && t >= T.choose ? `scale(${1 + 0.04 * (1 - press) * (t - T.choose < 0.1 ? -1 : 1)})` : 'none';
+  });
+  // the camera: close on the palette; down the list as it settles; a nudge on the choice
+  const arrive = progress(t, 0, 0.8, ease.outCubic), close = progress(t, 0.3, 1.1, ease.inOutCubic);
+  const py = pal.offsetTop + Math.min(pal.offsetHeight, rowH * 5) * 0.5 - ch / 2;
+  const kick = t >= T.choose ? Math.sin(Math.min(1, (t - T.choose) / 0.4) * Math.PI) : 0;
+  if (!wide) {
+    // fit the palette to the frame's width, then keep pushing in; a nudge on the choice
+    const P = SHORT * 1.7, sFit = Math.min((W * 0.8) / pw, (H * 0.86) / (pal.offsetHeight + rowH));
+    const sNow = sFit * (0.55 + 0.45 * arrive) * (0.8 + 0.2 * close) * (1 + 0.1 * progress(t, T.type[1], D, ease.inOutSine) + 0.02 * kick);
+    cam.at({ x: 0, y: (pal.offsetTop + pal.offsetHeight / 2 - ch / 2) * Math.min(1, close + arrive * 0.6), z: P / sNow - P, yaw: -8 * (1 - arrive) + 2.5 * close * Math.sin(t * 0.8), pitch: 3 * (1 - arrive) + 3 * close });
+  } else
+  cam.at({ x: 0, y: py * close, z: DIST + SHORT * 0.3 * (1 - arrive) - SHORT * 1.0 * close - SHORT * 0.15 * progress(t, T.type[1], D, ease.inOutSine) - SHORT * 0.02 * kick, yaw: -8 * (1 - arrive) + 3 * close * Math.sin(t * 0.8), pitch: 3 * (1 - arrive) + 3 * close });
+  comp.style.opacity = String(progress(t, 0, 0.3));
+});
+B.cue(s, 'transition', T.open); B.cue(s, 'text', T.type[0]); B.cue(s, 'land', T.choose);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

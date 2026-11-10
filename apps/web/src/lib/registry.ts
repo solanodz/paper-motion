@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export type ResourceType = "component" | "transition" | "text" | "camera" | "background" | "palette" | "font-pair" | "recipe" | "shot";
+export type ResourceType = "component" | "transition" | "text" | "camera" | "background" | "palette" | "font-pair" | "recipe" | "shot" | "block";
 
 export type Param = { name: string; type: string; default?: unknown; options?: unknown[]; description?: string };
 
@@ -45,6 +45,7 @@ export const TYPES: { type: ResourceType; title: string; short: string; blurb: s
   { type: "font-pair", title: "Font pairs", short: "Fonts", blurb: "Free type pairings with a scale for video." },
   { type: "recipe", title: "Recipes", short: "Recipes", blurb: "Whole video structures that combine the rest." },
   { type: "shot", title: "Shots", short: "Shots", blurb: "Short camera moves, 3 to 6 s: a close-up, a pass over a component, a cursor that guides." },
+  { type: "block", title: "Blocks", short: "Blocks", blurb: "Ready-made moments, 4 to 8 s: annotations, interfaces, code, data, type and effects. Each one recomposes for 16:9, 9:16 and 1:1." },
 ];
 
 export function getIndex(): { site: string; count: number; items: IndexItem[] } {
