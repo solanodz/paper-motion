@@ -4,6 +4,23 @@ All notable changes to the `paper-motion` npm package. Dates are release dates o
 
 ## Unreleased
 
+The studio always says whose turn it is, and never plays a video that is out of date.
+
+- **`piece ask <piece> "question"`**: run before asking the user something in the chat. The studio shows the
+  question in a bar across the top with a button back to the agent's app (found from the CLI's own process tree
+  on macOS; `--return <url>` or `PAPER_MOTION_RETURN` for an agent in a browser). Cleared by the next `piece
+  review` or `piece working`, or `--done`.
+- **A turn bar in the studio**, also in the tab's title: your turn (and whether the agent is waiting for it), the
+  agent working and for how long, a board waiting, a join in progress, the agent not having read the last
+  changes, the studio itself stopped. Commands that wait (`piece review`, `board`) say so while they wait.
+- **Stale videos are held.** Each joined render records what it was made from. When the piece changes (a text, a
+  length, the order, a join, a scene the agent rewrote), the Assembly or Final video stops, dims and says
+  "Updating" with the part being rendered; Approve waits for the new one.
+- **The studio joins the draft again by itself** after an edit by hand, with the sound the draft was made with.
+  The agent is only called when the join fails. An edit after the final render sends Final back to the agent.
+- Fixed: editing a text while in Assembly left the old film in place and told no one; clearing a part's length
+  set it to 0.5 s; a part edited by hand in a piece past Parts had to be approved again.
+
 From a test where an agent with no context made a video from `llms.txt` alone:
 
 - `board --url`: option and look values may hold several keys and lists (`graphite:accent=#B8F03C,ramp=["#0A0A0B","#B8F03C"]`, `--look "acid-night:figure=#FFF,muted=#7E8079,geist"`); `--look brand` uses the palette, colors and font pair the project installed.

@@ -17,6 +17,7 @@
 //   scan-reveal, mask-reveal, glitch, cells, flip-3d, whip-pan (see MOVE_JOINS)
 // Each part plays from `from` (default 0) for `seconds` (default: the whole scene). A part cut before its
 // land (the beat a block declares with B.cue(s, 'land', t)) gets a warning with the length that keeps it.
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -170,13 +171,58 @@ export function plan(chain, infos) {
   return { parts, warnings, total: parts.reduce((a, p) => a + p.seconds, 0) };
 }
 
+// ── is a joined render still current, and is one being made right now ──────────────────────────────────────
+/**
+ * A fingerprint of everything a joined render shows: the order, lengths and joins in chain.json, each part's
+ * files, the brand's tokens and backgrounds, the project's moves. A render made from another fingerprint is stale.
+ */
+export function chainSig(cwd, dir) {
+  const h = crypto.createHash('sha1');
+  const chain = readJson(path.join(dir, 'chain.json'), { parts: [] });
+  h.update(JSON.stringify([chain.format ?? null, chain.join ?? null, (chain.parts ?? []).map((p) => [p.dir, p.id, p.seconds ?? null, p.from ?? null, p.join ?? null])]));
+  const add = (f) => {
+    try {
+      const st = fs.statSync(f); if (st.isDirectory()) return;
+      h.update(path.basename(f));
+      if (/\.(html|json|js|mjs|css|svg)$/.test(f)) h.update(fs.readFileSync(f)); else h.update(`${st.size}:${Math.round(st.mtimeMs)}`);
+    } catch { /* gone: nothing to add */ }
+  };
+  const all = (d, skip = () => false) => { try { for (const f of fs.readdirSync(d).sort()) if (!skip(f)) add(path.join(d, f)); } catch { /* no such folder */ } };
+  for (const p of chain.parts ?? []) if (p.dir) all(path.join(dir, p.dir), (f) => f.endsWith('.md'));
+  for (const f of ['brand/tokens.json', 'brand/shader-set/set.json', 'brand/sound.json']) add(path.join(cwd, f));
+  all(path.join(cwd, 'moves'));
+  return h.digest('hex').slice(0, 16);
+}
+const sigFile = (dir) => path.join(dir, 'renders', '.sig.json');
+/** What each joined render in renders/ was made from: { "<file>": { sig, sfx, audio } }. */
+export const readSigs = (dir) => readJson(sigFile(dir), {});
+
+// the join in progress, for the studio's "updating" notice and so two joins of the same file never run at once
+const jobFile = (dir) => path.join(dir, '.job.json');
+/** The join running on this piece right now (its process still alive), or null. */
+export function readJob(dir) {
+  const j = readJson(jobFile(dir), null);
+  if (!j) return null;
+  try { process.kill(j.pid, 0); return j; } catch { return null; }
+}
+const writeJob = (dir, j) => { try { fs.writeFileSync(jobFile(dir), JSON.stringify({ pid: process.pid, at: Date.now(), ...j })); } catch { /* read-only: no notice */ } };
+const endJob = (dir) => { try { if (readJson(jobFile(dir), {}).pid === process.pid) fs.rmSync(jobFile(dir)); } catch { /* already gone */ } };
+
 /**
  * Renders every part in the brand's look and joins them into one file.
  * Must run from the project root (where brand/ is): scenes load the brand from /brand.
  */
 export async function renderChain({ cwd = process.cwd(), piece, out, motionBlur = 1, dpr = 1, audio, sfx = true, draft = false, onStep = () => {} }) {
   if (draft) { dpr = 0.5; motionBlur = 1; }
-  return withChain({ cwd, piece }, async ({ dir, url, parts, warnings, total, config }) => {
+  // the piece's own draft and final are tracked (what they were made from, and that they are being made);
+  // a render to another file (--out) is the caller's business
+  const home = pieceDir(piece, cwd), kind = out ? null : draft ? 'assembly' : 'final', sig = kind ? chainSig(cwd, home) : null;
+  if (kind) {
+    const busy = readJob(home);
+    if (busy && busy.pid !== process.pid && busy.kind === kind) throw new Error(`this piece's ${kind === 'assembly' ? 'draft' : 'final'} is already being rendered (${busy.of ? `part ${busy.part} of ${busy.of}` : 'starting'}): wait for it, then look at piece status`);
+    writeJob(home, { kind });
+  }
+  try { return await withChain({ cwd, piece }, async ({ dir, url, parts, warnings, total, config }) => {
     const { renderVideo } = await import('./render.mjs');
     for (const w of warnings) onStep({ warning: w });
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-chain-'));
@@ -184,6 +230,7 @@ export async function renderChain({ cwd = process.cwd(), piece, out, motionBlur 
       const files = [];
       for (const [i, p] of parts.entries()) {
         onStep({ part: i + 1, of: parts.length, dir: p.dir });
+        if (kind) writeJob(home, { kind, part: i + 1, of: parts.length });
         const f = path.join(tmp, `${pad(i)}.mov`);
         await renderVideo({ url: url(p), out: f, format: 'prores', from: p.from, to: p.to, sfx, motionBlur, dpr });
         files.push(f);
@@ -194,10 +241,12 @@ export async function renderChain({ cwd = process.cwd(), piece, out, motionBlur 
       out = path.resolve(cwd, out ?? path.join(dir, 'renders', `${path.basename(dir)}${draft ? '-draft' : ''}.mp4`));
       fs.mkdirSync(path.dirname(out), { recursive: true });
       onStep({ joining: true });
+      if (kind) writeJob(home, { kind, part: parts.length, of: parts.length, joining: true });
       const j = await join({ files, parts, out, ground, fps, music: audio, lufs: sound.loudness ?? -16 });
+      if (kind) fs.writeFileSync(sigFile(home), JSON.stringify({ ...readSigs(home), [path.basename(out)]: { sig, sfx, ...(audio ? { audio } : {}) } }, null, 2) + '\n');
       return { out, total: j.seconds, planned: total, parts: parts.length, warnings, W, H };
     } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
-  });
+  }); } finally { if (kind) endJob(home); }
 }
 
 /**

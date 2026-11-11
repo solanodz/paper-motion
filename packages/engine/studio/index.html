@@ -91,6 +91,24 @@
   .metas span { display: flex; align-items: center; padding: 0 16px; border-left: 1px solid var(--line); color: var(--muted); font-size: 12px; white-space: nowrap; }
 
   /* the six stages, a strip of cells; the open one is inverted */
+  /* whose turn it is, always: under the title, above the stages */
+  .turn { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 48px; padding: 8px 20px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .turn .mk { width: 9px; height: 9px; background: var(--muted); }
+  .turn b { font-weight: 500; margin-right: 10px; }
+  .turn .tx { color: var(--muted); }
+  .turn.yours .mk { background: var(--paper); }
+  .turn.busy .mk, .turn.agent .mk { animation: blink 1.2s steps(1, end) infinite; }
+  .turn.ask { background: var(--paper); color: #000; }
+  .turn.ask .mk { background: #000; } .turn.ask .tx { color: #000a; }
+  .turn.ask .btn { border-color: #000; color: #000; } .turn.ask .btn:hover { background: #000; color: var(--paper); }
+  .turn.deaf .mk, .turn.off .mk { background: var(--warn); }
+  .turn.off { color: var(--warn); }
+  /* a video that no longer shows the piece as it is: held, dimmed, and told why */
+  .shot.stale > video { opacity: .28; filter: grayscale(1); }
+  .updating { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 10px; text-align: center; padding: 20px; overflow: hidden; }
+  .updating b { background: var(--paper); color: #000; padding: 7px 12px; font: 500 13px/1 var(--mono); }
+  .updating.err b { background: var(--warn); }
+  .updating span { font: 13px var(--mono); color: var(--figure); max-width: 52ch; }
   .strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid var(--line); background: var(--ground); }
   .cell { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto auto; padding: 14px 16px; min-height: 116px; border-right: 1px solid var(--line); }
   .cell:last-child { border-right: 0; }
@@ -223,6 +241,9 @@
   /* a phone: the strip scrolls and stays on top; everything stacks */
   @media (max-width: 760px) {
     .ttl { padding: 0 14px; font-size: 18px; }
+    .turn { grid-template-columns: auto minmax(0, 1fr); padding: 10px 14px; }
+    .turn .btn { grid-column: 2; justify-self: start; }
+    .turn b { display: block; }
     .back span, .metas span:not(:last-child) { display: none; }
     .back { padding: 0 14px; }
     .strip { display: flex; overflow-x: auto; position: sticky; top: 0; z-index: 10; scrollbar-width: none; }
@@ -247,7 +268,7 @@
     .lrow { grid-template-columns: minmax(0, 1fr) auto; }
     .lrow .mono { display: none; }
   }
-  @media (prefers-reduced-motion: reduce) { .rendering::after, .pulse rect { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .rendering::after, .pulse rect, .turn .mk { animation: none; } }
 </style>
 </head>
 <body>
@@ -310,7 +331,7 @@ const nn = (i) => String(i + 1).padStart(2, '0');
 
 // ─── state ─────────────────────────────────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
-let piece = params.get('p'), P = null, raw = '', view = null, followed = null;
+let piece = params.get('p'), P = null, raw = '', view = null, followed = null, misses = 0;
 const RW = [280, 560];
 let rightW = (() => { try { return Math.min(RW[1], Math.max(RW[0], Number(localStorage.getItem('studio:rw')) || 340)); } catch { return 340; } })();
 
@@ -351,11 +372,15 @@ function restoreFocus(f) {
 async function act(body) {
   const res = await fetch(`/api/piece?p=${encodeURIComponent(piece)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const r = await res.json();
-  toast(r.error ? `Not sent: ${r.error}` : 'Sent to your agent');
+  // an edit by hand is applied here; a decision goes to the agent, who may or may not be waiting for it right now
+  const decision = ['approve', 'changes', 'reopen', 'approve-part'].includes(body.type);
+  toast(r.error ? `Not done: ${r.error}` : !decision ? 'Saved' : P.agent?.listening ? 'Sent to your agent' : 'Saved. Tell your agent “continue” in the chat', decision && !r.error && !P.agent?.listening ? 4200 : 1800);
   raw = ''; await load();
 }
-let tt; function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), 1800); }
-setInterval(() => load().catch(() => {}), 1500);
+let tt; function toast(t, ms = 1800) { const e = document.getElementById('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), ms); }
+// the page polls the studio; a few misses in a row mean the studio itself stopped, and the page says so
+setInterval(() => load().then(() => { if (misses >= 3) { misses = 0; paintTurn(); } misses = 0; }).catch(() => { if (++misses === 3) paintTurn(); }), 1500);
+setInterval(() => paintTurn(), 20000);   // "for 4 min" keeps counting between changes
 
 function renderList(list) {
   document.getElementById('app').innerHTML = `<header class="top"><div class="ttl">paper-motion studio</div></header>
@@ -437,13 +462,52 @@ function trackHTML() {
     </div>`).join('')}</div>
     <div class="tfoot"><span>Drag a part to reorder</span><span>${fmt(T)} in total</span></div></div>`;
 }
-const bigShot = (src, st, working, idle) => (src ? `<div class="shot marks" style="overflow:visible">${vid(src, 'controls')}</div>` : `<div class="shot marks" style="overflow:visible"><div class="empty ${st === 'working' ? 'rendering' : ''}" style="height:100%">${st === 'working' ? working : idle}</div></div>`);
-function assemblyHTML(st) {
-  return `${bigShot(P.media.assembly, st, 'Your agent is joining the parts', 'Not joined yet')}${trackHTML()}`;
+// Why the joined video (assembly) or the final is not the piece as it is right now, or null when it is current.
+function updating(kind) {
+  const M = P.media, job = P.job?.kind === kind ? P.job : null;
+  const busy = P.parts.filter((p) => ['changes', 'queued', 'rendering'].includes(p.status)), names = busy.map((p) => p.name).join(', ');
+  if (job) return { head: 'Updating', sub: job.joining ? 'Joining the parts' : job.of ? `Rendering part ${job.part} of ${job.of}` : 'Starting' };
+  if (kind === 'assembly' && M.error) return { head: 'Not updated', sub: `The studio could not join the parts (${M.error}). Your agent has been told and will join them.`, err: true };
+  if (busy.length) return { head: 'Updating', sub: busy.some((p) => p.status === 'changes') ? `Your agent is changing ${names}` : `Rendering ${names} again` };
+  if (M[`${kind}Stale`]) return { head: 'Out of date', sub: kind === 'final' ? 'The piece changed after this render. Your agent renders the final again.' : 'The piece changed after this was joined. The new video is on its way.' };
+  return null;
 }
+function bigShot(src, st, working, idle, upd) {
+  if (!src) return `<div class="shot marks" style="overflow:visible"><div class="empty ${st === 'working' ? 'rendering' : ''}" style="height:100%">${st === 'working' ? working : idle}</div></div>`;
+  return `<div class="shot marks${upd ? ' stale' : ''}" style="overflow:visible">${vid(src, 'controls')}${upd ? `<div class="updating${upd.err ? ' err' : ' rendering'}" role="status"><b>${esc(upd.head)}</b><span>${esc(upd.sub)}</span></div>` : ''}</div>`;
+}
+function assemblyHTML(st) {
+  return `${bigShot(P.media.assembly, st, 'Your agent is joining the parts', 'Not joined yet', updating('assembly'))}${trackHTML()}`;
+}
+
+// ─── whose turn it is ──────────────────────────────────────────────────────────────
+const ago = (iso) => { const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000); return m < 1 ? 'just now' : m < 60 ? `for ${m} min` : `for ${Math.floor(m / 60)} h ${m % 60} min`; };
+function turn() {
+  if (misses >= 3) return { kind: 'off', head: 'The studio stopped', text: 'This page is no longer up to date. Ask your agent to start it again (npx paper-motion studio).' };
+  const cur = P.stage, st = P.stages[cur].status, name = STAGES[order(cur)][1], A = P.agent ?? {};
+  if (P.ask) return { kind: 'ask', head: 'Your agent asked you something in the chat', text: P.ask.text, back: true };
+  if (P.job) { const u = updating(P.job.kind); return { kind: 'busy', head: P.job.kind === 'final' ? 'Rendering the final' : 'Joining the parts again', text: u?.sub ?? '', go: P.job.kind }; }
+  const board = (P.boards ?? []).find((b) => b.status === 'waiting' && b.stage === cur);   // a board left unanswered in a stage long past is not a turn
+  if (board) return { kind: 'yours', head: 'Your turn: choose on a board', text: board.title, link: board.url };
+  if (st === 'review') return A.listening
+    ? { kind: 'yours', head: `Your turn: review ${name.toLowerCase()}`, text: 'Your agent is waiting for your decision.', go: cur }
+    : { kind: 'yours', head: `Your turn: review ${name.toLowerCase()}`, text: 'Your agent is not waiting right now. Decide here, then tell it “continue” in the chat.', go: cur, back: true };
+  if (P.unread && !A.listening) return { kind: 'deaf', head: 'Your agent has not read your last changes', text: 'Tell it “continue” in the chat.', back: true };
+  if (st === 'approved' && cur === 'final') return { kind: 'done', head: 'This piece is finished', text: 'The files are in Final.', go: 'final' };
+  const since = P.stages[cur].since, late = since && Date.now() - new Date(since).getTime() > 12 * 60000;
+  return { kind: 'agent', head: `Your agent is working on ${name.toLowerCase()}`, text: `${since ? ago(since) : ''}${late ? '. No news in a while: check the chat.' : ''}`, back: late };
+}
+function turnHTML() {
+  const T = turn(), A = P?.agent ?? {};
+  const back = !T.back ? '' : A.focus ? `<button class="btn" data-focus>Go to ${esc(A.app)} ${icon('out', 15)}</button>` : A.url ? `<a class="btn" href="${esc(A.url)}" target="_blank" rel="noopener">Go to your agent ${icon('out', 15)}</a>` : '';
+  const go = T.link ? `<a class="btn" href="${esc(T.link)}" target="_blank" rel="noopener">Open the board ${icon('out', 15)}</a>` : T.go && T.go !== view ? `<button class="btn" data-go="${T.go}">Open ${esc(STAGES[order(T.go)][1].toLowerCase())}</button>` : '';
+  document.title = `${{ ask: '(?) Answer in the chat · ', yours: '● Your turn · ', deaf: '(!) ', off: '(stopped) ', busy: 'Updating… · ' }[T.kind] ?? ''}${P?.title ?? 'paper-motion'} · studio`;
+  return `<div id="turn" class="turn ${T.kind}" role="status"><i class="mk" aria-hidden="true"></i><span><b>${esc(T.head)}</b><span class="tx">${esc(T.text)}</span></span>${back || go}</div>`;
+}
+function paintTurn() { const el = document.getElementById('turn'); if (el && P) el.outerHTML = turnHTML(); }
 function finalHTML(st) {
   const out = P.media.outputs;
-  return `${bigShot(P.media.final, st, 'Rendering at full quality', 'Not rendered yet')}
+  return `${bigShot(P.media.final, st, 'Rendering at full quality', 'Not rendered yet', updating('final'))}
     ${out.length ? `<div class="outs">${out.map((o) => `<div class="out"><span class="mono">${esc(o.file)}</span><span style="display:flex;gap:16px;align-items:center"><span class="mono muted" style="font-size:12px">${(o.bytes / 1e6).toFixed(1)} MB</span><a class="btn" href="${esc(o.url)}" download="${esc(o.file)}">${icon('down', 15)} Download</a></span></div>`).join('')}</div>
     <p class="hint">Need another shape (9:16, 1:1), a ProRes master or a GIF? Ask for it in the changes box.</p>` : ''}`;
 }
@@ -460,7 +524,8 @@ function render() {
       <span class="nm">${t}</span><span class="cs">${key === 'parts' && P.parts.length && ss !== 'pending' ? `${approvedParts} of ${P.parts.length} approved` : STATUS[ss] ?? ss}</span></button>`;
   }).join('');
   const body = { brief: briefHTML, look: lookHTML, structure: structureHTML, parts: partsHTML, assembly: () => assemblyHTML(st), final: () => finalHTML(st) }[k]();
-  const canApprove = st === 'review' && (k !== 'parts' || (P.parts.length && approvedParts === P.parts.length));
+  const held = ['assembly', 'final'].includes(k) && !!updating(k);   // never approve a video that is being replaced
+  const canApprove = st === 'review' && !held && (k !== 'parts' || (P.parts.length && approvedParts === P.parts.length));
   const notes = P.events.filter((e) => e.stage === k && e.kind === 'changes').slice(-8);
   const activity = P.events.filter((e) => e.stage === k).slice(-6).reverse();
   const total = P.parts.reduce((a, p) => a + Number(p.seconds ?? 0), 0);
@@ -471,6 +536,7 @@ function render() {
       <div class="ttl">${esc(P.title)}</div>
       <div class="metas">${[[P.brand, ''], [P.dir, 'mono'], [P.format, 'mono'], [total ? fmt(total) : '', 'mono']].filter(([v]) => v).map(([v, c]) => `<span class="${c}">${esc(v)}</span>`).join('')}</div>
     </header>
+    ${turnHTML()}
     <nav class="strip" aria-label="Stages">${cells}</nav>
     <div id="grid" class="work" style="--rw:${rightW}px">
     <main class="stage">
@@ -482,6 +548,7 @@ function render() {
       <div class="dstate"><b>${icon(st, 18)}${{ approved: 'Approved', review: 'Yours to review', changes: 'Changes asked', working: 'Your agent is on it', pending: 'Not yet' }[st] ?? st}</b>${P.stages[k].at ? `<time class="mono muted" style="font-size:12px">${clock(P.stages[k].at)}</time>` : ''}</div>
       ${P.stages[k].note && st !== 'approved' ? `<div class="said">${esc(P.stages[k].note)}</div>` : ''}
       ${k === 'parts' && P.parts.length && st !== 'pending' ? `<div><div class="meter" role="img" aria-label="${approvedParts} of ${P.parts.length} parts approved">${P.parts.map((p) => `<i class="${p.status === 'approved' ? 'y' : ''}"></i>`).join('')}</div>${st === 'review' && !canApprove ? `<p class="muted" style="font-size:13px;margin-top:10px">Approve each part, or ask for changes. When all are approved, your agent joins them.</p>` : ''}</div>` : ''}
+      ${st === 'review' && held ? `<p class="muted" style="font-size:13px">You can approve once the new video is here.</p>` : ''}
       ${st === 'review' ? `<button class="btn primary big" data-oks="${k}" ${canApprove ? '' : 'disabled'}>Approve ${title.toLowerCase()} ${icon('approved', 18)}</button>
         <div class="ask"><textarea id="note" aria-label="What to change" placeholder="Anything to change? Your agent reads it and brings this stage back to you."></textarea><button class="btn" data-cs="${k}" style="margin-top:8px;width:100%">${icon('note', 15)} Ask for changes</button></div>` : ''}
       ${st === 'approved' ? `<p class="muted" style="font-size:13px">Reopen it if you want something changed.</p><button class="btn" data-reopen="${k}" style="justify-self:start">${icon('reopen', 15)} Reopen</button>` : ''}
@@ -491,6 +558,12 @@ function render() {
       ${activity.length ? `<div class="activity"><div class="lh">Sent to your agent</div><div class="log">${activity.map((e) => `<div><time>${clock(e.at)}</time><span class="muted">${e.part ? `<span class="mono">${esc(e.part)}</span> ` : ''}${esc(said(e))}</span></div>`).join('')}</div></div>` : ''}
     </aside></div>`;
   app.querySelectorAll('video[data-k]').forEach((v) => { const c = vcache.get(v.dataset.k); if (c) v.replaceWith(c); else vcache.set(v.dataset.k, v); });
+  // a video being replaced stops playing (it would look like the change never happened); it plays again if it turns out current
+  app.querySelectorAll('.shot.marks > video').forEach((v) => {
+    const stale = v.parentElement.classList.contains('stale');
+    if (stale && !v.dataset.held) { v.dataset.held = '1'; v.autoplay = false; v.pause(); v.controls = false; }
+    else if (!stale && v.dataset.held) { delete v.dataset.held; v.controls = true; v.play().catch(() => {}); }
+  });
   restoreFocus(focus);
   // on a phone the stages are a strip that scrolls: keep the open one in view
   const on = app.querySelector('.cell.on'); if (on && on.parentElement.scrollWidth > on.parentElement.clientWidth) on.parentElement.scrollLeft = on.offsetLeft - (on.parentElement.clientWidth - on.offsetWidth) / 2;
@@ -502,6 +575,7 @@ document.addEventListener('click', (e) => {
   const t = e.target.closest('button'); if (!t || t.disabled) return;
   const d = t.dataset;
   if (d.go) { view = d.go; render(); scrollTo({ top: 0 }); }
+  else if ('focus' in d) fetch(`/api/focus?p=${encodeURIComponent(piece)}`, { method: 'POST' }).then((r) => r.json()).then((r) => { if (r.error) toast('Could not open it: go to the chat yourself'); }).catch(() => {});
   else if (d.okp) act({ type: 'approve-part', part: d.okp });
   else if (d.oks) act({ type: 'approve', stage: d.oks });
   else if (d.cs) { const v = document.getElementById('note').value; if (v.trim()) act({ type: 'changes', stage: d.cs, text: v }); else { toast('Write what to change first'); document.getElementById('note').focus(); } }

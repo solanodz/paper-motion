@@ -66,7 +66,10 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      hand a stage to the user in the studio (brief, look, structure,
                                      parts, assembly, final) and wait for their decision; prints it.
                                      Starts the studio if needed; the first time, opens it for them
-  piece working <piece> <stage>      mark a stage as yours again (after changes were asked)
+  piece working <piece> <stage>      mark a stage as yours (when you start it, or after changes were asked)
+  piece ask <piece> "question" | --done
+                                     run right before asking the user something in the chat: the studio
+                                     tells them you are waiting there, with a way back to you
   piece status <piece>               where the piece is, and what the user did that you haven't read
   studio [--port 4317] [--open] [--stop]
                                      the local studio: the user follows each piece, approves, edits
@@ -423,7 +426,10 @@ async function main() {
         if (short && wait) {
           const minutes = Number.isFinite(Number(args.wait)) && args.wait !== undefined && args.wait !== true ? Number(args.wait) : 10;
           console.error(`waiting up to ${minutes} min for the choice on ${short.id} (the user can still paste the line)…`);
-          const choice = await awaitChoice(site, short.id, { timeout: minutes * 60 * 1000 });
+          // while this waits, the studio shows the agent as listening
+          const pulse = pdir ? setInterval(() => PC.beat(pdir, { waiting: 'board' }), 3000) : null;
+          if (pdir) PC.beat(pdir, { waiting: 'board' });
+          const choice = await awaitChoice(site, short.id, { timeout: minutes * 60 * 1000 }).finally(() => { if (pulse) { clearInterval(pulse); PC.unbeat(pdir); } });
           if (!choice) { console.error('no choice yet: wait again with board --await ' + short.id); process.exit(3); }
           if (pdir) PC.markBoard(pdir, short.id, choice.line);
           console.log(choice.line);
@@ -542,15 +548,18 @@ async function main() {
 
     case 'piece': {
       const sub = args._[1], piece = args._[2];
-      if (!['init', 'review', 'working', 'status'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …] [--no-studio] [--force]\n       piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open] [--no-studio] [--skip]\n       piece working <piece> <stage>\n       piece status <piece>\n  Stages: brief, look, structure, parts, assembly, final. review hands a stage to the user in the studio and prints what they did, one line each; it refuses while an earlier stage is not approved (--skip moves on without it, only when the user agreed). --no-wait returns at once with what is unread; --no-open does not open their browser; --no-studio runs without the studio.'); process.exit(args.help ? 0 : 1); }
+      if (!['init', 'review', 'working', 'status', 'ask'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …] [--no-studio] [--force]\n       piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open] [--no-studio] [--skip]\n       piece working <piece> <stage>\n       piece ask <piece> "the question you are asking in the chat" | --done\n       piece status <piece>\n  ask: run it right before you ask the user anything in the chat, so the studio sends them there (the next review or working clears it, or --done). --return <url> on any of these gives the studio a link back to you when you run in a browser.\n  Stages: brief, look, structure, parts, assembly, final. review hands a stage to the user in the studio and prints what they did, one line each; it refuses while an earlier stage is not approved (--skip moves on without it, only when the user agreed). --no-wait returns at once with what is unread; --no-open does not open their browser; --no-studio runs without the studio.'); process.exit(args.help ? 0 : 1); }
       const P = await import('../lib/piece.mjs');
       const { pieceDir } = await import('../lib/chain.mjs');
       const dir = pieceDir(piece), studioLib = await import('../lib/studio.mjs'), q = `?p=${encodeURIComponent(path.basename(dir))}`;
       const studio = async () => (args.studio === false || args['no-studio'] ? null : studioLib.ensureStudio(process.cwd(), { bin: fileURLToPath(import.meta.url) }));
+      // where this agent runs, so the studio can take the user back to it
+      const host = async () => { if (sub !== 'status') P.setHost(dir, (await import('../lib/host.mjs')).hostApp({ url: typeof args.return === 'string' ? args.return : undefined })); };
       if (sub === 'init') {
         const brief = Object.fromEntries(P.BRIEF_KEYS.filter((k) => typeof args[k] === 'string').map((k) => [k, args[k]]));
         const p = P.initPiece({ piece, title: typeof args.title === 'string' ? args.title : undefined, brief, force: !!args.force });
         console.log(`✓ ${path.relative(process.cwd(), dir)}/piece.json · "${p.title}" · stage ${p.stage}`);
+        await host();
         const missing = P.BRIEF_KEYS.filter((k) => !p.brief[k]);
         if (missing.length) console.log(`  brief still empty: ${missing.join(', ')} (pass them, or write piece.json)`);
         const s = await studio().catch((e) => { console.log(`  ! ${e.message}`); return null; });
@@ -566,9 +575,20 @@ async function main() {
         if (fresh.length) { console.log(`\n${fresh.length} unread:`); for (const e of fresh) console.log(P.eventLine(p, e)); }
         break;
       }
+      if (sub === 'ask') {
+        if (!P.readPiece(dir)) { console.error(`no piece.json in ${path.relative(process.cwd(), dir)}`); process.exit(1); }
+        await host();
+        if (args.done) { P.clearAsk(dir); console.log('✓ cleared: the studio no longer sends the user to the chat'); break; }
+        const question = typeof args._[3] === 'string' ? args._[3].trim() : '';
+        if (!question) { console.error('piece ask: give the question in one line (the one you are asking in the chat), or --done'); process.exit(1); }
+        P.setAsk(dir, question);
+        console.log(`✓ the studio now tells the user you asked this in the chat${P.readPiece(dir).agent ? ', with a way back to you' : ''}. Ask it now; the next piece review or piece working clears it (or piece ask ${piece} --done).`);
+        break;
+      }
       const stage = args._[3];
+      await host();
       if (!P.STAGES.includes(stage)) { console.error(`piece ${sub}: give a stage (${P.STAGES.join(', ')})`); process.exit(1); }
-      if (sub === 'working') { P.updatePiece(dir, (p) => { p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working' }; }); console.log(`✓ ${stage}: working`); break; }
+      if (sub === 'working') { P.updatePiece(dir, (p) => { delete p.ask; p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working', since: new Date().toISOString() }; }); console.log(`✓ ${stage}: working`); break; }
       // review: hand the stage over and wait for the user's decision in the studio
       try { P.toReview(dir, stage, { skip: !!args.skip }); } catch (e) { console.error(`✗ ${e.message}`); process.exit(1); }
       const s = await studio();

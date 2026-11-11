@@ -5,6 +5,8 @@
 //   brief      what, who, format, tone, action: written by the agent, editable by the user
 //   parts      per part (by its folder in chain.json): status (queued · rendering · review · changes · approved), note
 //   events     what the user did in the studio, in order; `seen` is the last one the agent has read
+//   ask        a question the agent asked in the chat and is waiting on (the studio sends the user there)
+//   agent      the app or page the agent runs in, so the studio can take the user back to it
 //
 // chain.json stays the source of what plays (order, seconds, joins); piece.json only tracks decisions.
 import fs from 'node:fs';
@@ -63,8 +65,10 @@ export function eventLine(p, e) {
     : e.kind === 'changes' ? `changes: "${e.text}"`
     : e.kind === 'order' ? `order ${e.text}`
     : e.kind === 'reopen' ? 'reopened'
+    : e.kind === 'failed' ? `could not join the parts: "${e.text}"`
     : `${e.key}="${e.text}"${e.rerendered ? ' (re-rendered)' : ''}`;
-  const tail = e.rejoin ? ' · join again: pamo chain --draft' : '';
+  // the studio joins the draft again by itself after an edit by hand; the full-quality render stays the agent's
+  const tail = `${e.rejoined ? ' (the studio is joining the draft again)' : ''}${e.rejoin ? ' · join again: pamo chain --draft' : ''}${e.refinal ? ` · the final is out of date: render it again (pamo chain ${p.piece} --motion-blur 5), then review final` : ''}`;
   return `paper-motion: piece ${p.piece} · ${e.kind === 'order' ? '' : `${who} `}${what}${tail}`.replace(/ {2,}/g, ' ');
 }
 
@@ -85,6 +89,7 @@ export function toReview(dir, stage, { skip = false } = {}) {
     const open = earlierOpen(p, stage);
     if (open.length && !skip) throw new Error(`${open.join(', ')} not approved yet: review ${open.length > 1 ? 'them' : 'it'} first (piece review ${p.piece} ${open[0]}), or pass --skip when the user agreed to move on without ${open.length > 1 ? 'them' : 'it'}`);
     for (const s of open) p.stages[s] = { ...p.stages[s], status: 'approved' };
+    delete p.ask;   // handing a stage over means the question in the chat is settled
     p.stage = stage;
     p.stages[stage] = { status: 'review', since: now() };
   });
@@ -101,7 +106,7 @@ export function unseen(dir, { mark = true } = {}) {
 }
 
 // an event that ends the agent's wait: a decision on the stage under review, or a change asked anywhere
-const decisive = (e, stage) => (e.kind === 'approve' && e.stage === stage && !e.part) || e.kind === 'changes' || e.kind === 'reopen' || e.rejoin;
+const decisive = (e, stage) => (e.kind === 'approve' && e.stage === stage && !e.part) || e.kind === 'changes' || e.kind === 'reopen' || e.rejoin || e.refinal;
 
 /**
  * Waits until the user decides on `stage` in the studio (approves it, or asks for changes), then returns every
@@ -109,16 +114,39 @@ const decisive = (e, stage) => (e.kind === 'approve' && e.stage === stage && !e.
  */
 export async function awaitDecision(dir, stage, { timeout = 30 * 60 * 1000, every = 1000, signal } = {}) {
   const t0 = Date.now();
-  for (;;) {
-    const p = readPiece(dir);
-    const fresh = p.events.filter((e) => e.n > (p.seen ?? 0));
-    if (fresh.some((e) => decisive(e, stage))) {
-      const r = unseen(dir);
-      return { done: true, piece: r.piece, events: r.events, lines: r.events.map((e) => eventLine(r.piece, e)) };
+  let last = 0;
+  try {
+    for (;;) {
+      if (Date.now() - last > 3000) { beat(dir, { waiting: stage }); last = Date.now(); }   // the studio shows "your agent is listening"
+      const p = readPiece(dir);
+      const fresh = p.events.filter((e) => e.n > (p.seen ?? 0));
+      if (fresh.some((e) => decisive(e, stage))) {
+        const r = unseen(dir);
+        return { done: true, piece: r.piece, events: r.events, lines: r.events.map((e) => eventLine(r.piece, e)) };
+      }
+      if (Date.now() - t0 > timeout || signal?.aborted) return { done: false, piece: p, events: fresh, lines: fresh.map((e) => eventLine(p, e)) };
+      await new Promise((res) => setTimeout(res, every));
     }
-    if (Date.now() - t0 > timeout || signal?.aborted) return { done: false, piece: p, events: fresh, lines: fresh.map((e) => eventLine(p, e)) };
-    await new Promise((res) => setTimeout(res, every));
-  }
+  } finally { unbeat(dir); }
+}
+
+// ── the agent's side of the conversation: is it listening, what did it ask, where does it live ────────────────
+// While a command waits for the user (piece review, board), it says so every few seconds in a small file beside
+// piece.json (piece.json itself stays quiet). No fresh beat means nobody reads what the user does in the studio.
+const beatFile = (dir) => path.join(dir, '.agent.json');
+export function beat(dir, info = {}) { try { fs.writeFileSync(beatFile(dir), JSON.stringify({ at: Date.now(), pid: process.pid, ...info })); } catch { /* a read-only project: the studio just won't know */ } }
+export function unbeat(dir) { try { if (JSON.parse(fs.readFileSync(beatFile(dir), 'utf8')).pid === process.pid) fs.rmSync(beatFile(dir)); } catch { /* already gone */ } }
+/** The command waiting on this piece right now, if any. */
+export function listening(dir, within = 9000) { try { const a = JSON.parse(fs.readFileSync(beatFile(dir), 'utf8')); return Date.now() - a.at < within ? a : null; } catch { return null; } }
+
+/** The agent asked the user something in the chat: the studio says so until the agent moves on. */
+export function setAsk(dir, text) { return updatePiece(dir, (p) => { p.ask = { text: String(text ?? '').trim(), at: now() }; }); }
+export function clearAsk(dir) { const p = readPiece(dir); return p?.ask ? updatePiece(dir, (q) => { delete q.ask; }) : p; }
+/** Where the agent runs (see host.mjs), kept so the studio can take the user back there. */
+export function setHost(dir, host) {
+  const p = readPiece(dir);
+  if (!p || !host || JSON.stringify(p.agent ?? null) === JSON.stringify(host)) return p;
+  return updatePiece(dir, (q) => { q.agent = host; });
 }
 
 // ── the words on screen: a scene's top-level string CONFIG entries ──────────────────────────

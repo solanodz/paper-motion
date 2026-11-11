@@ -5,17 +5,23 @@
 //   GET  /api/pieces               pieces in this project that have a piece.json
 //   GET  /api/piece?p=<piece>      everything the page shows: piece.json + chain + look + media
 //   POST /api/piece?p=<piece>      an action: { type, … } (see act())
+//   POST /api/focus?p=<piece>      brings the agent's app to the front (the app the CLI found itself running in)
 //   GET  /files/<path>             files under the project (renders, drafts), with byte ranges for video
 //
 // Edits that need no judgment are applied here: a text goes into the part's CONFIG and the part re-renders as a
-// draft; lengths, joins and order go into chain.json. Everything the user does is also an event in piece.json,
-// which `pamo piece review` hands to the agent.
+// draft; lengths, joins and order go into chain.json; and when the piece already has a joined draft, the studio
+// joins it again by itself. Everything the user does is also an event in piece.json, which `pamo piece review`
+// hands to the agent.
+//
+// The page always says whose turn it is: /api/piece carries whether a command of the agent is waiting on the piece
+// (`agent.listening`), a question it asked in the chat (`ask`), the join in progress (`job`), and whether the
+// joined draft or the final were made from something that has changed since (`media.assemblyStale`, `finalStale`).
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pieceDir, JOINS } from './chain.mjs';
-import { STAGES, BRIEF_KEYS, readPiece, updatePiece, addEvent, eventLine, sceneTexts, setSceneText } from './piece.mjs';
+import { pieceDir, JOINS, chainSig, readSigs, readJob } from './chain.mjs';
+import { STAGES, BRIEF_KEYS, readPiece, updatePiece, addEvent, eventLine, sceneTexts, setSceneText, listening } from './piece.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PAGE = path.join(HERE, '..', 'studio', 'index.html');
@@ -38,6 +44,20 @@ const fileUrl = (cwd, f) => {
   return `/files/${path.relative(cwd, f).split(path.sep).map(encodeURIComponent).join('/')}?v=${Math.round(fs.statSync(f).mtimeMs)}`;
 };
 
+/** Whether the piece's joined draft and final still show what the piece is now, and the join running on it. */
+export function filmState(cwd, dir) {
+  const name = path.basename(dir), sigs = readSigs(dir), sig = chainSig(cwd, dir), renders = path.join(dir, 'renders');
+  const has = (f) => fs.existsSync(path.join(renders, f));
+  const stale = (f) => has(f) && !!sigs[f]?.sig && sigs[f].sig !== sig;   // a render with no record is taken as current
+  const job = readJob(dir);
+  return {
+    draft: has(`${name}-draft.mp4`), final: has(`${name}.mp4`), opts: sigs[`${name}-draft.mp4`] ?? {},
+    assemblyStale: stale(`${name}-draft.mp4`), finalStale: stale(`${name}.mp4`),
+    job: job ? { kind: job.kind, part: job.part ?? null, of: job.of ?? null, joining: !!job.joining } : null,
+  };
+}
+const joinErrors = new Map();   // piece folder → why the studio's last join failed
+
 /** What the page shows for one piece. */
 export function view(cwd, piece) {
   const dir = pieceDir(piece, cwd), p = readPiece(dir);
@@ -54,7 +74,7 @@ export function view(cwd, piece) {
       ...(p.parts?.[c.dir] ?? { status: 'queued' }),
     };
   });
-  const renders = path.join(dir, 'renders'), name = path.basename(dir);
+  const renders = path.join(dir, 'renders'), name = path.basename(dir), film = filmState(cwd, dir);
   const outputs = fs.existsSync(renders) ? fs.readdirSync(renders).filter((f) => !f.startsWith('.') && !f.includes('-draft')).map((f) => ({ file: f, url: fileUrl(cwd, path.join(renders, f)), bytes: fs.statSync(path.join(renders, f)).size })) : [];
   return {
     ...p, boards: p.boards ?? [], dir: path.relative(cwd, dir), format: chain.format ?? null, join: chain.join ?? 'whip', joins: Object.keys(JOINS),
@@ -65,7 +85,13 @@ export function view(cwd, piece) {
       backgrounds: (set.entries ?? []).map((e) => e.id),
       moves: fs.existsSync(movesDir) ? fs.readdirSync(movesDir).filter((f) => f.endsWith('.js')).map((f) => f.replace(/\.js$/, '')) : [],
     },
-    media: { assembly: fileUrl(cwd, path.join(renders, `${name}-draft.mp4`)), final: fileUrl(cwd, path.join(renders, `${name}.mp4`)), outputs },
+    media: { assembly: fileUrl(cwd, path.join(renders, `${name}-draft.mp4`)), final: fileUrl(cwd, path.join(renders, `${name}.mp4`)), outputs,
+      assemblyStale: film.assemblyStale, finalStale: film.finalStale, error: joinErrors.get(dir) ?? null },
+    job: film.job,
+    ask: p.ask ?? null,
+    // is a command of the agent waiting on this piece, how many of the user's moves it hasn't read, and the way back to it
+    agent: { listening: !!listening(dir), app: p.agent?.app ?? null, focus: process.platform === 'darwin' && !!p.agent?.path, url: p.agent?.url ?? null },
+    unread: p.events.filter((e) => e.n > (p.seen ?? 0)).length,
   };
 }
 
@@ -88,22 +114,30 @@ function act(cwd, piece, a, queue) {
   const dir = pieceDir(piece, cwd), chainFile = path.join(dir, 'chain.json');
   const chain = () => readJson(chainFile, { parts: [] }), saveChain = (c) => fs.writeFileSync(chainFile, JSON.stringify(c, null, 2) + '\n');
   const text = (v) => String(v ?? '').trim();
-  let rerender = null;
+  const film = filmState(cwd, dir), past = (p, stage) => STAGES.indexOf(p.stage) > STAGES.indexOf(stage);
+  let rerender = null, keep = false;
+  // an edit by hand re-renders a part; one that was approved, in a piece already past Parts, stays approved
+  const redo = (p, part) => { keep = p.parts[part]?.status === 'approved' && past(p, 'parts'); p.parts[part] = { ...(p.parts[part] ?? {}), status: 'queued' }; rerender = part; };
   updatePiece(dir, (p) => {
     switch (a.type) {
       case 'approve': {   // a stage
         if (!STAGES.includes(a.stage)) throw new Error('bad stage');
         if (a.stage === 'parts' && Object.values(p.parts).some((x) => x.status !== 'approved')) throw new Error('approve every part first');
+        // never approve a film that no longer shows the piece as it is
+        if (['assembly', 'final'].includes(a.stage)) {
+          if (film.job?.kind === a.stage || film[`${a.stage}Stale`]) throw new Error('this video is being updated: wait for the new one');
+          if (Object.values(p.parts).some((x) => ['changes', 'queued', 'rendering'].includes(x.status))) throw new Error('a part is still changing: wait for the new video');
+        }
         p.stages[a.stage] = { status: 'approved', at: new Date().toISOString() };
         const next = STAGES[STAGES.indexOf(a.stage) + 1];
-        if (next) { p.stage = next; if (p.stages[next].status === 'pending') p.stages[next] = { status: 'working' }; }
+        if (next) { p.stage = next; if (p.stages[next].status === 'pending') p.stages[next] = { status: 'working', since: new Date().toISOString() }; }
         addEvent(p, { kind: 'approve', stage: a.stage });
         break;
       }
       case 'changes': {   // a stage, or a part when a.part
         const t = text(a.text); if (!t) throw new Error('say what to change');
         if (a.part) { p.parts[a.part] = { ...(p.parts[a.part] ?? {}), status: 'changes', note: t }; addEvent(p, { kind: 'changes', stage: 'parts', part: a.part, text: t }); }
-        else { p.stages[a.stage] = { status: 'changes', note: t }; p.stage = a.stage; addEvent(p, { kind: 'changes', stage: a.stage, text: t }); }
+        else { p.stages[a.stage] = { status: 'changes', note: t, since: new Date().toISOString() }; p.stage = a.stage; addEvent(p, { kind: 'changes', stage: a.stage, text: t }); }
         break;
       }
       case 'reopen': { p.stages[a.stage] = { status: 'review' }; addEvent(p, { kind: 'reopen', stage: a.stage }); break; }
@@ -126,15 +160,18 @@ function act(cwd, piece, a, queue) {
       case 'text': {   // a word on screen: straight into the scene's CONFIG, then a fresh draft
         const f = path.join(dir, a.part, 'scene.html');
         fs.writeFileSync(f, setSceneText(fs.readFileSync(f, 'utf8'), a.key, text(a.value)));
-        p.parts[a.part] = { ...(p.parts[a.part] ?? {}), status: 'queued' };
+        redo(p, a.part);
         addEvent(p, { kind: 'edit', stage: 'parts', part: a.part, key: a.key, text: text(a.value), rerendered: true });
-        rerender = a.part;
         break;
       }
       case 'seconds':
       case 'join': {
         const c = chain(), part = c.parts.find((x) => x.dir === a.part); if (!part) throw new Error('no such part');
-        if (a.type === 'seconds') { part.seconds = Math.max(0.5, Math.min(30, Number(a.value))); rerender = a.part; p.parts[a.part] = { ...(p.parts[a.part] ?? {}), status: 'queued' }; }
+        if (a.type === 'seconds') {
+          const n = Number(a.value);
+          if (!String(a.value ?? '').trim() || !Number.isFinite(n)) throw new Error('give a length in seconds');
+          part.seconds = Math.max(0.5, Math.min(30, n)); redo(p, a.part);
+        }
         else { if (!(a.value in JOINS)) throw new Error('bad join'); part.join = a.value; }
         saveChain(c);
         addEvent(p, { kind: 'edit', stage: 'parts', part: a.part, key: a.type, text: String(a.type === 'seconds' ? part.seconds : part.join), rerendered: a.type === 'seconds' });
@@ -150,33 +187,69 @@ function act(cwd, piece, a, queue) {
       default: throw new Error(`unknown action ${a.type}`);
     }
   });
-  // in Assembly, a new order, length or join means the joined version is stale: hand it back to the agent
-  if (['order', 'seconds', 'join'].includes(a.type)) updatePiece(dir, (p) => {
-    if (p.stage !== 'assembly') return;
-    p.stages.assembly = { status: 'changes', note: 'edited by hand: join the parts again' };
-    p.events.at(-1).rejoin = true;
-  });
-  if (rerender) queue(piece, rerender);
+  // An edit by hand changes what the joined video shows. A draft that exists is joined again here, by the studio
+  // (no judgment needed, so no waiting for the agent). The full-quality final is the agent's: it goes back to it.
+  if (['text', 'order', 'seconds', 'join'].includes(a.type)) {
+    updatePiece(dir, (p) => {
+      const ev = p.events.at(-1);
+      if (film.draft) ev.rejoined = true;
+      if (p.stages.final.status !== 'pending') {   // the final was reached: it no longer shows the piece
+        p.stages.final = { status: 'changes', note: 'You edited the piece by hand, so the final needs a new render.', since: new Date().toISOString() };
+        ev.refinal = true;
+      }
+    });
+    joinErrors.delete(dir);
+  }
+  if (rerender) queue.part(piece, rerender, keep);
+  if (film.draft && ['text', 'order', 'seconds', 'join'].includes(a.type)) queue.join(piece);
   const p = readPiece(dir);
   return { ok: true, line: eventLine(p, p.events.at(-1)) };
 }
 
-/** One part at a time re-renders as a draft after an edit (the engine needs no agent for that). */
+/**
+ * The studio's own renders after an edit by hand, one at a time: parts first (each as a draft), then, once no part
+ * is left, the joined draft again with the sound it was made with. The engine needs no agent for either.
+ */
 function renderQueue(cwd, log) {
-  const q = [];
+  const parts = [], joins = new Set();
   let busy = false;
   const next = async () => {
-    if (busy || !q.length) return;
+    if (busy || (!parts.length && !joins.size)) return;
     busy = true;
-    const [piece, part] = q.shift();
-    try {
-      const { renderDrafts } = await import('./chain.mjs');
-      await renderDrafts({ cwd, piece, only: [part] });
-      log(`re-rendered ${piece}/${part}`);
-    } catch (e) { log(`✗ ${piece}/${part}: ${e.message}`); }
+    const chainLib = await import('./chain.mjs');
+    if (parts.length) {
+      const [piece, part, keep] = parts.shift(), dir = pieceDir(piece, cwd);
+      try {
+        await chainLib.renderDrafts({ cwd, piece, only: [part] });
+        if (keep) updatePiece(dir, (p) => { if (p.parts[part]?.status === 'review' && !p.parts[part].error) p.parts[part].status = 'approved'; });
+        log(`re-rendered ${piece}/${part}`);
+      } catch (e) { log(`✗ ${piece}/${part}: ${e.message}`); }
+    } else {
+      const piece = joins.values().next().value, dir = pieceDir(piece, cwd);
+      joins.delete(piece);
+      try {
+        // a join the agent already started covers this edit only if it began after it: wait for it, then look again
+        while (chainLib.readJob(dir)?.kind === 'assembly') await new Promise((r) => setTimeout(r, 1000));
+        const film = filmState(cwd, dir);
+        if (film.assemblyStale || !film.opts.sig) {
+          await chainLib.renderChain({ cwd, piece, draft: true, sfx: film.opts.sfx ?? true, audio: film.opts.audio });
+          log(`joined ${piece} again`);
+        }
+        joinErrors.delete(dir);
+      } catch (e) {
+        // the studio could not: say so on the page and hand the join to the agent
+        const why = String(e.message ?? e).split('\n')[0].slice(0, 240);
+        log(`✗ join ${piece}: ${why}`);
+        joinErrors.set(dir, why);
+        try { updatePiece(dir, (p) => { addEvent(p, { kind: 'failed', stage: 'assembly', text: why, rejoin: true }); }); } catch { /* the piece is gone */ }
+      }
+    }
     busy = false; next();
   };
-  return (piece, part) => { if (!q.some(([a, b]) => a === piece && b === part)) q.push([piece, part]); next(); };
+  return {
+    part: (piece, part, keep = false) => { if (!parts.some(([a, b]) => a === piece && b === part)) parts.push([piece, part, keep]); next(); },
+    join: (piece) => { joins.add(piece); next(); },
+  };
 }
 
 function sendFile(req, res, f) {
@@ -216,6 +289,14 @@ export function startStudio({ cwd = process.cwd(), port = 4317, log = console.lo
         await refreshBoards(cwd, piece);
         const v = view(cwd, piece);
         return v ? json(res, 200, v) : json(res, 404, { error: `no piece "${piece}"` });
+      }
+      if (u.pathname === '/api/focus' && req.method === 'POST') {
+        // back to the agent: the app its CLI runs in, as recorded in piece.json by that CLI
+        const app = readPiece(pieceDir(u.searchParams.get('p') ?? '', cwd))?.agent?.path;
+        if (process.platform !== 'darwin' || !app || !app.endsWith('.app') || !fs.existsSync(app)) return json(res, 400, { error: 'no app to open' });
+        const { spawn } = await import('node:child_process');
+        spawn('open', ['-a', app], { detached: true, stdio: 'ignore' }).on('error', () => {}).unref();
+        return json(res, 200, { ok: true });
       }
       if (u.pathname.startsWith('/files/')) {
         const f = path.resolve(cwd, decodeURIComponent(u.pathname.slice(7)));
