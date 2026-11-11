@@ -66,8 +66,10 @@ export async function structureFromBoard(ref, option, { site }) {
   if (String(ref).includes('#')) board = await decodeBoard(String(ref).slice(String(ref).indexOf('#') + 1));
   else {
     const id = String(ref).replace(/\/$/, '').split('/').pop();
-    const res = await fetch(`${site}/api/boards/${id}`);
-    if (!res.ok) throw new Error(`board ${id}: ${res.status} from ${site} (expired, or a long link is needed)`);
+    // a full link says where its board lives; a bare id is looked up on the site (--site, or the default)
+    const from = /^https?:\/\//i.test(String(ref)) ? new URL(String(ref)).origin : site;
+    const res = await fetch(`${from}/api/boards/${id}`);
+    if (!res.ok) throw new Error(`board ${id}: ${res.status} from ${from} (expired or never stored there: pass the board's full link, the long #… link, or --site <url>)`);
     board = (await res.json()).board;
   }
   const opts = board?.options ?? [];

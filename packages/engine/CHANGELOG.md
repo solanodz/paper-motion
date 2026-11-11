@@ -12,6 +12,14 @@ From a test where an agent with no context made a video from `llms.txt` alone:
 - A chosen transition can be the join between two parts of a chain: `"join": "wipe"` (also crossfade, push, zoom-through, iris, slices, flash, scan-reveal, mask-reveal, glitch, cells, flip-3d).
 - A tuned palette retunes its ramp (the steps between ground and accent follow the new accent); a background recolored into a palette takes the brand's ground behind everything.
 - `chain --check` warns when the total drifts from the brief's length.
+
+From a second test, an agent following the site's "For agents" page alone:
+
+- `piece review` refuses while an earlier stage is not approved, and names the one to review first. It used to mark the earlier stages approved on its own. `--skip` moves on without them, for when the user agreed.
+- `chain init --board <link>` looks the board up on the server of the link it is given (a bare id still uses `--site`, or the default site); the error says what to pass.
+- After `chain init`, the next steps printed are the real ones in order: review the structure, write the parts, `--check`, `--drafts`, `--draft`, then the full render.
+- `chain.json` takes the open piece's title, not the board option's.
+- `piece --help`, `chain --help` and `board --help` list every flag of their commands.
 - `pamo --version`. Help says `--wait` is in minutes; the docs say `pamo` means `npx paper-motion` and when to review the structure.
 
 ## 0.3.0 · 2026-11-11

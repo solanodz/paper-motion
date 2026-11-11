@@ -77,14 +77,21 @@ export function addEvent(p, e) {
 }
 
 /** The agent hands a stage to the user: it becomes the current stage, in review. */
-export function toReview(dir, stage) {
+export function toReview(dir, stage, { skip = false } = {}) {
   if (!STAGES.includes(stage)) throw new Error(`stage "${stage}": use ${STAGES.join(', ')}`);
   return updatePiece(dir, (p) => {
+    // nothing moves on until the user approves: an earlier stage they have not approved stops the hand-over,
+    // unless the agent says outright that it is skipping it (`skip`), which marks it approved
+    const open = earlierOpen(p, stage);
+    if (open.length && !skip) throw new Error(`${open.join(', ')} not approved yet: review ${open.length > 1 ? 'them' : 'it'} first (piece review ${p.piece} ${open[0]}), or pass --skip when the user agreed to move on without ${open.length > 1 ? 'them' : 'it'}`);
+    for (const s of open) p.stages[s] = { ...p.stages[s], status: 'approved' };
     p.stage = stage;
     p.stages[stage] = { status: 'review', since: now() };
-    for (const s of STAGES.slice(0, STAGES.indexOf(stage))) if (p.stages[s].status !== 'approved') p.stages[s] = { ...p.stages[s], status: 'approved' };
   });
 }
+
+/** The stages before `stage` that the user has not approved. */
+export const earlierOpen = (p, stage) => STAGES.slice(0, STAGES.indexOf(stage)).filter((s) => p.stages[s].status !== 'approved');
 
 /** Events the agent hasn't read; marks them read when `mark`. */
 export function unseen(dir, { mark = true } = {}) {

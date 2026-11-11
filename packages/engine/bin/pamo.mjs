@@ -47,7 +47,7 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      --cols 1 stacks options full width (judge type at real size)
                                      --sequence plays the clips one after another, with their sound
                                      (for choices you hear: sound palettes, typing)
-  chain init <piece> (--board <id|link> [--option D] | --parts id:sec,id:sec,…) [--format 1920x1080]
+  chain init <piece> (--board <id|link> [--option D] [--site url] | --parts id:sec,id:sec,…) [--format 1920x1080]
         [--join whip|cut|dissolve|dip] [--title "…"] [--force]
                                      a piece made of blocks: installs each part as its own scene under
                                      pieces/<piece>/<nn>-<id>/ (edit each CONFIG) and writes chain.json;
@@ -62,7 +62,7 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
   piece init <piece> [--title "…"] [--what "…"] [--who "…"] [--format "…"] [--tone "…"] [--action "…"]
         [--no-studio]                start tracking a piece stage by stage (pieces/<piece>/piece.json)
                                      and start this project's studio in the background
-  piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open]
+  piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open] [--skip]
                                      hand a stage to the user in the studio (brief, look, structure,
                                      parts, assembly, final) and wait for their decision; prints it.
                                      Starts the studio if needed; the first time, opens it for them
@@ -454,7 +454,7 @@ async function main() {
       }
       await ensureDeps();
       const files = args._.slice(1);
-      if (files.length < 2 || files.length > 6 || args.help) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]   (a rendered board)\n       board --url --title "…" --option id[:key=value,…] … [--look palette,font] [--kit]        (a live board link)'); process.exit(args.help ? 0 : 1); }
+      if (files.length < 2 || files.length > 6 || args.help) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]   (a rendered board)\n       board --url --title "…" --option id[:key=value,…] … [--look palette,font | --look brand] [--kit] [--choose 1-3] [--wait minutes | --no-wait] [--long] [--site url]   (a live board link)\n       board --await <id|link> [--wait minutes] [--site url]   (wait again for a board already shared)\n       board --forget <id>\n  board --url --help explains the live board in full.'); process.exit(args.help ? 0 : 1); }
       const { renderStills, renderVideo } = await import('../lib/render.mjs');
       const { composeBoard } = await import('../lib/board.mjs');
       const os = await import('node:os');
@@ -494,7 +494,7 @@ async function main() {
     case 'chain': {
       const sub = args._[1] === 'init' ? 'init' : 'render';
       const piece = sub === 'init' ? args._[2] : args._[1];
-      if (!piece || args.help) { console.error('Usage: chain init <piece> [--board <id|link> [--option D] | --parts id:sec,…] [--format 1920x1080] [--join whip|cut|dissolve|dip] [--force]\n       chain <piece> [--out file.mp4] [--motion-blur 5] [--audio music.wav] [--no-sfx] [--check]'); process.exit(args.help ? 0 : 1); }
+      if (!piece || args.help) { console.error('Usage: chain init <piece> [--board <id|link> [--option D] [--site url] | --parts id:sec,…] [--title "…"] [--format 1920x1080] [--join whip|cut|dissolve|dip] [--force]\n       chain <piece> [--check] [--drafts [--only dir,…]] [--draft] [--out file.mp4] [--motion-blur 5] [--audio music.wav] [--no-sfx] [--dpr 1]\n  --board takes the board\'s link (its id is the last part of a /b/<id> link) and the letter the user chose. In order: --check plans and warns without rendering; --drafts renders each part alone (parts stage); --draft joins a quick version (assembly stage); --motion-blur 5 is the full render (final stage).'); process.exit(args.help ? 0 : 1); }
       const chainLib = await import('../lib/chain.mjs');
       if (sub === 'init') {
         const { SITE } = await import('../lib/registry.mjs');
@@ -502,11 +502,21 @@ async function main() {
         if (args.board) src = await chainLib.structureFromBoard(String(args.board), typeof args.option === 'string' ? args.option : undefined, { site: typeof args.site === 'string' ? args.site : SITE });
         else if (typeof args.parts === 'string') src = { parts: chainLib.partsFromList(args.parts) };
         else src = {};   // no source: sync an existing chain.json (install parts added since)
-        const r = await chainLib.initChain({ piece, title: typeof args.title === 'string' ? args.title : src.title, parts: src.parts, format: typeof args.format === 'string' ? args.format : undefined, join: typeof args.join === 'string' ? args.join : undefined, registry: args.registry, force: !!args.force });
+        // an open piece already has its title; a board option's title ("Six blocks") names the structure, not the film
+        const open = (await import('../lib/piece.mjs')).readPiece(chainLib.pieceDir(piece));
+        const r = await chainLib.initChain({ piece, title: typeof args.title === 'string' ? args.title : open?.title ?? src.title, parts: src.parts, format: typeof args.format === 'string' ? args.format : undefined, join: typeof args.join === 'string' ? args.join : undefined, registry: args.registry, force: !!args.force });
         console.log(`✓ ${path.relative(process.cwd(), r.dir)}/chain.json · "${r.chain.title}" · ${r.chain.parts.length} parts, ${r.chain.format}`);
         for (const p of r.chain.parts) console.log(`  ${p.dir ?? '(no block)'}${p.name ? ` · ${p.name}` : ''}${p.seconds ? ` · ${p.seconds} s` : ''}${p.what ? `  — ${p.what}` : ''}`);
         for (const n of r.notes) console.log(`  ! ${n}`);
-        console.log(`\nNext: write each part's text and data into its CONFIG (the "what" above is the brief), then:\n  npx paper-motion chain ${piece} --motion-blur 5`);
+        console.log([
+          '', 'Next:',
+          ...(open ? [`  npx paper-motion piece review ${piece} structure   (the user approves the structure before you write the parts)`] : []),
+          `  write each part's text and data into its CONFIG (the "what" above is the brief)`,
+          `  npx paper-motion chain ${piece} --check       (plans and warns, renders nothing)`,
+          `  npx paper-motion chain ${piece} --drafts      (each part alone${open ? ', for the parts stage' : ''})`,
+          `  npx paper-motion chain ${piece} --draft       (joined, quick${open ? ', for the assembly stage' : ''})`,
+          `  npx paper-motion chain ${piece} --motion-blur 5   (the full render)`,
+        ].join('\n'));
         break;
       }
       await ensureDeps();
@@ -532,7 +542,7 @@ async function main() {
 
     case 'piece': {
       const sub = args._[1], piece = args._[2];
-      if (!['init', 'review', 'working', 'status'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …]\n       piece review <piece> <stage> [--wait 30] [--no-wait]\n       piece working <piece> <stage>\n       piece status <piece>'); process.exit(args.help ? 0 : 1); }
+      if (!['init', 'review', 'working', 'status'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …] [--no-studio] [--force]\n       piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open] [--no-studio] [--skip]\n       piece working <piece> <stage>\n       piece status <piece>\n  Stages: brief, look, structure, parts, assembly, final. review hands a stage to the user in the studio and prints what they did, one line each; it refuses while an earlier stage is not approved (--skip moves on without it, only when the user agreed). --no-wait returns at once with what is unread; --no-open does not open their browser; --no-studio runs without the studio.'); process.exit(args.help ? 0 : 1); }
       const P = await import('../lib/piece.mjs');
       const { pieceDir } = await import('../lib/chain.mjs');
       const dir = pieceDir(piece), studioLib = await import('../lib/studio.mjs'), q = `?p=${encodeURIComponent(path.basename(dir))}`;
@@ -560,7 +570,7 @@ async function main() {
       if (!P.STAGES.includes(stage)) { console.error(`piece ${sub}: give a stage (${P.STAGES.join(', ')})`); process.exit(1); }
       if (sub === 'working') { P.updatePiece(dir, (p) => { p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working' }; }); console.log(`✓ ${stage}: working`); break; }
       // review: hand the stage over and wait for the user's decision in the studio
-      P.toReview(dir, stage);
+      try { P.toReview(dir, stage, { skip: !!args.skip }); } catch (e) { console.error(`✗ ${e.message}`); process.exit(1); }
       const s = await studio();
       const url = s ? `${s.url}${q}` : null;
       // the first hand-over opens the studio in the user's browser; after that the open page follows the piece
