@@ -20,7 +20,7 @@ import { STAGES, BRIEF_KEYS, readPiece, updatePiece, addEvent, eventLine, sceneT
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PAGE = path.join(HERE, '..', 'studio', 'index.html');
 const SITE = (process.env.PAPER_MOTION_SITE ?? 'https://paper-motion.vercel.app').replace(/\/$/, '');
-const TYPES = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.gif': 'image/gif', '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json', '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript' };
+const TYPES = { '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.gif': 'image/gif', '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json', '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2' };
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
 
 /** Pieces in the project that the studio can show. */
@@ -61,7 +61,7 @@ export function view(cwd, piece) {
     parts,
     look: {
       colors: Object.entries(tokens.colors ?? {}).map(([k, v]) => [k, v?.hex ?? v]),
-      fonts: Object.entries(tokens.fonts ?? {}).map(([k, v]) => [k, v?.family ?? v]),
+      fonts: Object.entries(tokens.fonts ?? {}).map(([k, v]) => [k, v?.family ?? v, v?.css ?? null]),
       backgrounds: (set.entries ?? []).map((e) => e.id),
       moves: fs.existsSync(movesDir) ? fs.readdirSync(movesDir).filter((f) => f.endsWith('.js')).map((f) => f.replace(/\.js$/, '')) : [],
     },
@@ -199,6 +199,12 @@ export function startStudio({ cwd = process.cwd(), port = 4317, log = console.lo
     const u = new URL(req.url, 'http://x');
     try {
       if (u.pathname === '/' || u.pathname === '/index.html') { res.writeHead(200, { 'Content-Type': TYPES['.html'], 'Cache-Control': 'no-store' }); return res.end(fs.readFileSync(PAGE)); }
+      if (u.pathname.startsWith('/fonts/')) {   // the studio's own typefaces, served locally so it works offline
+        const f = path.join(path.dirname(PAGE), 'fonts', path.basename(u.pathname));
+        if (!fs.existsSync(f)) { res.writeHead(404); return res.end(); }
+        res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] ?? 'application/octet-stream', 'Cache-Control': 'max-age=86400' });
+        return res.end(fs.readFileSync(f));
+      }
       if (u.pathname === '/api/pieces') return json(res, 200, listPieces(cwd));
       if (u.pathname === '/api/info') return json(res, 200, { app: 'paper-motion-studio', cwd: path.resolve(cwd), pid: process.pid });
       if (u.pathname === '/api/piece') {
