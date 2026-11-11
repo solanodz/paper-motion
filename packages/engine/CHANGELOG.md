@@ -2,13 +2,14 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
-## Unreleased
+## 0.3.0 · 2026-11-11
 
 - **Studio**: `pamo studio` serves a local page where the user follows a piece stage by stage (brief, look, structure, parts, assembly, final), watches each stage's renders, approves or asks for changes, and edits the brief, the words on screen (a part's CONFIG texts, re-rendered on the spot), lengths, joins and order (drag and drop). `pieces/<piece>/piece.json` holds the stages and what the user did; `pamo piece init | review | working | status` is the agent's side (`review` hands a stage over and waits for the decision).
 - The studio is the default way to make a piece: `pamo piece init` starts the project's studio in the background (one per project, on the first free port from 4317; `pamo studio --stop` ends it), and the first `pamo piece review` opens it in the user's browser (`--no-open` to skip). `llms.txt` and `make-video` now start every piece there.
 - The studio adapts to tablets and phones.
 - `pamo chain <piece> --drafts [--only dir]` renders each part alone, quickly, for review; `--draft` joins a quick version.
 - **Chains**: `pamo chain init <piece>` installs the blocks of a chosen structure (`--board <id> --option D`, or `--parts id:sec,…`) as one scene each under `pieces/<piece>/` with a `chain.json`; `pamo chain <piece>` renders them in the brand's look and joins them into one video (`whip`, `cut`, `dissolve`, `dip`), keeping each part's sound and setting the loudness once. `--check` warns when a part is cut before its land.
+- Boards: a structure beat may name the block or shot that shows it (`[block-id]` in `--option "@Title | 18 | Hook 0-2 [word-swap] …"`, `id` in the payload, checked against the registry); the board plays that clip for the beat.
 - Scenes expose the gestures they cue (`B.cue`) as `window.__pm.marks`.
 - Blocks with a dark panel keep their type light in light brands (`search-type`, `browser-frame`, `terminal-run`, `light-sweep`); `drag-drop`'s cards follow the brand's mode.
 
