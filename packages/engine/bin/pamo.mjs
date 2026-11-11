@@ -58,13 +58,17 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      --drafts renders each part alone, quickly, for the studio's Parts
                                      stage; --draft joins a quick version for its Assembly stage
   piece init <piece> [--title "…"] [--what "…"] [--who "…"] [--format "…"] [--tone "…"] [--action "…"]
-                                     start tracking a piece stage by stage (pieces/<piece>/piece.json)
-  piece review <piece> <stage> [--wait 30] [--no-wait]
+        [--no-studio]                start tracking a piece stage by stage (pieces/<piece>/piece.json)
+                                     and start this project's studio in the background
+  piece review <piece> <stage> [--wait 30] [--no-wait] [--no-open]
                                      hand a stage to the user in the studio (brief, look, structure,
-                                     parts, assembly, final) and wait for their decision; prints it
+                                     parts, assembly, final) and wait for their decision; prints it.
+                                     Starts the studio if needed; the first time, opens it for them
   piece working <piece> <stage>      mark a stage as yours again (after changes were asked)
   piece status <piece>               where the piece is, and what the user did that you haven't read
-  studio [--port 4317]               the local studio: the user follows each piece, approves, edits
+  studio [--port 4317] [--open] [--stop]
+                                     the local studio: the user follows each piece, approves, edits
+                                     (one per project; --stop ends the one running in the background)
   wordmark <text> --family <name> [--css <url> | --file <font>] [--weight 400] [--tracking -0.02em]
          [--color #fff] [--size 400] [--pad 0] [--out wordmark.png]
                                      the name set in its typeface, as a transparent PNG
@@ -481,14 +485,17 @@ async function main() {
       if (!['init', 'review', 'working', 'status'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …]\n       piece review <piece> <stage> [--wait 30] [--no-wait]\n       piece working <piece> <stage>\n       piece status <piece>'); process.exit(args.help ? 0 : 1); }
       const P = await import('../lib/piece.mjs');
       const { pieceDir } = await import('../lib/chain.mjs');
-      const dir = pieceDir(piece), port = Number(args.port ?? 4317), studioUrl = `http://127.0.0.1:${port}/?p=${encodeURIComponent(path.basename(dir))}`;
+      const dir = pieceDir(piece), studioLib = await import('../lib/studio.mjs'), q = `?p=${encodeURIComponent(path.basename(dir))}`;
+      const studio = async () => (args.studio === false || args['no-studio'] ? null : studioLib.ensureStudio(process.cwd(), { bin: fileURLToPath(import.meta.url) }));
       if (sub === 'init') {
         const brief = Object.fromEntries(P.BRIEF_KEYS.filter((k) => typeof args[k] === 'string').map((k) => [k, args[k]]));
         const p = P.initPiece({ piece, title: typeof args.title === 'string' ? args.title : undefined, brief, force: !!args.force });
         console.log(`✓ ${path.relative(process.cwd(), dir)}/piece.json · "${p.title}" · stage ${p.stage}`);
         const missing = P.BRIEF_KEYS.filter((k) => !p.brief[k]);
         if (missing.length) console.log(`  brief still empty: ${missing.join(', ')} (pass them, or write piece.json)`);
-        console.log(`\nNext: npx paper-motion piece review ${piece} brief   (the user reads and edits it in the studio)`);
+        const s = await studio().catch((e) => { console.log(`  ! ${e.message}`); return null; });
+        if (s) console.log(`  studio: ${s.url}${q}${s.started ? ' (started in the background; npx paper-motion studio --stop ends it)' : ''}`);
+        console.log(`\nNext: npx paper-motion piece review ${piece} brief   (opens the studio for the user and waits for their decision)`);
         break;
       }
       if (sub === 'status') {
@@ -504,22 +511,27 @@ async function main() {
       if (sub === 'working') { P.updatePiece(dir, (p) => { p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working' }; }); console.log(`✓ ${stage}: working`); break; }
       // review: hand the stage over and wait for the user's decision in the studio
       P.toReview(dir, stage);
-      const up = await fetch(`http://127.0.0.1:${port}/api/pieces`).then((r) => r.ok).catch(() => false);
-      let own = null;
-      if (!up) { const { startStudio } = await import('../lib/studio.mjs'); own = await startStudio({ port, log: () => {} }); }
-      console.log(`${stage} is ready for the user: ${studioUrl}${own ? '\n(studio started for this wait; keep one running with: npx paper-motion studio)' : ''}`);
-      if (args['no-wait']) { const r = P.unseen(dir); for (const e of r.events) console.log(P.eventLine(r.piece, e)); if (own) await own.close(); break; }
+      const s = await studio();
+      const url = s ? `${s.url}${q}` : null;
+      // the first hand-over opens the studio in the user's browser; after that the open page follows the piece
+      let opened = false;
+      if (url && !args['no-open'] && !P.readPiece(dir).opened) { opened = await studioLib.openInBrowser(url); if (opened) P.updatePiece(dir, (p) => { p.opened = true; }); }
+      console.log(`${stage} is ready for the user${url ? `: ${url}${opened ? ' (opened in their browser)' : ' (tell them to open it)'}` : ' (no studio: --no-studio)'}`);
+      if (args['no-wait']) { const r = P.unseen(dir); for (const e of r.events) console.log(P.eventLine(r.piece, e)); break; }
       console.log('Waiting for their decision…');
       const r = await P.awaitDecision(dir, stage, { timeout: Number(args.wait ?? 30) * 60 * 1000 });
-      if (own) await own.close();
       for (const l of r.lines) console.log(l);
       if (!r.done) { console.log(`(no decision yet: run piece review ${piece} ${stage} again, or piece status ${piece})`); process.exit(3); }
       break;
     }
 
     case 'studio': {
-      const { startStudio, listPieces } = await import('../lib/studio.mjs');
+      const { startStudio, listPieces, findStudio, openInBrowser } = await import('../lib/studio.mjs');
+      const running = await findStudio(process.cwd());
+      if (args.stop) { if (running) { process.kill(running.pid); console.log(`stopped the studio on port ${running.port}`); } else console.log('no studio running for this project'); break; }
+      if (running) { console.log(`studio already running: ${running.url}`); if (args.open) await openInBrowser(running.url); break; }
       const s = await startStudio({ port: Number(args.port ?? 4317) });
+      if (args.open) await openInBrowser(`http://127.0.0.1:${s.port}/`);
       const list = listPieces(process.cwd());
       console.log(`studio: http://127.0.0.1:${s.port}/${list.length === 1 ? `?p=${encodeURIComponent(list[0].piece)}` : ''}  (${list.length} piece${list.length === 1 ? '' : 's'}; ctrl-c to stop)`);
       await new Promise(() => {});

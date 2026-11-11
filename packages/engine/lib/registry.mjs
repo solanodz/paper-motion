@@ -114,17 +114,27 @@ export function llmsTxt(items, site, { full = false } = {}) {
    skills and MCP servers when a session starts, so after installing the skills **read
    \`.claude/skills/make-video/SKILL.md\` now** (or \`.agents/skills/make-video/SKILL.md\`) and follow it in this
    session; tell the user that the MCP at ${site}/mcp, if they want it, is added before opening a session.
-2. **Interview.** Follow the \`make-video\` skill. Without the skills, ask at least: what the brand is in one plain
+2. **Open the studio: it is where the user decides.** A video is made in stages the user watches and approves in
+   a local page: brief, look, structure, parts, assembly, final. Start the piece right after setup:
+   \`npx paper-motion piece init <piece> --title "…"\` (it starts the project's studio in the background). Then,
+   at the end of each stage, \`npx paper-motion piece review <piece> <stage>\`: the first time it opens the studio in
+   the user's browser; it waits for their decision and prints what they did, one \`paper-motion: piece …\` line each
+   (an approval, a change to make, or an edit they already made by hand: the brief, words on screen, lengths, joins,
+   order; build on those, never undo them). Quick renders for review: \`chain <piece> --drafts\` (each part on its
+   own) and \`chain <piece> --draft\` (joined). Only when the user can't open a browser, run the same stages in the
+   chat.
+3. **Interview.** Follow the \`make-video\` skill. Without the skills, ask at least: what the brand is in one plain
    line; what this video is for and where it plays (format: 16:9, 9:16, 1:1); its ground, text and accent colors or
    "no brand yet"; three words for the feel and one thing it must never look like; the one action at the end.
-   Mirror it back before proposing anything. **You never choose a look for the user.** These decisions always go
+   Mirror it back, write it into the brief (\`piece init --what … --who … --format … --tone … --action …\`) and
+   \`piece review <piece> brief\`. **You never choose a look for the user.** These decisions always go
    through a board, in this order, one board each: palette · font pair · background(s) · moves by role (how things
    enter, how one thing becomes the next, how text arrives; let them pick several with \`choose\`) · recipe or shots
    (shots are 3–6 s camera gestures: a close-up, a pass over a component, a cursor that clicks; they chain before a
    recipe or stand alone) · blocks for the moments inside it (ready-made 4–8 s pieces: annotations on a screen, a
    form, a terminal, code typing, a chart, captions, a logo sting; each recomposes for 16:9, 9:16 and 1:1). Skip a
    board only when the brand folder already settles that decision, and say so.
-3. **Propose with boards.** For each visual decision (palette, type, background, moves, recipe) pick 2–4 options from
+4. **Propose with boards.** For each visual decision (palette, type, background, moves, recipe) pick 2–4 options from
    this registry and share a board link: \`pamo board --url --title … --option id … --look palette,font\` prints it
    (format below): a short link (\`${site}/b/<id>\`, stored for 90 days) when the site answers, the long form
    with the board in the URL fragment otherwise. The user opens it, sees the options live in their look, may tune one,
@@ -134,14 +144,14 @@ export function llmsTxt(items, site, { full = false } = {}) {
    (\`--choose 1-3\`: use it for text effects and transitions), or \`paper-motion: none of bg-1, calmer ones\`. The
    reply carries every value that differs from the defaults, your pre-tuning included, so installing it reproduces what
    they saw. Never ask the user to paste anything while a command or the MCP is waiting: the choice arrives on its own.
-4. **Install the choices.** \`npx paper-motion add <id> [--set key=value …]\` in the project root, with exactly the
+5. **Install the choices.** \`npx paper-motion add <id> [--set key=value …]\` in the project root, with exactly the
    \`--set\` arguments from the reply. Moves go to \`moves/\`, backgrounds to \`brand/shader-set/set.json\`, palettes and
    fonts to \`brand/tokens.json\`, recipes to \`pieces/<id>/\`. Their choices also accumulate in a kit at ${site}/kit,
    whose prompt carries the whole \`pamo add\` command. \`add\` never overwrites a value already in the project: when
    the user re-chooses or re-tunes something you installed before, pass \`--force\`. A recipe also reads
    \`brand/motion.json\` (pace) and \`brand/sound.json\` (cues; without it the piece is silent) and the brand's name
    from \`tokens.json\` \`brand\`: write those from the interview before rendering.
-5. **Make the video.** Every move the user chose appears in the piece, and the brief says where each one plays;
+6. **Make the video.** Every move the user chose appears in the piece, and the brief says where each one plays;
    a recipe's own moves are placeholders to swap for theirs. Build \`scene.html\` (a pure function of time), check stills with \`pamo still\`, render with
    \`pamo render scene.html --motion-blur 5\`. The test shot and the final piece are real renders, not boards.
    When the user chose a structure whose beats name blocks or shots (or several blocks in order), chain them instead:
@@ -149,12 +159,8 @@ export function llmsTxt(items, site, { full = false } = {}) {
    \`pieces/<piece>/<nn>-<id>/\` and writes \`chain.json\` (seconds per part; \`join\`: whip, cut, dissolve or dip);
    write each part's \`CONFIG\` from its beat, then \`npx paper-motion chain <piece> --motion-blur 5\` renders every
    part in the brand's look and joins them into one video. It warns when a part is cut before its land.
-6. **Let the user follow it in the studio.** \`npx paper-motion studio\` serves a local page (http://127.0.0.1:4317)
-   where the user sees the piece stage by stage (brief, look, structure, parts, assembly, final), approves each or
-   asks for changes, and edits the brief, the words on screen, lengths, joins and order by hand.
-   \`npx paper-motion piece init <piece>\` starts it; \`npx paper-motion piece review <piece> <stage>\` hands a stage
-   over and waits, then prints what they did (one \`paper-motion: piece …\` line each). Quick renders for review:
-   \`chain <piece> --drafts\` (each part) and \`chain <piece> --draft\` (joined).
+   In the studio: review \`look\` after installing the choices, \`structure\` after \`chain init\`, \`parts\` after
+   \`chain --drafts\`, \`assembly\` after \`chain --draft\`, \`final\` after the full render.
 
 ## Choosing well: the metadata
 

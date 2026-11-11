@@ -56,6 +56,55 @@
   .drop-before { box-shadow: 0 -3px 0 0 var(--paper); } .drop-after { box-shadow: 0 3px 0 0 var(--paper); }
   [data-trackdrag].drop-before { box-shadow: -3px 0 0 0 var(--paper); } [data-trackdrag].drop-after { box-shadow: 3px 0 0 0 var(--paper); }
   body.resizing { cursor: col-resize; user-select: none; } body.resizing video { pointer-events: none; }
+  /* layout: rail · stage · decision, then the decision moves above the stage, then the rail becomes a strip */
+  .shell { display: grid; grid-template-columns: 280px minmax(0, 1fr) var(--rw, 340px); grid-template-areas: 'rail stage decide'; min-height: 100vh; }
+  .rail { grid-area: rail; border-right: 1px solid var(--line); padding: 22px 12px; display: grid; align-content: start; gap: 4px; }
+  .rail .head { padding: 0 14px 18px; }
+  .steps { display: grid; gap: 4px; }
+  .step { all: unset; cursor: pointer; display: grid; grid-template-columns: 28px 1fr 18px; gap: 10px; align-items: start; padding: 12px 14px; border-radius: 10px; }
+  .step.on { background: var(--panel2); }
+  .step:disabled { cursor: default; opacity: .45; }
+  .step:focus-visible { outline: 1px solid var(--paper); }
+  .stage { grid-area: stage; padding: 28px 36px 90px; display: grid; align-content: start; gap: 22px; max-width: 1000px; min-width: 0; }
+  .stage h1 { font-size: 40px; margin: 4px 0 2px; line-height: 1.05; }
+  .decide { grid-area: decide; border-left: 1px solid var(--line); padding: 28px 22px; display: grid; align-content: start; gap: 18px; position: sticky; top: 0; height: 100vh; overflow: auto; }
+  .brow { display: grid; grid-template-columns: 130px 1fr; gap: 16px; align-items: start; }
+  .blabel { font-size: 12px; padding-top: 9px; display: flex; gap: 6px; align-items: center; }
+  .card { display: grid; grid-template-columns: 18px minmax(180px, 260px) minmax(0, 1fr); gap: 14px; padding: 14px 14px 14px 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  .track { display: flex; align-items: stretch; margin-top: 14px; }
+  .tblock { cursor: grab; min-width: 0; }
+  @media (max-width: 1180px) {
+    .shell { grid-template-columns: 220px minmax(0, 1fr); grid-template-areas: 'rail decide' 'rail stage'; grid-template-rows: auto 1fr; }
+    .decide { position: static; height: auto; border-left: 0; border-bottom: 1px solid var(--line); padding: 20px 36px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 12px 24px; }
+    .decide > * { grid-column: 1 / -1; }
+    .decide > .btn.primary { grid-column: 1; align-self: start; }
+    .decide > div:has(> #note) { grid-column: 2; grid-row: span 2; }
+    #resize { display: none; }
+    .decide .activity { display: none !important; }
+    .decide .notes > div:nth-last-child(n+3) { display: none; }
+    .decide .notes > div:first-child { display: block; }
+  }
+  @media (max-width: 760px) {
+    .shell { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'rail' 'decide' 'stage'; }
+    .rail { border-right: 0; border-bottom: 1px solid var(--line); padding: 16px 0 10px; position: sticky; top: 0; z-index: 10; background: var(--bg); gap: 10px; }
+    .rail .head { padding: 0 16px; }
+    .rail .head .serif { font-size: 20px !important; margin-top: 6px !important; }
+    .steps { display: flex; overflow-x: auto; gap: 4px; padding: 0 12px; scrollbar-width: none; }
+    .steps::-webkit-scrollbar { display: none; }
+    .step { grid-template-columns: auto auto auto; gap: 7px; padding: 7px 12px; flex: 0 0 auto; border-radius: 999px; align-items: center; }
+    .step .sub, .step > .mono { display: none; }
+    .stage { padding: 20px 16px 90px; gap: 18px; }
+    .stage h1 { font-size: 32px; }
+    .decide { padding: 16px; grid-template-columns: minmax(0, 1fr); }
+    .decide > .btn.primary, .decide > div:has(> #note) { grid-column: 1; grid-row: auto; }
+    .brow { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .blabel { padding-top: 0; }
+    .card { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+    .card .grip { display: none; }
+    .track { overflow-x: auto; padding-bottom: 6px; }
+    .tblock { min-width: 96px; }
+    .info .tip { width: min(280px, calc(100vw - 48px)); }
+  }
   #toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: #1d1d1d; border: 1px solid var(--line2); border-radius: 999px; padding: 8px 16px; font: 12px var(--mono); opacity: 0; transition: opacity .2s; pointer-events: none; }
   #toast.on { opacity: 1; }
 </style>
@@ -164,8 +213,8 @@ function renderList(list) {
 
 // ─── stages ────────────────────────────────────────────────────────────────────────
 function briefHTML() {
-  return `<div style="display:grid;gap:14px"><p class="faint" style="margin:0;font-size:13px">Click any text to edit it. Your agent works from your version.</p>${Object.entries(BRIEF_HELP).map(([k, [l, help]]) => `<div style="display:grid;grid-template-columns:130px 1fr;gap:16px;align-items:start">
-    <span class="dim mono" style="font-size:12px;padding-top:9px;display:flex;gap:6px;align-items:center">${l}<span class="info" tabindex="0" role="button" aria-label="What goes in ${l}">${I.info}<span class="tip" role="tooltip">${help}</span></span></span>
+  return `<div style="display:grid;gap:14px"><p class="faint" style="margin:0;font-size:13px">Click any text to edit it. Your agent works from your version.</p>${Object.entries(BRIEF_HELP).map(([k, [l, help]]) => `<div class="brow">
+    <span class="dim mono blabel">${l}<span class="info" tabindex="0" role="button" aria-label="What goes in ${l}">${I.info}<span class="tip" role="tooltip">${help}</span></span></span>
     <div class="edit" contenteditable="plaintext-only" spellcheck="false" data-brief="${k}" data-placeholder="empty" style="${k === 'what' ? 'font:22px/1.35 var(--serif)' : ''}">${esc(P.brief[k])}</div></div>`).join('')}</div>`;
 }
 function lookHTML() {
@@ -190,7 +239,7 @@ function partsHTML() {
     const media = p.status === 'rendering' || p.status === 'queued'
       ? `<div class="empty ${p.status === 'rendering' ? 'rendering' : ''}">${p.status}</div>`
       : p.draft ? vid(p.draft) : '<div class="empty">no draft yet</div>';
-    return `<div class="card" data-drop="${i}" data-dir="${esc(p.dir)}" style="display:grid;grid-template-columns:18px minmax(180px,260px) 1fr;gap:14px;padding:14px 14px 14px 8px;border:1px solid var(--line);border-radius:12px;background:var(--panel)">
+    return `<div class="card" data-drop="${i}" data-dir="${esc(p.dir)}" >
       <span class="grip" data-grip title="drag to move">${I.grip}</span>
       <div style="border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:#000">${media}</div>
       <div style="display:grid;gap:10px;align-content:start;min-width:0">
@@ -210,9 +259,9 @@ function partsHTML() {
 function trackHTML() {
   if (!P.parts.length) return '';
   const T = P.parts.reduce((a, p) => a + Number(p.seconds ?? 0), 0);
-  return `<div style="display:flex;align-items:stretch;margin-top:14px">${P.parts.map((p, i) => `
+  return `<div class="track">${P.parts.map((p, i) => `
     ${i ? `<span title="${p.join}" style="display:grid;place-items:center;width:28px;color:var(--dim)">${I.join[p.join] ?? ''}</span>` : ''}
-    <div data-drop="${i}" data-dir="${esc(p.dir)}" draggable="true" data-trackdrag style="cursor:grab;flex:${p.seconds ?? 1} 1 0;min-width:0;border-radius:8px;overflow:hidden;position:relative;outline:1px solid var(--line2);height:60px;background:#000">
+    <div data-drop="${i}" data-dir="${esc(p.dir)}" draggable="true" data-trackdrag class="tblock" style="flex:${p.seconds ?? 1} 1 0;border-radius:8px;overflow:hidden;position:relative;outline:1px solid var(--line2);height:60px;background:#000">
       ${p.draft ? `<video src="${esc(p.draft)}#t=${Math.min(1, (p.seconds ?? 2) / 2)}" preload="metadata" muted style="height:100%;object-fit:cover;pointer-events:none"></video>` : ''}
       <span style="position:absolute;inset:auto 0 0 0;padding:4px 8px;background:linear-gradient(#0000,#000c);display:flex;justify-content:space-between;font-size:12px;pointer-events:none"><span>${esc(p.name)}</span><span class="mono dim">${fmt(p.seconds)}</span></span>
     </div>`).join('')}</div><div class="faint mono" style="font-size:12px;margin-top:6px;text-align:right">${fmt(T)} in total · drag to reorder</div>`;
@@ -224,7 +273,7 @@ function finalHTML(st) {
   const out = P.media.outputs;
   return `${P.media.final ? `<div style="border-radius:12px;overflow:hidden">${vid(P.media.final, 'controls')}</div>` : `<div class="empty ${st === 'working' ? 'rendering' : ''}" style="border-radius:12px">${st === 'working' ? 'rendering at full quality' : 'not rendered yet'}</div>`}
     ${out.length ? `<div style="display:grid;gap:0">${out.map((o) => `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:9px 0"><span class="mono">${esc(o.file)}</span><span style="display:flex;gap:14px;align-items:center"><span class="faint mono" style="font-size:12px">${(o.bytes / 1e6).toFixed(1)} MB</span><a class="btn small" href="${esc(o.url)}" download="${esc(o.file)}">${I.down} download</a></span></div>`).join('')}</div>
-    <p class="faint" style="font-size:13px;margin:0">Need another shape (9:16, 1:1), a ProRes master or a GIF? Ask for it on the right.</p>` : ''}`;
+    <p class="faint" style="font-size:13px;margin:0">Need another shape (9:16, 1:1), a ProRes master or a GIF? Ask for it in the changes box.</p>` : ''}`;
 }
 
 function render() {
@@ -234,9 +283,9 @@ function render() {
   const approvedParts = P.parts.filter((p) => p.status === 'approved').length;
   const rail = STAGES.map(([key, t, s], n) => {
     const ss = P.stages[key].status, on = key === k, can = ss !== 'pending' || key === P.stage;
-    return `<button data-go="${key}" ${can ? '' : 'disabled'} style="all:unset;cursor:${can ? 'pointer' : 'default'};display:grid;grid-template-columns:28px 1fr 18px;gap:10px;align-items:start;padding:12px 14px;border-radius:10px;background:${on ? 'var(--panel2)' : 'transparent'};opacity:${can ? 1 : .45}">
+    return `<button data-go="${key}" ${can ? '' : 'disabled'} class="step${on ? ' on' : ''}">
       <span class="mono faint" style="font-size:12px;padding-top:2px">0${n + 1}</span>
-      <span><span style="display:block">${t}</span><span class="dim" style="font-size:12px">${key === 'parts' && P.parts.length ? `${approvedParts} of ${P.parts.length} approved` : s}</span></span>
+      <span><span style="display:block">${t}</span><span class="dim sub" style="font-size:12px">${key === 'parts' && P.parts.length ? `${approvedParts} of ${P.parts.length} approved` : s}</span></span>
       <span style="color:${(STATUS[ss] ?? [])[1]};padding-top:2px">${I[ss] ?? ''}</span></button>`;
   }).join('');
   const body = { brief: briefHTML, look: lookHTML, structure: structureHTML, parts: partsHTML, assembly: () => assemblyHTML(st), final: () => finalHTML(st) }[k]();
@@ -245,16 +294,16 @@ function render() {
   const activity = P.events.filter((e) => e.stage === k).slice(-6).reverse();
   const total = P.parts.reduce((a, p) => a + Number(p.seconds ?? 0), 0);
   const app = document.getElementById('app');
-  app.innerHTML = `<div id="grid" style="display:grid;grid-template-columns:280px 1fr ${rightW}px;min-height:100vh">
-    <aside style="border-right:1px solid var(--line);padding:22px 12px;display:grid;align-content:start;gap:4px">
-      <div style="padding:0 14px 18px"><a href="/" class="faint mono" style="font-size:12px;text-decoration:none">← pieces</a><div class="serif" style="font-size:24px;line-height:1.1;margin-top:10px">${esc(P.title)}</div><div class="dim mono" style="font-size:12px;margin-top:6px">${[P.brand, P.dir, P.format, total ? fmt(total) : ''].filter(Boolean).map(esc).join(' · ')}</div></div>
-      ${rail}
+  app.innerHTML = `<div id="grid" class="shell" style="--rw:${rightW}px">
+    <aside class="rail">
+      <div class="head"><a href="/" class="faint mono" style="font-size:12px;text-decoration:none">← pieces</a><div class="serif" style="font-size:24px;line-height:1.1;margin-top:10px">${esc(P.title)}</div><div class="dim mono" style="font-size:12px;margin-top:6px">${[P.brand, P.dir, P.format, total ? fmt(total) : ''].filter(Boolean).map(esc).join(' · ')}</div></div>
+      <div class="steps">${rail}</div>
     </aside>
-    <main style="padding:28px 36px 90px;display:grid;align-content:start;gap:22px;max-width:1000px;min-width:0">
-      <header><div class="dim mono" style="font-size:12px">stage ${order(k) + 1} of 6</div><h1 class="serif" style="font-size:40px;margin:4px 0 2px;line-height:1.05">${title}</h1><div class="dim">${sub}</div></header>
+    <main class="stage">
+      <header><div class="dim mono" style="font-size:12px">stage ${order(k) + 1} of 6</div><h1 class="serif">${title}</h1><div class="dim">${sub}</div></header>
       ${body}
     </main>
-    <aside style="border-left:1px solid var(--line);padding:28px 22px;display:grid;align-content:start;gap:18px;position:sticky;top:0;height:100vh;overflow:auto">
+    <aside class="decide">
       <div id="resize" title="drag to resize · double-click to reset" style="position:absolute;left:-5px;top:0;bottom:0;width:10px;cursor:col-resize;z-index:5"><span style="position:absolute;left:4px;top:50%;width:2px;height:44px;margin-top:-22px;border-radius:2px;background:var(--line2)"></span></div>
       <div>${badge(st)}${P.stages[k].at ? `<span class="faint mono" style="font-size:12px"> · ${clock(P.stages[k].at)}</span>` : ''}</div>
       ${P.stages[k].note && st !== 'approved' ? `<div style="font-size:13px;border-left:2px solid var(--warn);padding-left:10px">${esc(P.stages[k].note)}</div>` : ''}
@@ -264,11 +313,13 @@ function render() {
       ${st === 'approved' ? `<p class="dim" style="margin:0;font-size:13px">Approved. Reopen it to ask for a change.</p><button class="btn small" data-reopen="${k}" style="justify-self:start">${I.changes} reopen</button>` : ''}
       ${st === 'working' || st === 'changes' ? `<p class="dim" style="margin:0;font-size:13px">Your agent is working on this stage. It shows up here when it's ready.</p>` : ''}
       ${st === 'pending' ? `<p class="dim" style="margin:0;font-size:13px">This comes after ${esc(STAGES[order(k) - 1]?.[1] ?? '')}.</p>` : ''}
-      ${notes.length ? `<div style="display:grid;gap:8px"><div class="faint mono" style="font-size:12px">your notes</div>${notes.map((f) => `<div style="font-size:13px;border-left:2px solid var(--line2);padding-left:10px">${f.part ? `<span class="faint mono">${esc(f.part)}</span> · ` : ''}${esc(f.text)} <span class="faint mono" style="font-size:11px">${clock(f.at)}</span></div>`).join('')}</div>` : ''}
-      ${activity.length ? `<div style="display:grid;gap:6px"><div class="faint mono" style="font-size:12px">sent to your agent</div>${activity.map((e) => `<div class="mono faint" style="font-size:11px;line-height:1.4">${clock(e.at)} · ${esc(e.part ? `${e.part} ` : '')}${esc(e.kind === 'edit' ? `${e.key} → ${e.text}` : e.kind === 'changes' ? 'changes asked' : e.kind)}</div>`).join('')}</div>` : ''}
+      ${notes.length ? `<div class="notes" style="display:grid;gap:8px"><div class="faint mono" style="font-size:12px">your notes</div>${notes.map((f) => `<div style="font-size:13px;border-left:2px solid var(--line2);padding-left:10px">${f.part ? `<span class="faint mono">${esc(f.part)}</span> · ` : ''}${esc(f.text)} <span class="faint mono" style="font-size:11px">${clock(f.at)}</span></div>`).join('')}</div>` : ''}
+      ${activity.length ? `<div class="activity" style="display:grid;gap:6px"><div class="faint mono" style="font-size:12px">sent to your agent</div>${activity.map((e) => `<div class="mono faint" style="font-size:11px;line-height:1.4">${clock(e.at)} · ${esc(e.part ? `${e.part} ` : '')}${esc(e.kind === 'edit' ? `${e.key} → ${e.text}` : e.kind === 'changes' ? 'changes asked' : e.kind)}</div>`).join('')}</div>` : ''}
     </aside></div>`;
   app.querySelectorAll('video[data-k]').forEach((v) => { const c = vcache.get(v.dataset.k); if (c) v.replaceWith(c); else vcache.set(v.dataset.k, v); });
   restoreFocus(focus);
+  // on a phone the stages are a strip: keep the open one in view
+  const on = app.querySelector('.step.on'); if (on && on.parentElement.scrollWidth > on.parentElement.clientWidth) on.scrollIntoView({ block: 'nearest', inline: 'center' });
 }
 const vcache = new Map();   // videos keep playing across re-renders (the key includes the file's mtime)
 
@@ -304,7 +355,7 @@ document.addEventListener('pointerdown', (e) => {
   if (!e.target.closest('#resize')) return;
   e.preventDefault(); document.body.classList.add('resizing');
   const grid = document.getElementById('grid');
-  const move = (ev) => { rightW = Math.round(Math.min(RW[1], Math.max(RW[0], innerWidth - ev.clientX))); grid.style.gridTemplateColumns = `280px 1fr ${rightW}px`; };
+  const move = (ev) => { rightW = Math.round(Math.min(RW[1], Math.max(RW[0], innerWidth - ev.clientX))); grid.style.setProperty('--rw', `${rightW}px`); };
   const up = () => { document.body.classList.remove('resizing'); removeEventListener('pointermove', move); removeEventListener('pointerup', up); try { localStorage.setItem('studio:rw', rightW); } catch {} };
   addEventListener('pointermove', move); addEventListener('pointerup', up);
 });
