@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { IconCheck, IconCopy } from "./icons";
 
-/** Copies `text`; shows "copied" for a moment. */
+/** Copies `text`; says "Copied" for a moment. */
 export function CopyButton({ text, label = "Copy", className = "" }: { text: string; label?: string; className?: string }) {
   const [done, setDone] = useState(false);
   return (
@@ -17,9 +18,10 @@ export function CopyButton({ text, label = "Copy", className = "" }: { text: str
           /* clipboard blocked */
         }
       }}
-      className={`shrink-0 rounded-md border border-line px-3 py-1.5 font-mono text-[12px] text-muted transition-colors hover:border-faint hover:text-figure ${className}`}
+      className={`btn btn-sm shrink-0 ${done ? "btn-primary" : ""} ${className}`}
     >
-      {done ? "copied" : label}
+      {done ? <IconCheck size={14} /> : <IconCopy size={14} />}
+      {done ? "Copied" : label}
     </button>
   );
 }
@@ -27,12 +29,12 @@ export function CopyButton({ text, label = "Copy", className = "" }: { text: str
 /** A one-line command or prompt with a copy button. */
 export function CopyLine({ text, prefix }: { text: string; prefix?: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-line bg-surface py-2 pl-4 pr-2">
-      <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-[13px] text-figure">
+    <div className="code flex items-stretch">
+      <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-4 py-2.5 text-figure">
         {prefix ? <span className="select-none text-faint">{prefix} </span> : null}
         {text}
       </code>
-      <CopyButton text={text} />
+      <CopyButton text={text} className="border-y-0 border-r-0 border-line" />
     </div>
   );
 }

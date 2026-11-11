@@ -7,12 +7,12 @@ export const metadata: Metadata = { title: "Your kit" };
 export default function KitPage() {
   const { site } = getIndex();
   return (
-    <div className="pb-24">
-      <div className="pt-12">
-        <h1 className="font-serif text-[48px] leading-none tracking-[-0.03em] md:text-[72px]">Your kit</h1>
-        <p className="mt-4 max-w-[60ch] text-[16px] leading-relaxed text-muted">Everything your agent needs to make the video, with your settings. It stays in this browser.</p>
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-9 pt-12 md:pt-16">
+        <h1 className="display">Your kit</h1>
+        <p className="max-w-[44ch] pb-2 text-[15px] leading-relaxed text-muted">Everything your agent needs to make the video, with your settings. It stays in this browser.</p>
       </div>
       <KitView site={site} />
-    </div>
+    </>
   );
 }

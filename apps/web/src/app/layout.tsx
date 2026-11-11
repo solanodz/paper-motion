@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-import { KitNavLink } from "@/components/kit-nav";
+import { HeaderNav } from "@/components/header-nav";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -19,35 +19,29 @@ export const metadata: Metadata = {
     "Transitions, component transitions, text effects, backgrounds, palettes, font pairs and video recipes your AI agent can pick by name and turn into a video.",
 };
 
-const NAV = [
-  { href: "/library", label: "Library", short: "Library" },
-  { href: "/docs", label: "For agents", short: "Agents" },
-];
-
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${geistSerif.variable} ${geistPixel.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <header className="sticky top-0 z-40 border-b border-line bg-ground/85 backdrop-blur">
-          <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-5 md:px-8">
-            <Link href="/" className="shrink-0 whitespace-nowrap font-serif text-[19px] tracking-[-0.02em] sm:text-[22px]">
+        <header className="sticky top-0 z-40 border-b border-line bg-ground">
+          <div className="flex h-[52px] items-stretch justify-between">
+            <Link href="/" className="flex shrink-0 items-center px-4 font-serif text-[19px] tracking-[-0.02em] sm:px-5 sm:text-[21px] md:px-8">
               paper-motion
             </Link>
-            <nav className="flex min-w-0 items-center gap-3 whitespace-nowrap font-mono text-[11.5px] text-muted sm:gap-5 sm:text-[13px]">
-              {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className="transition-colors hover:text-figure">
-                  <span className="sm:hidden">{n.short}</span><span className="max-sm:hidden">{n.label}</span>
-                </Link>
-              ))}
-              <KitNavLink />
-            </nav>
+            <HeaderNav />
           </div>
         </header>
         <main className="flex-1">{children}</main>
         <footer className="border-t border-line">
-          <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-5 py-8 font-mono text-[12px] text-muted md:flex-row md:items-center md:justify-between md:px-8">
-            <span>paper-motion · creative-directed videos for people who use coding agents</span>
-            <span>MIT · resources are yours to edit</span>
+          <div className="grid gap-y-8 px-5 py-10 md:grid-cols-[1fr_auto] md:items-end md:px-8">
+            <p className="max-w-[26ch] font-serif text-[30px] leading-[1.05] tracking-[-0.02em] md:text-[40px]">Creative-directed videos for people who use coding agents.</p>
+            <div className="cells flex-wrap border border-line text-[13px] [&>*:first-child]:border-l-0 [&>*]:h-10">
+              <Link href="/library" className="cell">Library</Link>
+              <Link href="/docs" className="cell">For agents</Link>
+              <a href="/llms.txt" className="cell font-mono text-[12px]">llms.txt</a>
+              <a href="https://github.com/solanodz/paper-motion" className="cell">GitHub</a>
+              <span className="cell font-mono text-[12px]">MIT</span>
+            </div>
           </div>
         </footer>
       </body>
