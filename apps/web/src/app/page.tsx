@@ -31,7 +31,7 @@ export default function Home() {
   const PROMPT = prompt(site);
   const n = (type: string) => items.filter((i) => i.type === type).length;
   const title = (type: string) => TYPES.find((t) => t.type === type)?.title ?? type;
-  const mesh = shader("mesh-graphite"), swirl = shader("swirl-paper"), metal = shader("liquid-metal"), spiral = shader("spiral-paper"), sage = shader("mesh-sage");
+  const mesh = shader("mesh-graphite"), ochre = shader("warp-ochre"), clay = shader("dither-clay"), swirl = shader("swirl-paper"), metal = shader("liquid-metal"), spiral = shader("spiral-paper"), sage = shader("mesh-sage");
   const palettes = PALETTES.map((id) => ({ id, colors: Object.values((getResource(id)?.install.entry as { colors?: Colors } | undefined)?.colors ?? {}).map((c) => c.hex) })).filter((p) => p.colors.length);
 
   // what each stage looks like
@@ -118,15 +118,22 @@ export default function Home() {
             </div>
           </div>
 
-          {/* two real renders, one over the other */}
-          <div className="relative pb-[16%] pr-[6%] max-xl:max-w-[760px]">
-            <div className="corner-marks border border-rule bg-ground">
-              <div className="aspect-video"><AutoVideo {...clip("launch")} /></div>
-              <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-2.5 text-[13px]"><span>A launch video, from one recipe</span><span className="font-mono text-[12px] text-muted">launch</span></div>
+          {/* two real renders, one over the other. Each plays straight on a material from the library: the clip's own
+              black is blended away, so the shader is its only background */}
+          <div className="relative pb-[18%] pr-[6%] max-xl:max-w-[760px]">
+            <div className="corner-marks relative border border-rule">
+              <div className="relative aspect-video overflow-hidden bg-ground">
+                {ochre ? <ShaderPreview entry={ochre} className="!absolute inset-0" /> : null}
+                <AutoVideo {...clip("word-rise")} className="relative !bg-transparent mix-blend-screen" />
+              </div>
+              <div className="flex items-center justify-between gap-3 border-t border-rule bg-ground px-4 py-2.5 text-[13px]"><span>Words that rise into place, on warp ochre</span><span className="font-mono text-[12px] text-muted">word-rise</span></div>
             </div>
-            <div className="absolute bottom-0 right-0 w-[52%] border border-paper bg-ground">
-              <div className="aspect-video"><AutoVideo {...clip("magic-move")} /></div>
-              <div className="flex items-center justify-between gap-3 border-t border-line px-3 py-2 text-[12px]"><span className="truncate">One card becomes the next</span><span className="font-mono text-[11px] text-muted">magic-move</span></div>
+            <div className="absolute bottom-0 right-0 w-[54%] border border-paper">
+              <div className="relative aspect-video overflow-hidden bg-ground">
+                {clay ? <ShaderPreview entry={clay} className="!absolute inset-0" /> : null}
+                <AutoVideo {...clip("magic-move")} className="relative !bg-transparent mix-blend-screen" />
+              </div>
+              <div className="flex items-center justify-between gap-3 border-t border-rule bg-ground px-3 py-2 text-[12px]"><span className="truncate">One card becomes the next</span><span className="font-mono text-[11px] text-muted">magic-move</span></div>
             </div>
           </div>
         </div>
