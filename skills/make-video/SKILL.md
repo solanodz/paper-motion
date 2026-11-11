@@ -23,15 +23,17 @@ Read `brand/`. Each file is a decision you build on, not a question to ask again
 
 Scenes load it with `paper-motion/brand` (see "Writing a scene"). When a part is missing, either offer its skill (`identity`, `visual-system`, `motion-style`, `sound-kit`, `shader-set`) or settle it inside this piece's intake with one question and a recommendation; never block on it. With no brand folder at all, the full intake below decides everything for this piece.
 
-## The studio: the user follows the piece stage by stage
+## The studio: where the user decides (the default)
 
-When the user can open a browser, run the piece through the **studio**: a local page where they see every stage of this piece, approve it or ask for changes, and edit by hand what needs no judgment (the brief, the words on screen, lengths, joins, order). You hand each stage over and wait for their decision; it arrives on its own, never ask them to paste anything.
+Every piece runs through the **studio**, a local page where the user sees each stage of the piece, approves it or asks for changes, and edits by hand what needs no judgment (the brief, the words on screen, lengths, joins, order). Start it as soon as you know the piece's name, before the intake; you hand each stage over and wait for their decision, which arrives on its own (never ask them to paste anything). Only when the user can't open a browser, run the same stages in the chat with the gates below.
 
 ```bash
-pamo studio &                                   # once; the user opens http://127.0.0.1:4317 (say so)
-pamo piece init <piece> --title "…" --what "…" --who "…" --format "…" --tone "…" --action "…"
-pamo piece review <piece> brief                 # waits; prints what they did, one paper-motion: line each
+pamo piece init <piece> --title "…"             # piece.json, and the project's studio in the background
+pamo piece init <piece> --what "…" --who "…" --format "…" --tone "…" --action "…"   # the brief, after the intake
+pamo piece review <piece> brief                 # opens the studio for them the first time; waits; prints what they did
 ```
+
+`pamo studio --stop` ends the background studio when the piece is done.
 
 | Stage | What you do before `piece review <piece> <stage>` |
 |---|---|

@@ -186,6 +186,7 @@ export function startStudio({ cwd = process.cwd(), port = 4317, log = console.lo
     try {
       if (u.pathname === '/' || u.pathname === '/index.html') { res.writeHead(200, { 'Content-Type': TYPES['.html'], 'Cache-Control': 'no-store' }); return res.end(fs.readFileSync(PAGE)); }
       if (u.pathname === '/api/pieces') return json(res, 200, listPieces(cwd));
+      if (u.pathname === '/api/info') return json(res, 200, { app: 'paper-motion-studio', cwd: path.resolve(cwd), pid: process.pid });
       if (u.pathname === '/api/piece') {
         const piece = u.searchParams.get('p');
         if (req.method === 'POST') {
@@ -207,4 +208,51 @@ export function startStudio({ cwd = process.cwd(), port = 4317, log = console.lo
     server.on('error', reject);
     server.listen(port, '127.0.0.1', () => resolve({ server, port: server.address().port, close: () => new Promise((r) => server.close(r)) }));
   });
+}
+
+// ── one studio per project, in the background ─────────────────────────────────────────────────
+const FIRST_PORT = 4317, LAST_PORT = 4336;
+async function probe(port) {
+  try {
+    const r = await fetch(`http://127.0.0.1:${port}/api/info`, { signal: AbortSignal.timeout(800) });
+    return r.ok ? await r.json() : { busy: true };
+  } catch (e) { return e?.cause?.code === 'ECONNREFUSED' ? null : { busy: true }; }
+}
+
+/** The studio serving this project, if one is running: { port, url }. */
+export async function findStudio(cwd = process.cwd()) {
+  for (let port = FIRST_PORT; port <= LAST_PORT; port++) {
+    const info = await probe(port);
+    if (info?.app === 'paper-motion-studio' && info.cwd === path.resolve(cwd)) return { port, url: `http://127.0.0.1:${port}/`, pid: info.pid };
+  }
+  return null;
+}
+
+/**
+ * Makes sure this project has a studio running: reuses it, or starts one detached (it outlives the command, so the
+ * user's page keeps working between the agent's steps) on the first free port. `pamo studio --stop` ends it.
+ */
+export async function ensureStudio(cwd = process.cwd(), { bin } = {}) {
+  const found = await findStudio(cwd);
+  if (found) return { ...found, started: false };
+  let port = FIRST_PORT;
+  while (port <= LAST_PORT && (await probe(port))) port++;
+  if (port > LAST_PORT) throw new Error(`no free port between ${FIRST_PORT} and ${LAST_PORT} for the studio`);
+  const { spawn } = await import('node:child_process');
+  const child = spawn(process.execPath, [bin, 'studio', '--port', String(port)], { cwd, detached: true, stdio: 'ignore' });
+  child.unref();
+  for (let i = 0; i < 40; i++) {
+    await new Promise((res) => setTimeout(res, 150));
+    const info = await probe(port);
+    if (info?.app === 'paper-motion-studio') return { port, url: `http://127.0.0.1:${port}/`, pid: info.pid, started: true };
+  }
+  throw new Error(`the studio didn't start on port ${port} (run: npx paper-motion studio --port ${port})`);
+}
+
+/** Opens a URL in the user's browser (macOS, Windows, Linux); quietly does nothing where it can't. */
+export async function openInBrowser(url) {
+  if (process.env.CI || process.env.PAPER_MOTION_NO_OPEN) return false;
+  const { spawn } = await import('node:child_process');
+  const [cmd, args] = process.platform === 'darwin' ? ['open', [url]] : process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]] : ['xdg-open', [url]];
+  try { spawn(cmd, args, { detached: true, stdio: 'ignore' }).on('error', () => {}).unref(); return true; } catch { return false; }
 }
