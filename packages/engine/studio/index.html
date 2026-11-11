@@ -35,9 +35,12 @@
   .sw { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line2); }
   .spin { animation: spin 1s linear infinite; transform-origin: 50% 50%; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .rendering { position: relative; }
-  .rendering::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(110deg, #0000 0 12px, #ffffff08 12px 24px); animation: slide 1s linear infinite; }
-  @keyframes slide { to { background-position: 48px 0; } }
+  /* the loader: diagonal stripes that slide forever without a seam. At 110deg, stripes 24px apart repeat every
+     24 / sin(70deg) ≈ 25.54px across, so the layer moves exactly that far per loop (and starts one period to the left) */
+  .rendering { position: relative; overflow: hidden; }
+  .rendering::after { content: ''; position: absolute; top: 0; bottom: 0; left: -25.54px; right: 0; background: repeating-linear-gradient(110deg, #0000 0 12px, #ffffff08 12px 24px); animation: slide 0.6s linear infinite; will-change: transform; pointer-events: none; }
+  @keyframes slide { to { transform: translateX(25.54px); } }
+  @media (prefers-reduced-motion: reduce) { .rendering::after { animation: none; } }
   .empty { aspect-ratio: 16/9; display: grid; place-items: center; background: #0d0d0d; color: var(--faint); font: 12px var(--mono); }
   .info { position: relative; display: inline-grid; place-items: center; color: var(--faint); cursor: help; border-radius: 50%; }
   .info:hover, .info:focus { color: var(--fg); outline: none; }
