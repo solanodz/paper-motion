@@ -63,8 +63,15 @@ export function recolor(item, pal) {
     return atLuminance(near.h, y) + (m[2] ? m[2] : '');
   };
   const out = {};
+  // the color behind everything takes the brand's ground exactly (its alpha kept), so the frame edge matches the brand
+  const ground = typeof pal?.ground === 'string' ? pal.ground : pal?.ground?.hex;
+  const behind = (name, v) => {
+    if (!/back/i.test(name) || !HEX.test(ground ?? '')) return null;
+    const m = typeof v === 'string' && v.match(HEX);
+    return m ? ground.slice(0, 7) + (m[2] ?? '') : null;
+  };
   for (const p of paramsOf(item)) {
-    if (p.type === 'color') out[p.name] = one(p.default);
+    if (p.type === 'color') out[p.name] = behind(p.name, p.default) ?? one(p.default);
     else if (p.type === 'colors' && Array.isArray(p.default)) out[p.name] = p.default.map(one);
   }
   return out;
@@ -124,7 +131,38 @@ function backgroundEntry(item, values) {
 function paletteTokens(item, values) {
   const e = item.install.entry ?? {};
   const colors = Object.fromEntries(Object.entries(e.colors ?? {}).map(([role, c]) => [role, { ...c, hex: values[role] ?? c.hex }]));
-  return { ...e, colors, ramp: values.ramp ?? e.ramp };
+  return { ...e, colors, ramp: tunedRamp(e, colors, values.ramp) };
+}
+
+/**
+ * The ramp after the colors were tuned: steps equal to a role's old color take its new one; the steps between keep
+ * their tone and take the hue of the nearest new color. A ramp given explicitly wins.
+ */
+function tunedRamp(e, colors, given) {
+  const ramp = e.ramp;
+  if (!Array.isArray(ramp) || (Array.isArray(given) && !same(given, ramp))) return given ?? ramp;
+  const old = Object.fromEntries(Object.entries(e.colors ?? {}).map(([role, c]) => [String(c.hex).toLowerCase(), role]));
+  const fresh = Object.values(colors).map((c) => c.hex).filter((h) => HEX.test(h ?? ''));
+  if (Object.entries(e.colors ?? {}).every(([role, c]) => colors[role].hex === c.hex)) return ramp;
+  // a ramp from one role to another (ground → accent, the usual): the steps between are mixed again from the new ends,
+  // at the same place along the way (by tone), so the ramp keeps its hue
+  const a0 = old[String(ramp[0]).toLowerCase()], a1 = old[String(ramp.at(-1)).toLowerCase()];
+  if (a0 && a1 && a0 !== a1) {
+    const [y0, y1] = [lum(ramp[0]), lum(ramp.at(-1))], [n0, n1] = [srgb(colors[a0].hex).map(lin), srgb(colors[a1].hex).map(lin)];
+    return ramp.map((h, i) => {
+      if (i === 0) return colors[a0].hex;
+      if (i === ramp.length - 1) return colors[a1].hex;
+      const t = Math.min(1, Math.max(0, (lum(h) - y0) / ((y1 - y0) || 1)));
+      return hex(n0.map((c, k) => c + t * (n1[k] - c)));
+    });
+  }
+  const ladder = fresh.map((h) => ({ h, y: lum(h) }));
+  return ramp.map((h) => {
+    const role = old[String(h).toLowerCase()];
+    if (role) return colors[role].hex;
+    const y = lum(h), near = ladder.reduce((a, b) => (Math.abs(b.y - y) < Math.abs(a.y - y) ? b : a));
+    return atLuminance(near.h, y);
+  });
 }
 
 function fontTokens(item, values) {

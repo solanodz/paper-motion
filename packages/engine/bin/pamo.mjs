@@ -14,6 +14,7 @@ const HELP = `paper-motion — minimal, creative-directed video from code + Pape
 Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/engine/bin/pamo.mjs in the repo)
 
   setup                              install engine deps, check ffmpeg + browser
+  --version                          the engine's version
   doctor                             only check the environment
   new <name> [--dir works] [--format 16:9|9:16|1:1 | --size 1920x1080] [--fps 30] [--duration 10]
              [--from <example> | --piece (wired to brand/) | --still |
@@ -33,8 +34,9 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      (sound effects declared with s.sfx() are mixed in)
   sfx <scene.html> [--out file.wav] [--from s] [--to s]
                                      export only the synthesized sound effects
-  board --url --title "…" [--ask "…"] [--reply name] [--look palette,font]
-        --option id[:key=value,…] [--note "why"] … [--kit] [--site url]
+  board --url --title "…" [--ask "…"] [--reply name] [--look palette[:key=v,…],font | --look brand]
+        --option id[:key=value,…] [--note "why"] … [--kit] [--wait minutes | --no-wait] [--site url]
+  board --await <id> [--wait minutes] wait (again) for the choice on a board already shared
                                      a live board: a paper-motion.app link the user opens to see
                                      2–4 options in their look, tune one and choose; with --kit each
                                      option is a space-separated list of ids (a whole kit)
@@ -60,7 +62,7 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
   piece init <piece> [--title "…"] [--what "…"] [--who "…"] [--format "…"] [--tone "…"] [--action "…"]
         [--no-studio]                start tracking a piece stage by stage (pieces/<piece>/piece.json)
                                      and start this project's studio in the background
-  piece review <piece> <stage> [--wait 30] [--no-wait] [--no-open]
+  piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open]
                                      hand a stage to the user in the studio (brief, look, structure,
                                      parts, assembly, final) and wait for their decision; prints it.
                                      Starts the studio if needed; the first time, opens it for them
@@ -181,6 +183,7 @@ const workDir = (file) => path.dirname(path.resolve(file));
 const fmtTime = (s) => (s < 60 ? `${s.toFixed(1)}s` : `${Math.floor(s / 60)}m${Math.round(s % 60)}s`);
 
 async function main() {
+  if (args.version || cmd === 'version') { console.log(JSON.parse(fs.readFileSync(path.join(ENGINE, 'package.json'), 'utf8')).version); return; }
   switch (cmd) {
     case 'setup': {
       await ensureDeps();
@@ -351,8 +354,25 @@ async function main() {
         const { parseSet, setArgs } = await import('../lib/customize.mjs');
         const reg = resolveRegistry(args.registry), { items } = await getIndex(reg), index = Object.fromEntries(items.map((i) => [i.id, i]));
         const opts = process.argv.flatMap((a, i, all) => (a === '--option' ? [all[i + 1]] : a.startsWith('--option=') ? [a.slice(9)] : [])).filter(Boolean);
-        if (!opts.length || !args.title || args.help) { console.error('Usage: board --url --title "…" [--ask "…"] [--reply name] [--look palette,font] --option id[:key=value,…] [--note "why"] … [--kit] [--choose 1-3] [--wait minutes | --no-wait] [--long] [--site url]\n       board --forget <id>\n  On a recipe board an option may be a structure of your own: --option "@Title | 18 | Hook 0-2 [word-swap] one line; Proof 2-12 [browser-frame] three shots; Close 12-18 [svg-logo] the action" (a [block-id] makes the board play that clip for the beat).\n  Prints a live board link: short (/b/<id>, stored on the site for 90 days) when the site answers, long (the board in the URL fragment) otherwise or with --long. Values after the colon are your adjustments; the reply line carries every non-default value.\n  With a short link the command keeps running until the user chooses in the browser (10 min; --wait 3 changes it, --no-wait returns at once) and prints the reply line, the same one they could paste. --choose lets them pick several options (a count, or min-max). --forget deletes a stored board early.'); process.exit(args.help ? 0 : 1); }
+        if (!opts.length || !args.title || args.help) { console.error('Usage: board --url --title "…" [--ask "…"] [--reply name] [--look palette[:key=value,…],font | --look brand] --option id[:key=value,…] [--note "why"] … [--kit] [--choose 1-3] [--wait minutes | --no-wait] [--long] [--site url]\n       board --await <id|link> [--wait minutes]   (wait again for a board already shared)\n       board --forget <id>\n  On a recipe board an option may be a structure of your own: --option "@Title | 18 | Hook 0-2 [word-swap] one line; Proof 2-12 [browser-frame] three shots; Close 12-18 [svg-logo] the action" (a [block-id] makes the board play that clip for the beat).\n  Prints a live board link: short (/b/<id>, stored on the site for 90 days) when the site answers, long (the board in the URL fragment) otherwise or with --long. Values after the colon are your adjustments; the reply line carries every non-default value.\n  With a short link the command keeps running until the user chooses in the browser (10 min; --wait 3 changes it, in minutes; --no-wait returns at once) and prints the reply line, the same one they could paste. If your shell caps how long a command runs, share with --no-wait and then wait in short steps: board --await <id> --wait 2, again until it prints the line (exit code 3 means not yet). Values take lists and several keys: --option graphite:accent=#B8F03C,ramp=["#0A0A0B","#B8F03C"] (quote it for the shell); --look brand uses the palette, colors and font pair this project installed. --choose lets them pick several options (a count, or min-max). --forget deletes a stored board early.'); process.exit(args.help ? 0 : 1); }
         const LABELS = ['A', 'B', 'C', 'D'];
+        // commas only separate at the top level (not inside [..], {..} or quotes), and only before a new "key=":
+        // so ramp=["#000","#111"] and multi-value colors survive
+        const splitTop = (str, startsNext) => {
+          const out = []; let depth = 0, q = null, cur = '';
+          for (let i = 0; i < str.length; i++) {
+            const c = str[i];
+            if (q) { if (c === q && str[i - 1] !== '\\') q = null; cur += c; continue; }
+            if (c === '"' || c === "'") q = c; else if ('[{'.includes(c)) depth++; else if (']}'.includes(c)) depth--;
+            if (c === ',' && depth === 0 && startsNext(str.slice(i + 1))) { out.push(cur); cur = ''; continue; }
+            cur += c;
+          }
+          out.push(cur);
+          return out.map((x) => x.trim()).filter(Boolean);
+        };
+        const splitPairs = (kv) => splitTop(kv, (rest) => /^\s*[\w-]+=/.test(rest));
+        // --look "palette:key=v,key=v,font-pair": a new item starts at a comma followed by an id (no "=" before the next , or :)
+        const splitLook = (spec) => splitTop(spec, (rest) => /^\s*[\w-]+\s*(?:[,:]|$)/.test(rest) && !/^\s*[\w-]+=/.test(rest));
         const parseOne = async (spec) => {
           if (spec.startsWith('@')) {
             // a structure of the agent's own: "@Title | 18 | Hook 0-2 one line; Proof 2-12 three shots; Close 12-18 the action"
@@ -360,10 +380,10 @@ async function main() {
             const beats = (beatsSpec ?? '').split(';').map((x) => x.trim()).filter(Boolean).map((x) => { const m = x.match(/^(.+?)\s+(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)\s+(.+)$/); if (!m) throw new Error(`structure beat "${x}" must read "Name from-to [block-id] what"`); const sh = m[4].match(/^\[([\w-]+)\]\s*(.+)$/); return { name: m[1], from: Number(m[2]), to: Number(m[3]), what: sh ? sh[2] : m[4], ...(sh ? { id: sh[1] } : {}) }; });
             return { structure: { title, duration: Number(dur), beats } };
           }
-          const [id, kv] = spec.split(':'), it = index[id];
+          const at = spec.indexOf(':'), id = (at < 0 ? spec : spec.slice(0, at)).trim(), kv = at < 0 ? '' : spec.slice(at + 1), it = index[id];
           if (!it) throw new Error(`"${id}" is not in the registry (try pamo search)`);
           if (!kv) return { id, values: {} };
-          const full = await getItem(id, reg), values = parseSet(full, kv.split(',').map((x) => x.trim()).filter(Boolean));
+          const full = await getItem(id, reg), values = parseSet(full, splitPairs(kv));
           // keep only what differs from the defaults, so the link stays small and the reply line honest
           const keep = Object.fromEntries(setArgs(full, values).map((a) => { const m = a.match(/^--set '?(\w+)=(.*?)'?$/); return [m[1], values[m[1]]]; }));
           return { id, values: keep };
@@ -375,7 +395,19 @@ async function main() {
           else options.push({ label: LABELS[i], ...(await parseOne(spec)), ...(notes[i] ? { note: notes[i] } : {}) });
         }
         const look = {};
-        if (typeof args.look === 'string') for (const spec of args.look.split(',')) { const o = await parseOne(spec.trim()); const t = index[o.id]?.type; if (t === 'palette') look.palette = o; else if (t === 'font-pair') look.font = o; else throw new Error(`--look takes a palette and a font pair, not "${o.id}"`); }
+        if (args.look === 'brand') {
+          // the look this project installed: its palette and font pair (paper-motion.json), with brand/tokens.json's colors
+          const lock = (() => { try { return JSON.parse(fs.readFileSync('paper-motion.json', 'utf8')).items ?? {}; } catch { return {}; } })();
+          const tokens = (() => { try { return JSON.parse(fs.readFileSync('brand/tokens.json', 'utf8')); } catch { return {}; } })();
+          const pal = Object.keys(lock).reverse().find((id) => index[id]?.type === 'palette'), font = Object.keys(lock).reverse().find((id) => index[id]?.type === 'font-pair');
+          if (!pal && !font) throw new Error('--look brand: no palette or font pair installed here yet (pamo add <palette> <font-pair>)');
+          if (pal) {
+            const full = await getItem(pal, reg), names = new Set((full.params ?? []).map((x) => x.name));
+            const pairs = Object.entries(tokens.colors ?? {}).filter(([k]) => names.has(k)).map(([k, v]) => `${k}=${v?.hex ?? v}`);
+            look.palette = await parseOne(pairs.length ? `${pal}:${pairs.join(',')}` : pal);
+          }
+          if (font) look.font = await parseOne(font);
+        } else if (typeof args.look === 'string') for (const spec of splitLook(args.look)) { const o = await parseOne(spec); const t = index[o.id]?.type; if (t === 'palette') look.palette = o; else if (t === 'font-pair') look.font = o; else throw new Error(`--look takes a palette and a font pair (or "brand"), not "${o.id}"`); }
         const choose = args.choose === undefined ? undefined : /^\d+-\d+$/.test(String(args.choose)) ? String(args.choose).split('-').map(Number) : Number(args.choose);
         const board = { v: 1, kind: args.kit ? 'kit' : 'resource', title: String(args.title), ...(args.ask ? { ask: String(args.ask) } : {}), ...(args.reply ? { reply: String(args.reply) } : {}), ...(Object.keys(look).length ? { look } : {}), ...(choose !== undefined ? { choose } : {}), options };
         const site = typeof args.site === 'string' ? args.site : SITE;
@@ -384,14 +416,32 @@ async function main() {
         // the short link when the site stores it; the long one (the board in the fragment) when it cannot
         if (!args.long) { try { short = await shortenBoard(site, board); } catch (e) { console.error(`(${e.message}; sharing the long link)`); } }
         console.log(short ? short.url : boardUrl(site, frag));
+        // the board also shows in the studio, in the stage it decides (--piece names the piece; else the one in progress)
+        const PC = await import('../lib/piece.mjs'), pdir = PC.activePiece(process.cwd(), typeof args.piece === 'string' ? args.piece : undefined);
+        if (pdir) PC.attachBoard(pdir, { url: short ? short.url : boardUrl(site, frag), id: short?.id, title: String(args.title), kind: board.kind });
         const wait = !args['no-wait'];   // waiting is the default: the choice comes back without the user pasting anything
         if (short && wait) {
           const minutes = Number.isFinite(Number(args.wait)) && args.wait !== undefined && args.wait !== true ? Number(args.wait) : 10;
           console.error(`waiting up to ${minutes} min for the choice on ${short.id} (the user can still paste the line)…`);
           const choice = await awaitChoice(site, short.id, { timeout: minutes * 60 * 1000 });
-          if (!choice) { console.error('no choice yet; ask the user to paste the line from the board'); process.exit(3); }
+          if (!choice) { console.error('no choice yet: wait again with board --await ' + short.id); process.exit(3); }
+          if (pdir) PC.markBoard(pdir, short.id, choice.line);
           console.log(choice.line);
         } else if (!short && wait) console.error('(no short link, so no waiting: the user will paste the line from the board)');
+        break;
+      }
+      if (args.await) {
+        // wait (again) for the choice on a board already shared: for shells that cap how long one command may run
+        const { awaitChoice } = await import('../lib/live-board.js');
+        const { SITE } = await import('../lib/registry.mjs');
+        const id = String(args.await).replace(/\/$/, '').split('/').pop(), site = typeof args.site === 'string' ? args.site : SITE;
+        const minutes = Number.isFinite(Number(args.wait)) && args.wait !== undefined && args.wait !== true ? Number(args.wait) : 10;
+        console.error(`waiting up to ${minutes} min for the choice on ${id}…`);
+        const choice = await awaitChoice(site, id, { timeout: minutes * 60 * 1000 });
+        if (!choice) { console.error('no choice yet: run it again'); process.exit(3); }
+        const PC = await import('../lib/piece.mjs'), pdir = PC.activePiece(process.cwd(), typeof args.piece === 'string' ? args.piece : undefined);
+        if (pdir) PC.markBoard(pdir, id, choice.line);
+        console.log(choice.line);
         break;
       }
       if (args.forget) {

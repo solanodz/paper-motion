@@ -13,6 +13,8 @@
 //   whip      the frame slides out sideways with a motion smear and the next slides in (0.35 s, the default)
 //   dissolve  a cross-fade (0.5 s)
 //   dip       out to the brand's ground color and back in (0.5 s)
+//   or a transition from the registry the user chose: wipe, push, zoom-through, iris, crossfade, slices, flash,
+//   scan-reveal, mask-reveal, glitch, cells, flip-3d, whip-pan (see MOVE_JOINS)
 // Each part plays from `from` (default 0) for `seconds` (default: the whole scene). A part cut before its
 // land (the beat a block declares with B.cue(s, 'land', t)) gets a warning with the length that keeps it.
 import fs from 'node:fs';
@@ -21,7 +23,17 @@ import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 
 export const JOINS = { cut: 0, whip: 0.35, dissolve: 0.5, dip: 0.5 };
-const OVERLAP = new Set(['whip', 'dissolve']);   // joins that need the outgoing part to run on under the next
+// the registry's transitions the user may have chosen, as joins between parts: [ffmpeg xfade transition, seconds].
+// So a chosen transition plays where one part becomes the next (it can also be built inside a part, by hand).
+export const MOVE_JOINS = {
+  crossfade: ['fade', 0.5], wipe: ['wipeleft', 0.5], push: ['slideleft', 0.45], 'zoom-through': ['zoomin', 0.5],
+  iris: ['circleopen', 0.55], slices: ['hrslice', 0.5], flash: ['fadewhite', 0.4], 'scan-reveal': ['wipedown', 0.5],
+  'mask-reveal': ['radial', 0.55], glitch: ['pixelize', 0.35], cells: ['dissolve', 0.5], 'flip-3d': ['squeezeh', 0.45],
+  'whip-pan': ['slideleft', 0.35],
+};
+for (const [k, [, d]] of Object.entries(MOVE_JOINS)) JOINS[k] = d;
+JOINS.whip = 0.35;   // the engine's own whip (slide + smear) wins over the registry's whip move of the same name
+const OVERLAP = new Set(['whip', 'dissolve', ...Object.keys(MOVE_JOINS)]);   // joins that need the outgoing part to run on under the next
 const LAND_HOLD = 0.6;                           // seconds after a land for the hit to read
 
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
@@ -235,7 +247,12 @@ async function withChain({ cwd, piece }, fn) {
     try { for (const p of chain.parts) infos.push(await sceneInfo(browser, url(p))); } finally { await browser.close(); }
     const sizes = new Set(infos.map((x) => `${x.config.width}x${x.config.height}`));
     if (sizes.size > 1) throw new Error(`parts come in different sizes (${[...sizes].join(', ')}): set the same format in each CONFIG`);
-    return await fn({ dir, chain, url, config: infos[0].config, ...plan(chain, infos) });
+    const planned = plan(chain, infos);
+    // the length the brief asked for ("unos 20 s", "~20s", "16:9 · 20 s"): say so when the chain drifts from it
+    const brief = readJson(path.join(dir, 'piece.json'), null)?.brief?.format ?? '';
+    const want = Number(String(brief).match(/(\d+(?:[.,]\d+)?)\s*(?:s\b|sec|seg)/i)?.[1]?.replace(',', '.'));
+    if (want > 0 && Math.abs(planned.total - want) > Math.max(1.5, want * 0.08)) planned.warnings.push(`the chain runs ${planned.total.toFixed(1)} s and the brief asks for about ${want} s: change some parts' seconds in chain.json, or the brief`);
+    return await fn({ dir, chain, url, config: infos[0].config, ...planned });
   } finally { await server.close(); }
 }
 
@@ -264,7 +281,7 @@ async function join({ files, parts, out, ground, fps, music, lufs }) {
     const j = parts[i].join, d = JOINS[j];
     if (OVERLAP.has(j)) {
       const off = Math.max(0, len - d);
-      g.push(`${v}${V[i]}xfade=transition=${j === 'whip' ? 'slideleft' : 'fade'}:duration=${d}:offset=${off.toFixed(3)}[x${i}]`);
+      g.push(`${v}${V[i]}xfade=transition=${j === 'whip' ? 'slideleft' : MOVE_JOINS[j]?.[0] ?? 'fade'}:duration=${d}:offset=${off.toFixed(3)}[x${i}]`);
       g.push(`${a}${A[i]}acrossfade=d=${d}:c1=tri:c2=tri[y${i}]`);
       if (j === 'whip') smears.push([off + d * 0.12, off + d * 0.88]);
       len = off + lens[i].duration;

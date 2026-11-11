@@ -110,7 +110,7 @@ export function llmsTxt(items, site, { full = false } = {}) {
 ## The flow (for agents)
 
 1. **Set up.** \`npx skills add solanodz/paper-motion\` (the skills) and \`npx paper-motion setup\` (the engine: Node 18+,
-   ffmpeg, Chrome). The CLI is \`npx paper-motion\` (short: \`pamo\`). Every command answers \`--help\`. Agents load
+   ffmpeg, Chrome). The CLI is \`npx paper-motion\`; where these docs write \`pamo\`, type \`npx paper-motion\` (the npm package named \`pamo\` is unrelated). \`npx paper-motion --version\` prints the version. Every command answers \`--help\`. Agents load
    skills and MCP servers when a session starts, so after installing the skills **read
    \`.claude/skills/make-video/SKILL.md\` now** (or \`.agents/skills/make-video/SKILL.md\`) and follow it in this
    session; tell the user that the MCP at ${site}/mcp, if they want it, is added before opening a session.
@@ -151,7 +151,8 @@ export function llmsTxt(items, site, { full = false } = {}) {
    the user re-chooses or re-tunes something you installed before, pass \`--force\`. A recipe also reads
    \`brand/motion.json\` (pace) and \`brand/sound.json\` (cues; without it the piece is silent) and the brand's name
    from \`tokens.json\` \`brand\`: write those from the interview before rendering.
-6. **Make the video.** Every move the user chose appears in the piece, and the brief says where each one plays;
+6. **Make the video.** Every move the user chose appears in the piece, and the brief says where each one plays
+   (a chosen transition may be the join between two parts of a chain: \`"join": "wipe"\` in chain.json takes its id);
    a recipe's own moves are placeholders to swap for theirs. Build \`scene.html\` (a pure function of time), check stills with \`pamo still\`, render with
    \`pamo render scene.html --motion-blur 5\`. The test shot and the final piece are real renders, not boards.
    When the user chose a structure whose beats name blocks or shots (or several blocks in order), chain them instead:
@@ -159,8 +160,12 @@ export function llmsTxt(items, site, { full = false } = {}) {
    \`pieces/<piece>/<nn>-<id>/\` and writes \`chain.json\` (seconds per part; \`join\`: whip, cut, dissolve or dip);
    write each part's \`CONFIG\` from its beat, then \`npx paper-motion chain <piece> --motion-blur 5\` renders every
    part in the brand's look and joins them into one video. It warns when a part is cut before its land.
-   In the studio: review \`look\` after installing the choices, \`structure\` after \`chain init\`, \`parts\` after
-   \`chain --drafts\`, \`assembly\` after \`chain --draft\`, \`final\` after the full render.
+   In the studio: review \`look\` after installing the choices, \`structure\` right after \`chain init\` (before you
+   write the parts), \`parts\` after writing each part's CONFIG and \`chain --drafts\`, \`assembly\` after
+   \`chain --draft\`, \`final\` after the full render. \`chain --check\` warns when the total drifts from the brief's
+   length. Boards you share while a piece is open also appear in its studio (Look or Structure), so the user finds them
+   there; if your shell caps how long a command may run, share with \`--no-wait\` and then
+   \`npx paper-motion board --await <id> --wait 2\` until it prints the line (exit code 3 = not yet).
 
 ## Choosing well: the metadata
 
