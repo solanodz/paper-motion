@@ -57,7 +57,7 @@ export function view(cwd, piece) {
   const renders = path.join(dir, 'renders'), name = path.basename(dir);
   const outputs = fs.existsSync(renders) ? fs.readdirSync(renders).filter((f) => !f.startsWith('.') && !f.includes('-draft')).map((f) => ({ file: f, url: fileUrl(cwd, path.join(renders, f)), bytes: fs.statSync(path.join(renders, f)).size })) : [];
   return {
-    ...p, dir: path.relative(cwd, dir), format: chain.format ?? null, join: chain.join ?? 'whip', joins: Object.keys(JOINS),
+    ...p, boards: p.boards ?? [], dir: path.relative(cwd, dir), format: chain.format ?? null, join: chain.join ?? 'whip', joins: Object.keys(JOINS),
     parts,
     look: {
       colors: Object.entries(tokens.colors ?? {}).map(([k, v]) => [k, v?.hex ?? v]),
@@ -67,6 +67,20 @@ export function view(cwd, piece) {
     },
     media: { assembly: fileUrl(cwd, path.join(renders, `${name}-draft.mp4`)), final: fileUrl(cwd, path.join(renders, `${name}.mp4`)), outputs },
   };
+}
+
+// boards still waiting: ask the site (at most every 4 s per board) whether the user chose, so the studio shows it
+const asked = new Map();
+async function refreshBoards(cwd, piece) {
+  const dir = pieceDir(piece, cwd), p = readPiece(dir);
+  for (const b of p?.boards ?? []) {
+    if (b.status !== 'waiting' || !b.id || Date.now() - (asked.get(b.id) ?? 0) < 4000) continue;
+    asked.set(b.id, Date.now());
+    try {
+      const res = await fetch(`${SITE}/api/boards/${b.id}/choice`, { signal: AbortSignal.timeout(2500) });
+      if (res.status === 200) { const { line } = await res.json(); updatePiece(dir, (q) => { const x = q.boards.find((y) => y.id === b.id); if (x) { x.status = 'chosen'; x.line = line; } }); }
+    } catch { /* offline: the agent's own wait still gets it */ }
+  }
 }
 
 // ── actions from the page ───────────────────────────────────────────────────────────────────
@@ -193,6 +207,7 @@ export function startStudio({ cwd = process.cwd(), port = 4317, log = console.lo
           let body = ''; for await (const c of req) body += c;
           try { return json(res, 200, act(cwd, piece, JSON.parse(body || '{}'), queue)); } catch (e) { return json(res, 400, { error: e.message }); }
         }
+        await refreshBoards(cwd, piece);
         const v = view(cwd, piece);
         return v ? json(res, 200, v) : json(res, 404, { error: `no piece "${piece}"` });
       }

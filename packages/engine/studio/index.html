@@ -217,7 +217,20 @@ function briefHTML() {
     <span class="dim mono blabel">${l}<span class="info" tabindex="0" role="button" aria-label="What goes in ${l}">${I.info}<span class="tip" role="tooltip">${help}</span></span></span>
     <div class="edit" contenteditable="plaintext-only" spellcheck="false" data-brief="${k}" data-placeholder="empty" style="${k === 'what' ? 'font:22px/1.35 var(--serif)' : ''}">${esc(P.brief[k])}</div></div>`).join('')}</div>`;
 }
+// the boards your agent shared for this stage: open one to compare and choose; the choice reaches your agent
+function boardsHTML(stage) {
+  const list = (P.boards ?? []).filter((b) => b.stage === stage);
+  if (!list.length) return '';
+  const waiting = list.filter((b) => b.status === 'waiting').length;
+  return `<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:8px"><div class="dim mono" style="font-size:12px">${waiting ? `${waiting} board${waiting > 1 ? 's' : ''} waiting for your choice` : 'boards'}</div>
+    ${list.map((b) => `<a href="${esc(b.url)}" target="_blank" rel="noopener" style="display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 14px;border:1px solid ${b.status === 'waiting' ? 'var(--paper)' : 'var(--line)'};border-radius:10px;background:var(--panel);text-decoration:none">
+      <span style="min-width:0"><span style="display:block">${esc(b.title)}</span>${b.line ? `<span class="mono faint" style="font-size:11px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.line.replace(/^paper-motion:\s*/, ''))}</span>` : ''}</span>
+      ${b.status === 'waiting' ? `<span class="btn small primary" style="flex-shrink:0">open and choose ↗</span>` : badge('approved').replace('approved', 'chosen')}</a>`).join('')}</div>`;
+}
 function lookHTML() {
+  return `<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:26px">${boardsHTML('look')}${lookBody()}</div>`;
+}
+function lookBody() {
   const L = P.look, row = (label, inner) => `<div><div class="dim mono" style="font-size:12px;margin-bottom:8px">${label}</div>${inner}</div>`;
   if (!L.colors.length && !L.fonts.length && !L.backgrounds.length && !L.moves.length) return `<p class="dim">Nothing chosen yet. Your agent proposes palettes, type, backgrounds and moves on boards; what you pick lands here.</p>`;
   return `<div style="display:grid;gap:22px">
@@ -227,6 +240,11 @@ function lookHTML() {
     ${L.moves.length ? row('moves', `<div style="display:flex;gap:6px;flex-wrap:wrap">${L.moves.map((m) => `<span class="chip">${esc(m)}</span>`).join('')}</div>`) : ''}</div></div>`;
 }
 function structureHTML() {
+  const boards = boardsHTML('structure');
+  if (!P.parts.length) return boards + (boards ? '' : `<p class="dim">No structure yet. Your agent proposes a few on a board; the one you choose shows here, beat by beat.</p>`);
+  return `<div style="display:grid;grid-template-columns:minmax(0,1fr);gap:26px">${boards}${structureBody()}</div>`;
+}
+function structureBody() {
   if (!P.parts.length) return `<p class="dim">No structure yet. Your agent proposes a few on a board; the one you choose shows here, beat by beat.</p>`;
   return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">${P.parts.map((p, i) => `<div>
     <div style="border-radius:8px;overflow:hidden;aspect-ratio:16/9">${p.clip ? vid(p.clip) : '<div class="empty">no block yet</div>'}</div>
@@ -260,7 +278,7 @@ function trackHTML() {
   if (!P.parts.length) return '';
   const T = P.parts.reduce((a, p) => a + Number(p.seconds ?? 0), 0);
   return `<div class="track">${P.parts.map((p, i) => `
-    ${i ? `<span title="${p.join}" style="display:grid;place-items:center;width:28px;color:var(--dim)">${I.join[p.join] ?? ''}</span>` : ''}
+    ${i ? `<span title="${p.join}" style="display:grid;place-items:center;width:28px;color:var(--dim)">${I.join[p.join] ?? I.join.dissolve}</span>` : ''}
     <div data-drop="${i}" data-dir="${esc(p.dir)}" draggable="true" data-trackdrag class="tblock" style="flex:${p.seconds ?? 1} 1 0;border-radius:8px;overflow:hidden;position:relative;outline:1px solid var(--line2);height:60px;background:#000">
       ${p.draft ? `<video src="${esc(p.draft)}#t=${Math.min(1, (p.seconds ?? 2) / 2)}" preload="metadata" muted style="height:100%;object-fit:cover;pointer-events:none"></video>` : ''}
       <span style="position:absolute;inset:auto 0 0 0;padding:4px 8px;background:linear-gradient(#0000,#000c);display:flex;justify-content:space-between;font-size:12px;pointer-events:none"><span>${esc(p.name)}</span><span class="mono dim">${fmt(p.seconds)}</span></span>

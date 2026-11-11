@@ -145,3 +145,29 @@ export function setSceneText(html, key, value) {
   if (!hit) throw new Error(`CONFIG has no text "${key}"`);
   return head + next + tail;
 }
+
+// ── boards: the decisions taken on paper-motion.app, listed in the studio so the user finds them there too ──────
+const BOARD_STAGE = (s) => (['brief', 'look'].includes(s) ? 'look' : 'structure');
+
+/** The piece a board belongs to: the one named, else the only one in progress before Parts. */
+export function activePiece(cwd, name) {
+  if (name) { const dir = pieceDir(name, cwd); return readPiece(dir) ? dir : null; }
+  const root = path.join(cwd, 'pieces');
+  if (!fs.existsSync(root)) return null;
+  const live = fs.readdirSync(root).map((d) => path.join(root, d)).filter((d) => { const p = readPiece(d); return p && ['brief', 'look', 'structure'].includes(p.stage); });
+  return live.length === 1 ? live[0] : null;
+}
+
+/** Records a board shared for this piece (shown in the studio's Look or Structure stage until chosen). */
+export function attachBoard(dir, { url, id, title, kind }) {
+  return updatePiece(dir, (p) => {
+    p.boards ??= [];
+    if (id && p.boards.some((b) => b.id === id)) return;
+    p.boards.push({ url, id: id ?? null, title, kind, stage: BOARD_STAGE(p.stage), at: now(), status: 'waiting' });
+  });
+}
+
+/** Marks a board chosen with the reply line. */
+export function markBoard(dir, id, line) {
+  return updatePiece(dir, (p) => { const b = (p.boards ?? []).find((x) => x.id === id); if (b) { b.status = 'chosen'; b.line = line; } });
+}

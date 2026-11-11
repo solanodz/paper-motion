@@ -39,8 +39,8 @@ pamo piece review <piece> brief                 # opens the studio for them the 
 |---|---|
 | brief | fill the five fields from the intake (`init`, or write `piece.json`) |
 | look | the boards for palette, type, backgrounds and moves; install the choices |
-| structure | a structure board whose beats name their blocks; `pamo chain init <piece> --board <id> --option <letter>`; write each part's CONFIG |
-| parts | `pamo chain <piece> --drafts`: each part alone, quick, in the brand |
+| structure | a structure board whose beats name their blocks; `pamo chain init <piece> --board <id> --option <letter>` (review right away, before writing the parts) |
+| parts | write each part's CONFIG from its beat (`pamo still` to check), then `pamo chain <piece> --drafts`: each part alone, quick, in the brand |
 | assembly | `pamo chain <piece> --draft`: the parts joined, quick |
 | final | `pamo chain <piece> --motion-blur 5` (and other formats if asked) |
 
@@ -55,7 +55,7 @@ Read every line `piece review` prints and act on it before the next review: `cha
 - **Real material:** ask what is real and can be shown, and use what `brand/assets/` already holds: photos of the product or place, the product's UI, a real command and its output, the music, the cover art, real numbers from the Facts. A piece that shows the real thing beats any abstract illustration of it; run photos through image shaders (HalftoneDots, ImageDithering, PaperTexture, FlutedGlass) to make them the brand's.
 - **Format:** 16:9 (1920×1080), 9:16 (1080×1920) or 1:1 (1080×1080). One piece, one format; another format is another piece, made after this one.
 - **Never choose a look for the user.** Palette, font pair, background(s), the moves by role (enter, swap, text) and the recipe each go through a board, in that order, unless `brand/` already settles one; say so when you skip. Let them pick several moves where a piece needs several (`--choose 1-3`).
-- **Everything they chose gets used.** Every move the user picked appears in the piece and `brief.md` says where it plays; a recipe's own moves are placeholders to swap for theirs.
+- **Everything they chose gets used.** Every move the user picked appears in the piece and `brief.md` says where it plays (a chosen transition can be the join between two parts: `"join": "wipe"` in `chain.json`, or be built inside a part); a recipe's own moves are placeholders to swap for theirs.
 - **Mirror back** after each round; get an explicit approval of `brief.md`.
 - When a gate is later rejected, ask what exactly was wrong (pace, type, composition, movement, transitions, sound, mood) before changing anything.
 

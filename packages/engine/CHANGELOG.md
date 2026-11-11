@@ -2,6 +2,18 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
+## Unreleased
+
+From a test where an agent with no context made a video from `llms.txt` alone:
+
+- `board --url`: option and look values may hold several keys and lists (`graphite:accent=#B8F03C,ramp=["#0A0A0B","#B8F03C"]`, `--look "acid-night:figure=#FFF,muted=#7E8079,geist"`); `--look brand` uses the palette, colors and font pair the project installed.
+- `board --await <id> [--wait minutes]` waits (again) for the choice on a board already shared, for shells that cap how long a command runs.
+- The studio lists the boards shared while a piece is open, in its Look or Structure stage, with a button to open each and the choice once made (`board --piece <name>` picks the piece when there are several).
+- A chosen transition can be the join between two parts of a chain: `"join": "wipe"` (also crossfade, push, zoom-through, iris, slices, flash, scan-reveal, mask-reveal, glitch, cells, flip-3d).
+- A tuned palette retunes its ramp (the steps between ground and accent follow the new accent); a background recolored into a palette takes the brand's ground behind everything.
+- `chain --check` warns when the total drifts from the brief's length.
+- `pamo --version`. Help says `--wait` is in minutes; the docs say `pamo` means `npx paper-motion` and when to review the structure.
+
 ## 0.3.0 · 2026-11-11
 
 - **Studio**: `pamo studio` serves a local page where the user follows a piece stage by stage (brief, look, structure, parts, assembly, final), watches each stage's renders, approves or asks for changes, and edits the brief, the words on screen (a part's CONFIG texts, re-rendered on the spot), lengths, joins and order (drag and drop). `pieces/<piece>/piece.json` holds the stages and what the user did; `pamo piece init | review | working | status` is the agent's side (`review` hands a stage over and waits for the decision).
