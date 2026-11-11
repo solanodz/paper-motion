@@ -5,14 +5,14 @@ import { CopyButton } from "@/components/copy-button";
 import { IconArrow, IconGrid } from "@/components/icons";
 import { ShaderPreview } from "@/components/shader-preview";
 import { getResource } from "@/lib/registry";
-import { AGENTS } from "./agents";
+import { AGENTS, GRADIENTS } from "./agents";
 import { AutoVideo } from "./auto-video";
 import { CountUp, Scramble } from "./load-text";
 
 type Entry = { shader: string; props: Record<string, unknown>; image?: string; background?: string };
 const entry = (id: string) => getResource(id)?.install.entry as Entry | undefined;
 
-const TITLE = "Art-directed video from a conversation";
+const TITLE = "Video editing without the timeline";
 // colour first: library backgrounds running live, with the liquid-metal word (a clip) among them
 const STRIP = ["warp-ochre", "mesh-sage", "text-mask", "grain-clay", "metaballs-muted", "simplex-slate"];
 
@@ -31,7 +31,7 @@ export function Hero({ prompt, count }: { prompt: string; count: number }) {
   return (
     <section className="relative isolate flex min-h-[calc(100dvh-52px)] flex-col overflow-hidden border-b border-line">
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 text-center md:px-8">
-        <h1 className="max-w-[20ch] font-serif text-[clamp(44px,6.6vw,108px)] leading-[0.95] tracking-[-0.035em]"><Scramble text={TITLE} duration={1.1} /></h1>
+        <h1 className="max-w-[20ch] text-balance font-serif text-[clamp(44px,6.6vw,108px)] leading-[0.95] tracking-[-0.035em]"><Scramble text={TITLE} duration={1.1} /></h1>
         <p className="mt-7 max-w-[60ch] text-[clamp(16px,1.25vw,19px)] leading-[1.5] text-figure/75">
           <Scramble text={`${count} named pieces of motion that your coding agent puts together into your brand’s video. You decide every stage.`} delay={0.45} duration={1.3} seed={7} />
         </p>
@@ -45,9 +45,15 @@ export function Hero({ prompt, count }: { prompt: string; count: number }) {
               // circles by clip-path (the site zeroes every border-radius): a ground-coloured disc as the gap, the tile inside it
               <span key={a.name} title={a.name} className="relative -ml-4 block h-10 w-10 bg-ground p-[2px] [clip-path:circle(50%)]" style={{ zIndex: AGENTS.length - i }}>
                 <span className="flex h-full w-full items-center justify-center [clip-path:circle(50%)]" style={{ background: a.bg }}>
-                  <svg viewBox="0 0 24 24" aria-hidden className="h-[19px] w-[19px]">
-                    {a.fg === "gemini" ? <defs><linearGradient id="agent-gemini" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stopColor="#4285F4" /><stop offset="0.5" stopColor="#9B72CB" /><stop offset="1" stopColor="#D96570" /></linearGradient></defs> : null}
-                    <path d={a.d} fill={a.fg === "gemini" ? "url(#agent-gemini)" : a.fg} />
+                  <svg viewBox={a.box} aria-hidden width={a.size} height={a.size}>
+                    <defs>
+                      {a.paths.map((p) => p.fill in GRADIENTS ? (() => { const g = GRADIENTS[p.fill as keyof typeof GRADIENTS]; return (
+                        <linearGradient key={p.fill} id={`agent-${p.fill}`} x1="0" y1={g.diagonal ? 1 : 0} x2={g.diagonal ? 1 : 0} y2={g.diagonal ? 0 : 1}>
+                          {g.stops.map((c, n) => <stop key={c} offset={n / (g.stops.length - 1)} stopColor={c} />)}
+                        </linearGradient>
+                      ); })() : null)}
+                    </defs>
+                    {a.paths.map((p) => <path key={p.d} d={p.d} fill={p.fill in GRADIENTS ? `url(#agent-${p.fill})` : p.fill} fillRule={p.evenodd ? "evenodd" : undefined} clipRule={p.evenodd ? "evenodd" : undefined} />)}
                   </svg>
                 </span>
               </span>

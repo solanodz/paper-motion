@@ -1,7 +1,7 @@
 "use client";
 
 // The film on the landing's monitor is a real one. Six blocks from the library, in paper-motion's own brand on the
-// neuro-slate background, rendered by the engine with `chain` and joined by whips. Nothing is drawn here: these are the
+// grain-clay background, rendered by the engine with `chain` and joined by whips. Nothing is drawn here: these are the
 // clips (public/landing-film), encoded from examples/paper-motion-brand/pieces/landing-film, so what you watch is
 // exactly what the library gives you. Re-render there with `pamo chain landing-film --motion-blur 5` and `--drafts`.
 import { useEffect, useRef, useState } from "react";

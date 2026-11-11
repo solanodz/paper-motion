@@ -48,10 +48,10 @@ function Brief({ done, free }: { done: boolean; free: boolean }) {
 // 2 · Look: four looks in the brand's tints, one chosen
 function Board({ looks, done, still, free }: { looks: Look[]; done: boolean; still: boolean; free: boolean }) {
   return (
-    <Frame free={free} where="a board, in your browser" state={done ? <Done>B, slate</Done> : <Waiting>choose one</Waiting>}>
+    <Frame free={free} where="a board, in your browser" state={done ? <Done>C, clay</Done> : <Waiting>choose one</Waiting>}>
       <div className={`grid grid-cols-2 gap-[max(6px,1cqi)] ${free ? "" : "mx-auto w-[min(100%,70cqi)]"}`}>
         {looks.map((l) => {
-          const on = done && l.label === "B", off = done && !on;
+          const on = done && l.label === "C", off = done && !on;
           return (
             <div key={l.id} className={`relative aspect-video overflow-hidden bg-black transition-opacity duration-700 ${on ? "outline outline-1 outline-offset-[3px] outline-figure" : ""} ${off ? "opacity-25" : ""}`}>
               <ShaderPreview entry={l.entry} still={still} className="!absolute inset-0" />

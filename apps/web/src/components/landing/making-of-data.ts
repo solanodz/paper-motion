@@ -17,7 +17,7 @@ export const STAGES: Stage[] = [
     name: "Look",
     says: "It puts four looks on a board, a link you open where each one plays in your colors. You pick one.",
     cmd: `${npx} board --look brand --option sage --option slate --option clay --option ochre`,
-    out: "you chose B, slate",
+    out: "you chose C, clay",
     caption: "A board: four looks for paper-motion, playing. The choice goes back to your agent.",
   },
   {
@@ -31,7 +31,7 @@ export const STAGES: Stage[] = [
     name: "Parts",
     says: "Every part is rendered alone, in your look. Approve it, ask for a change, or rewrite its words.",
     cmd: `${npx} chain paper-motion --drafts`,
-    out: "6 drafts on slate, 6 of 6 approved",
+    out: "6 drafts on clay, 6 of 6 approved",
     caption: "The parts, rendered one by one in the look you chose.",
   },
   {
