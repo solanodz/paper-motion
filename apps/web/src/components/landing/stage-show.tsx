@@ -44,7 +44,7 @@ export function StageShow({ stages, visuals }: { stages: Stage[]; visuals: React
         })}
       </ol>
       <div className="grid lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-        <div className="flex flex-col justify-between gap-10 border-line px-5 py-8 md:px-8 md:py-10 lg:border-r">
+        <div className="flex flex-col justify-between gap-12 border-line px-5 py-10 md:px-8 md:py-14 lg:border-r">
           <div>
             <h3 className="font-serif text-[44px] leading-none tracking-[-0.025em] md:text-[64px]">{s.t}</h3>
             <p className="mt-5 max-w-[36ch] text-[16px] leading-relaxed text-muted md:text-[17px]">{s.d}</p>

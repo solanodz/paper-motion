@@ -2,7 +2,10 @@ import Link from "next/link";
 import { CopyButton } from "@/components/copy-button";
 import { IconAgent, IconArrow, IconCheck, IconGrid, TYPE_ICONS } from "@/components/icons";
 import { AutoVideo } from "@/components/landing/auto-video";
+import { InView, Parallax } from "@/components/landing/motion";
 import { StageShow } from "@/components/landing/stage-show";
+import { Rise } from "@/components/landing/text";
+import { Typed } from "@/components/landing/typed";
 import { Ticker } from "@/components/landing/ticker";
 import { ShaderPreview } from "@/components/shader-preview";
 import { starterPrompt as prompt } from "@/lib/prompt";
@@ -31,7 +34,7 @@ export default function Home() {
   const PROMPT = prompt(site);
   const n = (type: string) => items.filter((i) => i.type === type).length;
   const title = (type: string) => TYPES.find((t) => t.type === type)?.title ?? type;
-  const mesh = shader("mesh-graphite"), ochre = shader("warp-ochre"), clay = shader("dither-clay"), swirl = shader("swirl-paper"), metal = shader("liquid-metal"), spiral = shader("spiral-paper"), sage = shader("mesh-sage");
+  const mesh = shader("mesh-graphite"), ochre = shader("warp-ochre"), clay = shader("dither-clay"), swirl = shader("swirl-paper"), metal = shader("liquid-metal"), closing = shader("dither-paper"), sage = shader("mesh-sage");
   const palettes = PALETTES.map((id) => ({ id, colors: Object.values((getResource(id)?.install.entry as { colors?: Colors } | undefined)?.colors ?? {}).map((c) => c.hex) })).filter((p) => p.colors.length);
 
   // what each stage looks like
@@ -77,10 +80,11 @@ export default function Home() {
   ];
 
   // the library as a bento: every kind of resource, shown doing what it does
+  let cells = 0;
   const cell = (type: string, span: string, media: React.ReactNode, extra = "") => {
     const Icon = TYPE_ICONS[type];
     return (
-      <Link key={type + span} href={`/library?type=${type}`} className={`group relative flex flex-col overflow-hidden bg-ground ${span}`}>
+      <Link key={type + span} href={`/library?type=${type}`} style={{ "--i": cells++ } as React.CSSProperties} className={`wipe group relative flex flex-col overflow-hidden border border-line bg-ground hover:border-figure ${span}`}>
         <div className={`min-h-0 flex-1 ${extra}`}>{media}</div>
         <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-2.5 group-hover:bg-figure group-hover:text-ground">
           <span className="flex min-w-0 items-center gap-2 text-[14px] font-medium"><Icon size={15} className="shrink-0" /><span className="truncate">{title(type)}</span></span>
@@ -98,21 +102,21 @@ export default function Home() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ground/85 via-ground/40 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-ground to-transparent" />
 
-        <div className="grid items-center gap-x-10 gap-y-14 px-5 pb-16 pt-12 md:px-8 md:pb-20 md:pt-16 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+        <div className="grid items-center gap-x-14 gap-y-16 px-5 pb-20 pt-16 md:px-8 md:pb-28 md:pt-24 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
           <div>
-            <h1 className="display max-w-[11ch]">Motion your agent can use.</h1>
-            <p className="mt-7 max-w-[52ch] text-[17px] leading-relaxed text-figure/75 md:text-[19px]">
+            <h1 className="display rise-now max-w-[11ch]"><Rise text="Motion your agent can use." /></h1>
+            <p className="settle-now mt-9 max-w-[52ch] text-[17px] leading-relaxed text-figure/75 md:text-[19px]">
               {count} moves, backgrounds, palettes, type pairs and ready-made blocks, built for AI agents. Yours proposes,
               you decide each stage in a studio, and the video renders on your machine.
             </p>
-            <div className="corner-marks mt-10 max-w-[760px] border border-rule bg-ground">
+            <div className="corner-marks settle-now mt-12 max-w-[760px] border border-rule bg-ground" style={{ "--i": 1 } as React.CSSProperties}>
               <div className="flex items-stretch justify-between border-b border-line">
                 <span className="flex items-center gap-2.5 px-5 py-3 text-[14px] font-medium"><IconAgent size={16} className="text-paper" />Say this to your agent</span>
                 <CopyButton text={PROMPT} label="Copy prompt" className="btn-primary border-y-0 border-r-0" />
               </div>
-              <p className="px-5 py-5 font-mono text-[14.5px] leading-relaxed text-figure md:text-[15.5px]">{PROMPT}</p>
+              <p className="px-5 py-6 font-mono text-[14.5px] leading-relaxed text-figure md:text-[15.5px]"><Typed text={PROMPT} delay={1300} /></p>
             </div>
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="settle-now mt-9 flex flex-wrap gap-3" style={{ "--i": 2 } as React.CSSProperties}>
               <Link href="/library" className="btn bg-ground"><IconGrid size={15} />Browse the library</Link>
               <Link href="/docs" className="btn bg-ground">How agents use it<IconArrow size={15} /></Link>
             </div>
@@ -120,44 +124,46 @@ export default function Home() {
 
           {/* two real renders, one over the other. Each plays straight on a material from the library: the clip's own
               black is blended away, so the shader is its only background */}
-          <div className="relative pb-[18%] pr-[6%] max-xl:max-w-[760px]">
-            <div className="corner-marks relative border border-rule">
-              <div className="relative aspect-video overflow-hidden bg-ground">
+          <Parallax className="relative pb-[18%] pr-[6%] max-xl:max-w-[760px]">
+            <div className="corner-marks drift relative border border-rule" style={{ "--dx": "-10px", "--dy": "-7px" } as React.CSSProperties}>
+              <div className="wipe-now relative aspect-video overflow-hidden bg-ground">
                 {ochre ? <ShaderPreview entry={ochre} className="!absolute inset-0" /> : null}
                 <AutoVideo {...clip("word-rise")} className="relative !bg-transparent mix-blend-screen" />
               </div>
-              <div className="flex items-center justify-between gap-3 border-t border-rule bg-ground px-4 py-2.5 text-[13px]"><span>Words that rise into place, on warp ochre</span><span className="font-mono text-[12px] text-muted">word-rise</span></div>
+              <div className="flex items-center justify-between gap-3 border-t border-rule bg-ground px-4 py-2.5 text-[13px]"><span className="truncate"><span className="sm:hidden">word-rise on warp ochre</span><span className="max-sm:hidden">Words that rise into place, on warp ochre</span></span><span className="font-mono text-[12px] text-muted max-sm:hidden">word-rise</span></div>
             </div>
-            <div className="absolute bottom-0 right-0 w-[54%] border border-paper">
-              <div className="relative aspect-video overflow-hidden bg-ground">
+            <div className="drift absolute bottom-0 right-0 w-[54%]" style={{ "--dx": "18px", "--dy": "12px" } as React.CSSProperties}>
+            <div className="float border border-paper">
+              <div className="wipe-now relative aspect-video overflow-hidden bg-ground" style={{ "--i": 2 } as React.CSSProperties}>
                 {clay ? <ShaderPreview entry={clay} className="!absolute inset-0" /> : null}
                 <AutoVideo {...clip("magic-move")} className="relative !bg-transparent mix-blend-screen" />
               </div>
-              <div className="flex items-center justify-between gap-3 border-t border-rule bg-ground px-3 py-2 text-[12px]"><span className="truncate">One card becomes the next</span><span className="font-mono text-[11px] text-muted">magic-move</span></div>
+              <div className="flex items-center justify-between gap-3 border-t border-rule bg-ground px-3 py-2 text-[12px]"><span className="truncate"><span className="sm:hidden">magic-move</span><span className="max-sm:hidden">One card becomes the next</span></span><span className="font-mono text-[11px] text-muted max-sm:hidden">magic-move</span></div>
             </div>
-          </div>
+            </div>
+          </Parallax>
         </div>
       </section>
 
-      <Ticker names={items.map((i) => i.id)} />
+      <Ticker names={["Magic move", "Whip pan", "Word rise", "Warp ochre", "Scramble", "Dive in", "Liquid metal", "Type on", "Tile swirl", "Dither clay", "Zoom through", "Bar grow"]} />
 
       <section className="border-b border-line">
-        <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 px-5 pb-10 pt-16 md:px-8 md:pt-20">
-          <h2 className="title max-w-[14ch]">You decide every stage.</h2>
+        <InView className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6 px-5 pb-14 pt-24 md:px-8 md:pb-16 md:pt-32">
+          <h2 className="title max-w-[14ch]"><Rise text="You decide every stage." /></h2>
           <p className="max-w-[46ch] pb-1 text-[15px] leading-relaxed text-muted">
             A video comes together in six stages. Your agent hands you each one in the studio, a page on your machine,
             and waits. Nothing moves on until you approve it.
           </p>
-        </div>
+        </InView>
         <StageShow stages={STAGES} visuals={visuals} />
       </section>
 
       {/* paper: the board, the one place where you choose with your eyes */}
       <section className="border-b border-line bg-paper text-ground">
-        <div className="grid items-center gap-x-12 gap-y-10 px-5 py-16 md:px-8 md:py-20 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
+        <InView className="grid items-center gap-x-16 gap-y-12 px-5 py-24 md:px-8 md:py-32 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
           <div>
-            <h2 className="title max-w-[12ch]">Choose with your eyes.</h2>
-            <p className="mt-6 max-w-[40ch] text-[16px] leading-relaxed text-ground/70">
+            <h2 className="title max-w-[12ch]"><Rise text="Choose with your eyes." /></h2>
+            <p className="mt-8 max-w-[40ch] text-[16px] leading-relaxed text-ground/70">
               What needs your eye comes as a board: a link with two to four options, playing in your colors and type.
               Pick one, tune it if you like, and the choice goes back to your agent on its own.
             </p>
@@ -180,15 +186,15 @@ export default function Home() {
             </div>
             <p className="border-t border-line px-4 py-2.5 font-mono text-[12px] text-muted">paper-motion: C · swirl-paper --set speed=0.6</p>
           </div>
-        </div>
+        </InView>
       </section>
 
-      <section className="border-b border-line px-5 pb-16 pt-16 md:px-8 md:pb-20 md:pt-20">
-        <div className="flex flex-wrap items-end justify-between gap-6 pb-10">
-          <h2 className="title">In the library</h2>
+      <section className="border-b border-line px-5 pb-24 pt-24 md:px-8 md:pb-32 md:pt-32">
+        <InView className="flex flex-wrap items-end justify-between gap-6 pb-14 md:pb-16">
+          <h2 className="title"><Rise text="In the library" /></h2>
           <Link href="/library" className="btn">All {count} resources<IconArrow size={15} /></Link>
-        </div>
-        <div className="sheet auto-rows-[190px] grid-cols-2 sm:auto-rows-[220px] lg:grid-cols-4 xl:auto-rows-[260px]">
+        </InView>
+        <InView className="grid auto-rows-[190px] grid-cols-2 gap-3 sm:auto-rows-[220px] md:gap-4 lg:grid-cols-4 xl:auto-rows-[270px]">
           {cell("recipe", "col-span-2 row-span-2", <AutoVideo {...clip("product-demo")} />)}
           {cell("background", "", swirl ? <ShaderPreview entry={swirl} className="h-full w-full" /> : null)}
           {cell("block", "", <AutoVideo {...clip("terminal-run")} />)}
@@ -199,28 +205,28 @@ export default function Home() {
           {cell("text", "", <AutoVideo {...clip("scramble")} />)}
           {cell("camera", "", <AutoVideo {...clip("orbit")} />)}
           {cell("shot", "", <AutoVideo {...clip("focus-pull")} />)}
-          <Link href="/r/liquid-metal" className="group relative col-span-2 flex flex-col overflow-hidden bg-ground">
+          <Link href="/r/liquid-metal" style={{ "--i": cells } as React.CSSProperties} className="wipe group relative col-span-2 flex flex-col overflow-hidden border border-line bg-ground hover:border-figure">
             <div className="min-h-0 flex-1">{metal ? <ShaderPreview entry={metal} className="h-full w-full" /> : null}</div>
             <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-2.5 group-hover:bg-figure group-hover:text-ground">
               <span className="text-[14px] font-medium">Your wordmark, as liquid metal</span>
               <span className="font-mono text-[12px] text-muted group-hover:text-ground/60">liquid-metal</span>
             </div>
           </Link>
-        </div>
+        </InView>
       </section>
 
       {/* the way out is the way in: the same sentence, on paper */}
       <section className="relative isolate overflow-hidden bg-paper text-ground">
-        {spiral ? <ShaderPreview entry={{ ...spiral, background: "#e9e4d8" }} className="!absolute inset-0 -z-10 opacity-30 lg:opacity-70" /> : null}
+        {closing ? <ShaderPreview entry={closing} className="!absolute inset-0 -z-10 opacity-40 lg:opacity-90" /> : null}
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-paper from-30% via-paper/70 via-55% to-transparent" />
-        <div className="px-5 py-20 md:px-8 md:py-28">
-          <h2 className="display max-w-[10ch]">One sentence starts it.</h2>
-          <p className="mt-8 max-w-[62ch] font-mono text-[15px] leading-relaxed md:text-[17px]">{PROMPT}</p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
+        <InView className="px-5 py-28 md:px-8 md:py-40">
+          <h2 className="display max-w-[10ch]"><Rise text="One sentence starts it." /></h2>
+          <p className="mt-10 max-w-[62ch] font-mono text-[15px] leading-relaxed md:text-[17px]">{PROMPT}</p>
+          <div className="mt-10 flex flex-wrap items-center gap-4">
             <CopyButton text={PROMPT} label="Copy prompt" className="!border-ground !bg-ground !px-5 !py-3 !text-[14px] !text-figure hover:!bg-figure hover:!text-ground" />
             <span className="max-w-[44ch] text-[13px] text-ground/70">Paste it in Claude Code, Codex, Cursor or any agent that reads the web and runs commands.</span>
           </div>
-        </div>
+        </InView>
       </section>
     </>
   );
