@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>browser-frame</title>
+<!--
+  Component · browser frame (6.4 s). The real product, in a browser: the address types itself, the page loads with a
+  thin progress bar and settles in from a blur, then the camera travels down the page as it scrolls, pausing on the
+  sections that matter. Give it a full-page screenshot (`image`, tall) and the stops to pause on.
+  Type 0.4–1.3 s · Load 1.35–2.0 s · Scroll 2.2–5.8 s · Hold to 6.4 s.
+  Square: a taller window, page shown a little larger. Vertical: a narrow portrait window, page shown larger (sidebar cropped). Both aim the URL zoom at the full address.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #win { position: absolute; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
+  #bar { position: relative; display: flex; align-items: center; gap: 1em; padding: 0 1.2em; flex: none; }
+  #url { flex: 1; display: flex; align-items: center; gap: 0.6em; padding: 0.55em 1em; border-radius: 0.6em; max-width: 60%; margin: 0 auto; }
+  .caret { display: inline-block; width: 0.08em; height: 1.1em; vertical-align: -0.15em; }
+  #prog { position: absolute; left: 0; bottom: 0; height: 2px; transform-origin: 0 50%; }
+  #view { position: relative; flex: 1; overflow: hidden; }
+  #page { position: absolute; left: 0; top: 0; width: 100%; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="world"><div id="win"><div id="bar"><div id="dots"></div><div id="url"></div><div id="prog"></div></div><div id="view"><img id="page"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease } from 'paper-motion';
+import { camera } from 'paper-motion/kit';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: 'neuro-slate',
+  image: 'browser-site.jpg',
+  url: 'paper-motion.app/library',
+  stops: [0, 0.32, 0.68],                 // where the scroll pauses, as fractions of the page's scrollable height
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 6.4;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.35;
+
+const DIST = SHORT * 0.62, K = 1 + DIST / (SHORT * 1.7);
+const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.7 });
+const ground = B.color('ground'), muted = B.color('muted'), figure = B.color('figure'), accent = B.color('accent', '#E9E4D8');
+const INK = '#EDEAE3';   // the browser chrome and the page's cards are always dark, so their type is always light, whatever the brand's mode
+// 16:9 a desktop window; square a taller one; vertical a narrow portrait window; outside 16:9 the page is shown larger, sidebar cropped, so it reads
+const tall = H > W, square = W === H;
+const L = tall ? { cw: W * 0.9, ch: H * 0.64, page: 1.8, crop: 0.17, fs: 0.026, url: 0.82 } : square ? { cw: W * 0.86, ch: W * 0.66, page: 1.22, crop: 0.17, fs: 0.017, url: 0.7 } : { cw: W * 0.74, ch: W * 0.74 * 0.6, page: 1, crop: 0, fs: 0.0125, url: 0.6 };
+const win = $('win'), cw = L.cw * K, ch = L.ch * K, R = (B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K;
+Object.assign(win.style, { width: `${cw}px`, height: `${ch}px`, borderRadius: `${R}px`, background: '#0b0b0b', border: `1.5px solid ${muted}55`, boxShadow: `0 ${SHORT * 0.05}px ${SHORT * 0.14}px rgba(0,0,0,0.6)`, fontSize: `${cw * L.fs}px`, fontFamily: B.font('text'), color: INK });
+Object.assign($('bar').style, { height: '3.4em', background: '#141414', borderBottom: `1px solid ${muted}33` });
+$('dots').innerHTML = ['#ff5f57', '#febc2e', '#28c840'].map((c) => `<i style="display:inline-block;width:0.8em;height:0.8em;border-radius:50%;margin-right:0.45em;background:${c};opacity:0.75"></i>`).join('');
+Object.assign($('url').style, { background: '#0b0b0b', border: `1px solid ${muted}33`, color: muted });
+$('url').innerHTML = `<svg width="0.9em" height="0.9em" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="${muted}" stroke-width="1.5"/><path d="M5 7 V5 a3 3 0 0 1 6 0 V7" fill="none" stroke="${muted}" stroke-width="1.5"/></svg><span style="white-space:pre;color:${INK}"><span id="u"></span><span class="caret" style="background:${accent}"></span></span>`;
+$('prog').style.background = accent;
+$('url').style.maxWidth = `${L.url * 100}%`;
+// no screenshot yet: a stand-in page drawn in the brand's colours (a header, a hero, rows of cards), so the scene works at once
+const standIn = () => {
+  const c = document.createElement('canvas'); c.width = 1440; c.height = 3200; const x = c.getContext('2d');
+  const box = (l, t, w, h, col, r = 14) => { x.fillStyle = col; x.beginPath(); x.roundRect(l, t, w, h, r); x.fill(); };
+  x.fillStyle = ground; x.fillRect(0, 0, 1440, 3200);
+  box(60, 40, 180, 20, figure, 10); [1000, 1110, 1220].forEach((l) => box(l, 42, 80, 16, muted, 8));
+  box(60, 220, 760, 90, figure, 20); box(60, 340, 560, 90, figure, 20); box(60, 480, 640, 22, muted, 11); box(60, 520, 520, 22, muted, 11);
+  box(60, 600, 220, 64, accent, 32);
+  for (let row = 0; row < 6; row++) for (let col = 0; col < 3; col++) {
+    const l = 60 + col * 450, t = 800 + row * 400; box(l, t, 420, 260, '#161616', 18); box(l + 24, t + 24, 372, 150, (row + col) % 3 === 1 ? accent : '#222', 12);
+    box(l + 24, t + 196, 220, 18, INK, 9); box(l + 24, t + 226, 300, 14, muted, 7);
+  }
+  return c.toDataURL('image/png');
+};
+const page = $('page'); page.src = CONFIG.image || standIn(); page.style.width = `${L.page * 100}%`; page.style.left = `${-L.crop * L.page * 100}%`;
+cam.place(win, { x: 0, y: 0, z: 0 });
+await new Promise((r) => (page.complete ? r() : (page.onload = r)));
+await document.fonts.ready;
+// outside 16:9 the URL close-up aims at the middle of the full address and zooms only as far as the address fits the width
+const urlEl = $('url'), uEl = $('u'); uEl.textContent = CONFIG.url;
+const lockW = cw * L.fs * 1.5, textW = uEl.offsetWidth + lockW, urlX = uEl.offsetLeft - lockW + textW / 2 - cw / 2;   // lock + address, in the window
+uEl.textContent = '';
+const P = SHORT * 1.7, zoomIn = W > H ? SHORT * 1.45 : DIST - (P / Math.min(1.95, (W * 0.8) / textW) - P);
+const view = $('view'), vh = view.offsetHeight, ph = page.offsetHeight, travel = Math.max(0, ph - vh);
+
+const T = { type: [0.4, 1.3], enter: 1.35, load: [1.35, 2.0], scroll: [2.2, 5.8] };
+// the scroll: glide to each stop, rest a beat there
+const seg = (T.scroll[1] - T.scroll[0]) / (CONFIG.stops.length - 1);
+const scrollAt = (t) => {
+  let y = CONFIG.stops[0];
+  for (let i = 1; i < CONFIG.stops.length; i++) y += (CONFIG.stops[i] - CONFIG.stops[i - 1]) * progress(t, T.scroll[0] + (i - 1) * seg, T.scroll[0] + (i - 1) * seg + seg * 0.7, ease.inOutCubic);
+  return y * travel;
+};
+s.update((t) => {
+  const n = Math.round(CONFIG.url.length * progress(t, ...T.type));
+  $('u').textContent = CONFIG.url.slice(0, n);
+  win.querySelector('.caret').style.opacity = t < T.enter && (t < T.type[1] || Math.sin(t * 10) > 0) ? '1' : '0';
+  // load: the bar runs, then fades; the page settles in from a blur
+  const l = progress(t, ...T.load, ease.inOutCubic);
+  $('prog').style.width = '100%'; $('prog').style.transform = `scaleX(${l})`; $('prog').style.opacity = String(t < T.load[1] + 0.2 ? (t >= T.enter ? 1 : 0) : 1 - progress(t, T.load[1] + 0.2, T.load[1] + 0.5));
+  const show = progress(t, T.load[0] + 0.3, T.load[1] + 0.2, ease.outCubic);
+  page.style.opacity = String(show); page.style.filter = show < 1 ? `blur(${(1 - show) * 12}px)` : 'none';
+  const y = scrollAt(t);
+  page.style.transform = `translateY(${-y + (1 - show) * vh * 0.04}px)`;
+  // the camera: close on the address bar while it types, back to the page as it loads, leaning with the scroll
+  const arrive = progress(t, 0, 0.8, ease.outCubic), onUrl = progress(t, 0.2, 0.7, ease.inOutCubic) * (1 - progress(t, T.load[0], T.load[1] + 0.3, ease.inOutCubic));
+  const sv = (scrollAt(t + 0.05) - scrollAt(t - 0.05)) / (0.1 * Math.max(1, travel));    // scroll speed, for a lean
+  cam.at({ x: (W > H && !square ? -cw * 0.15 : urlX) * onUrl, y: (-ch / 2 + cw * L.fs * 1.7) * onUrl, z: DIST + SHORT * 0.3 * (1 - arrive) - zoomIn * onUrl - SHORT * 0.18 * progress(t, T.load[1], D, ease.inOutSine), yaw: -7 * (1 - arrive) + 3 * Math.sin(t * 0.6), pitch: 2 * (1 - arrive) - sv * 6, roll: 0 });
+  win.style.opacity = String(progress(t, 0, 0.3));
+});
+B.cue(s, 'text', T.type[0]); B.cue(s, 'land', T.enter); B.cue(s, 'transition', T.scroll[0]);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -32,7 +33,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="flex shrink-0 items-center px-4 font-serif text-[19px] tracking-[-0.02em] sm:px-5 sm:text-[21px] md:px-8">
               paper-motion
             </Link>
-            <HeaderNav />
+            {/* reads the pathname: on routes rendered per request it streams in after the shell */}
+            <Suspense fallback={null}><HeaderNav /></Suspense>
           </div>
         </header>
         <main className="flex-1">{children}</main>

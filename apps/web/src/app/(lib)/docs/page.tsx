@@ -18,6 +18,56 @@ const STAGES: { t: string; d: string; cmds: string[] }[] = [
   { t: "Final", d: "The full render.", cmds: ["chain --motion-blur 5"] },
 ];
 
+// one piece from start to finish, in the order the commands are really run: paper-motion's own film, the one on the
+// home page. `say` is a step with no command (the agent talks, writes or waits).
+type Step = { cmd: string } | { say: string };
+const RUN: { stage: string; steps: Step[] }[] = [
+  { stage: "Set up", steps: [
+    { cmd: "npx skills add solanodz/paper-motion" },
+    { cmd: "npx paper-motion setup" },
+  ] },
+  { stage: "Brief", steps: [
+    { cmd: `npx paper-motion piece init paper-motion --title "paper-motion"` },
+    { say: "Interview the user: what the film says, to whom, format, tone, the action at the end." },
+    { cmd: `npx paper-motion piece init paper-motion --what "Art-directed video from a conversation" --who "people who build with coding agents" --format "16:9, 30 s" --tone "quiet, exact" --action "paper-motion.app"` },
+    { cmd: "npx paper-motion piece review paper-motion brief" },
+  ] },
+  { stage: "Look", steps: [
+    { say: "A new project has no look yet. Palette and type come first: every later board plays in them." },
+    { cmd: `npx paper-motion board --url --title "Palette for paper-motion" --option graphite --option slate-sea --option clay-desert --option ochre-sun` },
+    { cmd: `npx paper-motion board --url --title "Type for paper-motion" --option geist-serif --option fraunces --option instrument` },
+    { say: "Each board prints its link, waits, and prints the choice: paper-motion: A · graphite" },
+    { cmd: `npx paper-motion add graphite geist-serif --brand "paper-motion"` },
+    { cmd: `npx paper-motion board --url --title "Backgrounds for paper-motion" --look brand --option mesh-sage --option neuro-slate --option grain-clay --option warp-ochre` },
+    { say: "--look brand needs the palette and font pair installed above. It prints: paper-motion: B · neuro-slate" },
+    { cmd: "npx paper-motion add neuro-slate" },
+    { cmd: "npx paper-motion piece review paper-motion look" },
+  ] },
+  { stage: "Structure", steps: [
+    { cmd: `npx paper-motion board --url --title "Structure for paper-motion" --look brand --option launch --option "@Six blocks | 31 | Hook 0-4 [marker-highlight] the claim; Agent 4-10 [terminal-run] the command; Library 10-16 [browser-frame] the site; Approvals 16-20 [toast-stack] your decisions; Numbers 20-25.5 [stat-row] three facts; Close 25.5-31 [text-mask] the name in metal"` },
+    { say: "The board prints its link, then the choice. Pass that link to chain init (its id is the last part, /b/<id>), with the letter they chose." },
+    { cmd: "npx paper-motion chain init paper-motion --board https://paper-motion.vercel.app/b/<id> --option B" },
+    { cmd: "npx paper-motion piece review paper-motion structure" },
+  ] },
+  { stage: "Parts", steps: [
+    { say: "Write each part: open pieces/paper-motion/<nn>-<block>/scene.html and fill its CONFIG from its beat: the words, the data, and background: 'neuro-slate' (the id you installed; left null it takes the brand's first)." },
+    { cmd: "npx paper-motion chain paper-motion --check" },
+    { say: "If --check warns that a part runs past its block or is cut before it lands, change that part's seconds in pieces/paper-motion/chain.json and check again." },
+    { cmd: "npx paper-motion chain paper-motion --drafts" },
+    { cmd: "npx paper-motion piece review paper-motion parts" },
+    { say: "It prints one line per decision: paper-motion: piece paper-motion · part 03-browser-frame approved, or … part 05-stat-row changes: \u201cbigger numbers\u201d. On a change, run piece working paper-motion parts, fix it, re-render with --drafts --only 05-stat-row, and review again." },
+  ] },
+  { stage: "Assembly", steps: [
+    { cmd: "npx paper-motion chain paper-motion --draft" },
+    { cmd: "npx paper-motion piece review paper-motion assembly" },
+  ] },
+  { stage: "Final", steps: [
+    { cmd: "npx paper-motion chain paper-motion --motion-blur 5" },
+    { cmd: "npx paper-motion piece review paper-motion final" },
+    { cmd: "npx paper-motion studio --stop" },
+  ] },
+];
+
 const WHO: [string, React.ReactNode][] = [
   ["The user", "Sees each stage in the studio, a local page. Approves it or asks for changes, and edits by hand what needs no judgment: the brief, the words on screen, lengths, joins and order."],
   ["The agent", <>Hands over a stage with <code className="font-mono text-[13px] text-figure">piece review</code> and waits. The decision arrives on its own, as lines the command prints: an approval, a change to make, or an edit the user already made. Build on those edits, never undo them.</>],
@@ -27,27 +77,28 @@ const WHO: [string, React.ReactNode][] = [
 
 const BOARD_CMD = `npx paper-motion board --url --title "Backgrounds for Kiln" --look cobalt,geist --option mesh-graphite --note "quiet, graphite" --option neuro-slate --note "a technical web" --option "dither-slate:colorFront=#3d6bff" --note "pixels in your accent" --option grain-slate`;
 
-type Group = { id: string; title: string; note: string; rows: [string, string][]; prints?: [string, string][] };
+type Group = { id: string; title: string; stages: string; note: string; rows: [string, string][]; prints?: [string, string][] };
 const COMMANDS: Group[] = [
   {
-    id: "setup", title: "Set up", note: "The skills and the engine. Every command answers --help.",
+    id: "setup", title: "Set up", stages: "before the brief", note: "The skills and the engine. Every command answers --help.",
     rows: [
       ["npx skills add solanodz/paper-motion", "The skills. Read make-video right after installing and follow it in this session."],
       ["npx paper-motion setup", "The engine: Node 18+, ffmpeg and Chrome."],
     ],
   },
   {
-    id: "studio", title: "The studio", note: "Where the user decides. Start the piece right after setup.",
+    id: "studio", title: "The studio", stages: "every stage", note: "Where the user decides. Start the piece right after setup.",
     rows: [
       [`npx paper-motion piece init <piece> --title "…"`, "Starts a piece, and the project's studio in the background."],
       [`npx paper-motion piece init <piece> --what "…" --who "…" --format "…" --tone "…" --action "…"`, "Writes the brief, after the interview."],
-      ["npx paper-motion piece review <piece> <stage>", "Hands a stage to the user. The first time it opens the studio in their browser. It waits for their decision and prints what they did, one line each."],
+      ["npx paper-motion piece review <piece> <stage>", "Hands a stage to the user. The first time it opens the studio in their browser. It waits for their decision and prints what they did, one line each. It refuses while an earlier stage is not approved; --skip moves on without it, only when the user agreed."],
+      ["npx paper-motion piece working <piece> <stage>", "Marks a stage as yours again, after the user asked for a change. Fix it, re-render, then review again."],
       ["npx paper-motion piece status <piece>", "Shows where everything stands and what you haven't read."],
       ["npx paper-motion studio --stop", "Ends the background studio when the piece is done."],
     ],
   },
   {
-    id: "boards", title: "Boards", note: "One link per visual decision, with two to four options from the registry.",
+    id: "boards", title: "Boards", stages: "look, structure", note: "One link per visual decision, with two to four options from the registry.",
     rows: [
       [`npx paper-motion search --type background --mode dark --near "#0a0f1f,#eef1f8,#3d6bff"`, "Filters the registry by its metadata. With --near it sorts by color fit to the brand's ground, text and accent."],
       [BOARD_CMD, "Prints the board's link, keeps running, and prints the choice the moment the user makes it (it waits 10 minutes by default). The options play live in the look you pass."],
@@ -60,24 +111,25 @@ const COMMANDS: Group[] = [
     ],
   },
   {
-    id: "install", title: "Install", note: "Resources become code the user owns.",
+    id: "install", title: "Install", stages: "look", note: "Resources become code the user owns.",
     rows: [
       ["npx paper-motion add <id> --set key=value", "Run it in the project root with exactly the --set arguments from the reply. Moves go to moves/, backgrounds to brand/shader-set/set.json, palettes and fonts to brand/tokens.json, recipes to pieces/<id>/."],
       ["npx paper-motion add <id> --force", "add never overwrites a value already in the project. Pass --force when the user chooses or tunes again something you installed before."],
     ],
   },
   {
-    id: "chain", title: "Chain", note: "A chosen structure becomes a chain: its parts in order, rendered and joined.",
+    id: "chain", title: "Chain", stages: "structure, parts, assembly, final", note: "A chosen structure becomes a chain: its parts in order, rendered and joined.",
     rows: [
-      ["npx paper-motion chain init <piece> --board <id> --option D", "Installs each beat's block under pieces/<piece>/ and writes chain.json: the seconds of each part and the join between them. Review the structure stage right after, before writing the parts."],
-      ["npx paper-motion chain <piece> --drafts", "A quick render of each part on its own, for the parts stage."],
+      ["npx paper-motion chain init <piece> --board <link> --option D", "Takes the board's link (or its id, the last part of /b/<id>) and the letter they chose. Installs each beat's block under pieces/<piece>/ and writes chain.json: the seconds of each part and the join between them. Review the structure stage right after, before writing the parts."],
+      ["npx paper-motion chain <piece> --check", "Plans without rendering: windows, joins, and parts that would be cut before they land. Run it after writing the parts."],
+      ["npx paper-motion chain <piece> --drafts", "A quick render of each part on its own, for the parts stage. Add --only <dir> to redo one part."],
       ["npx paper-motion chain <piece> --draft", "A quick render of the parts joined, for the assembly stage."],
       ["npx paper-motion chain <piece> --motion-blur 5", "The full render: every part in the brand's look, joined into one video."],
     ],
   },
 ];
 
-const NAV: [string, string][] = [["#prompt", "Starter prompt"], ["#stages", "Six stages"], ["#commands", "Commands"], ["#entry", "Entry points"]];
+const NAV: [string, string][] = [["#prompt", "Starter prompt"], ["#stages", "Six stages"], ["#run", "One piece, start to finish"], ["#commands", "Commands"], ["#entry", "Entry points"]];
 
 export default function DocsPage() {
   const { site, count } = getIndex();
@@ -121,6 +173,9 @@ export default function DocsPage() {
             The user pastes it in Claude Code, Codex, Cursor or any agent that reads the web and runs commands. From there the agent
             reads llms.txt, installs the skills and the engine, and follows the make-video skill.
           </p>
+          <p className="border-t border-line px-5 py-3.5 text-[13px] leading-relaxed text-figure">
+            If you are the person and not the agent: this prompt is all you type. Everything below is run by your agent; you only open the studio and decide.
+          </p>
         </div>
       </section>
 
@@ -133,14 +188,14 @@ export default function DocsPage() {
         </div>
         <ol className="sheet sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
           {STAGES.map((s, i) => (
-            <li key={s.t} className="flex gap-4 px-4 pb-4 pt-3.5 sm:min-h-[196px] sm:flex-col 2xl:min-h-[244px] sm:gap-0">
-              <span className="num w-11 shrink-0 text-[26px]">0{i + 1}</span>
+            <li key={s.t} className="group relative flex gap-4 px-4 pb-4 pt-3.5 transition-colors duration-150 hover:bg-paper hover:text-ground sm:min-h-[196px] sm:flex-col 2xl:min-h-[244px] sm:gap-0">
+              <span className="num w-11 shrink-0 text-[26px] group-hover:!text-ground">0{i + 1}</span>
               <div className="min-w-0 sm:pt-7">
-                <h3 className="text-[17px] font-medium leading-tight">{s.t}</h3>
-                <p className="mt-1.5 text-[13.5px] leading-snug text-muted">{s.d}</p>
+                <h3 className="text-[17px] font-medium leading-tight"><a href={`#run-${s.t.toLowerCase()}`} className="outline-offset-4 after:absolute after:inset-0">{s.t}</a></h3>
+                <p className="mt-1.5 text-[13.5px] leading-snug text-muted group-hover:text-ground/70">{s.d}</p>
               </div>
               <ul className="max-sm:hidden sm:mt-auto sm:pt-5">
-                {s.cmds.map((c) => <li key={c} className="truncate font-mono text-[12px] leading-[1.6] text-muted">{c}</li>)}
+                {s.cmds.map((c) => <li key={c} className="truncate font-mono text-[12px] leading-[1.6] text-muted group-hover:text-ground/70">{c}</li>)}
               </ul>
             </li>
           ))}
@@ -155,28 +210,52 @@ export default function DocsPage() {
         </div>
       </section>
 
+      <section id="run" className="scroll-mt-[96px] pt-20">
+        <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-9">
+          <h2 className="title">One piece, start to finish</h2>
+          <p className="max-w-[46ch] pb-1 text-[15px] leading-relaxed text-muted">
+            Every command of a real piece, in the order it is run: paper-motion&rsquo;s own film, the one on the home page. Each stage ends with a review, and the next one waits for it.
+          </p>
+        </div>
+        <ol className="border-t border-rule">
+          {RUN.map((r, i) => (
+            <li key={r.stage} id={`run-${r.stage.toLowerCase().replace(" ", "-")}`} className="grid scroll-mt-[110px] grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-3 border-b border-line py-5 md:grid-cols-[150px_minmax(0,1fr)]">
+              <h3 className="flex items-baseline gap-3 md:block">
+                <span className="num text-[22px]">{i ? `0${i}` : "00"}</span>
+                <span className="text-[16px] font-medium md:mt-2 md:block">{r.stage}</span>
+              </h3>
+              <ul className="min-w-0 space-y-2">
+                {r.steps.map((st) => "cmd" in st
+                  ? <li key={st.cmd} className="min-w-0"><CopyLine prefix="$" text={st.cmd} /></li>
+                  : <li key={st.say} className="border-l-2 border-rule py-1 pl-4 text-[14px] leading-relaxed text-muted">{st.say}</li>)}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <section id="commands" className="@container scroll-mt-[96px] pt-20">
         <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
           <h2 className="title">Commands</h2>
           <p className="max-w-[46ch] pb-1 text-[15px] leading-relaxed text-muted">
-            The CLI is <code className="font-mono text-[13px] text-figure">npx paper-motion</code>. The groups follow the order of a piece.
+            The reference: every command of <code className="font-mono text-[13px] text-figure">npx paper-motion</code> with what it does, grouped by job. Each group names the stages it serves.
           </p>
         </div>
         {COMMANDS.map((g) => (
           <div key={g.id} className="pt-11">
             <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1.5 border-b border-rule pb-3">
               <h3 className="font-serif text-[28px] leading-none tracking-[-0.02em]">{g.title}</h3>
-              <p className="text-[13px] text-muted">{g.note}</p>
+              <p className="text-[13px] text-muted"><span className="tag mr-3 !py-1 !text-[11px]">{g.stages}</span>{g.note}</p>
             </div>
             <ul>
               {g.rows.map(([cmd, what]) => (
-                <li key={cmd} className="grid items-center gap-x-8 gap-y-2.5 border-b border-line py-3 @4xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+                <li key={cmd} className="grid grid-cols-[minmax(0,1fr)] items-center gap-x-8 gap-y-2.5 border-b border-line py-3 @4xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                   <CopyLine prefix="$" text={cmd} />
                   <p className="text-[14px] leading-relaxed text-muted">{what}</p>
                 </li>
               ))}
               {g.prints?.map(([line, what]) => (
-                <li key={line} className="grid items-center gap-x-8 gap-y-2.5 border-b border-line py-3 @4xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+                <li key={line} className="grid grid-cols-[minmax(0,1fr)] items-center gap-x-8 gap-y-2.5 border-b border-line py-3 @4xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                   <code className="block overflow-x-auto whitespace-nowrap border-l-2 border-paper py-2 pl-4 font-mono text-[13px] text-figure">{line}</code>
                   <p className="text-[14px] leading-relaxed text-muted">{what}</p>
                 </li>
@@ -204,7 +283,7 @@ export default function DocsPage() {
           ))}
           <div className="row">
             <code className="font-mono text-[13px] text-figure">/mcp</code>
-            <div className="grid gap-3">
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3">
               <p className="text-[14px] leading-relaxed text-muted">
                 The same registry as tools, with no install: search, resource, recolor, board (it waits for the choice) and board_choice.
                 Streamable HTTP, no auth. Add it to the agent before opening a session. Installing stays with <code className="font-mono text-[13px] text-figure">npx paper-motion add</code>.
