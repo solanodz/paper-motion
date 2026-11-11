@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { CopyButton, CopyLine } from "@/components/copy-button";
 import { IconAgent } from "@/components/icons";
+import { starterPrompt as prompt } from "@/lib/prompt";
 import { getIndex } from "@/lib/registry";
 
 export const metadata: Metadata = { title: "For agents" };
 
 // the same prompt the home page hands to the user
-const prompt = (site: string) => `Use ${site.replace(/^https?:\/\//, "")} to make a video for my brand. Read ${site}/llms.txt first, interview me, then let me decide each step in the paper-motion studio and on board links I can open.`;
 
 // the six stages of a piece, the same ones the studio shows: what the agent prepares before handing each one over
 const STAGES: { t: string; d: string; cmds: string[] }[] = [

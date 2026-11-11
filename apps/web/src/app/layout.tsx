@@ -4,6 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { HeaderNav } from "@/components/header-nav";
+import { ShaderPreview } from "@/components/shader-preview";
+import { getResource } from "@/lib/registry";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -20,6 +22,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  // the sign-off: the wordmark as liquid metal, one of the library's own backgrounds, as wide as the page
+  const metal = getResource("liquid-metal")?.install.entry as { shader: string; props: Record<string, unknown>; image?: string } | undefined;
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${geistSerif.variable} ${geistPixel.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
@@ -33,6 +37,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </header>
         <main className="flex-1">{children}</main>
         <footer className="border-t border-line">
+          {metal ? (
+            <div role="img" aria-label="paper-motion" className="border-b border-line">
+              <ShaderPreview entry={{ ...metal, props: { ...metal.props, scale: 0.94 } }} className="aspect-[5/1] min-h-[120px] w-full" />
+            </div>
+          ) : null}
           <div className="grid gap-y-8 px-5 py-10 md:grid-cols-[1fr_auto] md:items-end md:px-8">
             <p className="max-w-[26ch] font-serif text-[30px] leading-[1.05] tracking-[-0.02em] md:text-[40px]">Creative-directed videos for people who use coding agents.</p>
             <div className="cells flex-wrap border border-line text-[13px] [&>*:first-child]:border-l-0 [&>*]:h-10">

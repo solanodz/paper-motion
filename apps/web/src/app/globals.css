@@ -133,3 +133,11 @@ body {
 @keyframes door-drop { 0%, 100% { transform: translate(-50%, -10%) scale(1); } 50% { transform: translate(-50%, 10%) scale(1.25); } }
 .door-drop { top: 30%; animation: door-drop 4.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .door-cycle, .door-drop { animation: none; } }
+
+/* landing: the ticker and the stage walk-through */
+@keyframes ticker { to { transform: translateX(-50%); } }
+.ticker-row { display: flex; width: max-content; padding: 5px 0; animation: ticker 90s linear infinite; }
+.ticker-back { animation-direction: reverse; animation-duration: 110s; }
+@keyframes stage-progress { from { width: 0; } to { width: 100%; } }
+.stage-progress { animation: stage-progress linear forwards; }
+@media (prefers-reduced-motion: reduce) { .ticker-row, .stage-progress { animation: none; } }
