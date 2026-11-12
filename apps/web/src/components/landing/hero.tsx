@@ -27,7 +27,7 @@ function Tile({ id }: { id: string }) {
 }
 
 export function Hero({ prompt, count }: { prompt: string; count: number }) {
-  const stats = [[count, "named pieces of motion"], [6, "stages, each one approved by you"], [1, "prompt to start"]] as const;
+  const stats = [[count, "named pieces of motion"], [4, "stages, each one approved by you"], [1, "prompt to start"]] as const;
   return (
     <section className="relative isolate flex min-h-[calc(100dvh-52px)] flex-col overflow-hidden border-b border-line">
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 text-center md:px-8">

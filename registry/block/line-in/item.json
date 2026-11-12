@@ -1,0 +1,170 @@
+{
+  "$schema": "../../schema.json",
+  "version": "1.0.0",
+  "license": "MIT",
+  "id": "line-in",
+  "type": "block",
+  "title": "A sentence",
+  "summary": "One sentence in the brand's display type, arriving in one of eight entrances; the words that carry it land in the accent.",
+  "tags": [
+    "block",
+    "text",
+    "sentence",
+    "line",
+    "headline",
+    "entrance"
+  ],
+  "params": [
+    {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "text",
+      "type": "string",
+      "default": "Video editing without the timeline",
+      "description": "the sentence",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "mark",
+      "type": "string",
+      "default": "without the timeline",
+      "description": "the words that land in the accent",
+      "group": "main",
+      "control": "text"
+    },
+    {
+      "name": "entrance",
+      "type": "enum",
+      "default": "rise",
+      "options": [
+        "rise",
+        "focus",
+        "scramble",
+        "type",
+        "track",
+        "flip",
+        "pop",
+        "bar"
+      ],
+      "description": "how it arrives",
+      "group": "main",
+      "control": "segmented"
+    },
+    {
+      "name": "align",
+      "type": "enum",
+      "default": "center",
+      "options": [
+        "center",
+        "left"
+      ],
+      "description": "where it sits",
+      "group": "main",
+      "control": "segmented"
+    },
+    {
+      "name": "format",
+      "type": "enum",
+      "default": "1920x1080",
+      "options": [
+        "1920x1080",
+        "1080x1920",
+        "1080x1080"
+      ],
+      "description": "output size; the layout recomposes for each",
+      "group": "main",
+      "control": "segmented"
+    }
+  ],
+  "install": {
+    "kind": "scene"
+  },
+  "files": [
+    {
+      "from": "registry/block/line-in/scene.html",
+      "to": "pieces/line-in/scene.html"
+    },
+    {
+      "from": "registry/block/line-in/brief.md",
+      "to": "pieces/line-in/brief.md"
+    }
+  ],
+  "requires": {
+    "engine": ">=0.3.0"
+  },
+  "usage": "npx paper-motion add line-in --name my-line\n# edit CONFIG in pieces/my-line/scene.html, then:\nnpx paper-motion render pieces/my-line/scene.html --motion-blur 5",
+  "notes": [
+    "Wired to the brand folder: needs brand/tokens.json (a palette and a font pair work) and, for the field, a shader-set entry.",
+    "Recomposes for 16:9, 9:16 and 1:1: set `format` and the layout and camera follow.",
+    "The entrance is a setting: a piece may hold several sentences, each arriving its own way (the planner gives each one a different entrance unless the user chose)."
+  ],
+  "related": [
+    "marker-highlight",
+    "word-rise",
+    "dither-dissolve"
+  ],
+  "preview": {
+    "video": "previews/line-in.webm",
+    "poster": "previews/line-in.jpg",
+    "at": 2.4,
+    "values": {}
+  },
+  "mood": [
+    "calm",
+    "editorial",
+    "bold"
+  ],
+  "duration": 4,
+  "formats": [
+    "16:9",
+    "9:16",
+    "1:1"
+  ],
+  "beats": [
+    {
+      "name": "Enter",
+      "from": 0.3,
+      "to": 1.7,
+      "what": "the sentence arrives"
+    },
+    {
+      "name": "Hold",
+      "from": 1.7,
+      "to": 4,
+      "what": "it holds under a slow push"
+    }
+  ],
+  "when": [
+    "any sentence that should be read on its own",
+    "several lines in one piece, each arriving differently"
+  ],
+  "needs": [
+    {
+      "kind": "line",
+      "fill": {
+        "text": "$text",
+        "mark": "$mark"
+      }
+    }
+  ],
+  "repeat": {
+    "param": "entrance",
+    "previews": {
+      "rise": "word-rise",
+      "focus": "blur-in",
+      "scramble": "scramble",
+      "type": "type-on",
+      "track": "track-in",
+      "flip": "flip-in",
+      "pop": "pop-in",
+      "bar": "bar-reveal"
+    }
+  }
+}

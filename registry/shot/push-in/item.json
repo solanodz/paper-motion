@@ -130,5 +130,13 @@
   "when": [
     "the opening of a piece on the name",
     "one word that deserves the whole frame"
+  ],
+  "needs": [
+    {
+      "kind": "name",
+      "fill": {
+        "line": "$brief.action"
+      }
+    }
   ]
 }

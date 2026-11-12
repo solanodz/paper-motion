@@ -149,5 +149,16 @@
   "when": [
     "sign-up or setup flows",
     "show how little it takes to start"
+  ],
+  "needs": [
+    {
+      "kind": "form",
+      "fill": {
+        "title": "$title",
+        "fields": "$fields",
+        "button": "$button",
+        "done": "$done"
+      }
+    }
   ]
 }

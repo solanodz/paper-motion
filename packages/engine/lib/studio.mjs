@@ -22,6 +22,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pieceDir, JOINS, chainSig, readSigs, readJob } from './chain.mjs';
 import { STAGES, BRIEF_KEYS, readPiece, updatePiece, addEvent, eventLine, sceneTexts, setSceneText, listening } from './piece.mjs';
+import { videoView, editVideo, styleView, editStyle, undo, canUndo } from './edit.mjs';
+import { KINDS, EDITABLE, ADDABLE, MULTI, PLAIN, GROUPS, listText, loadRaw, normalize, candidates, scenesOf, describe, applyEdit, evalFill, fillConfig } from './inventory.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PAGE = path.join(HERE, '..', 'studio', 'index.html');
@@ -58,6 +60,97 @@ export function filmState(cwd, dir) {
 }
 const joinErrors = new Map();   // piece folder → why the studio's last join failed
 
+// the blocks and shots that show content and the library's backgrounds, read once when the studio starts (the
+// registry may be the site); LIVE is the scene server the page's live previews play from
+let SCENES = [], BACKGROUNDS = [], TITLES = new Map(), PALETTES = [], FONTPAIRS = [], LIVE = null;
+const building = new Set(), rendering = new Map();   // pieces whose first version or final is being made by the studio
+// a resource's sample (clip and still): the repo's own when the studio runs inside it (new blocks show before the
+// site has them), else the site's
+const LOCAL_PREVIEWS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../apps/web/public/previews');
+const preview = (id, ext) => (fs.existsSync(path.join(LOCAL_PREVIEWS, `${id}.${ext}`)) ? `/previews/${id}.${ext}` : `${SITE}/previews/${id}.${ext}`);
+
+// What of a block a person may tune: its numbers and its either/or choices (its words come from the content).
+const NOT_TUNED = new Set(['format', 'background', 'fps', 'codec', 'winner', 'mark', 'detail', 'highlight']);
+function tunables(block, filled, values = {}) {
+  return (block.params ?? []).filter((p) => !filled.has(p.name) && !NOT_TUNED.has(p.name) && (p.type === 'enum' || p.type === 'number')).map((p) => {
+    const d = p.default, num = p.type === 'number';
+    const min = num ? p.min ?? +(d * 0.4).toFixed(2) : null, max = num ? p.max ?? +(d * 1.8).toFixed(2) : null;
+    // a setting whose every choice has its own sample (a sentence's entrance) is chosen by watching them
+    const demos = block.repeat?.param === p.name && block.repeat.previews ? (p.options ?? []).map((o) => { const r = block.repeat.previews[o]; return { value: o, title: TITLES.get(r) ?? o, clip: r ? preview(r, 'webm') : null, poster: r ? preview(r, 'jpg') : null }; }) : null;
+    return { name: p.name, label: (p.description ?? p.name).replace(/^./, (c) => c.toUpperCase()), kind: num ? 'number' : 'enum', options: p.options ?? null, min, max, step: num ? +(Math.max((max - min) / 40, 0.01)).toFixed(2) : null, default: d, value: values[p.name] ?? d, set: p.name in values, demos, varies: block.repeat?.param === p.name };
+  });
+}
+// the blocks that can show an item, in the order the page offers them: one that can play several times first
+const ways = (it) => [...candidates(it, SCENES)].sort((a, b) => (b.repeat ? 1 : 0) - (a.repeat ? 1 : 0));
+const filledBy = (block) => new Set(block.needs.flatMap((n) => Object.keys(n.fill ?? {})));
+// the brand's own backgrounds (shader entries, not image filters), as the page shows them
+const brandBackgrounds = (cwd) => (readJson(path.join(cwd, 'brand/shader-set/set.json'), {}).entries ?? []).filter((e) => e.shader && !e.image).map((e) => ({ id: e.id, title: e.id, colors: (e.props?.colors ?? [e.props?.colorBack, e.props?.colorFront]).filter((c) => /^#[0-9a-f]{6}/i.test(c ?? '')).slice(0, 5), entry: { shader: e.shader, props: e.props, background: e.background } }));
+
+/**
+ * A block as it will really play for one item: installed under pieces/<piece>/.try/, its CONFIG filled with the
+ * item's content and the user's tuning, in the brand's look. Returns the address the page plays it from.
+ */
+async function tryScene(cwd, piece, itemId, blockId) {
+  if (!LIVE) throw new Error('the live preview is not ready yet');
+  const dir = pieceDir(piece, cwd), p = readPiece(dir), all = normalize(loadRaw(dir), { cwd }).all;
+  const it = all.find((i) => i.id === itemId), b = SCENES.find((x) => x.id === blockId);
+  if (!it || !b) throw new Error('no such item or block');
+  const need = b.needs[0], fits = (i) => i.kind === need.kind && i.status !== 'removed' && (need.has ?? []).every((f) => i[f] !== undefined && i[f] !== '') && Object.entries(need.where ?? {}).every(([k, v]) => i[k] === v);
+  const group = [it, ...all.filter((i) => i !== it && fits(i))].slice(0, need.count ?? 1);
+  const fill = { ...evalFill(need.fill, group, p?.brief ?? {}) };
+  for (const n of b.needs.slice(1)) if (n.kind === 'name') Object.assign(fill, evalFill(n.fill, [], p?.brief ?? {}));
+  Object.assign(fill, it.tune ?? {});
+  const sub = path.join('.try', `${it.id}--${b.id}`), file = path.join(dir, sub, 'scene.html');
+  if (!fs.existsSync(file)) {
+    const { add } = await import('./registry.mjs');
+    const f = String(p?.brief?.format ?? ''), format = /9\s*:\s*16/.test(f) ? '1080x1920' : /1\s*:\s*1/.test(f) ? '1080x1080' : '1920x1080';
+    await add([b.id], { cwd, force: true, name: path.join(path.relative(path.join(cwd, 'pieces'), dir), sub), set: (b.params ?? []).some((x) => x.name === 'format') ? [`format=${format}`] : [] });
+  }
+  fs.writeFileSync(file, fillConfig(fs.readFileSync(file, 'utf8'), fill));
+  return { url: `${LIVE}/${path.relative(cwd, file).split(path.sep).map(encodeURIComponent).join('/')}?embed&v=${Date.now()}` };
+}
+/** The piece's inventory for the page: every item with where it stands, what can show it and what it lacks. */
+function inventoryView(cwd, dir) {
+  // the page speaks the user's language: everyday names, the fields a person would recognise, labelled
+  const kinds = Object.fromEntries(ADDABLE.map((k) => [k, { name: PLAIN[k].name, fields: EDITABLE[k].filter((f) => PLAIN[k].fields[f]).map((f) => [f, PLAIN[k].fields[f], KINDS[k].needs.includes(f)]) }]));
+  let raw = [], all = [];
+  try { raw = loadRaw(dir); all = normalize(raw, { cwd }).all; } catch (e) { return { items: [], kinds, groups: GROUPS, error: e.message }; }
+  const byId = new Map(raw.map((r) => [r.id, r]));
+  const mine = brandBackgrounds(cwd), have = new Set(mine.map((m) => m.id));
+  // about how many moments the length in the brief holds (a block runs about four seconds, the close is one of them)
+  const secs = Number(String(readPiece(dir)?.brief?.format ?? '').match(/(\d+(?:\.\d+)?)\s*(?:s\b|sec|seconds?)/i)?.[1]) || null;
+  return { kinds, groups: GROUPS, live: LIVE, moments: secs ? Math.max(2, Math.round((secs - 4) / 4.2) + 1) : null, seconds: secs, backgrounds: { mine, library: BACKGROUNDS.filter((b) => !have.has(b.id)) }, items: all.map((it) => {
+    const K = KINDS[it.kind], r = byId.get(it.id) ?? {}, H = PLAIN[it.kind] ?? { name: it.kind, group: 'show', fields: {} };
+    const how = (f) => MULTI[it.kind]?.[f] ?? 'text';
+    return {
+      id: it.id, kind: it.kind, name: H.name, group: H.group, status: it.status, must: !!it.must, what: { line: it.text, voice: it.script, command: it.command }[it.kind] ?? describe(it), source: it.source ?? '',   // a sentence or a command is shown whole
+      missing: (it.missing ?? []).map((f) => H.fields[f] ?? f),
+      // how it could look: the library's own samples of the blocks that show this kind of thing
+      // a block that can play several times (a sentence, arriving its own way each time) is the first way to show it
+      looks: ways(it).map((b) => ({ id: b.id, title: b.title ?? b.id, summary: b.summary ?? '', poster: preview(b.id, 'jpg'), clip: preview(b.id, 'webm') })),
+      // the block the user picked for it (or none: the plan picks), and what of that block they may tune
+      show: ways(it).some((b) => b.id === it.show) ? it.show : null, tune: it.tune ?? {},
+      tunable: (() => { const c = ways(it), b = c.find((x) => x.id === it.show) ?? c[0]; return b ? tunables(b, filledBy(b), it.tune ?? {}) : []; })(),
+      shown: K.role === 'bed' || it.kind === 'logo' ? 'always' : null,
+      thumb: it.image ? fileUrl(cwd, path.join(cwd, it.image.replace(/^\//, ''))) : null,
+      // [field, value as text, needed, how it is edited, its label]: only what a person would recognise
+      fields: Object.entries(H.fields).map(([f, label]) => [f, how(f) === 'text' ? r[f] ?? '' : listText(r[f], how(f)), K.needs.includes(f), how(f), label]),
+    };
+  }) };
+}
+
+// What can be added to a video, by what the user wants to do, each named by what it does; and the transitions.
+const INTENTS = [['say', 'Say something'], ['show', 'Show the product'], ['prove', 'Prove it'], ['how', 'How it works'], ['end', 'End']];
+const JOIN_NAMES = { whip: 'Fast slide', crossfade: 'Soft fade', wipe: 'Wipe', push: 'Push', iris: 'Circle opens', 'zoom-through': 'Zoom through', flash: 'Flash', cells: 'Squares', slices: 'Strips', glitch: 'Glitch', 'flip-3d': 'Card flip', cut: 'Straight cut', dissolve: 'Dissolve', dip: 'Dip to your colour', 'mask-reveal': 'Mask', 'scan-reveal': 'Scan line', 'whip-pan': 'Whip pan' };
+function libraryView() {
+  const group = (b) => { const k = b.needs?.[0]?.kind; return !b.needs?.length ? null : k === 'name' || k === 'logo' ? 'end' : PLAIN[k]?.group === 'brand' ? 'end' : PLAIN[k]?.group ?? null; };
+  const blocks = SCENES.map((b) => ({ id: b.id, title: b.title, summary: b.summary ?? '', group: group(b), poster: preview(b.id, 'jpg'), clip: preview(b.id, 'webm') })).filter((b) => b.group);
+  return {
+    intents: INTENTS.map(([id, title]) => ({ id, title, blocks: blocks.filter((b) => b.group === id) })).filter((g) => g.blocks.length),
+    joins: Object.keys(JOINS).filter((j) => j !== 'dip' && j !== 'dissolve' || true).map((id) => ({ id, title: JOIN_NAMES[id] ?? id, poster: TITLES.has(id) ? preview(id, 'jpg') : null, clip: TITLES.has(id) ? preview(id, 'webm') : null })),
+  };
+}
+
 /** What the page shows for one piece. */
 export function view(cwd, piece) {
   const dir = pieceDir(piece, cwd), p = readPiece(dir);
@@ -79,6 +172,18 @@ export function view(cwd, piece) {
   return {
     ...p, boards: p.boards ?? [], dir: path.relative(cwd, dir), format: chain.format ?? null, join: chain.join ?? 'whip', joins: Object.keys(JOINS),
     parts,
+    inventory: inventoryView(cwd, dir),
+    // Your video: the parts as the editor shows them, each playing live from the project, and what can be added
+    video: (() => {
+      const v = videoView(cwd, dir, SCENES); if (!v) return null;
+      const rel = path.relative(cwd, dir).split(path.sep).map(encodeURIComponent).join('/');
+      for (const x of v.parts) { x.live = LIVE ? `${LIVE}/${rel}/${encodeURIComponent(x.dir)}/scene.html?embed&v=${x.mtime}-${styleView(cwd).stamp}` : null; x.poster = preview(x.id, 'jpg'); x.clip = preview(x.id, 'webm');
+        if (x.motion) x.motion.demos = x.motion.options.map((o) => ({ value: o, title: TITLES.get(x.motion.previews[o]) ?? o, poster: x.motion.previews[o] ? preview(x.motion.previews[o], 'jpg') : null, clip: x.motion.previews[o] ? preview(x.motion.previews[o], 'webm') : null })); }
+      return v;
+    })(),
+    building: building.has(dir), rendering: rendering.get(dir) ?? null, undo: canUndo(dir),
+    library: libraryView(),
+    style: { ...styleView(cwd), palettes: PALETTES, fontpairs: FONTPAIRS },
     look: {
       colors: Object.entries(tokens.colors ?? {}).map(([k, v]) => [k, v?.hex ?? v]),
       fonts: Object.entries(tokens.fonts ?? {}).map(([k, v]) => [k, v?.family ?? v, v?.css ?? null]),
@@ -123,7 +228,15 @@ function act(cwd, piece, a, queue) {
       case 'approve': {   // a stage
         if (!STAGES.includes(a.stage)) throw new Error('bad stage');
         if (a.stage === 'parts' && Object.values(p.parts).some((x) => x.status !== 'approved')) throw new Error('approve every part first');
+        if (a.stage === 'inventory') {
+          const inv = loadRaw(dir);
+          if (inv.some((i) => i.status === 'proposed')) throw new Error('keep or remove every proposal first');
+          if (!inv.some((i) => !i.status || i.status === 'kept')) throw new Error('there is nothing to show yet');
+          const short = normalize(inv, { cwd }).items.filter((i) => i.missing.length);
+          if (short.length) throw new Error(`${short[0].id} still needs ${short[0].missing.join(', ')}: fill it in or remove it`);
+        }
         // never approve a film that no longer shows the piece as it is
+        if (a.stage === 'video' && !fs.existsSync(path.join(dir, 'chain.json'))) throw new Error('there is no video yet');
         if (['assembly', 'final'].includes(a.stage)) {
           if (film.job?.kind === a.stage || film[`${a.stage}Stale`]) throw new Error('this video is being updated: wait for the new one');
           if (Object.values(p.parts).some((x) => ['changes', 'queued', 'rendering'].includes(x.status))) throw new Error('a part is still changing: wait for the new video');
@@ -149,6 +262,33 @@ function act(cwd, piece, a, queue) {
         // an approved brief that changes comes back for the user to confirm
         if (p.stages.brief.status === 'approved') p.stages.brief = { status: 'review', note: 'edited by hand' };
         addEvent(p, { kind: 'edit', stage: 'brief', key: a.key, text: t });
+        break;
+      }
+      case 'inv-show': case 'inv-tune': {   // how an item is shown: the block, its settings, its background
+        const it = normalize(loadRaw(dir), { cwd }).all.find((i) => i.id === a.id); if (!it) throw new Error('no such item');
+        const c = ways(it);
+        if (a.type === 'inv-show') { const b = c.find((x) => x.id === a.value); if (a.value && !b) throw new Error('that block cannot show this'); a.title = b?.title; }
+        else {
+          const b = c.find((x) => x.id === (a.block ?? it.show)) ?? c[0]; if (!b) throw new Error('nothing shows this item yet');
+          if (a.key === 'background') { if (a.value && !brandBackgrounds(cwd).some((m) => m.id === a.value)) throw new Error('that background is not in your brand yet: add it first'); a.label = 'background'; }
+          else {
+            const t = tunables(b, filledBy(b)).find((x) => x.name === a.key); if (!t) throw new Error(`"${a.key}" is not a setting of ${b.title ?? b.id}`);
+            if (a.value !== '' && a.value != null) { if (t.kind === 'number') { const n = Number(a.value); if (!Number.isFinite(n)) throw new Error('a number, please'); a.value = Math.min(t.max, Math.max(t.min, n)); } else if (!t.options.includes(a.value)) throw new Error('not one of the choices'); }
+            a.label = t.label;
+            // tuning a block means wanting that block: it stays the one that shows this item
+            if (it.show !== b.id) applyEdit(dir, { type: 'inv-show', id: it.id, value: b.id, title: b.title });
+          }
+        }
+        const said = applyEdit(dir, a);
+        if (p.stages.inventory.status === 'approved') p.stages.inventory = { status: 'review', note: 'edited by hand' };
+        addEvent(p, { kind: 'edit', stage: 'inventory', key: said.key, text: said.text, say: said.human });
+        break;
+      }
+      case 'inv-status': case 'inv-rest': case 'inv-must': case 'inv-field': case 'inv-add': {   // the inventory, by hand
+        const said = applyEdit(dir, a);
+        // an approved inventory that changes comes back for the user to confirm (and the plan made from it is old)
+        if (p.stages.inventory.status === 'approved') p.stages.inventory = { status: 'review', note: 'edited by hand' };
+        addEvent(p, { kind: 'edit', stage: 'inventory', key: said.key, text: said.text, say: said.human });   // `say`: the same, in the user's words, for the page
         break;
       }
       case 'what': {   // a part's description: a note for the agent, kept in chain.json
@@ -204,6 +344,43 @@ function act(cwd, piece, a, queue) {
   if (film.draft && ['text', 'order', 'seconds', 'join'].includes(a.type)) queue.join(piece);
   const p = readPiece(dir);
   return { ok: true, line: eventLine(p, p.events.at(-1)) };
+}
+
+// ── Your video: edits that need no judgment, made here; each reaches the agent as one line ──────────────────────
+async function actVideo(cwd, piece, a, log) {
+  const dir = pieceDir(piece, cwd), p = readPiece(dir); if (!p) throw new Error('no such piece');
+  let said;
+  if (a.type === 'undo') said = { say: `Undid ${undo(cwd, dir)}` };
+  else if (a.type === 'render') { renderFinal(cwd, piece, log); said = { say: 'Rendering the final' }; }
+  else if (a.type.startsWith('style-')) said = await editStyle(cwd, dir, { ...a, type: a.type.slice(6) });
+  else said = await editVideo(cwd, dir, { ...a, type: a.type.slice(2) }, SCENES, { ...p.brief, title: p.title });
+  updatePiece(dir, (q) => {
+    // an edit to a video already approved sends it back to the user, and a final made before it is out of date
+    if (a.type !== 'render') {
+      if (q.stages.video?.status === 'approved') q.stages.video = { status: 'review', note: 'edited by hand' };
+      if (q.stages.final?.status && q.stages.final.status !== 'pending') q.stages.final = { status: 'changes', note: 'You changed the video, so the final needs a new render.', since: new Date().toISOString() };
+    }
+    addEvent(q, { kind: 'edit', stage: 'video', key: a.type, text: said.say, say: said.say });
+  });
+  return { ok: true, ...said };
+}
+function buildFirst(cwd, piece, log) {
+  const dir = pieceDir(piece, cwd);
+  if (fs.existsSync(path.join(dir, 'chain.json')) || building.has(dir)) return;
+  building.add(dir);
+  const p = readPiece(dir);
+  editVideo(cwd, dir, { type: 'build' }, SCENES, { ...p.brief, title: p.title })
+    .then((r) => updatePiece(dir, (q) => { q.stage = 'video'; q.stages.video = { status: 'review', since: new Date().toISOString() }; addEvent(q, { kind: 'edit', stage: 'video', key: 'build', text: r.say, say: r.say }); }))
+    .catch((e) => { log(`✗ building ${piece}: ${e.message}`); joinErrors.set(dir, e.message.split('\n')[0]); })
+    .finally(() => building.delete(dir));
+}
+function renderFinal(cwd, piece, log) {
+  const dir = pieceDir(piece, cwd); if (rendering.has(dir)) return;
+  rendering.set(dir, { started: Date.now() });
+  import('./chain.mjs').then((c) => c.renderChain({ cwd, piece, motionBlur: 5, onStep: (e) => { if (e.part) rendering.set(dir, { started: rendering.get(dir)?.started, part: e.part, of: e.of }); else if (e.joining) rendering.set(dir, { started: rendering.get(dir)?.started, joining: true }); } }))
+    .then((r) => updatePiece(dir, (q) => { q.stage = 'final'; q.stages.final = { status: 'review', since: new Date().toISOString() }; addEvent(q, { kind: 'edit', stage: 'final', key: 'render', text: `rendered ${path.basename(r.out)}`, say: 'The final is ready' }); }))
+    .catch((e) => { log(`✗ final ${piece}: ${e.message}`); joinErrors.set(dir, e.message.split('\n')[0]); })
+    .finally(() => rendering.delete(dir));
 }
 
 /**
@@ -267,6 +444,14 @@ function sendFile(req, res, f) {
 
 export function startStudio({ cwd = process.cwd(), port = 4317, log = console.log } = {}) {
   const queue = renderQueue(cwd, log);
+  import('./registry.mjs').then((r) => r.getIndex()).then((i) => {   // offline: items show without their blocks
+    SCENES = scenesOf(i); TITLES = new Map((i.items ?? []).map((x) => [x.id, x.title]));
+    PALETTES = (i.items ?? []).filter((x) => x.type === 'palette').map((x) => ({ id: x.id, title: x.title, colors: x.colors ?? [] }));
+    FONTPAIRS = (i.items ?? []).filter((x) => x.type === 'font-pair').map((x) => ({ id: x.id, title: x.title }));
+    BACKGROUNDS = (i.items ?? []).filter((x) => x.type === 'background' && x.install?.entry?.shader && !x.install.entry.image).map((x) => ({ id: x.id, title: x.title, colors: x.colors ?? [], entry: { shader: x.install.entry.shader, props: x.install.entry.props, background: x.install.entry.background } }));
+  }).catch(() => {});
+  // the page's live previews (a block with the user's content, a background) play from a scene server on this project
+  import('./server.mjs').then((m) => m.startServer({ root: cwd })).then((sv) => { LIVE = `http://127.0.0.1:${sv.port}`; }).catch((e) => log(`live previews are off: ${e.message}`));
   const json = (res, code, body) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
   const server = http.createServer(async (req, res) => {
     const u = new URL(req.url, 'http://x');
@@ -284,11 +469,38 @@ export function startStudio({ cwd = process.cwd(), port = 4317, log = console.lo
         const piece = u.searchParams.get('p');
         if (req.method === 'POST') {
           let body = ''; for await (const c of req) body += c;
-          try { return json(res, 200, act(cwd, piece, JSON.parse(body || '{}'), queue)); } catch (e) { return json(res, 400, { error: e.message }); }
+          try {
+            const a = JSON.parse(body || '{}');
+            if (/^(v-|style-)|^undo$|^render$/.test(a.type)) return json(res, 200, await actVideo(cwd, piece, a, log));
+            const r = act(cwd, piece, a, queue);
+            // keeping the content builds the first version of the video, by itself: the user lands on something to edit
+            if (a.type === 'approve' && a.stage === 'inventory') buildFirst(cwd, piece, log);
+            return json(res, 200, r);
+          } catch (e) { return json(res, 400, { error: e.message.split('\n')[0] }); }
         }
         await refreshBoards(cwd, piece);
         const v = view(cwd, piece);
         return v ? json(res, 200, v) : json(res, 404, { error: `no piece "${piece}"` });
+      }
+      if (u.pathname.startsWith('/previews/')) {   // the repo's own samples (see preview())
+        const f = path.join(LOCAL_PREVIEWS, path.basename(u.pathname));
+        if (!fs.existsSync(f)) { res.writeHead(404); return res.end(); }
+        return sendFile(req, res, f);
+      }
+      if (u.pathname === '/api/try' && req.method === 'POST') {   // a block playing live with one item's content
+        let body = ''; for await (const c of req) body += c;
+        try { const a = JSON.parse(body || '{}'); return json(res, 200, await tryScene(cwd, u.searchParams.get('p'), a.id, a.block)); } catch (e) { return json(res, 400, { error: e.message.split('\n')[0] }); }
+      }
+      if (u.pathname === '/api/background' && req.method === 'POST') {   // a library background into the brand, in its colours
+        let body = ''; for await (const c of req) body += c;
+        try {
+          const a = JSON.parse(body || '{}'), b = BACKGROUNDS.find((x) => x.id === a.id); if (!b) throw new Error('no such background');
+          const { add } = await import('./registry.mjs');
+          await add([b.id], { cwd, palette: 'brand' });
+          const dir = pieceDir(u.searchParams.get('p'), cwd);
+          updatePiece(dir, (p) => { addEvent(p, { kind: 'edit', stage: 'inventory', key: 'brand background', text: b.id, say: `Added a background to your brand: ${b.title}` }); });
+          return json(res, 200, { ok: true });
+        } catch (e) { return json(res, 400, { error: e.message.split('\n')[0] }); }
       }
       if (u.pathname === '/api/focus' && req.method === 'POST') {
         // back to the agent: the app its CLI runs in, as recorded in piece.json by that CLI

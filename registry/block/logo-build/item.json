@@ -123,5 +123,13 @@
   "when": [
     "the end card",
     "a logo sting"
+  ],
+  "needs": [
+    {
+      "kind": "name",
+      "fill": {
+        "domain": "$brief.action"
+      }
+    }
   ]
 }

@@ -5,335 +5,199 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>paper-motion studio</title>
 <!--
-  pamo studio: a piece, stage by stage. Reads /api/piece, writes actions back; the agent reads them from piece.json.
-  The look is paper-motion's own: black ground, white figure, one warm paper accent; Geist Serif for titles, Geist for
-  text, Geist Mono for data, Geist Pixel for the stage numerals. Hard edges everywhere (no radius), 1px rules, and the
-  six stages as a strip of cells across the top, the open one inverted in paper.
+  pamo studio: one piece in three steps. What it says (the brief and the content the user keeps), Your video (every
+  part playing live, edited in place: words, how it arrives, background, settings, length, transitions, order, adding,
+  swapping, removing, and the whole video's style) and Export. Reads /api/piece, writes edits back; the files stay the
+  source of truth and the agent reads every change as one line. paper-motion's own look: black ground, white figure,
+  one warm paper accent, hard edges, 1px rules.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   @font-face { font-family: 'Geist Serif'; src: url('/fonts/GeistSerif-Regular.woff2') format('woff2'); font-display: swap; }
   @font-face { font-family: 'Geist Pixel'; src: url('/fonts/GeistPixel-Square.woff2') format('woff2'); font-display: swap; }
-  :root {
-    --ground: #000; --surface: #0a0a0a; --raised: #121212; --line: #1f1f1f; --rule: #3a3a3a;
-    --figure: #fff; --muted: #8a8a8a; --faint: #4a4a4a; --paper: #e9e4d8; --ok: #3ddc84; --warn: #ff4d2e;
-    --serif: 'Geist Serif', Georgia, serif; --sans: 'Geist', system-ui, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace; --pixel: 'Geist Pixel', 'Geist Mono', ui-monospace, monospace;
-  }
+  :root { --ground: #000; --surface: #0b0b0b; --raised: #141414; --line: #1f1f1f; --rule: #3a3a3a; --figure: #fff; --muted: #8a8a8a; --faint: #4a4a4a; --paper: #e9e4d8; --ok: #3ddc84; --warn: #ff4d2e;
+    --serif: 'Geist Serif', Georgia, serif; --sans: 'Geist', system-ui, sans-serif; --mono: 'Geist Mono', ui-monospace, monospace; --pixel: 'Geist Pixel', 'Geist Mono', monospace; }
   * { box-sizing: border-box; border-radius: 0; }
   html { background: var(--ground); color-scheme: dark; }
-  body { margin: 0; background: var(--ground); color: var(--figure); font: 14px/1.5 var(--sans); }
+  body { margin: 0; background: var(--ground); color: var(--figure); font: 14px/1.45 var(--sans); }
   ::selection { background: var(--paper); color: #000; }
   button, input, select, textarea { font: inherit; color: inherit; }
-  button { cursor: pointer; }
-  video, img { display: block; width: 100%; background: #000; }
-  a { color: inherit; }
-  p { margin: 0; }
+  button { cursor: pointer; } a { color: inherit; }
   :focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
-  .mono { font-family: var(--mono); } .serif { font-family: var(--serif); font-weight: 400; }
-  .muted { color: var(--muted); } .faint { color: var(--faint); }
-  svg { flex-shrink: 0; display: block; }
-
-  /* controls: rectangles that invert on hover */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--rule); background: transparent; color: var(--figure); padding: 9px 14px; font: 500 13px/1 var(--sans); text-decoration: none; white-space: nowrap; }
-  .btn:hover { background: var(--figure); border-color: var(--figure); color: #000; }
-  .btn.primary { background: var(--paper); border-color: var(--paper); color: #000; }
+  .muted { color: var(--muted); } .mono { font-family: var(--mono); } .serif { font-family: var(--serif); font-weight: 400; }
+  .ico { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: square; flex: none; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--rule); background: transparent; padding: 8px 13px; font-size: 13px; white-space: nowrap; text-decoration: none; }
+  .btn:hover { border-color: var(--paper); }
+  .btn.primary { background: var(--paper); color: #000; border-color: var(--paper); }
   .btn.primary:hover { background: #fff; border-color: #fff; }
-  .btn.big { width: 100%; height: 54px; justify-content: space-between; padding: 0 18px; font-size: 15px; }
-  .btn[disabled] { opacity: .3; pointer-events: none; }
-  .field { width: 100%; min-width: 0; background: transparent; border: 0; border-bottom: 1px solid var(--rule); padding: 6px 0; }
-  .field:hover { border-color: var(--muted); }
-  .field:focus { outline: 0; border-color: var(--paper); }
-  .field::placeholder, textarea::placeholder { color: var(--faint); }
-  .box { background: var(--surface); border: 1px solid var(--rule); padding: 6px 9px; font: 13px var(--mono); }
-  .box:focus { outline: 0; border-color: var(--paper); }
-  select.box { appearance: none; padding-right: 28px; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%238a8a8a' stroke-width='1.5'%3E%3Cpath d='m1 1 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 9px center; }
-  select.box:disabled { opacity: .4; }
-  textarea { display: block; width: 100%; min-height: 84px; resize: vertical; background: var(--surface); border: 1px solid var(--rule); padding: 11px 12px; }
-  textarea:focus { outline: 0; border-color: var(--paper); }
-  .edit { padding: 6px 10px; margin: -6px -10px; outline: 1px dashed transparent; cursor: text; min-height: 1.5em; }
-  .edit:hover { outline-color: var(--rule); }
-  .edit:focus { outline: 1px solid var(--paper); background: var(--surface); color: var(--figure); }
+  .btn.sm { padding: 6px 10px; font-size: 12.5px; }
+  .btn.on { background: var(--paper); color: #000; border-color: var(--paper); }
+  .btn:disabled { opacity: .35; cursor: default; }
+  .hint { font-size: 12.5px; color: var(--muted); margin: 0; }
+  .lbl { font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+  header.top { display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 18px; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 30; background: var(--ground); }
+  .back { display: flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: 13px; }
+  .ttl { font: 400 21px/1 var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 26vw; }
+  .steps { display: flex; margin: 0 auto; border: 1px solid var(--rule); }
+  .steps button { background: none; border: 0; padding: 9px 16px; display: flex; gap: 8px; align-items: center; color: var(--muted); }
+  .steps button + button { border-left: 1px solid var(--rule); }
+  .steps button b { font: 400 15px/1 var(--pixel); }
+  .steps button.on { background: var(--paper); color: #000; }
+  .steps button i { width: 7px; height: 7px; background: var(--ok); display: inline-block; }
+  .turn { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 18px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .turn .mk { width: 8px; height: 8px; background: var(--paper); flex: none; }
+  .turn.agent .mk { background: var(--muted); animation: pulse 1.4s infinite; } .turn.off .mk, .turn.deaf .mk { background: var(--warn); }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .turn b { font-weight: 500; margin-right: 8px; } .turn .tx { color: var(--muted); }
+  .turn .grow { flex: 1; }
+  main { min-height: calc(100vh - 97px); }
+
+  /* 1 · what it says */
+  .what { max-width: 900px; margin: 0 auto; padding: 36px 20px 90px; }
+  .what h1 { font: 400 46px/1.05 var(--serif); margin: 0; }
+  .what .sub { margin: 10px 0 26px; color: var(--muted); font-size: 15px; max-width: 62ch; }
+  .brief { border: 1px solid var(--line); margin-bottom: 30px; }
+  .brief summary { cursor: pointer; padding: 12px 14px; display: flex; justify-content: space-between; gap: 10px; list-style: none; }
+  .brief summary::-webkit-details-marker { display: none; }
+  .brief .rows { padding: 0 14px 14px; display: grid; gap: 10px; }
+  .brief .row { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: baseline; }
+  .edit { padding: 5px 8px; margin: -5px -8px; outline: 1px dashed transparent; cursor: text; min-height: 1.4em; }
+  .edit:hover { outline-color: var(--rule); } .edit:focus { outline: 1px solid var(--paper); background: var(--surface); }
   .edit:empty::before { content: attr(data-placeholder); color: var(--faint); }
+  .fact { display: grid; grid-template-columns: 96px 1fr auto; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+  .fact:last-of-type { border-bottom: 1px solid var(--line); }
+  .fact img { width: 96px; height: 60px; object-fit: cover; object-position: top; border: 1px solid var(--rule); }
+  .fact .k { font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+  .fact .k .new { background: var(--paper); color: #000; padding: 3px 5px; }
+  .fact .t { font: 400 23px/1.2 var(--serif); margin-top: 6px; overflow-wrap: anywhere; }
+  .fact .s { font-size: 12.5px; color: var(--faint); margin-top: 4px; }
+  .fact.out { opacity: .38; } .fact.out .t { text-decoration: line-through; }
+  .fact .acts { display: flex; gap: 6px; }
+  .addfact { margin-top: 16px; display: flex; gap: 8px; }
+  .addfact input, .addfact select { background: var(--surface); border: 1px solid var(--rule); padding: 10px 12px; }
+  .addfact input { flex: 1; }
+  .nextbar { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 
-  /* a status: a solid tag when it asks something of you or records your answer, an outline while it is the agent's */
-  .tag { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; white-space: nowrap; font: 500 12px/1 var(--mono); padding: 5px 9px 5px 6px; border: 1px solid var(--rule); color: var(--muted); }
-  .tag.approved { background: var(--ok); border-color: var(--ok); color: #000; }
-  .tag.review { background: var(--paper); border-color: var(--paper); color: #000; }
-  .tag.changes { background: var(--warn); border-color: var(--warn); color: #000; }
-  .tag.pending { border-color: var(--line); color: var(--faint); }
-  .pulse rect { animation: blink 1.2s steps(1, end) infinite; }
-  .pulse rect:nth-child(2) { animation-delay: .4s; } .pulse rect:nth-child(3) { animation-delay: .8s; }
-  @keyframes blink { 0% { opacity: 1; } 34% { opacity: .2; } }
+  /* 2 · your video */
+  .editor { display: grid; grid-template-columns: minmax(0, 1fr) 372px; min-height: calc(100vh - 97px); }
+  .center { padding: 20px 24px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; min-width: 0; }
+  .player { position: relative; aspect-ratio: 16/9; background: #000; border: 1px solid var(--line); width: min(100%, calc(56vh * 16 / 9)); margin: 0 auto; overflow: hidden; }
+  .player.tall { aspect-ratio: 9/16; width: min(100%, calc(56vh * 9 / 16)); } .player.sq { aspect-ratio: 1; width: min(100%, 56vh); }
+  .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .player .badge { position: absolute; left: 10px; top: 10px; font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; background: rgba(0,0,0,.65); border: 1px solid rgba(255,255,255,.2); padding: 5px 7px; z-index: 2; }
+  .player .msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px; color: var(--muted); font: 13px var(--mono); }
+  .pbar { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; flex-wrap: wrap; }
+  .pbar .grow { flex: 1; }
+  .track { display: flex; align-items: stretch; overflow-x: auto; padding: 6px 2px 12px; }
+  .part { flex: none; width: 170px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; position: relative; }
+  .part:hover { border-color: var(--rule); } .part.sel { border-color: var(--paper); box-shadow: 0 0 0 1px var(--paper); }
+  .part.dragging { opacity: .4; } .part.drop { box-shadow: -3px 0 0 var(--paper); }
+  .part .th { aspect-ratio: 16/9; background: #000 center/cover no-repeat; position: relative; overflow: hidden; }
+  .part .th video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .part .meta { padding: 7px 9px 9px; }
+  .part .nm { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .part .tx { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .part .sec { position: absolute; right: 6px; top: 6px; font: 500 11px/1 var(--mono); background: rgba(0,0,0,.72); padding: 4px 5px; }
+  .part .n { position: absolute; left: 6px; top: 6px; font: 400 13px/1 var(--pixel); background: rgba(0,0,0,.72); padding: 3px 5px; }
+  .join { flex: none; width: 52px; display: grid; place-items: center; position: relative; }
+  .join button { width: 34px; height: 34px; border: 1px solid var(--rule); background: var(--ground); display: grid; place-items: center; padding: 0; }
+  .join button:hover { border-color: var(--paper); }
+  .join small { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font: 10px/1.1 var(--mono); color: var(--muted); }
+  .addp { flex: none; width: 40px; display: grid; place-items: center; }
+  .addp button { width: 30px; height: 100%; min-height: 120px; border: 1px dashed var(--rule); background: none; display: grid; place-items: center; }
+  .addp button:hover { border-color: var(--paper); }
+  .insp { border-left: 1px solid var(--line); padding: 18px 20px 60px; overflow-y: auto; max-height: calc(100vh - 97px); position: sticky; top: 97px; }
+  .insp h2 { margin: 6px 0 0; font: 400 26px/1.1 var(--serif); }
+  .insp .sum { margin-top: 6px; }
+  .tabs { display: flex; margin: 16px 0 14px; border: 1px solid var(--rule); }
+  .tabs button { flex: 1; background: none; border: 0; padding: 8px 4px; font-size: 12.5px; color: var(--muted); }
+  .tabs button + button { border-left: 1px solid var(--rule); }
+  .tabs button.on { background: var(--paper); color: #000; }
+  .pane { display: grid; gap: 14px; }
+  .fld { display: grid; gap: 6px; font-size: 12.5px; color: var(--muted); }
+  .fld i { font-style: normal; color: var(--faint); }
+  .fld input, .fld textarea, .fld select { background: var(--surface); border: 1px solid var(--rule); padding: 9px 10px; font-size: 14px; color: var(--figure); width: 100%; }
+  .fld textarea { resize: vertical; min-height: 64px; } .fld textarea.code { font: 13px/1.5 var(--mono); }
+  .fld input:focus, .fld textarea:focus, .fld select:focus { outline: 0; border-color: var(--paper); }
+  .pick img { width: 100%; aspect-ratio: 16/9; object-fit: cover; object-position: top; border: 1px solid var(--rule); }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { border: 1px solid var(--line); background: none; padding: 0; text-align: left; }
+  .tile:hover { border-color: var(--rule); } .tile.on { border-color: var(--paper); box-shadow: 0 0 0 1px var(--paper); }
+  .ph { aspect-ratio: 16/9; background: #000 center/cover no-repeat; position: relative; overflow: hidden; }
+  .ph video, .ph iframe { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border: 0; }
+  .ph .bars { position: absolute; inset: 0; display: flex; } .ph .bars i { flex: 1; }
+  .tile .lb { padding: 7px 8px 8px; font-size: 12.5px; }
+  .tile .lb small { display: block; color: var(--muted); font-size: 11.5px; line-height: 1.3; margin-top: 2px; }
+  .slider { display: grid; gap: 6px; font-size: 12.5px; color: var(--muted); }
+  .slider div { display: flex; justify-content: space-between; gap: 10px; } .slider em { font-style: normal; color: var(--figure); font-family: var(--mono); }
+  .slider input { accent-color: var(--paper); width: 100%; }
+  .seg { display: flex; flex-wrap: wrap; } .seg .btn { flex: 1; } .seg .btn + .btn { border-left: 0; }
+  .partacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
 
-  /* the loader: diagonal stripes that slide forever without a seam. At 110deg, stripes 24px apart repeat every
-     24 / sin(70deg) ≈ 25.54px across, so the layer moves exactly that far per loop (and starts one period to the left) */
-  .rendering { position: relative; overflow: hidden; }
-  .rendering::after { content: ''; position: absolute; top: 0; bottom: 0; left: -25.54px; right: 0; background: repeating-linear-gradient(110deg, #0000 0 12px, #ffffff0d 12px 24px); animation: slide 0.6s linear infinite; will-change: transform; pointer-events: none; }
-  @keyframes slide { to { transform: translateX(25.54px); } }
-  .empty { aspect-ratio: 16/9; display: grid; place-items: center; background: var(--surface); color: var(--muted); font: 12px var(--mono); text-align: center; padding: 12px; }
+  /* sheets */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.62); z-index: 50; display: none; }
+  .scrim.on { display: block; }
+  .sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(760px, 100vw); background: var(--ground); border-left: 1px solid var(--paper); z-index: 51; overflow-y: auto; padding: 0 24px 40px; transform: translateX(102%); transition: transform .26s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on { transform: none; }
+  .sheet header { position: sticky; top: 0; background: var(--ground); padding: 20px 0 14px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; z-index: 2; }
+  .sheet header h2 { margin: 4px 0 0; font: 400 28px/1.1 var(--serif); }
+  .sheet .grp { margin-top: 22px; }
+  .sheet .grp h3 { margin: 0 0 10px; }
+  .sheet .tiles { grid-template-columns: repeat(3, 1fr); }
+  .pals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pal { display: flex; align-items: center; gap: 4px; padding: 8px; border: 1px solid var(--line); background: none; width: 100%; text-align: left; }
+  .pal:hover { border-color: var(--rule); } .pal.on { border-color: var(--paper); }
+  .pal i { width: 20px; height: 20px; display: block; border: 1px solid rgba(255,255,255,.15); }
+  .pal span { margin-left: 8px; font-size: 13px; }
+  .colors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .colors label { display: grid; gap: 6px; font-size: 12.5px; color: var(--muted); }
+  .colors input { width: 100%; height: 38px; padding: 0; border: 1px solid var(--rule); background: none; }
+  .fonts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .font { padding: 10px 12px; border: 1px solid var(--line); background: none; text-align: left; font-size: 14px; }
+  .font:hover { border-color: var(--rule); } .font.on { border-color: var(--paper); }
+  .ask { position: fixed; right: 18px; bottom: 18px; z-index: 40; width: 360px; background: var(--surface); border: 1px solid var(--rule); padding: 12px; display: none; }
+  .ask.on { display: grid; gap: 8px; }
+  .ask textarea { width: 100%; min-height: 80px; background: var(--ground); border: 1px solid var(--rule); padding: 8px; resize: vertical; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--paper); color: #000; padding: 9px 14px; font-size: 13px; transition: .2s; z-index: 80; pointer-events: none; max-width: 80vw; }
+  #toast.on { opacity: 1; transform: translateX(-50%); }
 
-  /* the brand's corner marks, around the piece's own picture */
-  .marks { position: relative; }
-  .marks::before, .marks::after { content: ''; position: absolute; width: 14px; height: 14px; border-color: var(--rule); pointer-events: none; }
-  .marks::before { left: -8px; top: -8px; border-left: 1px solid; border-top: 1px solid; }
-  .marks::after { right: -8px; bottom: -8px; border-right: 1px solid; border-bottom: 1px solid; }
-  .shot { border: 1px solid var(--line); background: #000; aspect-ratio: 16/9; overflow: hidden; }
-  .shot > video { height: 100%; object-fit: contain; }
-  .shot.marks { width: min(100%, calc(64vh * 16 / 9)); }   /* the whole picture and the strip under it fit one screen */
-
-  /* top bar: where you are */
-  .top { display: flex; align-items: stretch; min-height: 52px; border-bottom: 1px solid var(--line); }
-  .back { display: flex; align-items: center; gap: 9px; padding: 0 18px; border-right: 1px solid var(--line); color: var(--muted); text-decoration: none; font-size: 13px; }
-  .back:hover { background: var(--figure); color: #000; }
-  .ttl { flex: 1; min-width: 0; padding: 0 20px; font: 21px/52px var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .metas { display: flex; }
-  .metas span { display: flex; align-items: center; padding: 0 16px; border-left: 1px solid var(--line); color: var(--muted); font-size: 12px; white-space: nowrap; }
-
-  /* the six stages, a strip of cells; the open one is inverted */
-  /* whose turn it is, always: under the title, above the stages */
-  .turn { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 48px; padding: 8px 20px; border-bottom: 1px solid var(--line); font-size: 14px; }
-  .turn .mk { width: 9px; height: 9px; background: var(--muted); }
-  .turn b { font-weight: 500; margin-right: 10px; }
-  .turn .tx { color: var(--muted); }
-  .turn.yours .mk { background: var(--paper); }
-  .turn.busy .mk, .turn.agent .mk { animation: blink 1.2s steps(1, end) infinite; }
-  .turn.ask { background: var(--paper); color: #000; }
-  .turn.ask .mk { background: #000; } .turn.ask .tx { color: #000a; }
-  .turn.ask .btn { border-color: #000; color: #000; } .turn.ask .btn:hover { background: #000; color: var(--paper); }
-  .turn.deaf .mk, .turn.off .mk { background: var(--warn); }
-  .turn.off { color: var(--warn); }
-  /* a video that no longer shows the piece as it is: held, dimmed, and told why */
-  .shot.stale > video { opacity: .28; filter: grayscale(1); }
-  .updating { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 10px; text-align: center; padding: 20px; overflow: hidden; }
-  .updating b { background: var(--paper); color: #000; padding: 7px 12px; font: 500 13px/1 var(--mono); }
-  .updating.err b { background: var(--warn); }
-  .updating span { font: 13px var(--mono); color: var(--figure); max-width: 52ch; }
-  .strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid var(--line); background: var(--ground); }
-  .cell { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto auto; padding: 14px 16px; min-height: 116px; border-right: 1px solid var(--line); }
-  .cell:last-child { border-right: 0; }
-  .cell .num { font: 26px/1 var(--pixel); color: var(--faint); }
-  .cell .ci { justify-self: end; }
-  .cell .nm { grid-column: 1 / -1; grid-row: 3; font-size: 16px; font-weight: 500; }
-  .cell .cs { grid-column: 1 / -1; grid-row: 4; font: 12px/1.5 var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cell:hover:not(:disabled):not(.on) { background: var(--raised); }
-  .cell:disabled { cursor: default; }
-  .cell:disabled .nm, .cell:disabled .cs { color: var(--faint); }
-  .cell.on { background: var(--paper); color: #000; }
-  .cell.on .num { color: #0006; } .cell.on .cs { color: #000a; } .cell.on .ci { color: #000 !important; }
-  .cell:focus-visible { outline: 2px solid var(--paper); outline-offset: -4px; }
-  .cell.on:focus-visible { outline-color: #000; }
-
-  /* the work, and your decision beside it */
-  .work { display: grid; grid-template-columns: minmax(0, 1fr) var(--rw, 340px); align-items: start; }
-  .stage { min-width: 0; max-width: 1240px; padding: 44px 48px 120px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px; align-content: start; }
-  .sh { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 32px; flex-wrap: wrap; }
-  .sh h1 { margin: 0; font-size: clamp(48px, 7vw, 96px); line-height: .92; letter-spacing: -.025em; }
-  .sh p { color: var(--muted); max-width: 32ch; padding-bottom: 6px; }
-  .decide { position: sticky; top: 0; align-self: start; height: 100vh; overflow: auto; border-left: 1px solid var(--line); border-top: 4px solid var(--state, var(--line)); padding: 20px 22px 40px; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 18px; }
-  #resize { position: absolute; left: -5px; top: 0; bottom: 0; width: 10px; cursor: col-resize; z-index: 5; }
-  #resize:hover::after { content: ''; position: absolute; left: 4px; top: 0; bottom: 0; width: 1px; background: var(--paper); }
-  .dstate { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .dstate b { display: inline-flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 500; color: var(--state, var(--figure)); }
-  .said { border-left: 2px solid var(--warn); padding-left: 10px; font-size: 13px; }
-  .meter { display: flex; gap: 3px; }
-  .meter i { flex: 1; height: 8px; border: 1px solid var(--rule); }
-  .meter i.y { background: var(--ok); border-color: var(--ok); }
-  .log { display: grid; gap: 0; border-top: 1px solid var(--line); }
-  .log > div { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
-  .log time { font-family: var(--mono); color: var(--faint); }
-  .lh { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-
-  /* rows: a label and what it holds (brief, look) */
-  .rows { border-top: 1px solid var(--rule); }
-  .row { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; padding: 18px 0; border-bottom: 1px solid var(--line); align-items: start; }
-  .rl { display: flex; align-items: center; gap: 8px; color: var(--muted); padding-top: 2px; }
-  .rows .edit { font-size: 16px; }
-  .rows .edit.lead { font: 28px/1.22 var(--serif); letter-spacing: -.01em; }
-  .hint { color: var(--muted); font-size: 13px; }
-  .info { position: relative; display: inline-grid; place-items: center; color: var(--faint); cursor: help; }
-  .info:hover, .info:focus { color: var(--figure); outline: none; }
-  .info .tip { position: absolute; left: -1px; top: calc(100% + 8px); width: 290px; z-index: 20; padding: 11px 13px; background: #000; border: 1px solid var(--paper); color: var(--figure); font: 13px/1.45 var(--sans); white-space: normal; opacity: 0; pointer-events: none; }
-  .info:hover .tip, .info:focus .tip { opacity: 1; }
-  .bars { display: flex; border: 1px solid var(--rule); }
-  .bars > div { flex: 1; min-width: 0; }
-  .bars i { display: block; height: 84px; }
-  .bars span { display: block; padding: 7px 9px; border-top: 1px solid var(--rule); font: 11px/1.4 var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bars > div + div { border-left: 1px solid var(--rule); }
-  .trow { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-  .trow:first-child { padding-top: 0; } .trow:last-child { border-bottom: 0; padding-bottom: 0; }
-  .spec { font-size: 28px; line-height: 1.15; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chip { font: 12px var(--mono); border: 1px solid var(--rule); padding: 4px 9px; color: var(--figure); white-space: nowrap; }
-
-  /* boards waiting on paper-motion.app */
-  .boards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .board { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border: 1px solid var(--line); text-decoration: none; }
-  .board.wait { border-color: var(--paper); border-left-width: 5px; }
-  .board:hover { background: var(--raised); }
-  .board .bt { min-width: 0; }
-  .board .bl { display: block; font: 11px/1.5 var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  /* structure: a contact sheet of beats */
-  .sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1px; padding: 1px; }
-  .beat { outline: 1px solid var(--line); min-width: 0; }
-  .beat .shot { border: 0; border-bottom: 1px solid var(--line); }
-  .beat .bm { padding: 12px 14px 14px; display: grid; gap: 4px; }
-  .beat .bh { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-  .beat .n { font: 18px/1 var(--pixel); color: var(--faint); margin-right: 8px; }
-
-  /* parts: one row each, ruled */
-  .parts { border-top: 1px solid var(--rule); }
-  .part { display: grid; grid-template-columns: 44px minmax(200px, 340px) minmax(0, 1fr); gap: 22px; padding: 24px 0; border-bottom: 1px solid var(--line); background: var(--ground); }
-  .pn { display: grid; align-content: start; justify-items: start; gap: 12px; }
-  .pn .n { font: 26px/1 var(--pixel); color: var(--faint); }
-  .grip { cursor: grab; color: var(--faint); padding: 4px; margin-left: -4px; }
-  .grip:hover { color: #000; background: var(--figure); }
-  .pb { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-content: start; min-width: 0; }
-  .ph { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .ph h2 { margin: 0; font: 24px/1.1 var(--serif); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ph h2 small { font: 12px var(--mono); color: var(--muted); margin-left: 8px; }
-  .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0 16px; align-items: center; }
-  .kv label { font: 12px var(--mono); color: var(--muted); }
-  .ctl { display: flex; gap: 8px 22px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
-  .ctl label { display: inline-flex; align-items: center; gap: 8px; }
-  .acts { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .acts .field { flex: 1; min-width: 180px; width: auto; }
-  .asked { color: var(--warn); font-size: 13px; }
-  .dragging { opacity: .3; }
-  .drop-before { box-shadow: 0 -3px 0 0 var(--paper); } .drop-after { box-shadow: 0 3px 0 0 var(--paper); }
-  [data-trackdrag].drop-before { box-shadow: -3px 0 0 0 var(--paper); } [data-trackdrag].drop-after { box-shadow: 3px 0 0 0 var(--paper); }
-  body.resizing { cursor: col-resize; user-select: none; } body.resizing video { pointer-events: none; }
-
-  /* assembly: the parts as a strip, as long as they last */
-  .track { display: flex; align-items: stretch; border: 1px solid var(--rule); }
-  .tblock { cursor: grab; min-width: 0; display: grid; grid-template-rows: 58px auto; background: #000; }
-  .tblock video { height: 58px; object-fit: cover; pointer-events: none; }
-  .tblock .tl { display: flex; justify-content: space-between; gap: 8px; padding: 6px 9px; border-top: 1px solid var(--rule); font-size: 12px; white-space: nowrap; overflow: hidden; }
-  .tblock .tl span:first-child { overflow: hidden; text-overflow: ellipsis; }
-  .jn { width: 32px; flex-shrink: 0; display: grid; place-items: center; color: var(--muted); border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); background: var(--surface); }
-  .tfoot { display: flex; justify-content: space-between; gap: 12px; font: 12px var(--mono); color: var(--muted); margin-top: 8px; }
-  .outs { border-top: 1px solid var(--rule); }
-  .out { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-
-  /* pieces list */
-  .list { max-width: 1000px; padding: 56px 48px 120px; display: grid; gap: 34px; }
-  .list h1 { margin: 0; font-size: clamp(56px, 9vw, 120px); line-height: .9; letter-spacing: -.03em; }
-  .lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 20px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
-  .lrow:hover { background: var(--raised); }
-  .lrow b { font: 26px/1.15 var(--serif); font-weight: 400; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; background: var(--paper); color: #000; padding: 9px 14px; font: 500 12px var(--mono); opacity: 0; transition: opacity .15s; pointer-events: none; }
-  #toast.on { opacity: 1; }
-
-  /* narrower: your decision moves above the work */
-  @media (max-width: 1100px) {
-    .work { grid-template-columns: minmax(0, 1fr); }
-    .decide { order: -1; position: static; height: auto; border-left: 0; border-bottom: 1px solid var(--line); padding: 18px 48px 22px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 24px; }
-    .decide > * { grid-column: 1 / -1; }
-    .decide > .btn.big { grid-column: 1; align-self: start; }
-    .decide > .ask { grid-column: 2; grid-row: span 2; }
-    .decide .activity { display: none; }
-    .decide .notes > div:nth-last-child(n+3) { display: none; }
-    #resize { display: none; }
-    .metas span:nth-child(2) { display: none; }
-  }
-  /* a phone: the strip scrolls and stays on top; everything stacks */
-  @media (max-width: 760px) {
-    .ttl { padding: 0 14px; font-size: 18px; }
-    .turn { grid-template-columns: auto minmax(0, 1fr); padding: 10px 14px; }
-    .turn .btn { grid-column: 2; justify-self: start; }
-    .turn b { display: block; }
-    .back span, .metas span:not(:last-child) { display: none; }
-    .back { padding: 0 14px; }
-    .strip { display: flex; overflow-x: auto; position: sticky; top: 0; z-index: 10; scrollbar-width: none; }
-    .strip::-webkit-scrollbar { display: none; }
-    .cell { flex: 0 0 auto; min-height: 0; grid-template-columns: auto auto auto; grid-template-rows: auto; align-items: center; column-gap: 9px; padding: 11px 14px; }
-    .cell .num { font-size: 17px; grid-row: 1; } .cell .nm { grid-column: 2; grid-row: 1; font-size: 14px; } .cell .ci { grid-column: 3; grid-row: 1; }
-    .cell .cs { display: none; }
-    .stage { padding: 26px 16px 100px; gap: 26px; }
-    .sh h1 { font-size: 46px; }
-    .decide { padding: 16px; grid-template-columns: minmax(0, 1fr); }
-    .decide > .btn.big, .decide > .ask { grid-column: 1; grid-row: auto; }
-    .row { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 14px 0; }
-    .rows .edit.lead { font-size: 23px; }
-    .bars i { height: 56px; }
-    .part { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 20px 0; }
-    .pn { grid-auto-flow: column; justify-content: start; align-items: center; }
-    .grip { display: none; }
-    .track { overflow-x: auto; }
-    .tblock { min-width: 104px; }
-    .info .tip { width: min(290px, calc(100vw - 40px)); }
-    .list { padding: 32px 16px 100px; }
-    .lrow { grid-template-columns: minmax(0, 1fr) auto; }
-    .lrow .mono { display: none; }
-  }
-  @media (prefers-reduced-motion: reduce) { .rendering::after, .pulse rect, .turn .mk { animation: none; } }
+  /* 3 · export */
+  .exp { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; display: grid; gap: 22px; }
+  .exp h1 { font: 400 42px/1.05 var(--serif); margin: 0; }
+  .file { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); }
+  .exp video { width: 100%; background: #000; border: 1px solid var(--line); }
+  .list { max-width: 760px; margin: 0 auto; padding: 40px 20px; }
+  .list h1 { font: 400 42px/1 var(--serif); margin: 0 0 20px; }
+  .lrow { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } .insp { position: static; max-height: none; border-left: 0; border-top: 1px solid var(--line); } .ttl { display: none; } .sheet .tiles { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
-<div id="app"><div class="empty" style="height:100vh;aspect-ratio:auto">loading…</div></div>
+<div id="app"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" role="dialog"></aside>
+<div class="ask" id="ask"><div style="display:flex;justify-content:space-between;align-items:center"><b>Ask your agent</b><button class="btn sm" data-ask-close>Close</button></div>
+  <p class="hint">For anything the controls can't do: "make it more playful", "add our pricing", "use the photo of the team".</p>
+  <textarea id="askText" aria-label="What to ask"></textarea><button class="btn primary" data-ask-send>Send</button></div>
 <div id="toast" role="status"></div>
 <script>
-const STAGES = [
-  ['brief', 'Brief', 'What we say, to whom and how.'],
-  ['look', 'Look', 'Colors, type, background and moves.'],
-  ['structure', 'Structure', 'The beats, and the block that shows each.'],
-  ['parts', 'Parts', 'Each block in your brand, one by one.'],
-  ['assembly', 'Assembly', 'Everything joined, with its transitions.'],
-  ['final', 'Final', 'Full quality, and the files.'],
-];
-const BRIEF_HELP = {
-  what: ['What', 'One or two sentences: what the video shows and where it will live (your site, LinkedIn, a launch). Tell the story, not the style.'],
-  who: ['For whom', 'Who watches it and what they already know. The more specific, the better the words on screen.'],
-  format: ['Format', 'Shape and length. 16:9 for web and YouTube, 9:16 for Reels and Stories, 1:1 for feeds. Most pieces run 15–30 s.'],
-  tone: ['Tone', 'How it should feel, in a few words (calm, bold, playful), and anything to avoid.'],
-  action: ['Call to action', 'The one thing viewers should do at the end: a URL, a button, a date.'],
-};
-const STATUS = { approved: 'approved', review: 'to review', changes: 'changes asked', rendering: 'rendering', queued: 'queued', working: 'agent working', pending: 'later' };
-const COLOR = { approved: 'var(--ok)', review: 'var(--paper)', changes: 'var(--warn)', rendering: 'var(--muted)', queued: 'var(--faint)', working: 'var(--muted)', pending: 'var(--faint)' };
-
-// paper-motion's icons, drawn for the brand like the site's: a 20×20 grid, 1.5px strokes, square caps, mitred corners
-const ic = (body, size = 16, cls = '') => `<svg${cls ? ` class="${cls}"` : ''} width="${size}" height="${size}" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">${body}</svg>`;
-const SOLID = 'fill="currentColor" stroke="none"';
-const G = {
-  approved: '<path d="m3.75 10.5 4 4 8.5-9"/>',
-  review: `<rect x="3.75" y="3.75" width="12.5" height="12.5"/><rect x="7.5" y="7.5" width="5" height="5" ${SOLID}/>`,
-  changes: '<path d="M3.75 16.25v-3.5l9-9 3.5 3.5-9 9z"/><path d="m10.5 6 3.5 3.5"/>',
-  pending: '<rect x="3.75" y="3.75" width="12.5" height="12.5" stroke-dasharray="2.5 2.5" stroke-linecap="butt"/>',
-  queued: '<path d="M3.75 10h2.5M8.75 10h2.5M13.75 10h2.5"/>',
-  working: `<rect x="2.5" y="8" width="4" height="4" ${SOLID}/><rect x="8" y="8" width="4" height="4" ${SOLID}/><rect x="13.5" y="8" width="4" height="4" ${SOLID}/>`,
-  note: '<path d="M3.25 3.75h13.5v9.5h-7l-3.5 3.5v-3.5h-3z"/>',
-  info: `<rect x="3.25" y="3.25" width="13.5" height="13.5"/><path d="M10 9.25v4.5"/><rect x="9.1" y="5.6" width="1.8" height="1.8" ${SOLID}/>`,
-  grip: [4, 9, 14].map((y) => `<rect x="5" y="${y}" width="2.5" height="2.5" ${SOLID}/><rect x="12.5" y="${y}" width="2.5" height="2.5" ${SOLID}/>`).join(''),
-  down: '<path d="M10 3.25v9.5M5.75 8.75 10 13l4.25-4.25M3.75 16.75h12.5"/>',
-  out: '<path d="M8.25 4.75h-4.5v11.5h11.5v-4.5"/><path d="M11.75 3.75h4.5v4.5M16.25 3.75 9.5 10.5"/>',
-  back: '<path d="M16.75 10h-13M8.5 5.25 3.75 10l4.75 4.75"/>',
-  reopen: '<path d="M4.25 10a5.75 5.75 0 1 0 1.7-4.1"/><path d="M3.75 2.75v3.75H7.5"/>',
-  // joins: how one part becomes the next
-  cut: '<path d="M10 2.75v14.5"/><path d="M4.25 6.75v6.5M15.75 6.75v6.5" opacity=".45"/>',
-  whip: '<path d="M7.25 10h9M12 5.25 16.75 10 12 14.75"/><path d="M3.25 6.5h3M3.25 13.5h3" opacity=".45"/>',
-  dissolve: '<rect x="2.75" y="5.75" width="9" height="9" opacity=".45"/><rect x="8.25" y="5.75" width="9" height="9"/>',
-  dip: '<path d="M3.25 5.25 10 14.75l6.75-9.5"/>',
-  wipe: '<rect x="2.75" y="3.75" width="14.5" height="12.5"/><path d="M11.5 3.75 8.5 16.25"/>',
-};
-G.rendering = G.working;
-const icon = (name, size) => ic(G[name] ?? '', size, name === 'working' || name === 'rendering' ? 'pulse' : '');
-const joinIcon = (j) => icon(G[j] ? j : 'wipe', 16);
-
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const tag = (st, label) => `<span class="tag ${st}">${icon(st, 14)}${label ?? STATUS[st] ?? st}</span>`;
-const vid = (src, extra = '') => `<video data-k="${esc(src)}" src="${esc(src)}" muted loop autoplay playsinline ${extra}></video>`;
-const fmt = (s) => (s == null ? '' : `${Number(s).toFixed(1).replace('.0', '')} s`);
-const clock = (iso) => (iso ? new Date(iso).toTimeString().slice(0, 5) : '');
-const order = (k) => STAGES.findIndex(([x]) => x === k);
-const nn = (i) => String(i + 1).padStart(2, '0');
-
-// ─── state ─────────────────────────────────────────────────────────────────────────
+// ─── state, helpers ────────────────────────────────────────────────────────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
-let piece = params.get('p'), P = null, raw = '', view = null, followed = null, misses = 0;
-const RW = [280, 560];
-let rightW = (() => { try { return Math.min(RW[1], Math.max(RW[0], Number(localStorage.getItem('studio:rw')) || 340)); } catch { return 340; } })();
+let piece = params.get('p'), P = null, raw = '', view = null, sel = null, tab = 'words', misses = 0, playing = null;
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $ = (id) => document.getElementById(id);
+const I = {
+  undo: '<path d="M7 5 3 9l4 4M3 9h9a5 5 0 0 1 0 10H9"/>', style: '<circle cx="10" cy="10" r="7"/><path d="M10 3v14M3 10h7"/>', ask: '<path d="M3 4h14v10H8l-4 3v-3H3z"/>',
+  add: '<path d="M10 4v12M4 10h12"/>', join: '<path d="M3 10h14M12 5l5 5-5 5"/>', back: '<path d="M12 4 6 10l6 6"/>', play: '<path d="M6 4l10 6-10 6z"/>', out: '<path d="M8 4H4v12h12v-4M11 3h6v6M17 3l-8 8"/>',
+};
+const icon = (n) => `<svg class="ico" viewBox="0 0 20 20">${I[n]}</svg>`;
+let tt; const toast = (t, ms = 1900) => { const e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), ms); };
+const STEP = { brief: 'what', inventory: 'what', video: 'video', final: 'export' };
+const tile = (o, attr, on) => `<button class="tile${on ? ' on' : ''}" ${attr} ${o.clip ? `data-clip="${esc(o.clip)}"` : ''}><div class="ph" ${o.poster ? `style="background-image:url('${esc(o.poster)}')"` : ''}></div><div class="lb">${esc(o.title)}${o.summary ? `<small>${esc(o.summary)}</small>` : ''}</div></button>`;
+const swatch = (b) => `<div class="ph" data-swatch="${esc(JSON.stringify(b.entry ?? {}))}"><div class="bars">${(b.colors?.length ? b.colors : ['#111', '#333']).map((c) => `<i style="background:${esc(c)}"></i>`).join('')}</div></div>`;
 
 async function load() {
   if (!piece) {
@@ -342,297 +206,297 @@ async function load() {
     else return renderList(list);
   }
   const res = await fetch(`/api/piece?p=${encodeURIComponent(piece)}`);
-  if (!res.ok) { document.getElementById('app').innerHTML = `<div class="empty" style="height:100vh;aspect-ratio:auto">There is no piece “${esc(piece)}” in this project.</div>`; return; }
+  if (!res.ok) { $('app').innerHTML = `<div class="empty">There is no piece “${esc(piece)}” in this project.</div>`; return; }
   const text = await res.text();
   if (text === raw) return;
   raw = text; P = JSON.parse(text);
-  // follow the piece when the agent moves it on, unless the user is looking at something else on purpose
-  if (!view || view === followed) view = P.stage;
-  followed = P.stage;
+  if (!view) view = STEP[P.stage] ?? 'what';
   render();
 }
-// a re-render keeps the field you're in: same element (by its data attributes), same unsaved text, same caret
-function captureFocus() {
-  const a = document.activeElement;
-  if (!a || a === document.body || !(a.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(a.tagName))) return null;
-  const sel = a.id ? `#${a.id}` : Object.entries(a.dataset).map(([k, v]) => `[data-${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}="${CSS.escape(v)}"]`).join('');
-  if (!sel) return null;
-  const range = a.isContentEditable ? (() => { const r = getSelection(); return r.rangeCount ? [r.anchorOffset, r.focusOffset] : null; })() : [a.selectionStart, a.selectionEnd];
-  return { sel, value: a.isContentEditable ? a.innerText : a.value, editable: a.isContentEditable, range };
-}
-function restoreFocus(f) {
-  const el = f && document.querySelector(f.sel); if (!el) return;
-  if (f.editable) el.innerText = f.value; else el.value = f.value;
-  el.focus({ preventScroll: true });
-  try {
-    if (f.editable && el.firstChild && f.range) { const r = document.createRange(), n = el.firstChild, len = n.textContent.length; r.setStart(n, Math.min(f.range[0], len)); r.setEnd(n, Math.min(f.range[1], len)); const g = getSelection(); g.removeAllRanges(); g.addRange(r); }
-    else if (f.range && el.setSelectionRange) el.setSelectionRange(f.range[0], f.range[1]);
-  } catch {}
-}
-async function act(body) {
+async function act(body, quiet) {
   const res = await fetch(`/api/piece?p=${encodeURIComponent(piece)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const r = await res.json();
-  // an edit by hand is applied here; a decision goes to the agent, who may or may not be waiting for it right now
-  const decision = ['approve', 'changes', 'reopen', 'approve-part'].includes(body.type);
-  toast(r.error ? `Not done: ${r.error}` : !decision ? 'Saved' : P.agent?.listening ? 'Sent to your agent' : 'Saved. Tell your agent “continue” in the chat', decision && !r.error && !P.agent?.listening ? 4200 : 1800);
+  if (r.error) toast(`Not done: ${r.error}`, 3200); else if (!quiet) toast(r.say ?? 'Saved');
   raw = ''; await load();
+  return r;
 }
-let tt; function toast(t, ms = 1800) { const e = document.getElementById('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), ms); }
-// the page polls the studio; a few misses in a row mean the studio itself stopped, and the page says so
-setInterval(() => load().then(() => { if (misses >= 3) { misses = 0; paintTurn(); } misses = 0; }).catch(() => { if (++misses === 3) paintTurn(); }), 1500);
-setInterval(() => paintTurn(), 20000);   // "for 4 min" keeps counting between changes
-
 function renderList(list) {
-  document.getElementById('app').innerHTML = `<header class="top"><div class="ttl">paper-motion studio</div></header>
-    <div class="list"><h1 class="serif">Pieces</h1>
-    ${list.length ? `<div style="border-top:1px solid var(--rule)">${list.map((x) => `<a class="lrow" href="?p=${encodeURIComponent(x.piece)}"><b>${esc(x.title)}</b><span class="mono muted" style="font-size:12px">pieces/${esc(x.piece)}</span>${tag(x.status, `${esc(x.stage)}: ${STATUS[x.status] ?? x.status}`)}</a>`).join('')}</div>`
-      : `<p class="muted" style="max-width:52ch">No pieces yet. Ask your agent for a video; it starts one here with <span class="mono">npx paper-motion piece init</span>.</p>`}</div>`;
+  $('app').innerHTML = `<header class="top"><div class="ttl">paper-motion studio</div></header><div class="list"><h1>Pieces</h1>
+    ${list.length ? list.map((x) => `<a class="lrow" href="?p=${encodeURIComponent(x.piece)}"><b>${esc(x.title)}</b><span class="muted mono">pieces/${esc(x.piece)}</span></a>`).join('') : '<p class="muted">No pieces yet. Ask your agent for a video.</p>'}</div>`;
 }
 
-// ─── stages ────────────────────────────────────────────────────────────────────────
-function briefHTML() {
-  return `<div class="rows">${Object.entries(BRIEF_HELP).map(([k, [l, help]]) => `<div class="row">
-    <div class="rl">${l}<span class="info" tabindex="0" role="button" aria-label="What goes in ${l}">${icon('info', 15)}<span class="tip" role="tooltip">${help}</span></span></div>
-    <div class="edit${k === 'what' ? ' lead' : ''}" contenteditable="plaintext-only" spellcheck="false" data-brief="${k}" data-placeholder="Empty">${esc(P.brief[k])}</div></div>`).join('')}</div>
-    <p class="hint">Click any text to edit it. Your agent works from your version.</p>`;
-}
-// the boards your agent shared for this stage: open one to compare and choose; the choice reaches your agent
-function boardsHTML(stage) {
-  const list = (P.boards ?? []).filter((b) => b.stage === stage);
-  if (!list.length) return '';
-  const waiting = list.filter((b) => b.status === 'waiting').length;
-  return `<div class="boards"><p class="muted">${waiting ? `${waiting === 1 ? 'One board is' : `${waiting} boards are`} waiting for your choice.` : 'The boards you chose on.'}</p>
-    ${list.map((b) => `<a class="board${b.status === 'waiting' ? ' wait' : ''}" href="${esc(b.url)}" target="_blank" rel="noopener">
-      <span class="bt"><span style="display:block;font-weight:500">${esc(b.title)}</span>${b.line ? `<span class="bl">${esc(b.line.replace(/^paper-motion:\s*/, ''))}</span>` : ''}</span>
-      ${b.status === 'waiting' ? `<span class="btn primary">Open and choose ${icon('out', 15)}</span>` : tag('approved', 'chosen')}</a>`).join('')}</div>`;
-}
-const fontLinks = new Set();
-function useFont(css) { if (!css || fontLinks.has(css)) return; fontLinks.add(css); const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = css; document.head.append(l); }
-function lookHTML() {
-  const L = P.look, boards = boardsHTML('look');
-  if (!L.colors.length && !L.fonts.length && !L.backgrounds.length && !L.moves.length) return boards || `<p class="muted" style="max-width:56ch">Nothing chosen yet. Your agent proposes palettes, type, backgrounds and moves on boards; what you pick lands here.</p>`;
-  const row = (label, inner) => `<div class="row"><div class="rl">${label}</div><div>${inner}</div></div>`;
-  for (const [, , css] of L.fonts) useFont(css);
-  return `${boards}<div class="rows">
-    ${L.colors.length ? row('Palette', `<div class="bars">${L.colors.map(([n, h]) => `<div><i style="background:${esc(h)}"></i><span>${esc(n)}<br>${esc(String(h).toLowerCase())}</span></div>`).join('')}</div>`) : ''}
-    ${L.fonts.length ? row('Type', L.fonts.map(([r, f]) => `<div class="trow"><span class="spec" style="font-family:'${esc(String(f).replace(/'/g, ''))}',var(--sans)">${esc(f)}</span><span class="mono muted" style="font-size:12px">${esc(r)}</span></div>`).join('')) : ''}
-    ${L.backgrounds.length ? row('Backgrounds', `<div class="chips">${L.backgrounds.map((b) => `<span class="chip">${esc(b)}</span>`).join('')}</div>`) : ''}
-    ${L.moves.length ? row('Moves', `<div class="chips">${L.moves.map((m) => `<span class="chip">${esc(m)}</span>`).join('')}</div>`) : ''}</div>`;
-}
-function structureHTML() {
-  const boards = boardsHTML('structure');
-  if (!P.parts.length) return boards || `<p class="muted" style="max-width:56ch">No structure yet. Your agent proposes a few on a board; the one you choose shows here, beat by beat.</p>`;
-  return `${boards}<div class="sheet">${P.parts.map((p, i) => `<div class="beat">
-    <div class="shot">${p.clip ? vid(p.clip) : '<div class="empty">No block for this beat yet</div>'}</div>
-    <div class="bm"><div class="bh"><span><span class="n">${nn(i)}</span>${esc(p.name)}</span><span class="mono muted" style="font-size:12px">${fmt(p.seconds)}</span></div>
-    <div class="muted" style="font-size:13px">${esc(p.what)}</div></div></div>`).join('')}</div>
-    <p class="hint">These clips are paper-motion's samples of each block. Yours come in the next stage, in your brand.</p>`;
-}
-function partsHTML() {
-  if (!P.parts.length) return `<p class="muted">The parts appear here once the structure is set.</p>`;
-  return `<div class="parts">${P.parts.map((p, i) => {
-    const media = p.status === 'rendering' || p.status === 'queued'
-      ? `<div class="empty ${p.status === 'rendering' ? 'rendering' : ''}">${p.status === 'rendering' ? 'Rendering this part' : 'Waiting its turn to render'}</div>`
-      : p.draft ? vid(p.draft) : '<div class="empty">No draft yet</div>';
-    return `<div class="part" data-drop="${i}" data-dir="${esc(p.dir)}">
-      <div class="pn"><span class="n">${nn(i)}</span><span class="grip" data-grip title="Drag to move this part">${icon('grip', 16)}</span></div>
-      <div class="shot">${media}</div>
-      <div class="pb">
-        <div class="ph"><h2>${esc(p.name)}<small>${esc(p.id)}</small></h2>${tag(p.status)}</div>
-        <div class="muted edit" contenteditable="plaintext-only" spellcheck="false" data-what="${esc(p.dir)}" data-placeholder="What this part shows">${esc(p.what)}</div>
-        ${p.note ? `<div class="asked">You asked: “${esc(p.note)}”</div>` : ''}
-        ${p.error ? `<div class="asked mono" style="font-size:12px">The render failed: ${esc(p.error)}</div>` : ''}
-        ${Object.keys(p.texts).length ? `<div class="kv">${Object.entries(p.texts).map(([k, v], n) => `<label for="t${i}-${n}">${esc(k)}</label><input id="t${i}-${n}" class="field" value="${esc(v)}" data-text="${esc(p.dir)}" data-key="${esc(k)}">`).join('')}</div>` : ''}
-        <div class="ctl">
-          <label>Length <input class="box" type="number" step="0.1" min="0.5" max="30" value="${p.seconds ?? ''}" data-sec="${esc(p.dir)}" style="width:72px"> s</label>
-          <label>Comes in with <select class="box" data-join="${esc(p.dir)}" ${i === 0 ? 'disabled' : ''}>${P.joins.map((j) => `<option ${j === p.join ? 'selected' : ''}>${j}</option>`).join('')}</select></label>
-        </div>
-        ${p.status === 'review' ? `<div class="acts"><button class="btn primary" data-okp="${esc(p.dir)}">${icon('approved', 15)} Approve part</button><input class="field" placeholder="Or ask for a change, then press Enter" aria-label="Ask for a change in ${esc(p.name)}" data-cp="${esc(p.dir)}"></div>` : ''}
-      </div></div>`;
-  }).join('')}</div>`;
-}
-function trackHTML() {
-  if (!P.parts.length) return '';
-  const T = P.parts.reduce((a, p) => a + Number(p.seconds ?? 0), 0);
-  return `<div><div class="track">${P.parts.map((p, i) => `
-    ${i ? `<span class="jn" title="Comes in with ${esc(p.join)}">${joinIcon(p.join)}</span>` : ''}
-    <div data-drop="${i}" data-dir="${esc(p.dir)}" draggable="true" data-trackdrag class="tblock" style="flex:${p.seconds ?? 1} 1 0">
-      ${p.draft ? `<video src="${esc(p.draft)}#t=${Math.min(1, (p.seconds ?? 2) / 2)}" preload="metadata" muted></video>` : '<span></span>'}
-      <span class="tl"><span>${esc(p.name)}</span><span class="mono muted">${fmt(p.seconds)}</span></span>
-    </div>`).join('')}</div>
-    <div class="tfoot"><span>Drag a part to reorder</span><span>${fmt(T)} in total</span></div></div>`;
-}
-// Why the joined video (assembly) or the final is not the piece as it is right now, or null when it is current.
-function updating(kind) {
-  const M = P.media, job = P.job?.kind === kind ? P.job : null;
-  const busy = P.parts.filter((p) => ['changes', 'queued', 'rendering'].includes(p.status)), names = busy.map((p) => p.name).join(', ');
-  if (job) return { head: 'Updating', sub: job.joining ? 'Joining the parts' : job.of ? `Rendering part ${job.part} of ${job.of}` : 'Starting' };
-  if (kind === 'assembly' && M.error) return { head: 'Not updated', sub: `The studio could not join the parts (${M.error}). Your agent has been told and will join them.`, err: true };
-  if (busy.length) return { head: 'Updating', sub: busy.some((p) => p.status === 'changes') ? `Your agent is changing ${names}` : `Rendering ${names} again` };
-  if (M[`${kind}Stale`]) return { head: 'Out of date', sub: kind === 'final' ? 'The piece changed after this render. Your agent renders the final again.' : 'The piece changed after this was joined. The new video is on its way.' };
-  return null;
-}
-function bigShot(src, st, working, idle, upd) {
-  if (!src) return `<div class="shot marks" style="overflow:visible"><div class="empty ${st === 'working' ? 'rendering' : ''}" style="height:100%">${st === 'working' ? working : idle}</div></div>`;
-  return `<div class="shot marks${upd ? ' stale' : ''}" style="overflow:visible">${vid(src, 'controls')}${upd ? `<div class="updating${upd.err ? ' err' : ' rendering'}" role="status"><b>${esc(upd.head)}</b><span>${esc(upd.sub)}</span></div>` : ''}</div>`;
-}
-function assemblyHTML(st) {
-  return `${bigShot(P.media.assembly, st, 'Your agent is joining the parts', 'Not joined yet', updating('assembly'))}${trackHTML()}`;
-}
-
-// ─── whose turn it is ──────────────────────────────────────────────────────────────
-const ago = (iso) => { const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000); return m < 1 ? 'just now' : m < 60 ? `for ${m} min` : `for ${Math.floor(m / 60)} h ${m % 60} min`; };
+// ─── the frame: steps, whose turn it is ───────────────────────────────────────────────────────────────────────────
 function turn() {
-  if (misses >= 3) return { kind: 'off', head: 'The studio stopped', text: 'This page is no longer up to date. Ask your agent to start it again (npx paper-motion studio).' };
-  const cur = P.stage, st = P.stages[cur].status, name = STAGES[order(cur)][1], A = P.agent ?? {};
-  if (P.ask) return { kind: 'ask', head: 'Your agent asked you something in the chat', text: P.ask.text, back: true };
-  if (P.job) { const u = updating(P.job.kind); return { kind: 'busy', head: P.job.kind === 'final' ? 'Rendering the final' : 'Joining the parts again', text: u?.sub ?? '', go: P.job.kind }; }
-  const board = (P.boards ?? []).find((b) => b.status === 'waiting' && b.stage === cur);   // a board left unanswered in a stage long past is not a turn
-  if (board) return { kind: 'yours', head: 'Your turn: choose on a board', text: board.title, link: board.url };
-  if (st === 'review') return A.listening
-    ? { kind: 'yours', head: `Your turn: review ${name.toLowerCase()}`, text: 'Your agent is waiting for your decision.', go: cur }
-    : { kind: 'yours', head: `Your turn: review ${name.toLowerCase()}`, text: 'Your agent is not waiting right now. Decide here, then tell it “continue” in the chat.', go: cur, back: true };
-  if (P.unread && !A.listening) return { kind: 'deaf', head: 'Your agent has not read your last changes', text: 'Tell it “continue” in the chat.', back: true };
-  if (st === 'approved' && cur === 'final') return { kind: 'done', head: 'This piece is finished', text: 'The files are in Final.', go: 'final' };
-  const since = P.stages[cur].since, late = since && Date.now() - new Date(since).getTime() > 12 * 60000;
-  return { kind: 'agent', head: `Your agent is working on ${name.toLowerCase()}`, text: `${since ? ago(since) : ''}${late ? '. No news in a while: check the chat.' : ''}`, back: late };
+  if (misses >= 3) return ['off', 'The studio stopped', 'Ask your agent to start it again.'];
+  if (P.ask) return ['ask', 'Your agent asked you something in the chat', P.ask.text];
+  if (P.building) return ['agent', 'Building your video', 'From what you kept. A few seconds.'];
+  if (P.rendering) return ['agent', 'Rendering the final', P.rendering.joining ? 'Joining the parts' : P.rendering.part ? `Part ${P.rendering.part} of ${P.rendering.of}` : 'Starting'];
+  const st = P.stages[P.stage]?.status, A = P.agent ?? {};
+  if (st === 'review') return ['yours', 'Your turn', A.listening ? 'Your agent waits while you edit. Every change reaches it.' : 'Edit freely; when you are done, tell your agent “continue” in the chat.'];
+  if (st === 'approved' && P.stage === 'final') return ['done', 'Finished', 'Your files are in Export.'];
+  return ['agent', 'Your agent is working', 'It shows up here when it is ready for you.'];
 }
-function turnHTML() {
-  const T = turn(), A = P?.agent ?? {};
-  const back = !T.back ? '' : A.focus ? `<button class="btn" data-focus>Go to ${esc(A.app)} ${icon('out', 15)}</button>` : A.url ? `<a class="btn" href="${esc(A.url)}" target="_blank" rel="noopener">Go to your agent ${icon('out', 15)}</a>` : '';
-  const go = T.link ? `<a class="btn" href="${esc(T.link)}" target="_blank" rel="noopener">Open the board ${icon('out', 15)}</a>` : T.go && T.go !== view ? `<button class="btn" data-go="${T.go}">Open ${esc(STAGES[order(T.go)][1].toLowerCase())}</button>` : '';
-  document.title = `${{ ask: '(?) Answer in the chat · ', yours: '● Your turn · ', deaf: '(!) ', off: '(stopped) ', busy: 'Updating… · ' }[T.kind] ?? ''}${P?.title ?? 'paper-motion'} · studio`;
-  return `<div id="turn" class="turn ${T.kind}" role="status"><i class="mk" aria-hidden="true"></i><span><b>${esc(T.head)}</b><span class="tx">${esc(T.text)}</span></span>${back || go}</div>`;
-}
-function paintTurn() { const el = document.getElementById('turn'); if (el && P) el.outerHTML = turnHTML(); }
-function finalHTML(st) {
-  const out = P.media.outputs;
-  return `${bigShot(P.media.final, st, 'Rendering at full quality', 'Not rendered yet', updating('final'))}
-    ${out.length ? `<div class="outs">${out.map((o) => `<div class="out"><span class="mono">${esc(o.file)}</span><span style="display:flex;gap:16px;align-items:center"><span class="mono muted" style="font-size:12px">${(o.bytes / 1e6).toFixed(1)} MB</span><a class="btn" href="${esc(o.url)}" download="${esc(o.file)}">${icon('down', 15)} Download</a></span></div>`).join('')}</div>
-    <p class="hint">Need another shape (9:16, 1:1), a ProRes master or a GIF? Ask for it in the changes box.</p>` : ''}`;
+function frame(body) {
+  const [k, head, tx] = turn(), step = STEP[P.stage], A = P.agent ?? {};
+  const done = (s) => ({ what: P.stages.inventory?.status === 'approved', video: P.stages.video?.status === 'approved', export: P.stages.final?.status === 'approved' }[s]);
+  document.title = `${k === 'yours' ? '● ' : ''}${P.title} · studio`;
+  return `<header class="top"><a class="back" href="/">${icon('back')}Pieces</a><div class="ttl">${esc(P.title)}</div>
+    <nav class="steps" aria-label="Steps">${[['what', 'What it says'], ['video', 'Your video'], ['export', 'Export']].map(([id, t], i) => `<button class="${view === id ? 'on' : ''}" data-view="${id}"><b>${i + 1}</b>${t}${done(id) ? '<i title="approved"></i>' : ''}</button>`).join('')}</nav>
+    <button class="btn" data-undo ${P.undo ? `title="Undo ${esc(P.undo)}"` : 'disabled'}>${icon('undo')}Undo</button>
+    <button class="btn" data-style>${icon('style')}Style</button>
+    <button class="btn" data-ask>${icon('ask')}Ask your agent</button></header>
+    <div class="turn ${k}"><i class="mk"></i><span><b>${esc(head)}</b><span class="tx">${esc(tx)}</span></span><span class="grow"></span>
+      ${A.focus && (k === 'yours' || k === 'ask') ? `<button class="btn sm" data-focus>Go to ${esc(A.app)} ${icon('out')}</button>` : ''}</div>
+    <main>${body}</main>`;
 }
 
+// ─── 1 · what it says ─────────────────────────────────────────────────────────────────────────────────────────────
+const BRIEF = [['what', 'What'], ['who', 'For whom'], ['format', 'Format'], ['tone', 'Tone'], ['action', 'At the end']];
+function whatHTML() {
+  const inv = P.inventory ?? { items: [] }, items = inv.items.filter((i) => i.status !== 'removed' || true);
+  const wait = items.filter((i) => i.status === 'proposed').length, kept = items.filter((i) => i.status === 'kept').length;
+  const briefOpen = P.stage === 'brief' || P.stages.brief?.status !== 'approved';
+  // what can be corrected right in the row: a sentence, a command, a number and what it counts
+  const EDITS = { line: ['text'], command: ['command'], figure: ['value', 'label'], share: ['value', 'label'], change: ['from', 'to', 'label'], screen: ['caption'] };
+  const inline = (i) => (EDITS[i.kind] ?? []).map((k) => i.fields?.find((f) => f[0] === k)).filter(Boolean);
+  const sentence = (i) => inline(i).length > 0;
+  const rows = items.map((i) => `<div class="fact${i.status === 'removed' ? ' out' : ''}">
+    ${i.thumb ? `<img src="${esc(i.thumb)}" alt="">` : '<span></span>'}
+    <div><div class="k">${esc(i.name)}${i.status === 'proposed' ? '<span class="new">To decide</span>' : ''}${i.must ? '<span class="new">Must appear</span>' : ''}</div>
+      ${sentence(i) && i.status !== 'removed' ? `<div class="t">${inline(i).map(([k, v]) => `<span class="edit" contenteditable="plaintext-only" spellcheck="false" data-inv="${esc(i.id)}" data-key="${esc(k)}" data-placeholder="${esc(k)}">${esc(v)}</span>`).join(i.kind === 'change' ? ' → ' : ' ')}</div>` : `<div class="t">${esc(i.what)}</div>`}
+      <div class="s">From ${esc(i.source || 'you')}${i.missing?.length ? ` · still needs ${esc(i.missing.join(', ').toLowerCase())}` : ''}</div></div>
+    <div class="acts">${i.status === 'removed' ? `<button class="btn sm" data-inv-set="${esc(i.id)}" data-v="kept">Keep it</button>`
+      : `${i.status === 'proposed' ? `<button class="btn sm primary" data-inv-set="${esc(i.id)}" data-v="kept">Keep</button>` : `<button class="btn sm${i.must ? ' on' : ''}" data-inv-must="${esc(i.id)}" data-v="${i.must ? '' : '1'}">★ ${i.must ? 'Must appear' : 'Must?'}</button>`}<button class="btn sm" data-inv-set="${esc(i.id)}" data-v="removed">Not this</button>`}</div></div>`).join('');
+  const atInv = ['brief', 'inventory'].includes(P.stage), hasVideo = !!P.video;
+  return `<div class="what">
+    <h1>What your video says</h1>
+    <p class="sub">Your agent read what you already have and found these. Keep what is true, star what must appear, click a sentence to change it. How it looks is the next step.</p>
+    <details class="brief"${briefOpen ? ' open' : ''}><summary><span><span class="lbl">The brief</span>&nbsp;&nbsp;${esc(P.brief.what)}</span><span class="muted">${P.stages.brief?.status === 'approved' ? 'approved' : 'to check'}</span></summary>
+      <div class="rows">${BRIEF.map(([k, l]) => `<div class="row"><span class="muted">${l}</span><div class="edit" contenteditable="plaintext-only" spellcheck="false" data-brief="${k}" data-placeholder="Empty">${esc(P.brief[k])}</div></div>`).join('')}
+      ${P.stage === 'brief' && P.stages.brief?.status === 'review' ? `<div><button class="btn primary sm" data-approve="brief">The brief is right</button></div>` : ''}</div></details>
+    ${items.length ? rows : `<p class="muted">${P.stage === 'brief' ? 'Once the brief is right, your agent brings what your video could say.' : 'Your agent is looking for what your video could say.'}</p>`}
+    ${inv.kinds && Object.keys(inv.kinds).length ? `<div class="addfact"><select id="addKind" aria-label="What is it">${Object.entries(inv.kinds).map(([id, k]) => `<option value="${id}">${esc(k.name)}</option>`).join('')}</select><input id="addText" placeholder="Add something true: a sentence, or a number and what it counts (163 pieces of motion)"><button class="btn" data-add-fact>Add</button></div>` : ''}
+    <div class="nextbar"><span class="muted">${kept} thing${kept === 1 ? '' : 's'} in your video${wait ? ` · ${wait} still to decide` : ''}${inv.moments ? ` · a ${inv.seconds} s video holds about ${inv.moments} moments` : ''}</span>
+      ${hasVideo ? `<button class="btn primary" data-view="video">Edit your video →</button>`
+        : atInv && P.stages.inventory?.status === 'review' && (kept || wait) ? `<button class="btn primary" data-make>${wait ? 'Keep the rest and make my video →' : 'Make my video →'}</button>`
+        : P.building ? '<span class="muted">Building your video…</span>' : ''}</div></div>`;
+}
+
+// ─── 2 · your video ───────────────────────────────────────────────────────────────────────────────────────────────
+const cur = () => P.video?.parts.find((p) => p.dir === sel) ?? P.video?.parts[0];
+const joinName = (id) => P.library?.joins.find((j) => j.id === id)?.title ?? id;
+const firstWords = (p) => { const w = p.words.find((f) => f.kind === 'text' && f.value) ?? p.words.find((f) => f.value); return w ? String(w.value).split('\n')[0] : p.summary; };
+function videoHTML() {
+  const V = P.video;
+  if (!V) return `<div class="empty">${P.building ? 'Building your video from what you kept…' : 'Your video appears here once you keep what it says.'}<div style="margin-top:16px"><button class="btn" data-view="what">Go to What it says</button></div></div>`;
+  const p = cur(); sel = p?.dir;
+  const shape = V.format === '1080x1920' ? ' tall' : V.format === '1080x1080' ? ' sq' : '';
+  return `<div class="editor"><div class="center">
+      <div class="player${shape}" id="player"><span class="badge" id="pbadge"></span></div>
+      <div class="pbar"><span id="pinfo"></span><span class="grow"></span><span>${V.total} s · ${V.parts.length} parts</span>
+        <button class="btn sm" data-playall>${icon('play')}${playing ? 'Stop' : 'Play the whole video'}</button>
+        ${P.stage === 'video' && P.stages.video?.status === 'review' ? `<button class="btn primary sm" data-approve="video">It looks right → Export</button>` : `<button class="btn sm" data-view="export">Export →</button>`}</div>
+      <div><p class="lbl" style="margin:4px 0 8px">Your video, in order · drag to reorder · ＋ adds a part · the arrow is the transition</p>
+      <div class="track" id="track">${V.parts.map((x, i) => `${i === 0 ? `<div class="addp"><button data-addat="0" title="Add a part here">${icon('add')}</button></div>` : ''}
+        <div class="part${x.dir === sel ? ' sel' : ''}" draggable="true" data-part="${esc(x.dir)}" data-clip="${esc(x.clip)}">
+          <div class="th" style="background-image:url('${esc(x.poster)}')"><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="sec">${Number(x.seconds).toFixed(1)}s</span></div>
+          <div class="meta"><div class="nm">${esc(x.title)}</div><div class="tx">${esc(firstWords(x))}</div></div></div>
+        ${x.join ? `<div class="join"><button data-joinof="${esc(x.dir)}" title="Transition: ${esc(joinName(x.join))}">${icon('join')}</button><small>${esc(joinName(x.join))}</small></div>` : ''}
+        <div class="addp"><button data-addat="${i + 1}" title="Add a part here">${icon('add')}</button></div>`).join('')}</div></div>
+    </div><aside class="insp" id="insp">${p ? inspHTML(p) : ''}</aside></div>`;
+}
+function inspHTML(p) {
+  const n = P.video.parts.indexOf(p) + 1;
+  const fld = (f) => {
+    const a = `data-word="${esc(f.key)}"`;
+    if (f.kind === 'image') { const imgs = P.style?.images ?? []; return `<div class="fld">${esc(f.label)}<div class="pick"><img src="/files/${esc(String(f.value).replace(/^\//, ''))}" alt=""></div>${imgs.length > 1 ? `<select ${a}>${imgs.map((m) => `<option value="${esc(m)}"${m === f.value ? ' selected' : ''}>${esc(m.split('/').pop())}</option>`).join('')}</select>` : ''}<p class="hint">Another picture? Put it in brand/assets, or ask your agent.</p></div>`; }
+    if (f.kind === 'rows') return `<label class="fld">${esc(f.label)} <i>one per line${f.columns > 1 ? ', as  value | what it is' : ''}</i><textarea ${a} rows="${Math.min(8, String(f.value).split('\n').length + 1)}">${esc(f.value)}</textarea></label>`;
+    if (f.kind === 'lines') return `<label class="fld">${esc(f.label)} <i>one per line</i><textarea ${a} rows="${Math.min(8, String(f.value).split('\n').length + 1)}">${esc(f.value)}</textarea></label>`;
+    if (f.kind === 'block') return `<label class="fld">${esc(f.label)}<textarea class="code" ${a} rows="7">${esc(f.value)}</textarea></label>`;
+    if (String(f.value).length > 44) return `<label class="fld">${esc(f.label)}<textarea ${a} rows="2">${esc(f.value)}</textarea></label>`;
+    return `<label class="fld">${esc(f.label)}<input ${a} value="${esc(f.value)}"></label>`;
+  };
+  const B = P.inventory?.backgrounds ?? { mine: [], library: [] };
+  const panes = {
+    words: p.words.length ? p.words.map(fld).join('') : '<p class="hint">This part has no words of its own.</p>',
+    motion: p.motion ? `<p class="hint">How it arrives. Point at one to see it move.</p><div class="tiles">${p.motion.demos.map((d) => tile(d, `data-motion="${esc(d.value)}"`, d.value === p.motion.value)).join('')}</div>`
+      : `<p class="hint">This part has its own way of moving.</p><div class="tiles">${tile({ title: p.title, summary: p.summary, poster: p.poster, clip: p.clip }, 'disabled', true)}</div><button class="btn sm" data-swap>Show it another way</button>`,
+    bg: !p.takesBackground ? '<p class="hint">This part draws its own background, so it has none to change. Show it another way to use one.</p>' : `<p class="hint">Behind this part. Point at one to see it move.</p><div class="tiles">${[{ id: '', title: "Your brand's first", colors: [] , entry: null }, ...B.mine].map((b) => `<button class="tile${(p.background ?? '') === b.id ? ' on' : ''}" data-bg="${esc(b.id)}">${b.entry ? swatch(b) : '<div class="ph" style="display:grid;place-items:center;color:var(--muted);font-size:12px">default</div>'}<div class="lb">${esc(b.title)}</div></button>`).join('')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-bgall>Use this background on every part</button>${B.library.length ? `<button class="btn sm" data-bgmore>More backgrounds (${B.library.length})</button>` : ''}</div>`,
+    tune: `${p.tune.map((t) => t.kind === 'number'
+        ? `<div class="slider"><div>${esc(t.label)}<em id="tv-${esc(t.name)}">${esc(t.value)}</em></div><input type="range" min="${t.min}" max="${t.max}" step="${t.step}" value="${esc(t.value)}" data-tune="${esc(t.name)}"></div>`
+        : `<div class="fld">${esc(t.label)}<div class="seg">${t.options.map((o) => `<button class="btn sm${String(t.value) === String(o) ? ' on' : ''}" data-tunev="${esc(t.name)}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`).join('')}
+      <div class="slider"><div>Length<em id="tv-seconds">${Number(p.seconds).toFixed(1)} s</em></div><input type="range" min="1.5" max="${Math.max(10, Math.ceil((p.duration ?? 6) * 1.6))}" step="0.1" value="${p.seconds}" data-seconds></div>
+      ${p.duration && p.seconds < p.duration * 0.7 ? '<p class="hint" style="color:var(--warn)">Shorter than this part needs to land: it may be cut.</p>' : ''}`,
+  };
+  return `<div class="lbl">Part ${n} of ${P.video.parts.length}</div><h2>${esc(p.title)}</h2><p class="hint sum">${esc(p.summary)}</p>
+    <div class="tabs">${[['words', 'Words'], ['motion', 'Motion'], ['bg', 'Background'], ['tune', 'Tune']].map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>
+    <div class="pane">${panes[tab]}</div>
+    <div class="partacts"><button class="btn sm" data-swap>Show it another way</button><button class="btn sm" data-dup>Duplicate</button><button class="btn sm" data-remove>Remove</button></div>`;
+}
+// the player: the part's real scene, playing live; kept across redraws, reloaded only when the part changed
+function paintPlayer() {
+  const box = $('player'), p = cur(); if (!box || !p) return;
+  $('pbadge').textContent = `${String(P.video.parts.indexOf(p) + 1).padStart(2, '0')} · ${p.title}`;
+  const info = [p.motion ? p.motion.demos.find((d) => d.value === p.motion.value)?.title : null, p.background ? `${p.background} background` : null, `${Number(p.seconds).toFixed(1)} s`].filter(Boolean).join(' · ');
+  $('pinfo').textContent = info;
+  let f = box.querySelector('iframe');
+  if (!p.live) { if (!box.querySelector('.msg')) box.insertAdjacentHTML('beforeend', '<div class="msg">The live preview is starting…</div>'); return; }
+  box.querySelector('.msg')?.remove();
+  if (!f) { f = document.createElement('iframe'); f.title = 'Live preview'; box.append(f); }
+  if (f.dataset.src !== p.live) { f.dataset.src = p.live; f.src = p.live; }
+}
+
+// ─── 3 · export ───────────────────────────────────────────────────────────────────────────────────────────────────
+function exportHTML() {
+  const M = P.media ?? {}, out = (M.outputs ?? []).filter((o) => /\.(mp4|mov|webm|gif)$/i.test(o.file));
+  const stale = P.stages.final?.status === 'changes';
+  return `<div class="exp"><h1>Export</h1>
+    ${!P.video ? '<p class="muted">Your video comes first.</p>' : `
+    <p class="muted">${P.video.parts.length} parts, ${P.video.total} s, ${esc(P.video.format)}. Full quality, with motion blur and your sound.${stale ? ' <b style="color:var(--warn)">You changed the video since the last render.</b>' : ''}</p>
+    <div>${P.rendering ? `<button class="btn" disabled>Rendering… ${P.rendering.joining ? 'joining' : P.rendering.part ? `part ${P.rendering.part} of ${P.rendering.of}` : ''}</button>` : `<button class="btn primary" data-render>${out.length ? 'Render again' : 'Render in full quality'}</button>`} <span class="muted" style="margin-left:10px">a minute or two</span></div>
+    ${M.final ? `<video src="${esc(M.final)}" controls playsinline></video>` : ''}
+    <div style="display:grid;gap:8px">${out.map((o) => `<div class="file"><span>${esc(o.file)} <span class="muted">· ${(o.bytes / 1e6).toFixed(1)} MB</span></span><a class="btn sm" href="${esc(o.url)}" download>Download</a></div>`).join('')}</div>
+    ${P.stage === 'final' && P.stages.final?.status === 'review' ? `<div><button class="btn" data-approve="final">This is the one</button></div>` : ''}`}</div>`;
+}
+
+// ─── drawing ──────────────────────────────────────────────────────────────────────────────────────────────────────
 function render() {
   if (!P) return;
-  const focus = captureFocus();
-  const k = view, st = P.stages[k].status, [, title, sub] = STAGES[order(k)];
-  const approvedParts = P.parts.filter((p) => p.status === 'approved').length;
-  const cells = STAGES.map(([key, t], n) => {
-    const ss = P.stages[key].status, on = key === k, can = ss !== 'pending' || key === P.stage;
-    return `<button data-go="${key}" ${can ? '' : 'disabled'} class="cell${on ? ' on' : ''}"${on ? ' aria-current="step"' : ''}>
-      <span class="num">${nn(n)}</span><span class="ci" style="color:${COLOR[ss]}">${icon(ss, 18)}</span>
-      <span class="nm">${t}</span><span class="cs">${key === 'parts' && P.parts.length && ss !== 'pending' ? `${approvedParts} of ${P.parts.length} approved` : STATUS[ss] ?? ss}</span></button>`;
-  }).join('');
-  const body = { brief: briefHTML, look: lookHTML, structure: structureHTML, parts: partsHTML, assembly: () => assemblyHTML(st), final: () => finalHTML(st) }[k]();
-  const held = ['assembly', 'final'].includes(k) && !!updating(k);   // never approve a video that is being replaced
-  const canApprove = st === 'review' && !held && (k !== 'parts' || (P.parts.length && approvedParts === P.parts.length));
-  const notes = P.events.filter((e) => e.stage === k && e.kind === 'changes').slice(-8);
-  const activity = P.events.filter((e) => e.stage === k).slice(-6).reverse();
-  const total = P.parts.reduce((a, p) => a + Number(p.seconds ?? 0), 0);
-  const said = (e) => (e.kind === 'edit' ? `${e.key} → ${e.text}` : e.kind === 'changes' ? 'Changes asked' : e.kind === 'approve' ? 'Approved' : e.kind === 'order' ? 'New order' : e.kind === 'reopen' ? 'Reopened' : e.kind);
-  const app = document.getElementById('app');
-  app.innerHTML = `<header class="top">
-      <a class="back" href="/" aria-label="All pieces">${icon('back', 16)}<span>Pieces</span></a>
-      <div class="ttl">${esc(P.title)}</div>
-      <div class="metas">${[[P.brand, ''], [P.dir, 'mono'], [P.format, 'mono'], [total ? fmt(total) : '', 'mono']].filter(([v]) => v).map(([v, c]) => `<span class="${c}">${esc(v)}</span>`).join('')}</div>
-    </header>
-    ${turnHTML()}
-    <nav class="strip" aria-label="Stages">${cells}</nav>
-    <div id="grid" class="work" style="--rw:${rightW}px">
-    <main class="stage">
-      <header class="sh"><h1 class="serif">${title}</h1><p>${sub}</p></header>
-      ${body}
-    </main>
-    <aside class="decide" style="--state:${COLOR[st]}" aria-label="Your decision">
-      <div id="resize" title="Drag to resize, double-click to reset"></div>
-      <div class="dstate"><b>${icon(st, 18)}${{ approved: 'Approved', review: 'Yours to review', changes: 'Changes asked', working: 'Your agent is on it', pending: 'Not yet' }[st] ?? st}</b>${P.stages[k].at ? `<time class="mono muted" style="font-size:12px">${clock(P.stages[k].at)}</time>` : ''}</div>
-      ${P.stages[k].note && st !== 'approved' ? `<div class="said">${esc(P.stages[k].note)}</div>` : ''}
-      ${k === 'parts' && P.parts.length && st !== 'pending' ? `<div><div class="meter" role="img" aria-label="${approvedParts} of ${P.parts.length} parts approved">${P.parts.map((p) => `<i class="${p.status === 'approved' ? 'y' : ''}"></i>`).join('')}</div>${st === 'review' && !canApprove ? `<p class="muted" style="font-size:13px;margin-top:10px">Approve each part, or ask for changes. When all are approved, your agent joins them.</p>` : ''}</div>` : ''}
-      ${st === 'review' && held ? `<p class="muted" style="font-size:13px">You can approve once the new video is here.</p>` : ''}
-      ${st === 'review' ? `<button class="btn primary big" data-oks="${k}" ${canApprove ? '' : 'disabled'}>Approve ${title.toLowerCase()} ${icon('approved', 18)}</button>
-        <div class="ask"><textarea id="note" aria-label="What to change" placeholder="Anything to change? Your agent reads it and brings this stage back to you."></textarea><button class="btn" data-cs="${k}" style="margin-top:8px;width:100%">${icon('note', 15)} Ask for changes</button></div>` : ''}
-      ${st === 'approved' ? `<p class="muted" style="font-size:13px">Reopen it if you want something changed.</p><button class="btn" data-reopen="${k}" style="justify-self:start">${icon('reopen', 15)} Reopen</button>` : ''}
-      ${st === 'working' || st === 'changes' ? `<p class="muted" style="font-size:13px">It shows up here when it's ready for you.</p>` : ''}
-      ${st === 'pending' ? `<p class="muted" style="font-size:13px">This comes after ${esc(STAGES[order(k) - 1]?.[1] ?? '')}.</p>` : ''}
-      ${notes.length ? `<div class="notes"><div class="lh">What you asked for</div><div class="log">${notes.map((f) => `<div><time>${clock(f.at)}</time><span>${f.part ? `<span class="mono muted">${esc(f.part)}</span> ` : ''}${esc(f.text)}</span></div>`).join('')}</div></div>` : ''}
-      ${activity.length ? `<div class="activity"><div class="lh">Sent to your agent</div><div class="log">${activity.map((e) => `<div><time>${clock(e.at)}</time><span class="muted">${e.part ? `<span class="mono">${esc(e.part)}</span> ` : ''}${esc(said(e))}</span></div>`).join('')}</div></div>` : ''}
-    </aside></div>`;
-  app.querySelectorAll('video[data-k]').forEach((v) => { const c = vcache.get(v.dataset.k); if (c) v.replaceWith(c); else vcache.set(v.dataset.k, v); });
-  // a video being replaced stops playing (it would look like the change never happened); it plays again if it turns out current
-  app.querySelectorAll('.shot.marks > video').forEach((v) => {
-    const stale = v.parentElement.classList.contains('stale');
-    if (stale && !v.dataset.held) { v.dataset.held = '1'; v.autoplay = false; v.pause(); v.controls = false; }
-    else if (!stale && v.dataset.held) { delete v.dataset.held; v.controls = true; v.play().catch(() => {}); }
-  });
-  restoreFocus(focus);
-  // on a phone the stages are a strip that scrolls: keep the open one in view
-  const on = app.querySelector('.cell.on'); if (on && on.parentElement.scrollWidth > on.parentElement.clientWidth) on.parentElement.scrollLeft = on.offsetLeft - (on.parentElement.clientWidth - on.offsetWidth) / 2;
+  // a field being typed in is never redrawn under the cursor: the page catches up when it loses focus
+  const a = document.activeElement;
+  if (a && a.closest?.('#app') && (a.matches('input, textarea, select') || a.isContentEditable)) { pending = true; return; }
+  pending = false;
+  const body = view === 'what' ? whatHTML() : view === 'video' ? videoHTML() : exportHTML();
+  const keepPlayer = $('player')?.querySelector('iframe');
+  const scroll = { insp: $('insp')?.scrollTop ?? 0, track: $('track')?.scrollLeft ?? 0 };
+  $('app').innerHTML = frame(body);
+  if (keepPlayer && $('player')) { $('player').append(keepPlayer); }
+  paintPlayer();
+  if ($('insp')) $('insp').scrollTop = scroll.insp;
+  if ($('track')) $('track').scrollLeft = scroll.track;
+  if (sheetOpen) paintSheet();
 }
-const vcache = new Map();   // videos keep playing across re-renders (the key includes the file's mtime)
+let pending = false;
 
-// ─── wiring ────────────────────────────────────────────────────────────────────────
-document.addEventListener('click', (e) => {
-  const t = e.target.closest('button'); if (!t || t.disabled) return;
-  const d = t.dataset;
-  if (d.go) { view = d.go; render(); scrollTo({ top: 0 }); }
-  else if ('focus' in d) fetch(`/api/focus?p=${encodeURIComponent(piece)}`, { method: 'POST' }).then((r) => r.json()).then((r) => { if (r.error) toast('Could not open it: go to the chat yourself'); }).catch(() => {});
-  else if (d.okp) act({ type: 'approve-part', part: d.okp });
-  else if (d.oks) act({ type: 'approve', stage: d.oks });
-  else if (d.cs) { const v = document.getElementById('note').value; if (v.trim()) act({ type: 'changes', stage: d.cs, text: v }); else { toast('Write what to change first'); document.getElementById('note').focus(); } }
-  else if (d.reopen) act({ type: 'reopen', stage: d.reopen });
+// ─── sheets: add, show another way, transition, more backgrounds, style ──────────────────────────────────────────
+let sheetOpen = null;
+function openSheet(kind, arg) { sheetOpen = { kind, arg }; paintSheet(); $('sheet').classList.add('on'); $('scrim').classList.add('on'); }
+function closeSheet() { sheetOpen = null; $('sheet').classList.remove('on'); $('scrim').classList.remove('on'); }
+let lastSheet = '';
+function paintSheet() {
+  const s = sheetOpen; if (!s || !P) return;
+  const key = JSON.stringify([s, P.style, P.video?.parts.map((p) => [p.dir, p.join, p.background, p.id]), P.inventory?.backgrounds?.mine?.length]);
+  if (key === lastSheet) return; lastSheet = key;
+  const head = (small, title) => `<header><div><span class="lbl">${esc(small)}</span><h2>${esc(title)}</h2></div><button class="btn sm" data-close>Close</button></header>`;
+  const L = P.library ?? { intents: [], joins: [] };
+  let h = '';
+  if (s.kind === 'add') h = head(`Add a part · position ${s.arg + 1}`, 'What do you want to add?') + `<p class="hint" style="margin-top:14px">Point at one to see it move. It arrives with something you kept, when it can show it.</p>` + L.intents.map((g) => `<div class="grp"><h3 class="lbl">${esc(g.title)}</h3><div class="tiles">${g.blocks.map((b) => tile(b, `data-addblock="${esc(b.id)}"`)).join('')}</div></div>`).join('');
+  else if (s.kind === 'swap') { const p = cur(), mine = L.intents.find((g) => g.blocks.some((b) => b.id === p.id)); h = head(`Part ${P.video.parts.indexOf(p) + 1}`, 'Show it another way') + `<p class="hint" style="margin-top:14px">Same content, shown differently. Point at one to see it move.</p>` + [mine, ...L.intents.filter((g) => g !== mine)].filter(Boolean).map((g, i) => `<div class="grp"><h3 class="lbl">${i ? esc(g.title) : `${esc(g.title)} · like this part`}</h3><div class="tiles">${g.blocks.map((b) => tile(b, `data-swapto="${esc(b.id)}"`, b.id === p.id)).join('')}</div></div>`).join(''); }
+  else if (s.kind === 'join') { const p = P.video.parts.find((x) => x.dir === s.arg), i = P.video.parts.indexOf(p); h = head(`Between part ${i + 1} and ${i + 2}`, 'How one leads to the next') + `<p class="hint" style="margin-top:14px">Point at one to see it move.</p><div class="grp"><div class="tiles">${L.joins.map((j) => tile(j, `data-setjoin="${esc(j.id)}"`, p.join === j.id)).join('')}</div></div><button class="btn sm" data-joinall style="margin-top:16px">Use ${esc(joinName(p.join))} everywhere</button>`; }
+  else if (s.kind === 'bgmore') { const B = P.inventory?.backgrounds ?? { library: [] }; h = head('Backgrounds', 'Add a background') + `<p class="hint" style="margin-top:14px">Point at one to see it move. Adding one puts it in your brand, in your colours, and uses it on this part.</p><div class="grp"><div class="tiles">${B.library.map((b) => `<button class="tile" data-bgadd="${esc(b.id)}">${swatch(b)}<div class="lb">${esc(b.title)}</div></button>`).join('')}</div></div>`; }
+  else if (s.kind === 'style') {
+    const S = P.style ?? {}, c = S.colors ?? {};
+    h = head('Your whole video', 'Style') + `
+      <div class="grp"><h3 class="lbl">Colours</h3><div class="pals">${(S.palettes ?? []).map((p) => `<button class="pal" data-palette="${esc(p.id)}">${p.colors.slice(0, 3).map((x) => `<i style="background:${esc(x)}"></i>`).join('')}<span>${esc(p.title)}</span></button>`).join('')}</div>
+        <p class="hint" style="margin:14px 0 8px">Or set each one yourself</p>
+        <div class="colors">${[['ground', 'Background'], ['figure', 'Text'], ['accent', 'Accent']].map(([k, l]) => `<label>${l}<input type="color" value="${esc(c[k] ?? '#000000')}" data-color="${k}"></label>`).join('')}</div></div>
+      <div class="grp"><h3 class="lbl">Type <span class="muted" style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· now ${esc(S.fonts?.display ?? '')} and ${esc(S.fonts?.text ?? '')}</span></h3><div class="fonts">${(S.fontpairs ?? []).map((f) => `<button class="font" data-fontpair="${esc(f.id)}">${esc(f.title)}</button>`).join('')}</div></div>
+      <div class="grp"><h3 class="lbl">Pace</h3><div class="seg">${['calm', 'medium', 'fast'].map((x) => `<button class="btn${S.pace === x ? ' on' : ''}" data-pace="${x}">${x[0].toUpperCase() + x.slice(1)}</button>`).join('')}</div></div>
+      <p class="hint" style="margin-top:22px">Style is your brand's: it changes every part of this video, and every video after it.</p>`;
+  }
+  $('sheet').innerHTML = h;
+}
+
+// ─── wiring ───────────────────────────────────────────────────────────────────────────────────────────────────────
+const vact = (type, extra = {}) => act({ type: `v-${type}`, part: sel, ...extra });
+document.addEventListener('click', async (e) => {
+  if (e.target.id === 'scrim') return closeSheet();
+  const b = e.target.closest('button, .part'); if (!b || b.disabled) return; const d = b.dataset;
+  if (d.view) { view = d.view; closeSheet(); render(); scrollTo({ top: 0 }); }
+  else if ('close' in d) closeSheet();
+  else if (d.part !== undefined && !e.target.closest('button')) { sel = d.part; render(); }
+  else if (d.tab) { tab = d.tab; render(); }
+  else if ('undo' in d) act({ type: 'undo' });
+  else if ('style' in d) openSheet('style');
+  else if ('ask' in d) $('ask').classList.add('on');
+  else if ('askClose' in d) $('ask').classList.remove('on');
+  else if ('askSend' in d) { const t = $('askText').value.trim(); if (!t) return; await act({ type: 'changes', stage: P.stage, text: t }, true); $('askText').value = ''; $('ask').classList.remove('on'); toast(P.agent?.listening ? 'Sent to your agent' : 'Saved. Tell your agent “continue” in the chat', 3600); }
+  else if ('focus' in d) fetch(`/api/focus?p=${encodeURIComponent(piece)}`, { method: 'POST' });
+  else if (d.approve) { await act({ type: 'approve', stage: d.approve }); if (d.approve === 'video') { view = 'export'; render(); } }
+  else if ('make' in d) { if (P.inventory.items.some((i) => i.status === 'proposed')) await act({ type: 'inv-rest', value: 'kept' }, true); await act({ type: 'approve', stage: 'inventory' }, true); view = 'video'; toast('Building your video…', 3000); render(); }
+  else if (d.invSet) act({ type: 'inv-status', id: d.invSet, value: d.v }, true);
+  else if (d.invMust) act({ type: 'inv-must', id: d.invMust, value: !!d.v }, true);
+  else if ('addFact' in d) { const k = $('addKind').value, t = $('addText').value.trim(); if (!t) return toast('Write it first'); const m = t.match(/^([\d.,]+%?)\s+(.+)$/); const fields = k === 'line' ? { text: t } : k === 'figure' && m ? { value: m[1], label: m[2] } : k === 'share' && m ? { value: m[1].replace('%', ''), label: m[2] } : { text: t, label: t }; const r = await act({ type: 'inv-add', kind: k, fields }, true); if (!r.error) { $('addText').value = ''; toast('Added'); } }
+  else if (d.addat !== undefined) openSheet('add', Number(d.addat));
+  else if (d.addblock) { closeSheet(); const r = await act({ type: 'v-add', at: sheetOpenAt, block: d.addblock }); if (r.part) { sel = r.part; tab = 'words'; render(); } }
+  else if ('swap' in d) openSheet('swap');
+  else if (d.swapto) { closeSheet(); const r = await vact('swap', { block: d.swapto }); if (r.part) { sel = r.part; render(); } }
+  else if ('dup' in d) { const r = await vact('duplicate'); if (r.part) { sel = r.part; render(); } }
+  else if ('remove' in d) { const i = P.video.parts.findIndex((x) => x.dir === sel); const r = await vact('remove'); if (!r.error) { sel = P.video.parts[Math.max(0, i - 1)]?.dir; render(); toast('Removed. Undo brings it back.'); } }
+  else if (d.joinof) openSheet('join', d.joinof);
+  else if (d.setjoin) { const at = sheetOpen.arg; closeSheet(); act({ type: 'v-join', part: at, value: d.setjoin }); }
+  else if ('joinall' in d) { const p = P.video.parts.find((x) => x.dir === sheetOpen.arg); closeSheet(); act({ type: 'v-join', part: p.dir, value: p.join, all: true }); }
+  else if (d.motion) vact('motion', { value: d.motion });
+  else if (d.bg !== undefined) vact('background', { value: d.bg });
+  else if ('bgall' in d) vact('background', { value: cur().background ?? '', all: true });
+  else if ('bgmore' in d) openSheet('bgmore');
+  else if (d.bgadd) { b.querySelector('.lb').textContent = 'Adding…'; const r = await (await fetch(`/api/background?p=${encodeURIComponent(piece)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: d.bgadd }) })).json(); if (r.error) return toast(`Not added: ${r.error}`); closeSheet(); vact('background', { value: d.bgadd }); }
+  else if (d.tunev) vact('tune', { key: d.tunev, value: d.v });
+  else if (d.palette) act({ type: 'style-palette', value: d.palette });
+  else if (d.fontpair) act({ type: 'style-font', value: d.fontpair });
+  else if (d.pace) act({ type: 'style-pace', value: d.pace });
+  else if ('render' in d) act({ type: 'render' });
+  else if ('playall' in d) playAll();
 });
+let sheetOpenAt = 0;
+const _open = openSheet; openSheet = (k, a) => { if (k === 'add') sheetOpenAt = a; _open(k, a); };
+function playAll() {
+  if (playing) { clearTimeout(playing); playing = null; render(); return; }
+  let i = 0; const parts = P.video.parts;
+  const next = () => { if (i >= parts.length || view !== 'video') { playing = null; render(); return; } sel = parts[i].dir; render(); playing = setTimeout(next, (parts[i++].seconds + 0.6) * 1000); };
+  playing = 1; next();
+}
 document.addEventListener('change', (e) => {
   const d = e.target.dataset;
-  if (d.text) act({ type: 'text', part: d.text, key: d.key, value: e.target.value });
-  if (d.sec) act({ type: 'seconds', part: d.sec, value: e.target.value });
-  if (d.join) act({ type: 'join', part: d.join, value: e.target.value });
+  if (d.word !== undefined) vact('word', { key: d.word, value: e.target.value });
+  else if (d.tune) vact('tune', { key: d.tune, value: e.target.value });
+  else if ('seconds' in d) vact('seconds', { value: e.target.value });
+  else if (d.color) act({ type: 'style-color', key: d.color, value: e.target.value });
 });
+document.addEventListener('input', (e) => { const d = e.target.dataset; const k = d.tune ?? ('seconds' in d ? 'seconds' : null); if (k) { const o = $(`tv-${k}`); if (o) o.textContent = k === 'seconds' ? `${Number(e.target.value).toFixed(1)} s` : e.target.value; } });
 document.addEventListener('focusout', (e) => {
-  const d = e.target.dataset, v = e.target.isContentEditable ? e.target.innerText.trim() : null;
-  if (d.brief && v !== P.brief[d.brief]) act({ type: 'brief', key: d.brief, value: v });
-  else if (d.what && v !== P.parts.find((p) => p.dir === d.what)?.what) act({ type: 'what', part: d.what, value: v });
+  const d = e.target.dataset ?? {}, v = e.target.isContentEditable ? e.target.innerText.trim() : null;
+  if (d.brief && v !== P.brief[d.brief]) act({ type: 'brief', key: d.brief, value: v }, true);
+  else if (d.inv && v) { const it = P.inventory.items.find((i) => i.id === d.inv); if (v !== String(it?.fields?.find((f) => f[0] === d.key)?.[1] ?? '')) act({ type: 'inv-field', id: d.inv, key: d.key, value: v }); }
+  setTimeout(() => { if (pending) render(); }, 0);
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter') return;
-  if (e.target.isContentEditable && !e.shiftKey) { e.preventDefault(); e.target.blur(); return; }   // Enter saves; Shift+Enter breaks a line
-  const d = e.target.dataset;
-  if (d.cp && e.target.value.trim()) act({ type: 'changes', stage: 'parts', part: d.cp, text: e.target.value });
+  if (e.key === 'Escape') { closeSheet(); $('ask').classList.remove('on'); }
+  if (e.key === 'Enter' && e.target.isContentEditable) { e.preventDefault(); e.target.blur(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.target.closest('input, textarea, [contenteditable]') && P?.undo) { e.preventDefault(); act({ type: 'undo' }); }
 });
-// the decision column: drag its left edge, between RW[0] and RW[1]; double-click resets
-document.addEventListener('pointerdown', (e) => {
-  if (!e.target.closest('#resize')) return;
-  e.preventDefault(); document.body.classList.add('resizing');
-  const grid = document.getElementById('grid');
-  const move = (ev) => { rightW = Math.round(Math.min(RW[1], Math.max(RW[0], innerWidth - ev.clientX))); grid.style.setProperty('--rw', `${rightW}px`); };
-  const up = () => { document.body.classList.remove('resizing'); removeEventListener('pointermove', move); removeEventListener('pointerup', up); try { localStorage.setItem('studio:rw', rightW); } catch {} };
-  addEventListener('pointermove', move); addEventListener('pointerup', up);
+// samples play while the pointer is on them: a block's clip, or a background's shader running live
+document.addEventListener('mouseover', (e) => {
+  const c = e.target.closest?.('[data-clip]'); const ph = c?.querySelector('.ph, .th');
+  if (ph && c.dataset.clip && !ph.querySelector('video')) { const v = document.createElement('video'); Object.assign(v, { src: c.dataset.clip, muted: true, loop: true, autoplay: true, playsInline: true }); ph.append(v); }
+  const sw = e.target.closest?.('[data-swatch]');
+  if (sw && !sw.querySelector('iframe') && P?.inventory?.live && sw.dataset.swatch !== '{}') { const f = document.createElement('iframe'); f.src = `${P.inventory.live}/__pm/runtime/swatch.html#${encodeURIComponent(sw.dataset.swatch)}`; f.title = 'Live background'; sw.append(f); }
 });
-document.addEventListener('dblclick', (e) => { if (e.target.closest('#resize')) { rightW = 340; try { localStorage.removeItem('studio:rw'); } catch {} render(); } });
-// drag to reorder: a part only while held by its grip (its fields stay usable); track blocks always
-let dragFrom = null;
-document.addEventListener('pointerdown', (e) => { if (e.target.closest('[data-grip]')) e.target.closest('.part').draggable = true; });
-document.addEventListener('dragstart', (e) => {
-  const el = e.target.closest?.('.part[draggable=true],[data-trackdrag]'); if (!el) return;
-  dragFrom = Number(el.dataset.drop); el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(dragFrom));
-});
-const clearMarks = () => document.querySelectorAll('.drop-before,.drop-after').forEach((x) => x.classList.remove('drop-before', 'drop-after'));
-document.addEventListener('dragover', (e) => {
-  if (dragFrom === null) return;
-  const el = e.target.closest('[data-drop]'); if (!el) return;
-  e.preventDefault(); clearMarks();
-  const r = el.getBoundingClientRect(), horiz = el.hasAttribute('data-trackdrag');
-  el.classList.add((horiz ? e.clientX < r.left + r.width / 2 : e.clientY < r.top + r.height / 2) ? 'drop-before' : 'drop-after');
-});
+document.addEventListener('mouseout', (e) => { for (const s of ['[data-clip]', '[data-swatch]']) { const c = e.target.closest?.(s); if (c && !c.contains(e.relatedTarget)) c.querySelector('.ph > video, .th > video, iframe')?.remove(); } });
+// drag a part to reorder
+let from = null;
+document.addEventListener('dragstart', (e) => { const p = e.target.closest?.('.part'); if (!p) return; from = p.dataset.part; p.classList.add('dragging'); });
+document.addEventListener('dragover', (e) => { const p = e.target.closest?.('.part'); if (from === null || !p) return; e.preventDefault(); document.querySelectorAll('.part.drop').forEach((x) => x.classList.remove('drop')); p.classList.add('drop'); });
 document.addEventListener('drop', (e) => {
-  const el = e.target.closest('[data-drop]'); if (dragFrom === null || !el) return;
-  e.preventDefault();
-  let to = Number(el.dataset.drop) + (el.classList.contains('drop-after') ? 1 : 0);
-  if (to > dragFrom) to--;
-  const dirs = P.parts.map((p) => p.dir);
-  if (to !== dragFrom) { const [m] = dirs.splice(dragFrom, 1); dirs.splice(to, 0, m); act({ type: 'order', order: dirs }); }
-  dragFrom = null; clearMarks();
+  const p = e.target.closest?.('.part'); if (from === null || !p) return; e.preventDefault();
+  const order = P.video.parts.map((x) => x.dir), to = order.indexOf(p.dataset.part), at = order.indexOf(from);
+  if (to !== at) { order.splice(at, 1); order.splice(to, 0, from); act({ type: 'v-order', value: order }); }
+  from = null;
 });
-document.addEventListener('dragend', () => { dragFrom = null; clearMarks(); document.querySelectorAll('.dragging').forEach((x) => x.classList.remove('dragging')); document.querySelectorAll('.part[draggable=true]').forEach((x) => (x.draggable = false)); });
+document.addEventListener('dragend', () => { from = null; document.querySelectorAll('.dragging, .drop').forEach((x) => x.classList.remove('dragging', 'drop')); });
+// the page keeps up with the studio; a few misses in a row mean the studio itself stopped
+setInterval(() => load().then(() => { misses = 0; }).catch(() => { if (++misses === 3) render(); }), 1500);
 load();
 </script>
 </body>

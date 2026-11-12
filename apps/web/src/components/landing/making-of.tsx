@@ -3,7 +3,7 @@
 // The making of the film: a pinned editorial page on black, every color held back for the shaders inside the monitor.
 // Left, the stage: its number in pixel, its name very large in serif, one plain sentence, and the command it runs as a
 // footnote. Right, the monitor: paper-motion's own film taking shape, each scene brought in by a transition from the
-// library. Along the bottom, six ruled cells, the current one in paper. Scroll back and it rewinds. On a phone nothing
+// library. Along the bottom, four ruled cells, the current one in paper. Scroll back and it rewinds. On a phone nothing
 // pins: the stages stack.
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { IconCheck, IconTransition } from "@/components/icons";
@@ -12,7 +12,7 @@ import { Screen, isFilm, type Look } from "./making-of-screens";
 
 export type { Look };
 
-const FX_MS: Record<Fx, number> = { "": 0, cut: 0, wipe: 620, slices: 760, iris: 700, whip: 560, "zoom-through": 620 };
+const FX_MS: Record<Fx, number> = { "": 0, cut: 0, slices: 760, whip: 560, "zoom-through": 620 };
 
 // the scroll, in units: the opening, one unit per stage, a short hold on the last frame
 const COLD = 0.5, TAIL = 0.4, UNITS = COLD + STAGES.length + TAIL, VH_PER_UNIT = 58;
@@ -20,7 +20,7 @@ const COLD = 0.5, TAIL = 0.4, UNITS = COLD + STAGES.length + TAIL, VH_PER_UNIT =
 const TYPE_FROM = 0.12, TYPE_TO = 0.42, ENTER = 0.46, OUT = 0.64;
 const HEAD = 52; // the site header
 
-// the split: the page gives the monitor more room when it shows the board and the finished film
+// the split: the page gives the monitor more room when it shows the video and the finished film
 const COLS = { open: "minmax(0,4.9fr) minmax(0,7.1fr)", stage: "minmax(0,4.3fr) minmax(0,7.7fr)", wide: "minmax(0,3.5fr) minmax(0,8.5fr)" };
 
 const QUERY = "(prefers-reduced-motion: reduce)";
@@ -119,12 +119,12 @@ function Pinned({ count, looks }: Props) {
     return () => { removeEventListener("scroll", on); removeEventListener("resize", on); cancelAnimationFrame(raf); };
   }, []);
 
-  // idx 0 is the opening; 1..6 the stages; u the progress inside the current stage
+  // idx 0 is the opening; 1..4 the stages; u the progress inside the current stage
   const idx = t < COLD ? 0 : Math.min(STAGES.length, Math.floor(t - COLD) + 1);
   const u = idx === 0 ? 0 : Math.min(1, Math.max(0, t - COLD - (idx - 1)));
   const shown = idx === 0 ? 0 : u >= ENTER ? idx : idx - 1;
   const done = shown < idx || u >= OUT;
-  const cols = idx === 0 ? COLS.open : idx === 2 || idx === 6 ? COLS.wide : COLS.stage;
+  const cols = idx === 0 ? COLS.open : idx === 3 || idx === 4 ? COLS.wide : COLS.stage;
 
   const goTo = (k: number) => {
     const el = section.current;
@@ -155,7 +155,7 @@ function Page({ count, idx, u, reduce }: { count: number; idx: number; u: number
       <div key="open" className="mko-turn">
         <h2 className="font-serif text-[length:min(11.6cqi,11vh)] leading-[0.94] tracking-[-0.035em]">The making of a thirty-second film</h2>
         <p className="mt-[3.2vh] max-w-[44ch] text-[length:clamp(15px,1.15vw,17px)] leading-[1.5] text-figure/70">
-          This is paper-motion&rsquo;s own film, put together by a coding agent from {count} named pieces of motion. Scroll, and watch the six stages it went through, each one decided by a person.
+          This is paper-motion&rsquo;s own film, put together by a coding agent from {count} named pieces of motion. Scroll, and watch the four stages it went through, each one decided by a person.
         </p>
       </div>
     );
@@ -165,7 +165,7 @@ function Page({ count, idx, u, reduce }: { count: number; idx: number; u: number
     const chars = reduce ? (u >= TYPE_FROM ? s.cmd.length : 0) : Math.ceil(typing * s.cmd.length);
     body = (
       <div key={idx} className="mko-turn">
-        <p className="font-pixel text-[length:clamp(22px,2vw,30px)] leading-none">{pad2(idx)}<span className="text-figure/30"> / 06</span></p>
+        <p className="font-pixel text-[length:clamp(22px,2vw,30px)] leading-none">{pad2(idx)}<span className="text-figure/30"> / {pad2(STAGES.length)}</span></p>
         <h2 className="-ml-[0.05em] mt-[2.4vh] font-serif leading-[0.86] tracking-[-0.045em]" style={{ fontSize: `min(25vh, ${(100 / (s.name.length * 0.5)).toFixed(1)}cqi)` }}>{s.name}</h2>
         <p className="mt-[4.5vh] max-w-[30ch] text-[length:clamp(17px,1.45vw,22px)] leading-[1.38] text-figure/80">{s.says}</p>
         <div className="mt-[5vh]"><Footnote cmd={s.cmd} result={s.out} chars={chars} out={u >= OUT} live /></div>
@@ -236,10 +236,10 @@ function Monitor({ shown, done, looks, reduce }: { shown: number; done: boolean;
   );
 }
 
-/** Six ruled cells along the foot of the page, the only progress: the current one inverted, a hairline filling under it. */
+/** One ruled cell per stage along the foot of the page, the only progress: the current one inverted, a hairline filling under it. */
 function Cells({ idx, u, onPick }: { idx: number; u: number; onPick: (k: number) => void }) {
   return (
-    <nav aria-label="The six stages" className="grid h-[68px] grid-cols-6 border-t border-line">
+    <nav aria-label="The stages" className="grid h-[68px] grid-cols-4 border-t border-line">
       {STAGES.map((s, i) => {
         const k = i + 1;
         const on = k === idx, ok = k < idx || (on && u >= OUT);
@@ -277,14 +277,14 @@ function Stacked({ count, looks }: Props) {
       <section className="px-4 pb-12 pt-10 sm:px-8">
         <h2 className="font-serif text-[clamp(40px,11vw,72px)] leading-[0.94] tracking-[-0.035em]">The making of a thirty-second film</h2>
         <p className="mt-5 max-w-[44ch] text-[15px] leading-[1.5] text-figure/70">
-          This is paper-motion&rsquo;s own film, put together by a coding agent from {count} named pieces of motion. Below, the six stages it went through, each one decided by a person.
+          This is paper-motion&rsquo;s own film, put together by a coding agent from {count} named pieces of motion. Below, the four stages it went through, each one decided by a person.
         </p>
         <div className="mt-10">{monitor(0)}</div>
         <p className="mt-3 border-t border-line pt-2.5 text-[13px] text-figure/70">paper-motion&rsquo;s own film: six blocks from the library. Below, how it gets made.</p>
       </section>
       {STAGES.map((s, i) => (
         <section key={s.name} className="border-t border-line px-4 pb-12 pt-6 sm:px-8">
-          <p className="font-pixel text-[22px] leading-none">{pad2(i + 1)}<span className="text-figure/30"> / 06</span></p>
+          <p className="font-pixel text-[22px] leading-none">{pad2(i + 1)}<span className="text-figure/30"> / {pad2(STAGES.length)}</span></p>
           <h2 className="-ml-[0.04em] mt-3 font-serif text-[clamp(64px,19vw,120px)] leading-[0.86] tracking-[-0.045em]">{s.name}</h2>
           <p className="mt-5 max-w-[34ch] text-[17px] leading-[1.42] text-figure/80">{s.says}</p>
           <div className="mt-7">{monitor(i + 1)}</div>

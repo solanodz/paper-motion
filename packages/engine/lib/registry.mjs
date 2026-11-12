@@ -115,7 +115,7 @@ export function llmsTxt(items, site, { full = false } = {}) {
    \`.claude/skills/make-video/SKILL.md\` now** (or \`.agents/skills/make-video/SKILL.md\`) and follow it in this
    session; tell the user that the MCP at ${site}/mcp, if they want it, is added before opening a session.
 2. **Open the studio: it is where the user decides.** A video is made in stages the user watches and approves in
-   a local page: brief, look, structure, parts, assembly, final. Start the piece right after setup:
+   a local page in three steps (What it says: brief and inventory; Your video; Export). Start the piece right after setup:
    \`npx paper-motion piece init <piece> --title "…"\` (it starts the project's studio in the background). Then,
    at the end of each stage, \`npx paper-motion piece review <piece> <stage>\`: the first time it opens the studio in
    the user's browser; it waits for their decision and prints what they did, one \`paper-motion: piece …\` line each
@@ -160,9 +160,10 @@ export function llmsTxt(items, site, { full = false } = {}) {
    \`pieces/<piece>/<nn>-<id>/\` and writes \`chain.json\` (seconds per part; \`join\`: whip, cut, dissolve or dip);
    write each part's \`CONFIG\` from its beat, then \`npx paper-motion chain <piece> --motion-blur 5\` renders every
    part in the brand's look and joins them into one video. It warns when a part is cut before its land.
-   In the studio: review \`look\` after installing the choices, \`structure\` right after \`chain init\` (before you
-   write the parts), \`parts\` after writing each part's CONFIG and \`chain --drafts\`, \`assembly\` after
-   \`chain --draft\`, \`final\` after the full render. \`chain --check\` warns when the total drifts from the brief's
+   In the studio the stages are brief, inventory, video and final. When the user approves the inventory the studio
+   builds the video itself from what they kept, and then they edit it there, live (words, how each part arrives,
+   backgrounds, settings, lengths, transitions, order, adding and swapping parts, colours, type, pace); every edit
+   reaches you as a line. Review \`video\` to wait for their approval; they can render the final from the studio. \`chain --check\` warns when the total drifts from the brief's
    length. Boards you share while a piece is open also appear in its studio (Look or Structure), so the user finds them
    there; if your shell caps how long a command may run, share with \`--no-wait\` and then
    \`npx paper-motion board --await <id> --wait 2\` until it prints the line (exit code 3 = not yet).
@@ -174,6 +175,16 @@ ${site}/registry.json is the index; every item carries, beside id, type, title, 
 - \`when\`: 2–3 "use it when…" phrases.
 - \`mood\`: calm, bold, playful, technical, editorial, warm, minimal, luxury, raw.
 - Moves: \`energy\` 1 (still) to 5 (violent) and \`role\` (enter, exit, swap, emphasis, camera, text).
+- Blocks and shots: \`needs\`, the content each one shows by kind (a \`figure\`, a \`change\`, a \`screen\`, a \`command\`, a
+  \`line\`…). Choose them by what the user has to show, not by mood. Gather \`pieces/<piece>/inventory.json\` with
+  \`npx paper-motion inventory <piece> --from <their site> --from README.md --from brand\` (it reads the page and
+  screenshots it, a markdown file, a folder, or the brand's Facts and assets, and writes proposals, each with its
+  source; \`npx paper-motion inventory kinds\` lists the kinds and their fields). Complete what a proposal still
+  needs (a command's real output), add what gathering cannot see, and hand it over:
+  \`npx paper-motion piece review <piece> inventory\`. The user keeps or removes each proposal in the studio; only
+  what they kept is used. Then let \`npx paper-motion plan <piece> --seconds <n>\` propose
+  the structures: it prints the structure board to share, and \`chain init <piece> --plan <letter>\` installs the
+  chosen one with the content already in every part's CONFIG.
 - Backgrounds and palettes: \`colors\` (dominant hex) and \`mode\` (light, dark); backgrounds also \`motion\` (still, gentle, lively).
   **Every background is a color family**: a board with a \`look.palette\` shows each background recolored into that
   palette (each of its colors keeps its tone and takes the nearest palette hue, so a dark one stays dark), and the
@@ -284,7 +295,7 @@ export function build({ dir = resolveRegistry().dir, out, site = SITE } = {}) {
   for (const it of items) if (it.preview) { const have = Object.fromEntries(Object.entries(it.preview).filter(([, p]) => typeof p !== 'string' || fs.existsSync(path.join(out, p)))); it.preview = Object.values(have).some((p) => typeof p === 'string') ? have : undefined; }
   const index = {
     name: 'paper-motion', site, schema: `${site}/schema.json`, count: items.length, types: TYPES.filter((t) => items.some((i) => i.type === t)),
-    items: items.map(({ id, type, title, summary, tags, version, preview, related, when, mood, energy, role, colors, mode, motion, voice, duration, formats, beats, params }) => ({ id, type, title, summary, tags, version, url: `${site}/r/${id}.json`, ...Object.fromEntries(Object.entries({ when, mood, energy, role, colors, mode, motion, voice, duration, formats, beats, preview, related, params: params?.filter((p) => !p.hidden).map((p) => p.name) }).filter(([, v]) => v !== undefined)) })),
+    items: items.map(({ id, type, title, summary, tags, version, preview, related, when, mood, energy, role, colors, mode, motion, voice, duration, formats, beats, needs, repeat, params }) => ({ id, type, title, summary, tags, version, url: `${site}/r/${id}.json`, ...Object.fromEntries(Object.entries({ when, mood, energy, role, colors, mode, motion, voice, duration, formats, beats, needs, repeat, preview, related, params: params?.filter((p) => !p.hidden).map((p) => p.name) }).filter(([, v]) => v !== undefined)) })),
   };
   fs.writeFileSync(path.join(out, 'registry.json'), JSON.stringify(index, null, 2));
   fs.mkdirSync(path.join(out, 'files'), { recursive: true });

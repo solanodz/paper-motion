@@ -126,5 +126,17 @@
   "when": [
     "growth over time",
     "one standout number"
+  ],
+  "needs": [
+    {
+      "kind": "series",
+      "fill": {
+        "title": "$title",
+        "bars": "$points",
+        "winner": {
+          "$argmax": "points"
+        }
+      }
+    }
   ]
 }

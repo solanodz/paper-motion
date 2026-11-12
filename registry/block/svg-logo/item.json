@@ -121,5 +121,14 @@
   "when": [
     "a logo sting from your own SVG",
     "the close of any video"
+  ],
+  "needs": [
+    {
+      "kind": "logo",
+      "fill": {
+        "svg": "$svg",
+        "name": "$name"
+      }
+    }
   ]
 }

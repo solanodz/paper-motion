@@ -86,8 +86,13 @@ A skill's entrance for someone who already decided: it takes what they bring (fo
 _Avoid_: expert mode, skip
 
 **Studio**:
-The local page where the user follows one piece through its stages (brief, look, structure, parts, assembly, final), approves each or asks for changes, and edits by hand what needs no judgment. The agent hands each stage over and reads back what the user did.
+The local page where the user makes one piece in three steps: What it says (the brief and the content they keep), Your video (every part playing live, edited in place: words, motion, backgrounds, settings, lengths, transitions, order, parts added or swapped, the brand's colours and type) and Export. Everything that needs no judgment is done there by the user; the agent reads each change and does what they ask for. The agent hands each stage over and reads back what the user did.
 _Avoid_: dashboard, editor, review app
+
+**Inventory**:
+The list of what a piece can really show, written before its structure: figures, screenshots, commands, lines, each with its kind and where it came from. The agent gathers it from what the user already has (their site, a README, the brand's Facts, their files) as proposals; the user keeps what is true and removes the rest in the studio, and only what they kept goes into a piece. Blocks and shots declare the kinds they show, so a structure is proposed from the inventory and each part arrives with that content in place.
+The studio shows it to the user as **Content**, in everyday words (a sentence, a number, a screenshot), never with the names of kinds, fields or blocks.
+_Avoid_: content plan, assets list, material (which is the shader set's word), facts (which are the identity's true claims; an inventory item cites them)
 
 **Chain**:
 One piece made of several blocks or shots played in order, each in the brand's look, each joined to the next by a cut, whip, dissolve or dip. What a chosen structure becomes when its beats name the blocks that show them.

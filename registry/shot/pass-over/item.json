@@ -132,5 +132,17 @@
   "when": [
     "a product surface worth looking at",
     "a quiet establishing shot before the words"
+  ],
+  "needs": [
+    {
+      "kind": "screen",
+      "has": [
+        "caption"
+      ],
+      "fill": {
+        "image": "$image",
+        "caption": "$caption"
+      }
+    }
   ]
 }

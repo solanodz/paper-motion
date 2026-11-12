@@ -128,5 +128,14 @@
   "when": [
     "say what a button does",
     "one-click moments"
+  ],
+  "needs": [
+    {
+      "kind": "action",
+      "fill": {
+        "label": "$text",
+        "button": "$button"
+      }
+    }
   ]
 }

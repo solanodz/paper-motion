@@ -1,4 +1,4 @@
-// The six stages of making a film, as the landing tells them: each leads with its name and one plain sentence;
+// The four stages of making a film, as the landing tells them: each leads with its name and one plain sentence;
 // the command it runs is the footnote. Shared by the page and the pinned section.
 
 export type Stage = { name: string; says: string; cmd: string; out: string; caption: string };
@@ -14,32 +14,18 @@ export const STAGES: Stage[] = [
     caption: "The brief, in the studio that runs on your machine.",
   },
   {
-    name: "Look",
-    says: "It puts four looks on a board, a link you open where each one plays in your colors. You pick one.",
-    cmd: `${npx} board --look brand --option sage --option slate --option clay --option ochre`,
-    out: "you chose C, clay",
-    caption: "A board: four looks for paper-motion, playing. The choice goes back to your agent.",
+    name: "Content",
+    says: "It reads your site and your files and lists what the film can really show. You keep what is true, and fix any word.",
+    cmd: `${npx} inventory paper-motion --from https://paper-motion.vercel.app --from README.md`,
+    out: "7 proposals, 6 kept",
+    caption: "What the film can show, in plain words: a sentence, a command, a screen, three numbers.",
   },
   {
-    name: "Structure",
-    says: "The film is cut into beats, and each beat gets a ready-made block from the library.",
-    cmd: `${npx} chain init paper-motion --parts marker-highlight,terminal-run,browser-frame,toast-stack,stat-row,text-mask`,
-    out: "6 parts in pieces/paper-motion, structure approved",
-    caption: "Six beats, each one a block from the library, as long as it needs to be.",
-  },
-  {
-    name: "Parts",
-    says: "Every part is rendered alone, in your look. Approve it, ask for a change, or rewrite its words.",
-    cmd: `${npx} chain paper-motion --drafts`,
-    out: "6 drafts on clay, 6 of 6 approved",
-    caption: "The parts, rendered one by one in the look you chose.",
-  },
-  {
-    name: "Assembly",
-    says: "The parts are joined by their transitions and played through, so you judge the whole film.",
-    cmd: `${npx} chain paper-motion --draft`,
-    out: "6 parts joined by whips, assembly approved",
-    caption: "The assembly: six parts joined by whips, played through.",
+    name: "Video",
+    says: "The studio builds the first cut from what you kept. You change any word, background, transition or length yourself, and watch it play.",
+    cmd: `${npx} piece review paper-motion video`,
+    out: "6 parts from the library, edited by you, approved",
+    caption: "Your video in the studio: six parts from the library, filled with your content.",
   },
   {
     name: "Final",
@@ -51,5 +37,5 @@ export const STAGES: Stage[] = [
 ];
 
 /** The library transition that brings each stage onto the monitor (index 0 is the opening film). */
-export const FX = ["", "cut", "wipe", "slices", "iris", "whip", "zoom-through"] as const;
+export const FX = ["", "cut", "slices", "whip", "zoom-through"] as const;
 export type Fx = (typeof FX)[number];

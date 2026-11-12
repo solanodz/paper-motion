@@ -121,5 +121,14 @@
   "when": [
     "one percentage that matters",
     "a success rate"
+  ],
+  "needs": [
+    {
+      "kind": "share",
+      "fill": {
+        "value": "$value",
+        "label": "$label"
+      }
+    }
   ]
 }

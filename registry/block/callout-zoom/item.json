@@ -120,5 +120,14 @@
   "when": [
     "a setting or value that is too small on screen",
     "show a detail without cutting away"
+  ],
+  "needs": [
+    {
+      "kind": "table",
+      "fill": {
+        "rows": "$rows",
+        "detail": "$main"
+      }
+    }
   ]
 }

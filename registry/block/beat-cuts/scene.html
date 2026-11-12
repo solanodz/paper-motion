@@ -30,7 +30,9 @@ import { scene, progress } from 'paper-motion';
 import { loadBrand } from 'paper-motion/brand';
 
 const CONFIG = {
-  bpm: 120, offset: 0.4,                 // the track's tempo and first beat; or `beats: [t, …]` from the track
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  bpm: 120,                              // the track's tempo; or `beats: [t, …]` from the track
+  offset: 0.4,                           // where its first beat falls, in seconds
   beats: null,
   shots: ['Make', 'it', 'move.', 'paper', 'motion', '↗', 'Every', 'frame', 'on', 'the', 'beat.', 'paper-motion'],
   format: [1920, 1080],
@@ -43,7 +45,7 @@ const $ = (id) => document.getElementById(id);
 const accent = B.color('accent', '#E9E4D8'), ground = B.color('ground'), figure = B.color('figure'), muted = B.color('muted');
 const beat = 60 / CONFIG.bpm;
 const beats = CONFIG.beats ?? Array.from({ length: Math.floor((D - CONFIG.offset) / beat) + 1 }, (_, i) => CONFIG.offset + i * beat).filter((b) => b < D);
-const bgId = B.set.entries.find((e) => e.shader && !e.image)?.id;
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 // the shots: words, on black, on the accent (first beat of each bar), or over the brand's field
 const shots = beats.map((b, i) => {
   const el = document.createElement('div'); el.className = 'shot';
@@ -78,10 +80,11 @@ if (W <= H) shots.forEach(({ w, down }) => {
 s.update((t) => {
   // cuts land on whole frames: hard, never blended by motion blur
   const tc = Math.round(t * 30) / 30;
-  let i = -1; beats.forEach((b, k) => { if (tc >= b - 1e-6) i = k; });
+  let i = 0; beats.forEach((b, k) => { if (tc >= b - 1e-6) i = k; });   // before the first beat, the first word is already up
   shots.forEach(({ el }, k) => { el.style.visibility = k === i ? '' : 'hidden'; });
-  if (i < 0) { dots.forEach((d) => (d.style.background = `${muted}55`)); return; }
-  const since = Math.max(0, t - beats[i]), hit = Math.exp(-since * (shots[i].down ? 6 : 9));
+  // no black count-in: the first word is on screen from the first frame and lands then (the beat before it is still
+  // in sync for a track: only what is shown before it changes)
+  const since = Math.max(0, t - (i === 0 ? 0 : beats[i])), hit = Math.exp(-since * (shots[i].down ? 6 : 9));
   const { w, el, down } = shots[i];
   w.style.transform = `scale(${1 + (down ? 0.14 : 0.08) * hit}) translateY(${(down ? -0.02 : 0.015) * SHORT * hit}px)`;
   el.style.filter = `brightness(${1 + 0.25 * hit})`;

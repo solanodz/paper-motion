@@ -105,5 +105,14 @@
   "when": [
     "boards, lists, anything you rearrange",
     "moving work from one state to another"
+  ],
+  "needs": [
+    {
+      "kind": "board",
+      "fill": {
+        "columns": "$columns",
+        "move": "$move"
+      }
+    }
   ]
 }

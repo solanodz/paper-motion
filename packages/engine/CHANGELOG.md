@@ -2,7 +2,78 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
-## Unreleased
+## 0.4.0 · 2026-11-12
+
+A piece is built from what the user has to show, not from a mood.
+
+**The studio in three steps, and the user edits the video themselves.**
+
+- **What it says** (the brief and the inventory), **Your video** and **Export** replace the seven stages
+  (`STAGES` is now brief, inventory, video, final; a piece started before is moved on by itself: look, structure,
+  parts and assembly all become video).
+- **Make my video** builds the first version from what the user kept, in the studio, with no agent turn.
+- **Your video** plays the selected part live (its real scene, with their content, in their brand) and edits it in
+  place: Words (sentences, numbers, lists, the picture), Motion (how a sentence arrives, by watching each), Background
+  (the brand's, live on hover, or a new one from the library; on one part or every part), Tune (the block's own
+  settings and the length). Between parts, the transition, chosen by watching each (or the same everywhere). Parts
+  are reordered by dragging, added by intent (say something, show the product, prove it, how it works, end) with
+  something kept already in them when they can show it, shown another way (the same words, another block),
+  duplicated and removed.
+- **Style** changes the whole video's colours (a palette, or each colour), type (a font pair) and pace, in `brand/`.
+- **Undo** (and ⌘Z) for every change; **Ask your agent** for what the controls can't do.
+- **Export** renders the final from the studio, full quality, and lists the files.
+- `lib/edit.mjs`: the edits, readable by any agent too.
+- **A project with no look yet gets one before its first video**, named after the piece (`graphite`, `geist-serif`
+  and `mesh-graphite`, changed in Style), when the studio builds it or `chain init --plan` fills it. It used to
+  render grey on grey and call itself "brand".
+- `dither-dissolve` dissolves into the brand's name by default, not "paper-motion"; `focus-pull` shrinks a long
+  detail ("12,000") to fit its card instead of cutting it.
+- `piece --help` and the steps after `chain init` name the new stages.
+
+- **`inventory <piece> --from <url|file.md|folder|brand>`** gathers the inventory from what the user already has:
+  a page (its headline, description, figures and commands, plus screenshots on a desktop and a phone saved to
+  `brand/assets/`), a markdown file, a folder of files, or the brand (IDENTITY.md's Facts and its assets). What
+  it finds is written as proposals with their source; running it again never proposes twice what is there or
+  what the user removed. Figures that count up on load are read once they stop. Only sentences a screen can
+  hold and commands that run the product are proposed; `--plain` leaves commands and code out, for a brand whose
+  audience does not code.
+- **`inventory <piece> --output <id>`** takes what a command really printed from stdin (`<the command> 2>&1 |
+  …`), tidied to a few lines; `--set id.field=value`, `--keep`, `--remove` and `--must` are the agent's edits.
+  `piece review <piece> inventory` refuses while an item is incomplete, and says how to finish each one.
+- **Content** (the piece's inventory, the second half of What it says), written for people who do not code: items are sorted into what we say, what we show, what proves it and how it works, each named in
+  everyday words with its source and a sample of how it could look; no kind, field or block names. There the
+  user keeps or removes each proposal, marks what must appear, corrects a value or a list by hand and adds a
+  line or a figure of their own; it cannot be approved while a proposal waits or a kept item is incomplete.
+  Every edit reaches the agent. A piece started before gets it as already approved.
+- **How each thing is shown is the user's to choose.** In Content, the samples of the blocks that can show an item
+  play when pointed at, and a sheet per item plays the chosen block live with the user's own content in their
+  brand (the scene itself, served by the studio, not a render). There they pick another block, tune its settings
+  (a direction, a ratio, how close the camera stops) and choose the background behind it, from the brand's set or
+  a new one from the library, each playing live on hover. The pick and the tuning are saved on the item (`show`,
+  `tune`); the plan uses that block for it and `chain init --plan` writes the settings into the part.
+- **A new block, `line-in` (A sentence):** one sentence in the brand's display type, arriving in one of the
+  library's eight text entrances (rise, focus, scramble, type, track, flip, pop, bar), the marked words in the
+  accent. Its `repeat` field lets a piece use it several times, each with a different entrance: the planner gives
+  every sentence its own unless the user chose one, and spreads extra sentences through the piece instead of
+  stacking them. So three kept sentences are three different moments, not one.
+- `plan` also fills the length asked with what the user kept and no slot took, while it fits.
+- In Content, the ways a kind of thing can be shown appear once per group, not under every row; each row only
+  says how it is shown, and the page says how many moments the brief's length holds. A setting whose choices
+  have samples (a sentence's entrance) is chosen in the sheet by watching each one.
+- Scenes opened with `?embed` play and loop without the player's controls, for showing one inside another page.
+- Items carry a `status` (`proposed`, `removed`, or none for kept). `plan` uses only what was kept and says how
+  many proposals are still waiting.
+- **`needs` on every block and shot**: the content it shows, by kind (a figure, a change, a screen, a command, a
+  line…), and how that content maps onto its CONFIG. Published in `registry.json` and each resource's file.
+- **`inventory <piece>`** checks `pieces/<piece>/inventory.json` (the list of what the piece can really show, each
+  item with its kind and its source) and says which blocks show each item and what is missing: nothing shows the
+  product, nothing proves it, a kind no block shows yet. `inventory kinds` lists the kinds and their fields.
+- **`plan <piece> [--seconds n]`** proposes up to three structures from the inventory, the same content in three
+  orders (show first, problem first, proof first). No item is shown twice, no block plays twice, every `must` is
+  in, no beat runs shorter than its land and none longer than its scene. It writes `plan.json` and prints the
+  structure board to share.
+- **`chain init <piece> --plan <letter>`** installs the chosen structure with the inventory's content already in
+  each part's CONFIG, and records in `chain.json` which items each part shows.
 
 The studio always says whose turn it is, and never plays a video that is out of date.
 
@@ -14,7 +85,7 @@ The studio always says whose turn it is, and never plays a video that is out of 
   agent working and for how long, a board waiting, a join in progress, the agent not having read the last
   changes, the studio itself stopped. Commands that wait (`piece review`, `board`) say so while they wait.
 - **Stale videos are held.** Each joined render records what it was made from. When the piece changes (a text, a
-  length, the order, a join, a scene the agent rewrote), the Assembly or Final video stops, dims and says
+  length, the order, a join, a scene the agent rewrote), Your video or the final stops, dims and says
   "Updating" with the part being rendered; Approve waits for the new one.
 - **The studio joins the draft again by itself** after an edit by hand, with the sound the draft was made with.
   The agent is only called when the join fails. An edit after the final render sends Final back to the agent.
@@ -25,7 +96,7 @@ From a test where an agent with no context made a video from `llms.txt` alone:
 
 - `board --url`: option and look values may hold several keys and lists (`graphite:accent=#B8F03C,ramp=["#0A0A0B","#B8F03C"]`, `--look "acid-night:figure=#FFF,muted=#7E8079,geist"`); `--look brand` uses the palette, colors and font pair the project installed.
 - `board --await <id> [--wait minutes]` waits (again) for the choice on a board already shared, for shells that cap how long a command runs.
-- The studio lists the boards shared while a piece is open, in its Look or Structure stage, with a button to open each and the choice once made (`board --piece <name>` picks the piece when there are several).
+- The studio lists the boards shared while a piece is open, in Your video, with a button to open each and the choice once made (`board --piece <name>` picks the piece when there are several).
 - A chosen transition can be the join between two parts of a chain: `"join": "wipe"` (also crossfade, push, zoom-through, iris, slices, flash, scan-reveal, mask-reveal, glitch, cells, flip-3d).
 - A tuned palette retunes its ramp (the steps between ground and accent follow the new accent); a background recolored into a palette takes the brand's ground behind everything.
 - `chain --check` warns when the total drifts from the brief's length.
@@ -34,10 +105,10 @@ From a second test, an agent following the site's "For agents" page alone:
 
 - `piece review` refuses while an earlier stage is not approved, and names the one to review first. It used to mark the earlier stages approved on its own. `--skip` moves on without them, for when the user agreed.
 - `chain init --board <link>` looks the board up on the server of the link it is given (a bare id still uses `--site`, or the default site); the error says what to pass.
-- After `chain init`, the next steps printed are the real ones in order: review the structure, write the parts, `--check`, `--drafts`, `--draft`, then the full render.
+- After `chain init`, the next steps printed are the real ones in order: check each part's CONFIG, `--check`, `--drafts`, `--draft`, the full render, and `piece review <piece> video` when a piece is open.
 - `chain.json` takes the open piece's title, not the board option's.
 - `piece --help`, `chain --help` and `board --help` list every flag of their commands.
-- `pamo --version`. Help says `--wait` is in minutes; the docs say `pamo` means `npx paper-motion` and when to review the structure.
+- `pamo --version`. Help says `--wait` is in minutes; the docs say `pamo` means `npx paper-motion`.
 
 ## 0.3.0 · 2026-11-11
 

@@ -1,6 +1,7 @@
 // A piece's progress: pieces/<piece>/piece.json, shared by the agent (CLI) and the user (pamo studio).
 //
-//   stage      the stage the piece is at: brief → look → structure → parts → assembly → final
+//   stage      the stage the piece is at: brief → inventory → video → final. The user sees three steps (What it says,
+//              Your video, Export); the brief is settled in the chat.
 //   stages     each stage's status: pending · working (the agent's turn) · review (the user's turn) · changes · approved
 //   brief      what, who, format, tone, action: written by the agent, editable by the user
 //   parts      per part (by its folder in chain.json): status (queued · rendering · review · changes · approved), note
@@ -13,7 +14,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pieceDir } from './chain.mjs';
 
-export const STAGES = ['brief', 'look', 'structure', 'parts', 'assembly', 'final'];
+export const STAGES = ['brief', 'inventory', 'video', 'final'];
+// the stages a piece had before Your video took them over: a piece at one of them is at `video` now
+const OLD_VIDEO = ['look', 'structure', 'parts', 'assembly'];
 export const STAGE_STATUS = ['pending', 'working', 'review', 'changes', 'approved'];
 export const BRIEF_KEYS = ['what', 'who', 'format', 'tone', 'action'];
 
@@ -21,7 +24,19 @@ const now = () => new Date().toISOString();
 const file = (dir) => path.join(dir, 'piece.json');
 
 export function readPiece(dir) {
-  try { return JSON.parse(fs.readFileSync(file(dir), 'utf8')); } catch { return null; }
+  try { return upgrade(JSON.parse(fs.readFileSync(file(dir), 'utf8'))); } catch { return null; }
+}
+// a piece started before a stage existed: that stage counts as done when the piece is already past it
+function upgrade(p) {
+  if (!p.stages.video) {
+    const at = OLD_VIDEO.indexOf(p.stage), last = OLD_VIDEO.findLast((s) => p.stages[s]);
+    p.stages.video = at >= 0 ? { ...p.stages[p.stage] } : last && p.stages[last].status === 'approved' && STAGES.indexOf(p.stage) > 0 ? { status: 'approved' } : undefined;
+    if (at >= 0) p.stage = 'video';
+    for (const s of OLD_VIDEO) delete p.stages[s];
+    if (!p.stages.video) delete p.stages.video;
+  }
+  for (const s of STAGES) p.stages[s] ??= STAGES.indexOf(p.stage) > STAGES.indexOf(s) ? { status: 'approved', skipped: true } : { status: 'pending' };
+  return p;
 }
 
 /** Writes atomically (the studio and the CLI both write it). */
@@ -66,7 +81,7 @@ export function eventLine(p, e) {
     : e.kind === 'order' ? `order ${e.text}`
     : e.kind === 'reopen' ? 'reopened'
     : e.kind === 'failed' ? `could not join the parts: "${e.text}"`
-    : `${e.key}="${e.text}"${e.rerendered ? ' (re-rendered)' : ''}`;
+    : e.say ? e.say : `${e.key}="${e.text}"${e.rerendered ? ' (re-rendered)' : ''}`;
   // the studio joins the draft again by itself after an edit by hand; the full-quality render stays the agent's
   const tail = `${e.rejoined ? ' (the studio is joining the draft again)' : ''}${e.rejoin ? ' · join again: pamo chain --draft' : ''}${e.refinal ? ` · the final is out of date: render it again (pamo chain ${p.piece} --motion-blur 5), then review final` : ''}`;
   return `paper-motion: piece ${p.piece} · ${e.kind === 'order' ? '' : `${who} `}${what}${tail}`.replace(/ {2,}/g, ' ');
@@ -182,14 +197,14 @@ export function setSceneText(html, key, value) {
 }
 
 // ── boards: the decisions taken on paper-motion.app, listed in the studio so the user finds them there too ──────
-const BOARD_STAGE = (s) => (['brief', 'look'].includes(s) ? 'look' : 'structure');
+const BOARD_STAGE = () => 'video';
 
 /** The piece a board belongs to: the one named, else the only one in progress before Parts. */
 export function activePiece(cwd, name) {
   if (name) { const dir = pieceDir(name, cwd); return readPiece(dir) ? dir : null; }
   const root = path.join(cwd, 'pieces');
   if (!fs.existsSync(root)) return null;
-  const live = fs.readdirSync(root).map((d) => path.join(root, d)).filter((d) => { const p = readPiece(d); return p && ['brief', 'look', 'structure'].includes(p.stage); });
+  const live = fs.readdirSync(root).map((d) => path.join(root, d)).filter((d) => { const p = readPiece(d); return p && ['brief', 'inventory', 'video'].includes(p.stage); });
   return live.length === 1 ? live[0] : null;
 }
 

@@ -110,5 +110,15 @@
   "when": [
     "voice-over videos for social",
     "talking points in vertical"
+  ],
+  "needs": [
+    {
+      "kind": "voice",
+      "fill": {
+        "script": "$script",
+        "words": "$words",
+        "emphasis": "$emphasis"
+      }
+    }
   ]
 }

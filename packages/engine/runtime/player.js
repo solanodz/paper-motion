@@ -1,9 +1,11 @@
 // Preview player: real-time playback, scrubbing and frame stepping.
-// Only mounted in preview (never in renders).
+// Only mounted in preview (never in renders). With ?embed in the address it plays and loops with no controls,
+// for a scene shown inside another page (the studio's live previews).
 //   space play/pause · ←/→ one frame · shift+←/→ one second · home start · L loop · H hide UI
 
 export function mountPlayer(scene, startT = 0) {
   const { stage, duration, fps } = scene;
+  const embed = new URLSearchParams(location.search).has('embed');
   let t = startT, playing = true, loop = true, last = performance.now(), busy = false;
 
   const bar = document.createElement('div');
@@ -25,10 +27,11 @@ export function mountPlayer(scene, startT = 0) {
   const range = bar.querySelector('input');
   const label = bar.querySelector('.pm-time');
   loopBtn.classList.toggle('on', loop);
+  if (embed) bar.style.display = 'none';
 
   function fit() {
     const avail = { w: innerWidth, h: innerHeight - (bar.style.display === 'none' ? 0 : 44) };
-    const s = Math.min(avail.w / scene.width, avail.h / scene.height, 1);
+    const s = Math.min(avail.w / scene.width, avail.h / scene.height, embed ? Infinity : 1);
     stage.style.transform = `translate(${(avail.w - scene.width * s) / 2}px, ${(avail.h - scene.height * s) / 2}px) scale(${s})`;
   }
   addEventListener('resize', fit); fit();
@@ -37,7 +40,7 @@ export function mountPlayer(scene, startT = 0) {
     t = Math.max(0, Math.min(duration, nt));
     range.value = t;
     label.textContent = `${t.toFixed(2)}s · f${String(Math.round(t * fps)).padStart(4, '0')} / ${Math.round(duration * fps)}`;
-    try { sessionStorage.setItem(`pm:t:${location.pathname}`, String(t)); } catch { /* storage blocked */ }
+    if (!embed) { try { sessionStorage.setItem(`pm:t:${location.pathname}`, String(t)); } catch { /* storage blocked */ } }
     busy = true; await scene.seek(t); busy = false;
   }
   function setPlaying(p) { playing = p; playBtn.textContent = p ? '❚❚' : '▶'; last = performance.now(); }

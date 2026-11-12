@@ -141,5 +141,16 @@
   "when": [
     "the old way against the new",
     "a refactor in one line"
+  ],
+  "needs": [
+    {
+      "kind": "rewrite",
+      "fill": {
+        "file": "$file",
+        "before": "$before",
+        "remove": "$remove",
+        "add": "$add"
+      }
+    }
   ]
 }

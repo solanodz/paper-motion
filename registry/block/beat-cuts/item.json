@@ -16,6 +16,25 @@
   ],
   "params": [
     {
+      "name": "background",
+      "type": "string",
+      "default": "",
+      "description": "a background id from the registry; empty uses the brand's first",
+      "group": "advanced",
+      "control": "select"
+    },
+    {
+      "name": "bpm",
+      "type": "number",
+      "default": 120,
+      "min": 60,
+      "max": 170,
+      "step": 1,
+      "description": "tempo: beats per minute (slower holds each word longer)",
+      "group": "main",
+      "control": "slider"
+    },
+    {
       "name": "format",
       "type": "enum",
       "default": "1920x1080",
@@ -87,5 +106,22 @@
   "when": [
     "an edit that follows a track",
     "a fast social teaser"
+  ],
+  "needs": [
+    {
+      "kind": "words",
+      "fill": {
+        "shots": "$items"
+      }
+    },
+    {
+      "kind": "music",
+      "optional": true,
+      "fill": {
+        "bpm": "$bpm",
+        "offset": "$offset",
+        "beats": "$beats"
+      }
+    }
   ]
 }

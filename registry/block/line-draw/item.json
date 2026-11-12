@@ -123,5 +123,26 @@
   "when": [
     "a curve that keeps climbing",
     "momentum"
+  ],
+  "needs": [
+    {
+      "kind": "series",
+      "fill": {
+        "title": "$title",
+        "points": {
+          "$col": [
+            "points",
+            1
+          ]
+        },
+        "labels": {
+          "$col": [
+            "points",
+            0
+          ]
+        },
+        "tag": "$tag"
+      }
+    }
   ]
 }

@@ -33,8 +33,8 @@
     {
       "name": "b",
       "type": "string",
-      "default": "paper-motion",
-      "description": "b",
+      "default": "",
+      "description": "the name it dissolves into (empty: the brand's name)",
       "group": "main",
       "control": "text"
     },
@@ -131,5 +131,14 @@
   "when": [
     "a transition that only this brand has",
     "between a statement and the name"
+  ],
+  "needs": [
+    {
+      "kind": "line",
+      "fill": {
+        "a": "$text",
+        "bLine": "$brief.what"
+      }
+    }
   ]
 }

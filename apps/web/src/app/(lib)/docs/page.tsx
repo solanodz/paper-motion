@@ -8,60 +8,44 @@ export const metadata: Metadata = { title: "For agents" };
 
 // the same prompt the home page hands to the user
 
-// the six stages of a piece, the same ones the studio shows: what the agent prepares before handing each one over
-const STAGES: { t: string; d: string; cmds: string[] }[] = [
-  { t: "Brief", d: "Interview the user, then fill the five fields: what, who, format, tone and action.", cmds: ["piece init"] },
-  { t: "Look", d: "Boards for palette, type, backgrounds and moves. Install what they choose.", cmds: ["board", "add"] },
-  { t: "Structure", d: "A board of structures whose beats name their blocks. The one they choose becomes a chain.", cmds: ["board", "chain init"] },
-  { t: "Parts", d: "Write each part from its beat, then render each one on its own, quick.", cmds: ["chain --drafts"] },
-  { t: "Assembly", d: "The parts joined, quick.", cmds: ["chain --draft"] },
-  { t: "Final", d: "The full render.", cmds: ["chain --motion-blur 5"] },
+// the four stages of a piece, the same ones the studio shows (the user sees three steps: What it says, Your video,
+// Export): what the agent prepares before handing each one over
+const STAGES: { t: string; id: string; d: string; cmds: string[] }[] = [
+  { t: "Brief", id: "brief", d: "Interview the user, then fill the five fields: what, who, format, tone and action.", cmds: ["piece init"] },
+  { t: "Content", id: "inventory", d: "Gather what the video can really show from their site, files and brand. They keep, remove or correct each thing.", cmds: ["inventory --from"] },
+  { t: "Video", id: "video", d: "The studio builds the first cut from what they kept. They edit it themselves; you do what they ask for.", cmds: ["piece review video"] },
+  { t: "Final", id: "final", d: "The full render, from the studio or by you.", cmds: ["chain --motion-blur 5"] },
 ];
 
 // one piece from start to finish, in the order the commands are really run: paper-motion's own film, the one on the
 // home page. `say` is a step with no command (the agent talks, writes or waits).
 type Step = { cmd: string } | { say: string };
-const RUN: { stage: string; steps: Step[] }[] = [
-  { stage: "Set up", steps: [
+const RUN: { stage: string; id: string; steps: Step[] }[] = [
+  { stage: "Set up", id: "setup", steps: [
     { cmd: "npx skills add solanodz/paper-motion" },
     { cmd: "npx paper-motion setup" },
   ] },
-  { stage: "Brief", steps: [
+  { stage: "Brief", id: "brief", steps: [
     { cmd: `npx paper-motion piece init paper-motion --title "paper-motion"` },
     { say: "Interview the user: what the film says, to whom, format, tone, the action at the end." },
     { cmd: `npx paper-motion piece init paper-motion --what "Art-directed video from a conversation" --who "people who build with coding agents" --format "16:9, 30 s" --tone "quiet, exact" --action "paper-motion.app"` },
     { cmd: "npx paper-motion piece review paper-motion brief" },
   ] },
-  { stage: "Look", steps: [
-    { say: "A new project has no look yet. Palette and type come first: every later board plays in them." },
-    { cmd: `npx paper-motion board --url --title "Palette for paper-motion" --option graphite --option slate-sea --option clay-desert --option ochre-sun` },
-    { cmd: `npx paper-motion board --url --title "Type for paper-motion" --option geist-serif --option fraunces --option instrument` },
-    { say: "Each board prints its link, waits, and prints the choice: paper-motion: A · graphite" },
-    { cmd: `npx paper-motion add graphite geist-serif --brand "paper-motion"` },
-    { cmd: `npx paper-motion board --url --title "Backgrounds for paper-motion" --look brand --option mesh-sage --option neuro-slate --option grain-clay --option warp-ochre` },
-    { say: "--look brand needs the palette and font pair installed above. It prints: paper-motion: B · neuro-slate" },
-    { cmd: "npx paper-motion add neuro-slate" },
-    { cmd: "npx paper-motion piece review paper-motion look" },
+  { stage: "Content", id: "inventory", steps: [
+    { cmd: "npx paper-motion inventory paper-motion --from https://paper-motion.vercel.app --from README.md --from brand" },
+    { say: "It reads the site (and screenshots it on a desktop and a phone), the README and the brand, and writes what it finds as proposals. Read every one before the user does: drop the noise, aim for six to eight things worth showing, and fill what the report says is missing." },
+    { cmd: "npx paper-motion inventory paper-motion --remove <id>,<id>" },
+    { say: "A command found in a README has no output until it runs. Run it and pipe what it really printed; never invent one." },
+    { cmd: "<the command> 2>&1 | npx paper-motion inventory paper-motion --output <id>" },
+    { cmd: "npx paper-motion piece review paper-motion inventory" },
+    { say: "In the studio the user keeps, removes or corrects each thing, stars what must appear and adds their own. When they press Make my video, the studio builds the first cut itself: the planner's structure, every part filled with their content." },
   ] },
-  { stage: "Structure", steps: [
-    { cmd: `npx paper-motion board --url --title "Structure for paper-motion" --look brand --option launch --option "@Six blocks | 31 | Hook 0-4 [marker-highlight] the claim; Agent 4-10 [terminal-run] the command; Library 10-16 [browser-frame] the site; Approvals 16-20 [toast-stack] your decisions; Numbers 20-25.5 [stat-row] three facts; Close 25.5-31 [text-mask] the name in metal"` },
-    { say: "The board prints its link, then the choice. Pass that link to chain init (its id is the last part, /b/<id>), with the letter they chose." },
-    { cmd: "npx paper-motion chain init paper-motion --board https://paper-motion.vercel.app/b/<id> --option B" },
-    { cmd: "npx paper-motion piece review paper-motion structure" },
+  { stage: "Video", id: "video", steps: [
+    { cmd: "npx paper-motion piece review paper-motion video" },
+    { say: "The user edits it live: words and numbers, how a sentence arrives, backgrounds, settings, lengths, transitions, order, and the whole video's colours, type and pace. Each edit prints as one line; build on them, never undo them. Do only what they ask for in Ask your agent (a changes line), then review again." },
   ] },
-  { stage: "Parts", steps: [
-    { say: "Write each part: open pieces/paper-motion/<nn>-<block>/scene.html and fill its CONFIG from its beat: the words, the data, and background: 'neuro-slate' (the id you installed; left null it takes the brand's first)." },
-    { cmd: "npx paper-motion chain paper-motion --check" },
-    { say: "If --check warns that a part runs past its block or is cut before it lands, change that part's seconds in pieces/paper-motion/chain.json and check again." },
-    { cmd: "npx paper-motion chain paper-motion --drafts" },
-    { cmd: "npx paper-motion piece review paper-motion parts" },
-    { say: "It prints one line per decision: paper-motion: piece paper-motion · part 03-browser-frame approved, or … part 05-stat-row changes: \u201cbigger numbers\u201d. On a change, run piece working paper-motion parts, fix it, re-render with --drafts --only 05-stat-row, and review again." },
-  ] },
-  { stage: "Assembly", steps: [
-    { cmd: "npx paper-motion chain paper-motion --draft" },
-    { cmd: "npx paper-motion piece review paper-motion assembly" },
-  ] },
-  { stage: "Final", steps: [
+  { stage: "Final", id: "final", steps: [
+    { say: "The user renders it from the studio's Export step. Or render it yourself:" },
     { cmd: "npx paper-motion chain paper-motion --motion-blur 5" },
     { cmd: "npx paper-motion piece review paper-motion final" },
     { cmd: "npx paper-motion studio --stop" },
@@ -69,9 +53,9 @@ const RUN: { stage: string; steps: Step[] }[] = [
 ];
 
 const WHO: [string, React.ReactNode][] = [
-  ["The user", "Sees each stage in the studio, a local page. Approves it or asks for changes, and edits by hand what needs no judgment: the brief, the words on screen, lengths, joins and order."],
+  ["The user", "Sees each stage in the studio, a local page, and edits the video there themselves: words, backgrounds, transitions, lengths, order, colours and type. Approves each stage or asks for changes."],
   ["The agent", <>Hands over a stage with <code className="font-mono text-[13px] text-figure">piece review</code> and waits. The decision arrives on its own, as lines the command prints: an approval, a change to make, or an edit the user already made. Build on those edits, never undo them.</>],
-  ["Boards", "Visual choices (palette, type, backgrounds, moves, structure) are proposed on boards: links the user opens to compare and choose. Boards shared while a piece is open also show in its studio."],
+  ["Boards", "For the brand's look before a piece (palette, type, backgrounds, moves): links the user opens to compare options and choose. Inside a piece the user changes the look in the studio."],
   ["Without a browser", "Only when the user can't open one, run the same stages in the chat."],
 ];
 
@@ -99,7 +83,7 @@ const COMMANDS: Group[] = [
     ],
   },
   {
-    id: "boards", title: "Boards", stages: "look, structure", note: "One link per visual decision, with two to four options from the registry.",
+    id: "boards", title: "Boards", stages: "the brand", note: "One link per visual decision, with two to four options from the registry.",
     rows: [
       [`npx paper-motion search --type background --mode dark --near "#0a0f1f,#eef1f8,#3d6bff"`, "Filters the registry by its metadata. With --near it sorts by color fit to the brand's ground, text and accent."],
       [BOARD_CMD, "Prints the board's link, keeps running, and prints the choice the moment the user makes it (it waits 10 minutes by default). The options play live in the look you pass."],
@@ -112,25 +96,36 @@ const COMMANDS: Group[] = [
     ],
   },
   {
-    id: "install", title: "Install", stages: "look", note: "Resources become code the user owns.",
+    id: "install", title: "Install", stages: "the brand", note: "Resources become code the user owns.",
     rows: [
       ["npx paper-motion add <id> --set key=value", "Run it in the project root with exactly the --set arguments from the reply. Moves go to moves/, backgrounds to brand/shader-set/set.json, palettes and fonts to brand/tokens.json, recipes to pieces/<id>/."],
       ["npx paper-motion add <id> --force", "add never overwrites a value already in the project. Pass --force when the user chooses or tunes again something you installed before."],
     ],
   },
   {
-    id: "chain", title: "Chain", stages: "structure, parts, assembly, final", note: "A chosen structure becomes a chain: its parts in order, rendered and joined.",
+    id: "inventory", title: "Content", stages: "content", note: "What the video can really show. Nothing goes in that is not true.",
     rows: [
-      ["npx paper-motion chain init <piece> --board <link> --option D", "Takes the board's link (or its id, the last part of /b/<id>) and the letter they chose. Installs each beat's block under pieces/<piece>/ and writes chain.json: the seconds of each part and the join between them. Review the structure stage right after, before writing the parts."],
+      ["npx paper-motion inventory <piece> --from <url> --from README.md --from brand", "Reads a site (and screenshots it), a markdown file, a folder or the brand, and adds what it finds as proposals for the user to keep or remove. Run it again any time: it never proposes twice. Add --plain when the audience does not code: commands and code are left out."],
+      ["npx paper-motion inventory <piece>", "Checks pieces/<piece>/inventory.json and says what is missing: nothing shows the product, nothing proves it, an item still incomplete."],
+      ["npx paper-motion inventory <piece> --remove id,… --must id,… --set id.field=value", "Drops the noise, marks what has to appear, corrects a field."],
+      ["<command> 2>&1 | npx paper-motion inventory <piece> --output <id>", "Gives a command its real output. Review refuses while an item is incomplete."],
+      ["npx paper-motion inventory kinds", "The kinds of content (a figure, a sentence, a screen, a command…), their fields and the blocks that show each."],
+      ["npx paper-motion plan <piece> --seconds 30", "Up to three structures from what the user kept, the same content argued in three orders. The studio uses the first when it builds the video."],
+    ],
+  },
+  {
+    id: "chain", title: "Chain", stages: "video, final", note: "A structure becomes a chain: its parts in order, rendered and joined. The studio runs these itself; they are yours when the user asks.",
+    rows: [
+      ["npx paper-motion chain init <piece> --plan A", "Installs the plan's structure A under pieces/<piece>/ with the content already in each part's CONFIG, and writes chain.json: the seconds of each part and the join between them. --board <link> --option D takes a structure chosen on a board instead."],
       ["npx paper-motion chain <piece> --check", "Plans without rendering: windows, joins, and parts that would be cut before they land. Run it after writing the parts."],
-      ["npx paper-motion chain <piece> --drafts", "A quick render of each part on its own, for the parts stage. Add --only <dir> to redo one part."],
-      ["npx paper-motion chain <piece> --draft", "A quick render of the parts joined, for the assembly stage."],
+      ["npx paper-motion chain <piece> --drafts", "A quick render of each part on its own. Add --only <dir> to redo one part."],
+      ["npx paper-motion chain <piece> --draft", "A quick render of the parts joined."],
       ["npx paper-motion chain <piece> --motion-blur 5", "The full render: every part in the brand's look, joined into one video."],
     ],
   },
 ];
 
-const NAV: [string, string][] = [["#prompt", "Starter prompt"], ["#stages", "Six stages"], ["#run", "One piece, start to finish"], ["#commands", "Commands"], ["#entry", "Entry points"]];
+const NAV: [string, string][] = [["#prompt", "Starter prompt"], ["#stages", "Four stages"], ["#run", "One piece, start to finish"], ["#commands", "Commands"], ["#entry", "Entry points"]];
 
 export default function DocsPage() {
   const { site, count } = getIndex();
@@ -182,17 +177,17 @@ export default function DocsPage() {
 
       <section id="stages" className="scroll-mt-[96px] pt-20">
         <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-9">
-          <h2 className="title">Six stages</h2>
+          <h2 className="title">Four stages</h2>
           <p className="max-w-[46ch] pb-1 text-[15px] leading-relaxed text-muted">
-            A video is made in six stages. The user watches and approves each one in the studio. Nothing moves on until they do.
+            A video is made in four stages. The user approves each one in the studio, and edits the video there themselves. Nothing moves on until they do.
           </p>
         </div>
-        <ol className="sheet sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        <ol className="sheet sm:grid-cols-2 xl:grid-cols-4">
           {STAGES.map((s, i) => (
-            <li key={s.t} className="group relative flex gap-4 px-4 pb-4 pt-3.5 transition-colors duration-150 hover:bg-paper hover:text-ground sm:min-h-[196px] sm:flex-col 2xl:min-h-[244px] sm:gap-0">
+            <li key={s.t} className="group relative flex gap-4 px-4 pb-4 pt-3.5 transition-colors duration-150 hover:bg-paper hover:text-ground sm:min-h-[196px] sm:flex-col xl:min-h-[232px] sm:gap-0">
               <span className="num w-11 shrink-0 text-[26px] group-hover:!text-ground">0{i + 1}</span>
               <div className="min-w-0 sm:pt-7">
-                <h3 className="text-[17px] font-medium leading-tight"><a href={`#run-${s.t.toLowerCase()}`} className="outline-offset-4 after:absolute after:inset-0">{s.t}</a></h3>
+                <h3 className="text-[17px] font-medium leading-tight"><a href={`#run-${s.id}`} className="outline-offset-4 after:absolute after:inset-0">{s.t}</a></h3>
                 <p className="mt-1.5 text-[13.5px] leading-snug text-muted group-hover:text-ground/70">{s.d}</p>
               </div>
               <ul className="max-sm:hidden sm:mt-auto sm:pt-5">
@@ -220,7 +215,7 @@ export default function DocsPage() {
         </div>
         <ol className="border-t border-rule">
           {RUN.map((r, i) => (
-            <li key={r.stage} id={`run-${r.stage.toLowerCase().replace(" ", "-")}`} className="grid scroll-mt-[110px] grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-3 border-b border-line py-5 md:grid-cols-[150px_minmax(0,1fr)]">
+            <li key={r.stage} id={`run-${r.id}`} className="grid scroll-mt-[110px] grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-3 border-b border-line py-5 md:grid-cols-[150px_minmax(0,1fr)]">
               <h3 className="flex items-baseline gap-3 md:block">
                 <span className="num text-[22px]">{i ? `0${i}` : "00"}</span>
                 <span className="text-[16px] font-medium md:mt-2 md:block">{r.stage}</span>
