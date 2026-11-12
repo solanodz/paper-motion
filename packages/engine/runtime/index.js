@@ -144,6 +144,13 @@ const imageCache = new Map();
 // A transparent pixel stands in for an image shader with no image (PaperTexture and Water also work standalone).
 const BLANK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
+// A scene shown inside another page (?embed: the studio's live previews) draws its shaders at the size it is shown,
+// not at the frame's full size times the screen's density (8 million pixels a frame on a Retina screen for a box
+// 700 px wide). Renders never pass ?embed, so they keep every pixel.
+const EMBED_PIXELS = typeof location !== 'undefined' && /[?&]embed(?:[=&]|$)/.test(location.search)
+  ? Math.max(480 * 270, Math.round(innerWidth * innerHeight * Math.max(1, globalThis.devicePixelRatio ?? 1) ** 2))
+  : null;
+
 class ShaderLayer {
   /**
    * @param el       element the canvas fills (give it a size: e.g. position:absolute; inset:0)
@@ -177,7 +184,7 @@ class ShaderLayer {
       { preserveDrawingBuffer: true, ...(props.webGlContextAttributes ?? {}) },
       0, this.frame0,
       this.options.minPixelRatio ?? 2,
-      this.options.maxPixelCount ?? 3840 * 2160 * 2,
+      this.options.maxPixelCount ?? EMBED_PIXELS ?? 3840 * 2160 * 2,
       props.mipmaps,
     );
     if (this.options.loop) {
@@ -220,6 +227,8 @@ class ShaderLayer {
 
   seek(t) {
     if (!this.a) return;
+    // embedded, a layer no one can see (a later shot waiting at opacity 0, display none) is not drawn this frame
+    if (EMBED_PIXELS && this.el.checkVisibility && !this.el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return;
     const time = this.time ?? (t + (this.options.timeOffset ?? 0));
     const ms = (s) => this.frame0 + s * 1000 * this.speed;
     const L = this.options.loop;

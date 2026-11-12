@@ -94,12 +94,13 @@ export async function renderSfx({ url, out, from = 0, to }) {
   } finally { await browser.close(); }
 }
 
-async function sfxFromPage(s, { from = 0, to, out, normalize = true }) {
+async function sfxFromPage(s, { from = 0, to, rate = 1, length, out, normalize = true }) {
   const { cues, audio } = await s.page.evaluate(() => ({ cues: window.__pm.cues ?? [], audio: window.__pm.audio ?? {} }));
   if (!cues.length) return null;
   const end = to ?? s.config.duration;
-  const shifted = cues.filter((c) => c.t < end).map((c) => ({ ...c, t: c.t - from }));
-  writeWav(out, synthesize(shifted, { duration: end - from, ...audio, normalize }));
+  // a faster or slower part moves its hits with the picture; each sound keeps its own pitch and length
+  const shifted = cues.filter((c) => c.t < end).map((c) => ({ ...c, t: (c.t - from) / rate }));
+  writeWav(out, synthesize(shifted, { duration: length ?? (end - from) / rate, ...audio, normalize }));
   return { out, cues: cues.length };
 }
 
@@ -110,7 +111,7 @@ function subframes(f, fps, k, shutter, duration) {
   return Array.from({ length: k }, (_, j) => Math.min(duration - 1e-4, Math.max(0, (f + ((j + 0.5) / k - 0.5) * open) / fps)));
 }
 
-export async function renderVideo({ url, out, format = 'mp4', workers, dpr = 1, from, to, fps: fpsOverride, crf, audio, sfx = true, motionBlur = 1, shutter = 180, gifWidth = 720, gifFps = 24, onProgress }) {
+export async function renderVideo({ url, out, format = 'mp4', workers, dpr = 1, from, to, rate = 1, seconds, fps: fpsOverride, crf, audio, sfx = true, motionBlur = 1, shutter = 180, gifWidth = 720, gifFps = 24, onProgress }) {
   const fmt = FORMATS[format];
   if (!fmt) throw new Error(`Unknown format "${format}". Use one of: ${Object.keys(FORMATS).join(', ')}`);
   const browser = await launch();
@@ -120,9 +121,12 @@ export async function renderVideo({ url, out, format = 'mp4', workers, dpr = 1, 
     const first = await openScene(browser, url, { dpr });
     const cfg = first.config;
     const fps = fpsOverride ?? cfg.fps;
+    // the scene's window [from, to], played at `rate` (scene seconds per second of video): 2 plays it twice as fast.
+    // `seconds` sets the video's length; past the window's end the last frame holds (under an overlapping join)
     const f0 = Math.round((from ?? 0) * fps);
     const f1 = Math.round((to ?? cfg.duration) * fps);
-    const total = f1 - f0;
+    const total = seconds !== undefined ? Math.round(seconds * fps) : Math.round((f1 - f0) / rate);
+    const sceneT = (st) => Math.min(f1 / fps - 1e-4, f0 / fps + st * rate);   // a time in the video → in the scene
     if (total <= 0) throw new Error('Nothing to render (check --from/--to).');
     const n = Math.max(1, Math.min(workers ?? Math.min(4, Math.max(1, Math.floor(os.cpus().length / 2))), Math.ceil(total / 15)));
     const chunk = Math.ceil(total / n);
@@ -131,7 +135,7 @@ export async function renderVideo({ url, out, format = 'mp4', workers, dpr = 1, 
 
     let sfxWav = null;
     if (sfx && !fmt.gif && !fmt.seq) {
-      const r = await sfxFromPage(first, { from: f0 / fps, to: f1 / fps, out: path.join(tmp, 'sfx.wav'), normalize: !audio }); // with an external track, effects keep their own gains
+      const r = await sfxFromPage(first, { from: f0 / fps, to: f1 / fps, rate, length: total / fps, out: path.join(tmp, 'sfx.wav'), normalize: !audio }); // with an external track, effects keep their own gains
       sfxWav = r?.out ?? null;
     }
 
@@ -139,7 +143,7 @@ export async function renderVideo({ url, out, format = 'mp4', workers, dpr = 1, 
     for (let i = 1; i < n; i++) sessions.push(await openScene(browser, url, { dpr }));
 
     const segments = await Promise.all(sessions.map(async (s, i) => {
-      const a = f0 + i * chunk, b = Math.min(f1, a + chunk);
+      const a = i * chunk, b = Math.min(total, a + chunk);
       if (a >= b) return null;
       const seg = path.join(tmp, `seg${String(i).padStart(3, '0')}.mkv`);
       // Lossless RGB intermediate; the final encode happens once, after concat.
@@ -148,8 +152,8 @@ export async function renderVideo({ url, out, format = 'mp4', workers, dpr = 1, 
       const blur = k > 1 ? ['-vf', `tmix=frames=${k},select='eq(mod(n\\,${k})\\,${k - 1})',setpts=N/(${fps}*TB)`, '-r', String(fps)] : [];
       const p = ffmpeg(['-f', 'image2pipe', '-framerate', String(fps * k), '-c:v', 'png', '-i', '-', ...blur, '-c:v', 'libx264rgb', '-preset', 'ultrafast', '-crf', '0', seg], { stdin: true });
       for (let f = a; f < b; f++) {
-        for (const tt of subframes(f, fps, k, shutter, cfg.duration)) {
-          await s.seek(tt);
+        for (const st of subframes(f, fps, k, shutter, Infinity)) {
+          await s.seek(sceneT(st));
           await write(p, await s.capture());
         }
         done++; tick();

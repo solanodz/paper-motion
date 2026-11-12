@@ -326,8 +326,8 @@ function inspHTML(p) {
     tune: `${p.tune.map((t) => t.kind === 'number'
         ? `<div class="slider"><div>${esc(t.label)}<em id="tv-${esc(t.name)}">${esc(t.value)}</em></div><input type="range" min="${t.min}" max="${t.max}" step="${t.step}" value="${esc(t.value)}" data-tune="${esc(t.name)}"></div>`
         : `<div class="fld">${esc(t.label)}<div class="seg">${t.options.map((o) => `<button class="btn sm${String(t.value) === String(o) ? ' on' : ''}" data-tunev="${esc(t.name)}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`).join('')}
-      <div class="slider"><div>Length<em id="tv-seconds">${Number(p.seconds).toFixed(1)} s</em></div><input type="range" min="1.5" max="${Math.max(10, Math.ceil((p.duration ?? 6) * 1.6))}" step="0.1" value="${p.seconds}" data-seconds></div>
-      ${p.duration && p.seconds < p.duration * 0.7 ? '<p class="hint" style="color:var(--warn)">Shorter than this part needs to land: it may be cut.</p>' : ''}`,
+      <div class="slider"><div>Length<em id="tv-seconds">${Number(p.seconds).toFixed(1)} s</em></div><input type="range" min="${p.range.min}" max="${p.range.max}" step="0.1" value="${p.seconds}" data-seconds data-natural="${p.duration}"></div>
+      <p class="hint" id="tv-pace">${pace(p.seconds, p.duration)}</p>`,
   };
   return `<div class="lbl">Part ${n} of ${P.video.parts.length}</div><h2>${esc(p.title)}</h2><p class="hint sum">${esc(p.summary)}</p>
     <div class="tabs">${[['words', 'Words'], ['motion', 'Motion'], ['bg', 'Background'], ['tune', 'Tune']].map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>
@@ -452,11 +452,18 @@ document.addEventListener('click', async (e) => {
 let sheetOpenAt = 0;
 const _open = openSheet; openSheet = (k, a) => { if (k === 'add') sheetOpenAt = a; _open(k, a); };
 function playAll() {
-  if (playing) { clearTimeout(playing); playing = null; render(); return; }
+  if (playing) { clearTimeout(playing); playing = null; onEnded = null; render(); return; }
   let i = 0; const parts = P.video.parts;
-  const next = () => { if (i >= parts.length || view !== 'video') { playing = null; render(); return; } sel = parts[i].dir; render(); playing = setTimeout(next, (parts[i++].seconds + 0.6) * 1000); };
+  // each part plays once in the player; the next one starts when it says it ended (or after its length, if it never does)
+  const next = () => {
+    clearTimeout(playing);
+    if (i >= parts.length || view !== 'video') { playing = null; onEnded = null; render(); return; }
+    sel = parts[i].dir; render(); onEnded = next; playing = setTimeout(next, (parts[i++].seconds + 3) * 1000);
+  };
   playing = 1; next();
 }
+let onEnded = null;
+addEventListener('message', (e) => { if (e.data?.pm === 'ended' && onEnded && e.source === $('player')?.querySelector('iframe')?.contentWindow) onEnded(); });
 document.addEventListener('change', (e) => {
   const d = e.target.dataset;
   if (d.word !== undefined) vact('word', { key: d.word, value: e.target.value });
@@ -464,7 +471,16 @@ document.addEventListener('change', (e) => {
   else if ('seconds' in d) vact('seconds', { value: e.target.value });
   else if (d.color) act({ type: 'style-color', key: d.color, value: e.target.value });
 });
-document.addEventListener('input', (e) => { const d = e.target.dataset; const k = d.tune ?? ('seconds' in d ? 'seconds' : null); if (k) { const o = $(`tv-${k}`); if (o) o.textContent = k === 'seconds' ? `${Number(e.target.value).toFixed(1)} s` : e.target.value; } });
+document.addEventListener('input', (e) => {
+  const d = e.target.dataset; const k = d.tune ?? ('seconds' in d ? 'seconds' : null); if (!k) return;
+  const o = $(`tv-${k}`); if (o) o.textContent = k === 'seconds' ? `${Number(e.target.value).toFixed(1)} s` : e.target.value;
+  if (k === 'seconds' && $('tv-pace')) $('tv-pace').textContent = pace(Number(e.target.value), Number(d.natural));
+});
+// a part always plays its whole scene: its length is a speed
+function pace(s, natural) {
+  const r = natural / s, pct = Math.round(Math.abs(r - 1) * 100);
+  return pct < 1 ? 'Plays its whole scene at its own speed.' : `Plays its whole scene ${pct}% ${r > 1 ? 'faster' : 'slower'}.`;
+}
 document.addEventListener('focusout', (e) => {
   const d = e.target.dataset ?? {}, v = e.target.isContentEditable ? e.target.innerText.trim() : null;
   if (d.brief && v !== P.brief[d.brief]) act({ type: 'brief', key: d.brief, value: v }, true);

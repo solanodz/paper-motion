@@ -2,6 +2,22 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
+## 0.4.1 · 2026-11-12
+
+- **The studio's live previews are much lighter.** A scene opened with `?embed` draws its shaders at the size it is
+  shown, not the full frame times the screen's density (a Retina screen drew 8 million pixels a frame for a box
+  700 px wide), skips layers no one can see, and plays at 30 frames a second. In a test of a part with six shots,
+  shader draws went from 180 to about 10 a second. Renders are unchanged.
+- **A part always plays its whole scene: its length is its speed.** Shorter plays it faster, longer slower, never
+  cut short and never looped; sounds move with the picture and keep their pitch. Each part may run from 1.6× faster
+  to 0.6× slower than its scene (`SPEED`, `lengthRange` in inventory.mjs); a length outside that range is held at
+  the limit with a warning. The studio's Length slider runs over that range, says how much faster or slower the
+  part plays, and its live preview plays at that speed. The planner proposes lengths inside the range.
+- **Previews in the studio play once and hold their last frame** (a click plays one again); "Play the whole video"
+  moves on when each part ends, instead of after a timer that let a part loop.
+- **Beat cuts puts one word on each beat, never repeating, and ends on its last word**: its length is the words
+  at the tempo. The chain records each scene's real length, so the studio knows it.
+
 ## 0.4.0 · 2026-11-12
 
 A piece is built from what the user has to show, not from a mood.

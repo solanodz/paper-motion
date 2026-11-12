@@ -550,7 +550,7 @@ async function main() {
       await ensureDeps();
       if (args.check) {
         const r = await chainLib.checkChain({ piece });
-        for (const p of r.parts) console.log(`  ${p.dir} · ${p.join} · ${p.from}–${+(p.from + p.seconds).toFixed(2)} s of ${p.D}`);
+        for (const p of r.parts) console.log(`  ${p.dir} · ${p.join} · ${p.seconds} s (its ${p.natural} s scene${Math.abs(p.rate - 1) > 0.005 ? `, ×${p.rate.toFixed(2)}` : ''})`);
         for (const w of r.warnings) console.log(`  ! ${w}`);
         console.log(`${r.total.toFixed(1)} s in all`);
         break;
