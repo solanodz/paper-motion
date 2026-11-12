@@ -177,7 +177,7 @@ export function view(cwd, piece) {
     video: (() => {
       const v = videoView(cwd, dir, SCENES); if (!v) return null;
       const rel = path.relative(cwd, dir).split(path.sep).map(encodeURIComponent).join('/');
-      for (const x of v.parts) { x.live = LIVE ? `${LIVE}/${rel}/${encodeURIComponent(x.dir)}/scene.html?embed&v=${x.mtime}-${styleView(cwd).stamp}` : null; x.poster = preview(x.id, 'jpg'); x.clip = preview(x.id, 'webm');
+      for (const x of v.parts) { x.live = LIVE ? `${LIVE}/${rel}/${encodeURIComponent(x.dir)}/scene.html?embed&rate=${x.rate}&v=${x.mtime}-${styleView(cwd).stamp}` : null; x.poster = preview(x.id, 'jpg'); x.clip = preview(x.id, 'webm');
         if (x.motion) x.motion.demos = x.motion.options.map((o) => ({ value: o, title: TITLES.get(x.motion.previews[o]) ?? o, poster: x.motion.previews[o] ? preview(x.motion.previews[o], 'jpg') : null, clip: x.motion.previews[o] ? preview(x.motion.previews[o], 'webm') : null })); }
       return v;
     })(),

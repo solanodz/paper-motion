@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>beat-cuts</title>
 <!--
-  Edit · beat cuts (6.4 s). The edit follows the music: every beat is a hard cut to a new shot, each landing with a
+  Edit · beat cuts (one beat per word: 6.5 s for twelve words at 120 bpm). The edit follows the music: every beat is a hard cut to a new shot, each landing with a
   punch that decays before the next; the first beat of a bar hits harder and flips the frame to the accent. Give it
   the track's tempo (`bpm`, `offset`) or its beat times (`beats`), and the shots. A strip at the bottom shows the bar
   and beat, so the sync can be checked by eye.
@@ -39,17 +39,19 @@ const CONFIG = {
 };
 
 const B = await loadBrand();
-const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 6.4;
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H);
+// one beat per word, never repeating; the last word holds a beat (at least 0.6 s) and the part ends there
+const beat = 60 / CONFIG.bpm;
+const beats = (CONFIG.beats ?? CONFIG.shots.map((_, i) => CONFIG.offset + i * beat)).slice(0, CONFIG.shots.length);
+const D = +(beats[beats.length - 1] + Math.max(beat, 0.6)).toFixed(2);
 const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
 const $ = (id) => document.getElementById(id);
 const accent = B.color('accent', '#E9E4D8'), ground = B.color('ground'), figure = B.color('figure'), muted = B.color('muted');
-const beat = 60 / CONFIG.bpm;
-const beats = CONFIG.beats ?? Array.from({ length: Math.floor((D - CONFIG.offset) / beat) + 1 }, (_, i) => CONFIG.offset + i * beat).filter((b) => b < D);
 const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
 // the shots: words, on black, on the accent (first beat of each bar), or over the brand's field
 const shots = beats.map((b, i) => {
   const el = document.createElement('div'); el.className = 'shot';
-  const down = i % 4 === 0, txt = CONFIG.shots[i % CONFIG.shots.length], last = i === beats.length - 1;
+  const down = i % 4 === 0, txt = CONFIG.shots[i], last = i === beats.length - 1;
   const field = !down && i % 4 === 2;
   el.style.background = down ? accent : ground;
   if (field && bgId) { const f = document.createElement('div'); f.className = 'abs'; f.style.inset = 0; f.style.opacity = 0.8; el.append(f); B.shader(s, f, bgId); }
@@ -60,6 +62,7 @@ const shots = beats.map((b, i) => {
   el.append(w); $('shots').append(el);
   return { el, w, down };
 });
+(s.marks ??= []).push({ gesture: 'land', t: beats[beats.length - 1] });   // the last word: a part cut before it loses the ending
 $('strip').style.fontSize = `${SHORT * 0.018}px`;
 $('strip').innerHTML = '<i></i><i></i><i></i><i></i>';
 const dots = [...$('strip').children];

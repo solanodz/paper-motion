@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
-import { fillConfig, evalFill, normalize, loadRaw, propose, writePlan, describe } from './inventory.mjs';
+import { fillConfig, evalFill, normalize, loadRaw, propose, writePlan, describe, lengthRange } from './inventory.mjs';
 
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
 const writeJson = (f, v) => fs.writeFileSync(f, JSON.stringify(v, null, 2) + '\n');
@@ -106,16 +106,29 @@ export const canUndo = (dir) => readJson(histFile(dir), []).at(-1)?.label ?? nul
 
 // ── reading the video ──────────────────────────────────────────────────────────────────────────────────────────
 
+/**
+ * A part's length within what its scene allows: it always plays the whole scene, so a length is a speed. Returns the
+ * length (held inside the range), the scene's own length, the range and the speed (above 1 is faster).
+ */
+export function timing(seconds, natural) {
+  const range = lengthRange(natural), s = Math.min(range.max, Math.max(range.min, seconds ?? natural));
+  return { seconds: s, duration: natural, range: { min: range.min, max: range.max }, rate: +(natural / s).toFixed(3) };
+}
+
 /** The parts as the editor shows them: each with its block, its words, motion, background, settings and join. */
 export function videoView(cwd, dir, scenes) {
   const chain = readJson(path.join(dir, 'chain.json'), null);
   if (!chain) return null;
   const byId = new Map(scenes.map((b) => [b.id, b]));
+  // what each scene really lasts, read by the last join (a scene's length can depend on its content); stale once edited
+  const lengths = readJson(path.join(dir, '.lengths.json'), {});
+  const real = (p) => { const l = lengths[p.dir]; try { return l && l.mtime === Math.round(fs.statSync(partFile(dir, p)).mtimeMs) ? l.duration : null; } catch { return null; } };
   const parts = (chain.parts ?? []).filter((p) => p.dir && fs.existsSync(partFile(dir, p))).map((p, i, all) => {
     const html = fs.readFileSync(partFile(dir, p), 'utf8'), cfg = readConfig(html), b = byId.get(p.id) ?? { id: p.id, params: [], needs: [] };
+    const D = real(p);
     const motion = b.repeat ? { param: b.repeat.param, value: cfg[b.repeat.param] ?? null, options: (b.params ?? []).find((x) => x.name === b.repeat.param)?.options ?? [], previews: b.repeat.previews ?? {} } : null;
     return {
-      dir: p.dir, id: p.id, title: b.title ?? p.id, kind: b.needs?.[0]?.kind ?? null, summary: b.summary ?? '', seconds: p.seconds ?? b.duration ?? 4, duration: b.duration ?? null,
+      dir: p.dir, id: p.id, title: b.title ?? p.id, kind: b.needs?.[0]?.kind ?? null, summary: b.summary ?? '', ...timing(p.seconds, D ?? b.duration ?? 4), exact: D !== null,
       join: i < all.length - 1 ? p.join ?? chain.join ?? 'whip' : null, shows: p.shows ?? [], what: p.what ?? '',
       words: wordFields(b, cfg), motion, background: cfg.background ?? null, takesBackground: (b.params ?? []).some((x) => x.name === 'background'), tune: tunables(b, cfg),
       mtime: Math.round(fs.statSync(partFile(dir, p)).mtimeMs),
@@ -193,8 +206,11 @@ export async function editVideo(cwd, dir, a, scenes, brief = {}) {
     }
     case 'seconds': {
       const p = find(), n = Number(a.value); if (!Number.isFinite(n)) throw new Error('give a length in seconds');
-      keep([chainFile], `the length of ${title(p)}`); p.seconds = Math.max(1, Math.min(30, +n.toFixed(1))); writeJson(chainFile, chain);
-      return { say: `${title(p)}: ${p.seconds} s`, part: p.dir };
+      const b = byId.get(p.id) ?? {}, natural = readJson(path.join(dir, '.lengths.json'), {})[p.dir]?.duration ?? b.duration ?? 4;
+      const t = timing(+n.toFixed(1), natural);
+      keep([chainFile], `the length of ${title(p)}`); p.seconds = t.seconds; writeJson(chainFile, chain);
+      const pace = t.rate > 1.005 ? `, ${Math.round((t.rate - 1) * 100)}% faster` : t.rate < 0.995 ? `, ${Math.round((1 - t.rate) * 100)}% slower` : '';
+      return { say: `${title(p)}: ${p.seconds} s${pace}`, part: p.dir };
     }
     case 'join': {
       const { JOINS } = await import('./chain.mjs'); if (!(a.value in JOINS)) throw new Error('bad transition');

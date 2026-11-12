@@ -281,7 +281,14 @@ const lead = (b) => b.needs[0];
 // the shortest a scene can run in a chain: its land (where its last beat, the hold, begins) plus the time for the
 // hit to read; a scene that ends on something else keeps most of its length
 const LAND_HOLD = 0.6;
-const floorOf = (b) => { const d = b.duration ?? 5, last = b.beats?.at(-1); return +(last && /^hold$/i.test(last.name) ? Math.min(d, last.from + LAND_HOLD + 0.1) : d * 0.8).toFixed(1); };
+/**
+ * A part always plays its whole scene: a different length plays it faster or slower, never cut short and never
+ * looped. These are how far it may go, so motion still reads (too fast) and still moves (too slow).
+ */
+export const SPEED = { fast: 1.6, slow: 0.6 };
+/** The lengths a part may take, from its scene's own length: { natural, min, max } in seconds. */
+export const lengthRange = (natural) => ({ natural, min: Math.ceil((natural / SPEED.fast) * 10) / 10, max: Math.floor((natural / SPEED.slow) * 10) / 10 });
+const floorOf = (b) => lengthRange(b.duration ?? 5).min;   // as fast as it may play
 const fits = (need, it) => it.kind === need.kind && (need.has ?? []).every((f) => it[f] !== undefined && it[f] !== '') && Object.entries(need.where ?? {}).every(([k, v]) => it[k] === v);
 // an item that says otherwise ("device: phone" for a block that prefers desktop) goes to this block last
 const offKey = (need, it) => Object.entries(need.prefer ?? {}).some(([k, v]) => it[k] !== undefined && it[k] !== v);
@@ -411,9 +418,9 @@ export function propose(items, scenes, { seconds, brief = {} } = {}) {
   return options.map((o, i) => ({ letter: String.fromCharCode(65 + i), ...o }));
 }
 
-// Fits the beats to the length asked for. No beat runs shorter than its floor (its land must read), so a piece that
-// is too long loses its last beat that is not a must instead; what time is left over the floors is shared out. A
-// short piece stays short: a scene cannot run past its own length, and padding it would be a lie about the content.
+// Fits the beats to the length asked for. Every beat plays its whole scene, faster or slower: none faster than its
+// floor (SPEED.fast), so a piece that is too long loses its last beat that is not a must instead. A short piece plays
+// a little slower (up to a quarter), never more: padding it further would be a lie about the content.
 function timed(beats, target) {
   let list = beats.map((b) => ({ ...b })), notes = [];
   const sum = (k) => list.reduce((s, b) => s + b[k], 0);
@@ -425,8 +432,9 @@ function timed(beats, target) {
       notes.push(`dropped "${list[i].what}" to fit ${target} s`); list.splice(i, 1);
     }
     // share out what is left over the floors; a scene never runs past its own length, so a short piece stays short
-    const room = sum('duration') - sum('min'), k = target >= sum('duration') ? 1 : Math.max(0, (target - sum('min')) / (room || 1));
-    list.forEach((b) => { b.duration = +(b.min + (b.duration - b.min) * k).toFixed(1); });
+    const total = sum('duration'), room = total - sum('min');
+    if (target >= total) { const g = Math.min(1.25, target / (total || 1)); list.forEach((b) => { b.duration = +(b.duration * g).toFixed(1); }); }
+    else { const k = Math.max(0, (target - sum('min')) / (room || 1)); list.forEach((b) => { b.duration = +(b.min + (b.duration - b.min) * k).toFixed(1); }); }
     if (sum('duration') > target * 1.05) notes.push(`runs ${sum('duration').toFixed(1)} s, over the ${target} s asked: every beat left is a must and none can run shorter`);
     if (sum('duration') < target * 0.9) notes.push(`runs ${sum('duration').toFixed(1)} s of the ${target} s asked: there is no more material to show`);
   }

@@ -5,8 +5,11 @@
 
 export function mountPlayer(scene, startT = 0) {
   const { stage, duration, fps } = scene;
-  const embed = new URLSearchParams(location.search).has('embed');
-  let t = startT, playing = true, loop = true, last = performance.now(), busy = false;
+  const q = new URLSearchParams(location.search), embed = q.has('embed');
+  // a part longer or shorter than its scene plays the whole scene slower or faster (the studio passes its rate)
+  const rate = Math.min(4, Math.max(0.25, Number(q.get('rate')) || 1));
+  // embedded, a scene plays once and holds its last frame (a click plays it again); on its own page it loops
+  let t = startT, playing = true, loop = !embed, last = performance.now(), busy = false;
 
   const bar = document.createElement('div');
   bar.innerHTML = `
@@ -45,10 +48,15 @@ export function mountPlayer(scene, startT = 0) {
   }
   function setPlaying(p) { playing = p; playBtn.textContent = p ? '❚❚' : '▶'; last = performance.now(); }
 
+  // embedded, it draws at most 30 frames a second: a preview beside an editor, not the render
+  const step = embed ? 1000 / 30 - 2 : 0;
+  let drawn = 0;
   function tick(now) {
+    if (embed && now - drawn < step) { requestAnimationFrame(tick); return; }
+    drawn = now;
     if (playing && !busy) {
-      let nt = t + (now - last) / 1000;
-      if (nt >= duration) { if (loop) nt %= duration; else { nt = duration; setPlaying(false); } }
+      let nt = t + ((now - last) / 1000) * rate;
+      if (nt >= duration) { if (loop) nt %= duration; else { nt = duration - 1 / fps; setPlaying(false); if (embed) { try { parent.postMessage({ pm: 'ended' }, '*'); } catch { /* no parent */ } } } }
       show(nt);
     }
     last = now;
@@ -57,6 +65,7 @@ export function mountPlayer(scene, startT = 0) {
   requestAnimationFrame(tick);
 
   playBtn.onclick = () => setPlaying(!playing);
+  if (embed) addEventListener('click', () => { if (!playing) show(0); setPlaying(true); });
   loopBtn.onclick = () => { loop = !loop; loopBtn.classList.toggle('on', loop); };
   range.oninput = () => { setPlaying(false); show(Number(range.value)); };
   addEventListener('keydown', (e) => {

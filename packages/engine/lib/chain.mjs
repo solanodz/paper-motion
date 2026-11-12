@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
+import { lengthRange } from './inventory.mjs';
 
 export const JOINS = { cut: 0, whip: 0.35, dissolve: 0.5, dip: 0.5 };
 // the registry's transitions the user may have chosen, as joins between parts: [ffmpeg xfade transition, seconds].
@@ -35,7 +36,6 @@ export const MOVE_JOINS = {
 for (const [k, [, d]] of Object.entries(MOVE_JOINS)) JOINS[k] = d;
 JOINS.whip = 0.35;   // the engine's own whip (slide + smear) wins over the registry's whip move of the same name
 const OVERLAP = new Set(['whip', 'dissolve', ...Object.keys(MOVE_JOINS)]);   // joins that need the outgoing part to run on under the next
-const LAND_HOLD = 0.6;                           // seconds after a land for the hit to read
 
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
 const pad = (i) => String(i + 1).padStart(2, '0');
@@ -156,17 +156,20 @@ export function plan(chain, infos) {
     const info = infos[i], D = info.config.duration, from = p.from ?? 0;
     const join = i === 0 ? 'cut' : (p.join ?? chain.join ?? 'whip');
     if (!JOINS.hasOwnProperty(join)) throw new Error(`part ${i + 1}: join "${join}" (use ${Object.keys(JOINS).join(', ')})`);
-    let seconds = p.seconds ?? D - from;
-    if (from + seconds > D + 1e-6) { warnings.push(`${p.dir}: ${seconds} s from ${from} runs past its end (${D} s); it plays ${+(D - from).toFixed(2)} s`); seconds = D - from; }
-    const lands = info.marks.filter((m) => m.gesture === 'land').map((m) => m.t).filter((t) => t >= from);
-    const land = lands.length ? Math.max(...lands) : null;
-    if (land !== null && from + seconds < land + LAND_HOLD) warnings.push(`${p.dir}: cut at ${seconds} s loses its land at ${+(land - from).toFixed(2)} s; give it at least ${+(land - from + LAND_HOLD).toFixed(1)} s`);
-    return { ...p, from, seconds, join, D };
+    // a part plays its whole scene: another length plays it faster or slower (never cut, never looped), within limits
+    const natural = +(D - from).toFixed(3), range = lengthRange(natural);
+    let seconds = p.seconds ?? natural;
+    if (seconds < range.min - 1e-6 || seconds > range.max + 1e-6) {
+      const held = Math.min(range.max, Math.max(range.min, seconds));
+      warnings.push(`${p.dir}: ${seconds} s would play its ${natural} s scene too ${seconds < range.min ? 'fast' : 'slow'} (it takes ${range.min}–${range.max} s); it plays ${held} s`);
+      seconds = held;
+    }
+    return { ...p, from, seconds, join, D, natural, rate: natural / seconds };
   });
-  // the outgoing part runs on under an overlapping join, as far as it can
+  // under an overlapping join the outgoing part holds its last frame while the next one comes in
   for (const [i, p] of parts.entries()) {
     const next = parts[i + 1], d = next && OVERLAP.has(next.join) ? JOINS[next.join] : 0;
-    p.to = Math.min(p.D, p.from + p.seconds + d);
+    p.out = +(p.seconds + d).toFixed(3);
   }
   return { parts, warnings, total: parts.reduce((a, p) => a + p.seconds, 0) };
 }
@@ -232,7 +235,7 @@ export async function renderChain({ cwd = process.cwd(), piece, out, motionBlur 
         onStep({ part: i + 1, of: parts.length, dir: p.dir });
         if (kind) writeJob(home, { kind, part: i + 1, of: parts.length });
         const f = path.join(tmp, `${pad(i)}.mov`);
-        await renderVideo({ url: url(p), out: f, format: 'prores', from: p.from, to: p.to, sfx, motionBlur, dpr });
+        await renderVideo({ url: url(p), out: f, format: 'prores', from: p.from, to: p.D, rate: p.rate, seconds: p.out, sfx, motionBlur, dpr });
         files.push(f);
       }
       const tokens = readJson(path.join(cwd, 'brand/tokens.json'), {}), sound = readJson(path.join(cwd, 'brand/sound.json'), {});
@@ -268,7 +271,7 @@ export async function renderDrafts({ cwd = process.cwd(), piece, only, onStep = 
       mark(p.dir, { status: 'rendering' });
       const out = path.join(dir, 'drafts', `${p.dir}.mp4`);
       try {
-        await renderVideo({ url: url(p), out, from: p.from, to: p.from + p.seconds, dpr: 0.5, motionBlur: 1, crf: 26 });
+        await renderVideo({ url: url(p), out, from: p.from, to: p.D, rate: p.rate, seconds: p.seconds, dpr: 0.5, motionBlur: 1, crf: 26 });
       } catch (e) { mark(p.dir, { status: 'review', error: String(e.message ?? e).slice(0, 300) }); throw e; }
       const v = (readPiece(dir)?.parts?.[p.dir]?.v ?? 0) + 1;
       mark(p.dir, { status: 'review', v, error: undefined, note: undefined });
@@ -296,6 +299,12 @@ async function withChain({ cwd, piece }, fn) {
   try {
     const browser = await launch(), infos = [];
     try { for (const p of chain.parts) infos.push(await sceneInfo(browser, url(p))); } finally { await browser.close(); }
+    // what each scene really lasts (some depend on their content: one beat per word), for the studio's length slider
+    try {
+      fs.writeFileSync(path.join(dir, '.lengths.json'), JSON.stringify(Object.fromEntries(chain.parts.map((p, i) => [p.dir, {
+        duration: infos[i].config.duration, mtime: Math.round(fs.statSync(path.join(dir, p.dir, 'scene.html')).mtimeMs),
+      }])), null, 2) + '\n');
+    } catch { /* the slider falls back to the block's usual length */ }
     const sizes = new Set(infos.map((x) => `${x.config.width}x${x.config.height}`));
     if (sizes.size > 1) throw new Error(`parts come in different sizes (${[...sizes].join(', ')}): set the same format in each CONFIG`);
     const planned = plan(chain, infos);

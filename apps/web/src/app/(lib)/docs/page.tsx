@@ -117,7 +117,7 @@ const COMMANDS: Group[] = [
     id: "chain", title: "Chain", stages: "video, final", note: "A structure becomes a chain: its parts in order, rendered and joined. The studio runs these itself; they are yours when the user asks.",
     rows: [
       ["npx paper-motion chain init <piece> --plan A", "Installs the plan's structure A under pieces/<piece>/ with the content already in each part's CONFIG, and writes chain.json: the seconds of each part and the join between them. --board <link> --option D takes a structure chosen on a board instead."],
-      ["npx paper-motion chain <piece> --check", "Plans without rendering: windows, joins, and parts that would be cut before they land. Run it after writing the parts."],
+      ["npx paper-motion chain <piece> --check", "Plans without rendering: each part's length and speed (it always plays its whole scene, 1.6× faster to 0.6× slower), and the joins. Run it after writing the parts."],
       ["npx paper-motion chain <piece> --drafts", "A quick render of each part on its own. Add --only <dir> to redo one part."],
       ["npx paper-motion chain <piece> --draft", "A quick render of the parts joined."],
       ["npx paper-motion chain <piece> --motion-blur 5", "The full render: every part in the brand's look, joined into one video."],
