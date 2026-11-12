@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>line-in</title>
+<!--
+  Text · a sentence on screen (4 s). One sentence in the brand's display type, over its field, arriving in one of the
+  library's eight text entrances; the words that carry it (`mark`) land in the accent, and the camera keeps a slow
+  push so the hold is never still. Because the entrance is a setting, one piece can hold several sentences, each
+  arriving its own way.
+  Vertical/square: the sentence wraps narrower and sits larger.
+  Enter 0.3–1.7 s · Hold to 4 s.
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  #p { display: flex; align-items: center; }
+  #line { line-height: 1.06; text-wrap: balance; }
+  #line > span { white-space: pre-wrap; }
+  #rule { height: 2px; transform-origin: 0 50%; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="bg" class="abs" style="inset:0"></div>
+  <div id="vig" class="abs" style="inset:0"></div>
+  <div id="p" class="abs" style="inset:0"><div id="box"><div id="line"></div><div id="rule"></div></div></div>
+</main>
+<script type="module">
+import { scene, progress, ease, clamp } from 'paper-motion';
+import { wordRise, blurIn, scramble, typeOn, typingTimes, keySounds, trackIn, flipIn, popIn, barReveal } from 'paper-motion/moves';
+import { loadBrand } from 'paper-motion/brand';
+
+const CONFIG = {
+  background: null,                      // a shader-set id, or null for the brand's first entry
+  text: 'Video editing without the timeline',
+  mark: 'without the timeline',          // the words that land in the accent; empty for none
+  entrance: 'rise',                      // rise · focus · scramble · type · track · flip · pop · bar
+  align: 'center',                       // center or left
+  format: [1920, 1080],
+};
+
+const B = await loadBrand();
+const [W, H] = CONFIG.format, SHORT = Math.min(W, H), D = 4, tall = H > W;
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: B.color('ground') });
+const bgId = CONFIG.background ?? B.set.entries.find((e) => e.shader && !e.image)?.id;
+if (bgId) B.shader(s, '#bg', bgId);
+const $ = (id) => document.getElementById(id);
+$('bg').style.opacity = 0.42;
+$('vig').style.background = 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 28%, rgba(0,0,0,0.62) 100%)';
+
+// the sentence: split around the marked words, so each part can arrive and the mark can take the accent
+const text = String(CONFIG.text ?? ''), at = CONFIG.mark ? text.indexOf(CONFIG.mark) : -1;
+const parts = at < 0 ? [[text, false]] : [[text.slice(0, at), false], [CONFIG.mark, true], [text.slice(at + CONFIG.mark.length), false]].filter(([x]) => x);
+const line = B.style($('line'), 'display', { short: SHORT, color: 'figure' }), accent = B.color('accent', '#E9E4D8');
+// longer sentences set smaller, so any of them fits on two or three lines
+const len = text.length, size = SHORT * clamp((tall ? 0.19 : 0.185) - len * 0.0013, tall ? 0.085 : 0.075, tall ? 0.16 : 0.15);
+line.style.fontSize = `${size}px`;
+const left = CONFIG.align === 'left';
+Object.assign($('p').style, { justifyContent: left ? 'flex-start' : 'center', padding: `0 ${W * (left ? 0.09 : 0.07)}px` });
+Object.assign($('box').style, { maxWidth: `${W * (tall ? 0.86 : 0.78)}px`, textAlign: left ? 'left' : 'center' });
+const segs = parts.map(([t, mark]) => { const e = document.createElement('span'); e.textContent = t; if (mark) e.style.color = accent; line.append(e); return e; });
+Object.assign($('rule').style, { background: accent, width: `${Math.min(W * 0.18, size * 3)}px`, marginTop: `${size * 0.42}px`, marginLeft: left ? '0' : 'auto', marginRight: left ? '0' : 'auto' });
+await document.fonts.ready;
+
+// one entrance, chosen by name; each is the library's own move, so they read as a family
+const E = CONFIG.entrance, T0 = 0.3, ENTER = 1.4;
+const each = (fn) => { let off = 0; const n = Math.max(1, text.replace(/\s/g, '').length); return (t) => segs.forEach((e) => { const share = e.textContent.replace(/\s/g, '').length / n; fn(e, t, T0 + off * ENTER, Math.max(0.35, share * ENTER)); off += share; }) || (off = 0); };
+let enter;
+if (E === 'focus') enter = (t) => blurIn(line, t, { start: T0, duration: 1.1, blur: size * 0.18 });
+else if (E === 'track') enter = (t) => trackIn(line, t, { start: T0, duration: 1.3, from: 0.38 });
+else if (E === 'bar') enter = (t) => barReveal(line, t, { start: T0, duration: 1.0, color: accent });
+else if (E === 'type') {
+  const times = typingTimes(text, { start: T0, cps: Math.max(14, text.length / 1.4), seed: 3 });
+  let k = 0; const spans = segs.map((e) => { const tx = e.textContent, sl = times.slice(k, k + tx.length); k += tx.length; e.textContent = ''; return [e, tx, sl]; });
+  const cur = document.createElement('span'); Object.assign(cur.style, { display: 'inline-block', width: '0.08em', height: '0.9em', marginLeft: '0.04em', background: accent, verticalAlign: '-0.08em' }); line.append(cur);
+  enter = (t) => { spans.forEach(([e, tx, sl]) => { let n = 0; while (n < sl.length && t >= sl[n]) n++; e.textContent = tx.slice(0, n); }); cur.style.opacity = t > times.at(-1) + 0.4 ? (Math.floor(t * 2.2) % 2 ? 0 : 1) : 1; };
+  keySounds(s, text, times, { ...B.keys, seed: 5 });
+} else {
+  const fn = { rise: (e, t, a, d) => wordRise(e, t, { start: a, each: 0.08, duration: 0.6 }), scramble: (e, t, a, d) => scramble(e, t, { start: a, duration: d + 0.4 }),
+    flip: (e, t, a) => flipIn(e, t, { start: a, each: 0.035 }), pop: (e, t, a) => popIn(e, t, { start: a, each: 0.03 }) }[E] ?? ((e, t, a) => wordRise(e, t, { start: a, each: 0.08, duration: 0.6 }));
+  enter = each(fn);
+}
+
+s.update((t) => {
+  enter(t);
+  const r = progress(t, T0 + ENTER * 0.8, T0 + ENTER + 0.4, ease.outExpo);
+  $('rule').style.transform = `scaleX(${r})`;
+  // a slow push that never stops, and the field a little slower behind it
+  const k = progress(t, 0, D, ease.outSine);
+  $('box').style.transform = `scale(${1.02 + 0.05 * k}) translateY(${(1 - progress(t, 0, 1.6, ease.outCubic)) * size * 0.12}px)`;
+  $('bg').style.transform = `scale(${1.06 + 0.04 * k})`;
+});
+B.cue(s, 'text', T0); B.cue(s, 'land', T0 + ENTER);
+B.sound(s);
+await s.start();
+</script>
+</body>
+</html>

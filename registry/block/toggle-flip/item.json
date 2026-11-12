@@ -123,5 +123,15 @@
   "when": [
     "a setting that changes everything",
     "light and dark mode"
+  ],
+  "needs": [
+    {
+      "kind": "toggle",
+      "fill": {
+        "title": "$title",
+        "toggle": "$toggle",
+        "rows": "$rows"
+      }
+    }
   ]
 }

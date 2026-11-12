@@ -152,5 +152,17 @@
   "when": [
     "revealing a cover, a card, a screenshot",
     "the first second of a product shot"
+  ],
+  "needs": [
+    {
+      "kind": "screen",
+      "has": [
+        "title"
+      ],
+      "fill": {
+        "image": "$image",
+        "title": "$title"
+      }
+    }
   ]
 }

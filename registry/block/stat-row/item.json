@@ -100,5 +100,23 @@
   "when": [
     "the closing numbers of a launch",
     "three metrics at once"
+  ],
+  "needs": [
+    {
+      "kind": "figure",
+      "count": 3,
+      "where": {
+        "numeric": true
+      },
+      "fill": {
+        "stats": {
+          "$each": [
+            "$value",
+            "$unit",
+            "$label"
+          ]
+        }
+      }
+    }
   ]
 }

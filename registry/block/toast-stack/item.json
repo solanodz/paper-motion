@@ -94,5 +94,13 @@
   "when": [
     "a process that reports as it goes",
     "a run of quick wins"
+  ],
+  "needs": [
+    {
+      "kind": "events",
+      "fill": {
+        "toasts": "$items"
+      }
+    }
   ]
 }

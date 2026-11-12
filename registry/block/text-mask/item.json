@@ -130,5 +130,13 @@
   "when": [
     "a title card with weight",
     "the opening or close on the name"
+  ],
+  "needs": [
+    {
+      "kind": "name",
+      "fill": {
+        "line": "$brief.what"
+      }
+    }
   ]
 }

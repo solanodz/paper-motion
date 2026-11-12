@@ -110,5 +110,13 @@
   "when": [
     "hard cuts on a beat",
     "a punchy social opener"
+  ],
+  "needs": [
+    {
+      "kind": "words",
+      "fill": {
+        "words": "$items"
+      }
+    }
   ]
 }

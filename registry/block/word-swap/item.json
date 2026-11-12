@@ -115,5 +115,15 @@
   "when": [
     "many uses for one product",
     "a headline with options"
+  ],
+  "needs": [
+    {
+      "kind": "variants",
+      "fill": {
+        "before": "$before",
+        "words": "$words",
+        "after": "$after"
+      }
+    }
   ]
 }

@@ -107,5 +107,14 @@
   "when": [
     "point at one figure on a dashboard",
     "the proof moment of a product demo"
+  ],
+  "needs": [
+    {
+      "kind": "table",
+      "fill": {
+        "stats": "$rows",
+        "mark": "$main"
+      }
+    }
   ]
 }

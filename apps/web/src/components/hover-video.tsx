@@ -28,7 +28,7 @@ export function HoverVideo({ src, poster, autoPlay = false }: { src: string; pos
       preload={autoPlay ? "auto" : "none"}
       onPointerEnter={autoPlay ? undefined : play}
       onPointerLeave={autoPlay ? undefined : stop}
-      className="h-full w-full object-cover"
+      className="block h-full w-full bg-black object-cover"
     />
   );
 }

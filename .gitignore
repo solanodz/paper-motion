@@ -32,3 +32,9 @@ examples/paper-motion-brand/brand/sheet/sheet.pdf
 **/brand/sound/sounds.json
 **/brand/sound/keys/
 .vercel
+
+# Chains: per-part drafts are rebuilt by `pamo chain <piece> --drafts`
+**/pieces/*/drafts/
+# the studio's passing notes about a piece (who is listening, the join in progress)
+**/pieces/*/.agent.json
+**/pieces/*/.job.json

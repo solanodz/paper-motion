@@ -120,5 +120,15 @@
   "when": [
     "show how little code it takes",
     "developer tools and APIs"
+  ],
+  "needs": [
+    {
+      "kind": "code",
+      "fill": {
+        "file": "$file",
+        "code": "$code",
+        "highlight": "$highlight"
+      }
+    }
   ]
 }

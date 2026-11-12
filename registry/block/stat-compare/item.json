@@ -119,5 +119,21 @@
   "when": [
     "how much time or money it saves",
     "a before and after in one figure"
+  ],
+  "needs": [
+    {
+      "kind": "change",
+      "fill": {
+        "before": {
+          "caption": "$fromLabel",
+          "value": "$from"
+        },
+        "after": {
+          "caption": "$toLabel",
+          "value": "$to"
+        },
+        "label": "$label"
+      }
+    }
   ]
 }

@@ -123,5 +123,17 @@
   "when": [
     "a mobile app",
     "any screen that deserves an object"
+  ],
+  "needs": [
+    {
+      "kind": "screen",
+      "where": {
+        "device": "phone"
+      },
+      "fill": {
+        "image": "$image",
+        "title": "$title"
+      }
+    }
   ]
 }

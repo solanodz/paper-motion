@@ -135,5 +135,18 @@
   "when": [
     "showing where to click in a real UI",
     "a feature in one gesture"
+  ],
+  "needs": [
+    {
+      "kind": "action",
+      "has": [
+        "answer"
+      ],
+      "fill": {
+        "image": "$image",
+        "button": "$button",
+        "answer": "$answer"
+      }
+    }
   ]
 }

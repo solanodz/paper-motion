@@ -122,5 +122,15 @@
   "when": [
     "find anything in one keystroke",
     "a library or catalog"
+  ],
+  "needs": [
+    {
+      "kind": "search",
+      "fill": {
+        "placeholder": "$placeholder",
+        "query": "$query",
+        "items": "$items"
+      }
+    }
   ]
 }

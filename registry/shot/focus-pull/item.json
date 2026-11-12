@@ -138,5 +138,17 @@
   "when": [
     "one number or one word deserves a close-up",
     "opening a piece on a detail before the name"
+  ],
+  "needs": [
+    {
+      "kind": "figure",
+      "fill": {
+        "detail": {
+          "text": "$display",
+          "image": ""
+        },
+        "title": "$label"
+      }
+    }
   ]
 }

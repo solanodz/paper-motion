@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { code as codeFor, defaults as defaultsOf, MOVE_TYPES, paramsOf, recolor } from "@/lib/customize.mjs";
-import { Controls, type Param } from "./controls";
+import { Controls, rangeCls, type Param } from "./controls";
 import { CodeView, copyText } from "./code-view";
 import { DURATION, type PlayerHandle } from "./move-player";
 import { ResourceStage } from "./resource-stage";
 import { chooseRange, decodeBoard, replyLine } from "@/lib/board.mjs";
 import { buildTheme, loadResource, type Res, type Theme } from "@/lib/theme";
-import { IconAgent, IconCheck, IconCopy } from "@/components/icons";
+import { IconAgent, IconArrow, IconCheck, IconCopy } from "@/components/icons";
 import { kit } from "@/lib/kit";
 import { KitButton } from "@/components/kit-button";
 import { useKitTheme } from "@/lib/use-kit-theme";
@@ -25,7 +25,10 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 const enc = (o: object) => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const dec = (s: string) => JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g, "+").replace(/_/g, "/")))));
 
-/** A resource's playground, "Inspector" layout: stage + playback, parameters panel, code below. */
+/**
+ * A resource's playground, "Inspector" layout: the stage and its transport in one frame (the corner marks), the
+ * parameters as a ruled column beside it, the code below.
+ */
 export function Playground({ resource: r, site, backgrounds }: { resource: PlaygroundResource; site: string; backgrounds: string[] }) {
   const defaults = useMemo(() => defaultsOf(r) as Values, [r]);
   const [values, setValues] = useState<Values>(defaults);
@@ -119,19 +122,23 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
     location.href = boardHref();
   };
 
+  // the transport: a strip of flush cells under the stage (on a phone the speeds drop to a strip of their own)
+  const transportBtn = "flex h-10 w-10 shrink-0 items-center justify-center border-r border-line text-figure hover:bg-figure hover:text-ground";
   const playback = isMove || r.type === "background" ? (
-    <div className="flex items-center gap-3 font-mono text-[11.5px] text-muted">
-      <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"} className="flex h-8 w-8 items-center justify-center rounded-md border border-line text-figure hover:border-faint">{playing ? <IconPause size={14} /> : <IconPlay size={14} />}</button>
+    <div className="flex flex-wrap items-stretch font-mono text-[12px] text-muted">
+      <button type="button" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"} className={transportBtn}>{playing ? <IconPause size={14} /> : <IconPlay size={14} />}</button>
       {isMove ? (
         <>
-          <button type="button" onClick={() => { player.current?.seek(0); setPlaying(true); }} aria-label="Replay" className="flex h-8 w-8 items-center justify-center rounded-md border border-line text-figure hover:border-faint"><IconReplay size={14} /></button>
-          <input type="range" min={0} max={DURATION} step={0.01} value={time} onChange={(e) => { setPlaying(false); player.current?.seek(Number(e.target.value)); }} className="min-w-0 flex-1 accent-[#e9e4d8]" />
-          <span className="w-10 text-right tabular-nums">{time.toFixed(1)}s</span>
+          <button type="button" onClick={() => { player.current?.seek(0); setPlaying(true); }} aria-label="Replay" className={transportBtn}><IconReplay size={14} /></button>
+          <div className="flex h-10 min-w-0 flex-1 items-center px-3"><input type="range" min={0} max={DURATION} step={0.01} value={time} onChange={(e) => { setPlaying(false); player.current?.seek(Number(e.target.value)); }} aria-label="Time" className={`${rangeCls} w-full`} /></div>
+          <span className="flex h-10 w-[52px] shrink-0 items-center justify-end border-l border-line px-2.5 tabular-nums text-figure">{time.toFixed(1)}s</span>
         </>
-      ) : <span className="flex-1">live shader</span>}
-      {[0.5, 1, 2].map((s) => (
-        <button key={s} type="button" onClick={() => setSpeed(s)} className={`rounded px-1.5 py-1 ${speed === s ? "bg-raised text-figure" : "hover:text-figure"}`}>×{s}</button>
-      ))}
+      ) : <span className="flex h-10 min-w-0 flex-1 items-center px-3">Live shader</span>}
+      <div className="flex max-sm:basis-full max-sm:border-t max-sm:border-line">
+        {[0.5, 1, 2].map((s) => (
+          <button key={s} type="button" onClick={() => setSpeed(s)} aria-pressed={speed === s} className={`h-10 border-l border-line max-sm:flex-1 max-sm:first:border-l-0 sm:w-11 ${speed === s ? "bg-paper text-ground" : "hover:bg-figure hover:text-ground"}`}>×{s}</button>
+        ))}
+      </div>
     </div>
   ) : null;
 
@@ -139,63 +146,64 @@ export function Playground({ resource: r, site, backgrounds }: { resource: Playg
   const codeView = (tall?: boolean) => <CodeView tabs={out.tabs} changed={out.changed} agent={out.agent} showAll={showAll} setShowAll={setShowAll} canShowAll={isMove} onShare={share} tall={tall} />;
 
   return (
-    <div className="mt-8">
+    <div className="mt-10">
       {board ? (
-        <div className="mb-5 rounded-lg border border-paper/40 bg-surface px-4 py-3">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-[13px]">
-            <span className="flex items-center gap-2 text-muted"><IconAgent size={15} className="text-paper" /> Tuning option <b className="text-figure">{board.label}</b> of “{board.b.title}”. Adjust, then choose it.</span>
-            <a href={boardHref()} className="text-muted underline decoration-faint underline-offset-4 hover:text-figure">Back to the board</a>
+        <div className="mb-6 border border-l-[5px] border-paper">
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 text-[14px]">
+            <span className="flex min-w-0 items-start gap-2.5 text-muted"><IconAgent size={16} className="mt-0.5 shrink-0 text-paper" /><span>Tuning option <b className="font-medium text-figure">{board.label}</b> of “{board.b.title}”. Adjust, then choose it.</span></span>
+            <a href={boardHref()} className="btn btn-sm"><IconArrow size={13} className="rotate-180" />Back to the board</a>
           </div>
           {reply ? (
-            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
-              <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-[12.5px] text-figure">{reply}</code>
-              <button type="button" onClick={async () => setCopied(await copyText(reply))} className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 font-mono text-[11.5px] text-muted hover:text-figure">{copied ? <IconCheck size={12} /> : <IconCopy size={12} />}{copied ? "copied, paste it in the chat" : "copy"}</button>
+            <div className="code flex border-x-0 border-b-0 max-sm:flex-col sm:items-stretch">
+              <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-4 py-2.5 text-figure">{reply}</code>
+              <button type="button" onClick={async () => setCopied(await copyText(reply))} className={`btn btn-sm shrink-0 border-line max-sm:border-x-0 max-sm:border-b-0 sm:border-y-0 sm:border-r-0 ${copied ? "btn-primary" : ""}`}>{copied ? <IconCheck size={13} /> : <IconCopy size={13} />}{copied ? "Copied, paste it in the chat" : "Copy"}</button>
             </div>
           ) : null}
         </div>
       ) : null}
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="text-[13px] text-muted">{out.changed ? `${out.changed} setting${out.changed > 1 ? "s" : ""} tuned` : "Tune it, then add it to your kit"}</span>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+          {out.changed ? <span className="tag tag-paper">{out.changed} setting{out.changed > 1 ? "s" : ""} tuned</span> : <span className="text-[14px] text-muted">Tune it, then add it to your kit</span>}
           {(isMove || (isBackground && theme?.palette)) && theme ? (
-            <button type="button" onClick={() => setUseTheme((u) => !u)} className={`flex items-center gap-2 truncate rounded-full border px-2.5 py-1 text-[12px] ${useTheme ? "border-paper text-paper" : "border-line text-muted"}`}>
-              <span className="h-2 w-2 rounded-full" style={{ background: theme.vars["--pm-a"] ?? "#e9e4d8" }} />
-              {useTheme ? (isBackground ? `In your palette · ${theme.label}` : `In your kit's look · ${theme.label}`) : isBackground ? "Recolor to my palette" : "Show in my kit's look"}
+            <button type="button" onClick={() => setUseTheme((u) => !u)} aria-pressed={useTheme} className={`btn btn-sm min-w-0 max-w-full ${useTheme ? "border-paper hover:border-figure" : ""}`}>
+              <span className="h-2.5 w-2.5 shrink-0 border border-current" style={{ background: theme.vars["--pm-a"] ?? "#e9e4d8" }} />
+              <span className="truncate">{useTheme ? (isBackground ? "In your palette" : "In your kit's look") : isBackground ? "Recolor to my palette" : "Show in my kit's look"}</span>
+              {/* which palette and fonts, each in a cell of its own */}
+              {useTheme ? theme.label.split(" · ").map((l, i) => <span key={i} className="truncate border-l border-current pl-2 font-mono text-[11px] opacity-70">{l}</span>) : null}
             </button>
           ) : null}
         </div>
         {board ? (
-          <button type="button" onClick={multiBoard ? addToPicks : choose} className="flex items-center gap-2 rounded-md bg-paper px-3.5 py-2 text-[13px] font-medium text-ground hover:bg-figure"><IconCheck size={15} /> {multiBoard ? `Keep ${board.label} like this, back to the board` : `Choose ${board.label}, like this`}</button>
+          <button type="button" onClick={multiBoard ? addToPicks : choose} className="btn btn-primary max-w-full"><IconCheck size={15} /><span className="min-w-0 truncate">{multiBoard ? `Keep ${board.label} like this, back to the board` : `Choose ${board.label}, like this`}</span></button>
         ) : <KitButton id={r.id} type={r.type} title={r.title} values={diff} variant="solid" />}
       </div>
-      {/* phone: Preview / Code tabs */}
-      <div className="mb-3 flex gap-1 lg:hidden">
+      {/* phone: Preview / Code as two flush cells */}
+      <div className="mb-5 flex h-10 items-stretch border border-line text-[13px] lg:hidden">
         {(["preview", "code"] as const).map((v) => (
-          <button key={v} type="button" onClick={() => setMobileTab(v)} className={`rounded-md px-3 py-1.5 font-mono text-[12.5px] capitalize ${mobileTab === v ? "bg-figure text-ground" : "text-muted"}`}>{v}</button>
+          <button key={v} type="button" onClick={() => setMobileTab(v)} aria-pressed={mobileTab === v} className={`cell flex-1 justify-center capitalize first:border-l-0 ${mobileTab === v ? "cell-on" : ""}`}>{v}</button>
         ))}
-        <span className="ml-auto self-center font-mono text-[11px] text-faint">{out.changed ? `${out.changed} changed` : ""}</span>
+        {out.changed ? <span className="cell px-3 font-mono text-[12px]">{out.changed} changed</span> : null}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div className={`flex min-w-0 flex-col gap-4 ${mobileTab === "code" ? "max-lg:hidden" : ""}`}>
-          <div className={full ? "fixed inset-0 z-[70] flex items-center justify-center bg-black p-4" : ""}>
-            <div className={`relative w-full overflow-hidden ${full ? "aspect-video max-h-full max-w-[calc((100vh-2rem)*16/9)]" : "aspect-video rounded-xl border border-line bg-surface"}`}>
+      <div className="grid gap-x-6 gap-y-6 lg:grid-cols-[minmax(0,1fr)_280px] xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-x-8">
+        <div className={`flex min-w-0 flex-col gap-7 ${mobileTab === "code" ? "max-lg:hidden" : ""}`}>
+          <div className={full ? "fixed inset-0 z-[70] flex items-center justify-center bg-black p-4" : "corner-marks"}>
+            <div className={`relative w-full overflow-hidden ${full ? "aspect-video max-h-full max-w-[calc((100vh-2rem)*16/9)]" : "aspect-video border border-line bg-surface"}`}>
               {stage}
-              <button type="button" onClick={() => setFull((f) => !f)} aria-label={full ? "Exit fullscreen" : "Fullscreen"} className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-line bg-ground/80 text-figure backdrop-blur hover:border-faint">{full ? <IconCollapse size={14} /> : <IconExpand size={14} />}</button>
+              <button type="button" onClick={() => setFull((f) => !f)} aria-label={full ? "Exit fullscreen" : "Fullscreen"} className="absolute right-0 top-0 z-10 flex h-9 w-9 items-center justify-center border-b border-l border-line bg-ground text-figure hover:bg-figure hover:text-ground">{full ? <IconCollapse size={14} /> : <IconExpand size={14} />}</button>
             </div>
             {full ? (
               <>
-                <div className="absolute bottom-6 left-1/2 w-[min(720px,90vw)] -translate-x-1/2 rounded-lg border border-line bg-ground/80 px-3 py-2 backdrop-blur">{playback}</div>
-                <div className="absolute bottom-24 right-6 top-6 w-[290px] overflow-y-auto rounded-lg border border-line bg-ground/85 p-4 backdrop-blur max-md:hidden">{controls}</div>
+                {playback ? <div className="absolute bottom-6 left-1/2 w-[min(720px,90vw)] -translate-x-1/2 border border-rule bg-ground">{playback}</div> : null}
+                <div className="absolute bottom-24 right-6 top-6 w-[340px] overflow-y-auto border border-rule bg-ground p-4 max-md:hidden">{controls}</div>
               </>
-            ) : null}
+            ) : playback ? <div className="border border-t-0 border-line">{playback}</div> : null}
           </div>
-          {!full ? playback : null}
-          <div className="lg:hidden rounded-xl border border-line bg-surface p-4">{controls}</div>
+          <div className="lg:hidden">{controls}</div>
           <div className="max-lg:hidden">{codeView()}</div>
         </div>
-        <aside className="max-lg:hidden">
-          <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-xl border border-line bg-surface p-4">{controls}</div>
+        <aside className="border-l border-line max-lg:hidden">
+          <div className="sticky top-[52px] max-h-[calc(100vh-52px)] overflow-y-auto py-4 pl-4 pr-1 xl:pl-5">{controls}</div>
         </aside>
         {mobileTab === "code" ? <div className="lg:hidden">{codeView(true)}</div> : null}
       </div>

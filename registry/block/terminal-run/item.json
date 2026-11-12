@@ -144,5 +144,16 @@
   "when": [
     "install and run steps",
     "a CLI doing its job"
+  ],
+  "needs": [
+    {
+      "kind": "command",
+      "fill": {
+        "cwd": "$cwd",
+        "command": "$command",
+        "working": "$working",
+        "output": "$output"
+      }
+    }
   ]
 }

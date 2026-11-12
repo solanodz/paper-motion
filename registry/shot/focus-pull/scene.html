@@ -54,7 +54,8 @@ const cam = camera($('stage'), $('world'), { perspective: SHORT * 1.6 });
 const detail = $('detail'), ds = SHORT * 0.36 * K;
 Object.assign(detail.style, { width: `${ds}px`, height: `${ds}px`, borderRadius: `${(B.tokens?.shape?.radius ?? 12) * (SHORT / 1080) * K}px`, background: B.surface(), border: `1.5px solid ${B.color('muted')}55`, boxShadow: `0 ${SHORT * 0.03}px ${SHORT * 0.1}px rgba(0,0,0,0.5)` });
 if (CONFIG.detail.image) { const img = document.createElement('img'); img.src = CONFIG.detail.image; detail.append(img); }
-else { const t = document.createElement('div'); B.style(t, 'display', { short: SHORT * K * 0.9 }); t.textContent = CONFIG.detail.text; t.style.fontFamily = B.font('mono'); t.style.letterSpacing = '-0.02em'; detail.append(t); }
+else { const t = document.createElement('div'); B.style(t, 'display', { short: SHORT * K * 0.9 }); t.textContent = CONFIG.detail.text; t.style.fontFamily = B.font('mono'); t.style.letterSpacing = '-0.02em'; t.style.whiteSpace = 'nowrap'; detail.append(t);
+  const fit = (ds * 0.84) / t.scrollWidth; if (fit < 1) t.style.fontSize = `${parseFloat(t.style.fontSize) * fit}px`; }   // a longer number shrinks to fit the card
 cam.place(detail, { x: -SHORT * 0.34 * K, y: SHORT * 0.02, z: SHORT * 0.12, yaw: 8 });
 const title = B.style($('title'), 'display', { short: SHORT * K }), line = B.style($('line'), 'body', { short: SHORT * K, color: 'muted' });
 title.textContent = CONFIG.title; line.textContent = CONFIG.line; line.style.marginTop = `${SHORT * 0.02}px`;

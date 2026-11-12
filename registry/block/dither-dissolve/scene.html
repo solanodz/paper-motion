@@ -31,7 +31,7 @@ import { loadBrand } from 'paper-motion/brand';
 const CONFIG = {
   background: null,                      // the shader behind shot B, or null for the brand's first entry
   a: 'Tools were made for hands.',
-  b: 'paper-motion',
+  b: null,                               // the name it dissolves into; null for the brand's name
   bLine: 'Brand videos, made by your coding agent.',
   cell: 14,                              // the dither's dot size, in pixels at 1080p
   format: [1920, 1080],
@@ -46,7 +46,7 @@ const $ = (id) => document.getElementById(id);
 const ground = B.color('ground'), accent = B.color('accent', '#E9E4D8');
 $('a').style.background = ground;
 const at = B.style($('at'), 'display', { short: SHORT, color: 'figure' }); at.textContent = CONFIG.a; at.style.fontSize = `${SHORT * 0.11}px`; at.style.maxWidth = '12ch';
-const bt = B.style($('bt'), 'display', { short: SHORT, color: 'figure' }); bt.textContent = CONFIG.b; bt.style.fontSize = `${SHORT * 0.15}px`; bt.style.textShadow = '0 4px 40px rgba(0,0,0,0.5)';
+const bt = B.style($('bt'), 'display', { short: SHORT, color: 'figure' }); bt.textContent = CONFIG.b || B.name; bt.style.fontSize = `${SHORT * 0.15}px`; bt.style.textShadow = '0 4px 40px rgba(0,0,0,0.5)';
 const bs = B.style($('bs'), 'title', { short: SHORT, color: 'figure' }); bs.textContent = CONFIG.bLine; bs.style.marginTop = `${SHORT * 0.02}px`; bs.style.opacity = 0.85;
 $('b').style.background = ground;
 await document.fonts.ready;

@@ -126,5 +126,17 @@
   "when": [
     "show a real site or web app",
     "a tour of a long page"
+  ],
+  "needs": [
+    {
+      "kind": "screen",
+      "prefer": {
+        "device": "desktop"
+      },
+      "fill": {
+        "image": "$image",
+        "url": "$url"
+      }
+    }
   ]
 }

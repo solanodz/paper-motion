@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { kit, kitTheme } from "@/lib/kit";
 import { ColorField, FontPicker } from "@/components/playground/controls";
 import { MovePlayer } from "@/components/playground/move-player";
-import { IconArrow, IconBrand, IconCheck } from "@/components/icons";
+import { IconArrow } from "@/components/icons";
 
 const gf = (family: string) => `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, "+")}&display=swap`;
 const lum = (h: string) => { const n = parseInt(h.slice(1, 7), 16); return ((n >> 16 & 255) * 0.299 + (n >> 8 & 255) * 0.587 + (n & 255) * 0.114) / 255; };
@@ -15,6 +14,11 @@ const mixHex = (a: string, b: string, t: number) => {
   const x = p(a), y = p(b);
   return `#${x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join("")}`;
 };
+
+// a row of the form: a narrow label and its control
+const ROW = "row sm:grid-cols-[132px_minmax(0,1fr)] 2xl:grid-cols-[180px_minmax(0,1fr)]";
+// the shared color field, with a square swatch as tall as its inputs
+const SQUARE = "max-w-[420px] [&_input]:h-9 [&_input[type=color]]:w-9 [&_input[type=color]]:p-0";
 
 /** "I have a brand": paste your colors, pick your fonts, see motion in them; it becomes your kit's palette and font pair. */
 export function BrandForm() {
@@ -54,56 +58,62 @@ export function BrandForm() {
   };
 
   return (
-    <div className="mx-auto max-w-[1180px] px-5 pb-24 pt-12 md:px-8">
-      <div className="mb-10 flex items-center justify-between">
-        <span className="flex items-center gap-2 text-[13.5px] text-muted"><IconBrand size={16} className="text-paper" /> I have a brand</span>
-        <Link href="/kit" className="text-[13px] text-muted hover:text-figure">← Back to your kit</Link>
-      </div>
-      <h1 className="font-serif text-[40px] leading-[1.02] tracking-[-0.02em] md:text-[60px]">Bring your colors and fonts.</h1>
-      <p className="mt-3 max-w-[62ch] text-[16px] text-muted">Every live preview switches to your brand, the boards your agent sends included. Your agent can also set this from your brand folder; here you can see it and adjust it.</p>
-
-      <div className="mt-10 grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <div className="flex flex-col gap-6">
-          <label className="block">
-            <span className="text-[13px] text-muted">Brand name</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Kiln" className="mt-2 w-full rounded-md border border-line bg-surface px-3 py-2 text-[15px] text-figure outline-none placeholder:text-faint focus:border-faint" />
+    <div className="-mx-5 border-t border-line md:-mx-10 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,46%)]">
+      <div className="px-5 pb-16 md:px-10 xl:pb-28">
+        <div className="rows border-t-0">
+          <label className={ROW}>
+            <span className="text-[14px] sm:pt-3">Brand name</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Kiln" className="field font-serif text-[28px] leading-tight tracking-[-0.01em]" />
           </label>
-          <fieldset className="flex flex-col gap-4">
-            <legend className="mb-3 text-[14px] font-medium">Colors</legend>
-            {[["Background", ground, setGround], ["Text", figure, setFigure], ["Accent", accent, setAccent]].map(([l, v, set]) => (
-              <div key={l as string}><div className="mb-1.5 text-[12.5px] text-muted">{l as string}</div><ColorField value={v as string} onChange={set as (x: string) => void} /></div>
-            ))}
-            <div className="flex items-center gap-2 text-[12px] text-faint">
-              <span>From those:</span>
-              {[derived.muted, derived.surface, ...derived.ramp.slice(1, 3)].map((c, i) => <span key={i} className="h-4 w-4 rounded-sm border border-line" style={{ background: c }} title={c} />)}
-              <span>muted, surface and a ramp</span>
-            </div>
-          </fieldset>
-          <fieldset className="flex flex-col gap-4">
-            <legend className="mb-3 text-[14px] font-medium">Fonts</legend>
-            {[["Headlines", display, setDisplay, "display"], ["Body", text, setText, "text"], ["Labels and code", mono, setMono, "mono"]].map(([l, v, set, role]) => (
-              <div key={l as string}><div className="mb-1.5 text-[12.5px] text-muted">{l as string}</div><FontPicker value={v as string} onChange={set as (x: string) => void} role={role as string} /></div>
-            ))}
-            <p className="text-[12px] leading-relaxed text-faint">Using a licensed font? Pick the closest one here; your agent will use your files from brand/assets/fonts/.</p>
-          </fieldset>
-          <button type="button" onClick={save} className="flex w-fit items-center gap-2 rounded-lg bg-paper px-5 py-3 text-[14px] font-medium text-ground hover:bg-figure">
-            <IconCheck size={16} /> Use my brand <IconArrow size={15} />
-          </button>
         </div>
 
-        <div className="lg:sticky lg:top-20 lg:h-fit">
-          {[display, text, mono].map((f) => (
-            // eslint-disable-next-line @next/next/no-page-custom-font
-            <link key={f} rel="stylesheet" href={gf(f)} />
+        <h2 id="brand-colors" className="pb-4 pt-10 font-serif text-[30px] leading-none tracking-[-0.02em]">Colors</h2>
+        <div role="group" aria-labelledby="brand-colors" className="rows">
+          {[["Background", ground, setGround], ["Text", figure, setFigure], ["Accent", accent, setAccent]].map(([l, v, set]) => (
+            <div key={l as string} className={`${ROW} items-center`}>
+              <div className="text-[14px]">{l as string}</div>
+              <div className={SQUARE}><ColorField value={v as string} onChange={set as (x: string) => void} /></div>
+            </div>
           ))}
-          <div className="overflow-hidden rounded-xl border border-line">
-            <div className="aspect-video"><MovePlayer id="magic-move" values={{}} playing speed={1} remountKey={`${display}|${mono}`} theme={theme} /></div>
+          <div className={`${ROW} items-center`}>
+            <div className="text-[14px]">From those</div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="flex">
+                {[derived.muted, derived.surface, ...derived.ramp.slice(1, 3)].map((c, i) => <span key={i} className="-ml-px h-9 w-9 border border-rule first:ml-0" style={{ background: c }} title={c} />)}
+              </span>
+              <span className="text-[13px] text-muted">Muted, surface and a ramp.</span>
+            </div>
           </div>
-          <div className="mt-4 rounded-xl border border-line p-6" style={{ background: ground }}>
-            <div className="text-[clamp(32px,4vw,56px)] leading-[0.95] tracking-[-0.02em]" style={{ fontFamily: `'${display}'`, color: figure }}>{name || "Your brand"}, moving.</div>
-            <p className="mt-3 text-[15px]" style={{ fontFamily: `'${text}'`, color: derived.muted }}>This is your body text on your background, with <span style={{ color: accent }}>one accent</span>.</p>
-            <p className="mt-3 text-[12px]" style={{ fontFamily: `'${mono}'`, color: derived.muted }}>$ npx paper-motion add magic-move</p>
-          </div>
+        </div>
+
+        <h2 id="brand-fonts" className="pb-4 pt-12 font-serif text-[30px] leading-none tracking-[-0.02em]">Fonts</h2>
+        <div role="group" aria-labelledby="brand-fonts" className="rows">
+          {[["Headlines", display, setDisplay, "display"], ["Body", text, setText, "text"], ["Labels and code", mono, setMono, "mono"]].map(([l, v, set, role]) => (
+            <div key={l as string} className={`${ROW} items-center`}>
+              <div className="text-[14px]">{l as string}</div>
+              <div className="max-w-[420px] [&>div>button]:min-h-9"><FontPicker value={v as string} onChange={set as (x: string) => void} role={role as string} /></div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 max-w-[60ch] text-[13px] leading-relaxed text-muted">Using a licensed font? Pick the closest one here; your agent will use your files from brand/assets/fonts/.</p>
+
+        <button type="button" onClick={save} className="btn btn-primary mt-10 h-[54px] w-full max-w-[420px] justify-between px-[18px] text-[15px]">
+          Use my brand <IconArrow size={16} />
+        </button>
+      </div>
+
+      <div className="border-t border-line px-5 pb-24 pt-8 md:px-10 xl:sticky xl:top-[52px] xl:h-[calc(100vh-52px)] xl:self-start xl:overflow-y-auto xl:border-l xl:border-t-0 xl:px-6 xl:pb-10">
+        {[display, text, mono].map((f) => (
+          // eslint-disable-next-line @next/next/no-page-custom-font
+          <link key={f} rel="stylesheet" href={gf(f)} />
+        ))}
+        <div className="corner-marks border border-line">
+          <div className="aspect-video overflow-hidden"><MovePlayer id="magic-move" values={{}} playing speed={1} remountKey={`${display}|${mono}`} theme={theme} /></div>
+        </div>
+        <div className="mt-6 border border-line p-6" style={{ background: ground }}>
+          <div className="text-[clamp(32px,4vw,56px)] leading-[0.95] tracking-[-0.02em]" style={{ fontFamily: `'${display}'`, color: figure }}>{name || "Your brand"}, moving.</div>
+          <p className="mt-3 text-[15px]" style={{ fontFamily: `'${text}'`, color: derived.muted }}>This is your body text on your background, with <span style={{ color: accent }}>one accent</span>.</p>
+          <p className="mt-3 break-words text-[12px]" style={{ fontFamily: `'${mono}'`, color: derived.muted }}>$ npx paper-motion add magic-move</p>
         </div>
       </div>
     </div>

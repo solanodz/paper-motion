@@ -1,0 +1,37 @@
+{
+  "title": "paper-motion",
+  "format": "1920x1080",
+  "join": "whip",
+  "parts": [
+    {
+      "id": "marker-highlight",
+      "dir": "01-marker-highlight",
+      "seconds": 4.8
+    },
+    {
+      "id": "terminal-run",
+      "dir": "02-terminal-run",
+      "seconds": 6.2
+    },
+    {
+      "id": "browser-frame",
+      "dir": "03-browser-frame",
+      "seconds": 6.4
+    },
+    {
+      "id": "toast-stack",
+      "dir": "04-toast-stack",
+      "seconds": 4
+    },
+    {
+      "id": "stat-row",
+      "dir": "05-stat-row",
+      "seconds": 5.6
+    },
+    {
+      "id": "text-mask",
+      "dir": "06-text-mask",
+      "seconds": 5.6
+    }
+  ]
+}

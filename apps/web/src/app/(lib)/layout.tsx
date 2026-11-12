@@ -10,9 +10,9 @@ export default function LibLayout({ children }: LayoutProps<"/">) {
     items: items.filter((i) => i.type === t.type).map((i) => ({ id: i.id, title: i.title })),
   })).filter((s) => s.items.length);
   return (
-    <div className="mx-auto flex max-w-[1500px] px-5 md:px-8">
+    <div className="flex">
       <Sidebar sections={sections} />
-      <div className="min-w-0 flex-1 lg:pl-10">{children}</div>
+      <div className="min-w-0 flex-1 px-5 md:px-10">{children}</div>
     </div>
   );
 }

@@ -351,6 +351,29 @@
         "type": "string"
       },
       "description": "Recipes: formats it is designed for, e.g. 16:9."
+    },
+    "repeat": {
+      "type": "object",
+      "description": "Blocks: one piece may use it more than once, each time with a different value of `param` (an enum of its params); `previews` names, per value, a resource whose preview shows that value.",
+      "required": ["param"],
+      "properties": { "param": { "type": "string" }, "previews": { "type": "object" } }
+    },
+    "needs": {
+      "type": "array",
+      "description": "Blocks and shots: the content this scene shows, by inventory kind (figure, change, screen, command, line…). The first is what the scene is about; `fill` maps the item's fields onto the scene's CONFIG. Empty when the scene draws its own stand-in content.",
+      "items": {
+        "type": "object",
+        "required": ["kind"],
+        "properties": {
+          "kind": { "type": "string" },
+          "count": { "type": "number", "description": "how many items of this kind it takes (default 1)" },
+          "optional": { "type": "boolean" },
+          "has": { "type": "array", "items": { "type": "string" }, "description": "fields the item must carry" },
+          "where": { "type": "object", "description": "field values the item must have" },
+          "prefer": { "type": "object", "description": "field values that make it a better fit; an item with another value goes elsewhere when it can" },
+          "fill": { "type": "object", "description": "CONFIG keys from the item: \"$field\", \"$brief.action\", { \"$each\": template } over a group, { \"$col\": [field, n] }, { \"$argmax\": field }" }
+        }
+      }
     }
   }
 }

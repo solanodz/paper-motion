@@ -47,7 +47,14 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
                                      --cols 1 stacks options full width (judge type at real size)
                                      --sequence plays the clips one after another, with their sound
                                      (for choices you hear: sound palettes, typing)
-  chain init <piece> (--board <id|link> [--option D] | --parts id:sec,id:sec,…) [--format 1920x1080]
+  inventory <piece> [--from <url|file.md|folder|brand> …] | inventory kinds
+                                     what a piece can really show (pieces/<piece>/inventory.json: figures, screens,
+                                     commands, lines…), checked, with the blocks that show each item; --from reads
+                                     a site (and screenshots it), a README, a folder or the brand's Facts and assets
+                                     and proposes items the user keeps or removes in the studio
+  plan <piece> [--seconds n]         structures proposed from the inventory: each beat a block that shows one of
+                                     its items, in three orders; prints the options for a structure board
+  chain init <piece> (--board <id|link> [--option D] [--site url] | --plan <letter> | --parts id:sec,id:sec,…) [--format 1920x1080]
         [--join whip|cut|dissolve|dip] [--title "…"] [--force]
                                      a piece made of blocks: installs each part as its own scene under
                                      pieces/<piece>/<nn>-<id>/ (edit each CONFIG) and writes chain.json;
@@ -62,11 +69,14 @@ Usage: pamo <command> [options]   (pamo = npx paper-motion, or node packages/eng
   piece init <piece> [--title "…"] [--what "…"] [--who "…"] [--format "…"] [--tone "…"] [--action "…"]
         [--no-studio]                start tracking a piece stage by stage (pieces/<piece>/piece.json)
                                      and start this project's studio in the background
-  piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open]
-                                     hand a stage to the user in the studio (brief, look, structure,
-                                     parts, assembly, final) and wait for their decision; prints it.
+  piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open] [--skip]
+                                     hand a stage to the user in the studio (brief, inventory, video,
+                                     final) and wait for their decision; prints it.
                                      Starts the studio if needed; the first time, opens it for them
-  piece working <piece> <stage>      mark a stage as yours again (after changes were asked)
+  piece working <piece> <stage>      mark a stage as yours (when you start it, or after changes were asked)
+  piece ask <piece> "question" | --done
+                                     run right before asking the user something in the chat: the studio
+                                     tells them you are waiting there, with a way back to you
   piece status <piece>               where the piece is, and what the user did that you haven't read
   studio [--port 4317] [--open] [--stop]
                                      the local studio: the user follows each piece, approves, edits
@@ -423,7 +433,10 @@ async function main() {
         if (short && wait) {
           const minutes = Number.isFinite(Number(args.wait)) && args.wait !== undefined && args.wait !== true ? Number(args.wait) : 10;
           console.error(`waiting up to ${minutes} min for the choice on ${short.id} (the user can still paste the line)…`);
-          const choice = await awaitChoice(site, short.id, { timeout: minutes * 60 * 1000 });
+          // while this waits, the studio shows the agent as listening
+          const pulse = pdir ? setInterval(() => PC.beat(pdir, { waiting: 'board' }), 3000) : null;
+          if (pdir) PC.beat(pdir, { waiting: 'board' });
+          const choice = await awaitChoice(site, short.id, { timeout: minutes * 60 * 1000 }).finally(() => { if (pulse) { clearInterval(pulse); PC.unbeat(pdir); } });
           if (!choice) { console.error('no choice yet: wait again with board --await ' + short.id); process.exit(3); }
           if (pdir) PC.markBoard(pdir, short.id, choice.line);
           console.log(choice.line);
@@ -454,7 +467,7 @@ async function main() {
       }
       await ensureDeps();
       const files = args._.slice(1);
-      if (files.length < 2 || files.length > 6 || args.help) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]   (a rendered board)\n       board --url --title "…" --option id[:key=value,…] … [--look palette,font] [--kit]        (a live board link)'); process.exit(args.help ? 0 : 1); }
+      if (files.length < 2 || files.length > 6 || args.help) { console.error('Usage: board <a.html> <b.html> [... up to 6] [--t 2 | --clip 5] [--labels "A · x,B · y"] [--out board.png]   (a rendered board)\n       board --url --title "…" --option id[:key=value,…] … [--look palette,font | --look brand] [--kit] [--choose 1-3] [--wait minutes | --no-wait] [--long] [--site url]   (a live board link)\n       board --await <id|link> [--wait minutes] [--site url]   (wait again for a board already shared)\n       board --forget <id>\n  board --url --help explains the live board in full.'); process.exit(args.help ? 0 : 1); }
       const { renderStills, renderVideo } = await import('../lib/render.mjs');
       const { composeBoard } = await import('../lib/board.mjs');
       const os = await import('node:os');
@@ -494,19 +507,44 @@ async function main() {
     case 'chain': {
       const sub = args._[1] === 'init' ? 'init' : 'render';
       const piece = sub === 'init' ? args._[2] : args._[1];
-      if (!piece || args.help) { console.error('Usage: chain init <piece> [--board <id|link> [--option D] | --parts id:sec,…] [--format 1920x1080] [--join whip|cut|dissolve|dip] [--force]\n       chain <piece> [--out file.mp4] [--motion-blur 5] [--audio music.wav] [--no-sfx] [--check]'); process.exit(args.help ? 0 : 1); }
+      if (!piece || args.help) { console.error('Usage: chain init <piece> [--board <id|link> [--option D] [--site url] | --plan <letter> | --parts id:sec,…] [--title "…"] [--format 1920x1080] [--join whip|cut|dissolve|dip] [--force]\n       chain <piece> [--check] [--drafts [--only dir,…]] [--draft] [--out file.mp4] [--motion-blur 5] [--audio music.wav] [--no-sfx] [--dpr 1]\n  --board takes the board\'s link (its id is the last part of a /b/<id> link) and the letter the user chose. In order: --check plans and warns without rendering; --drafts renders each part alone (parts stage); --draft joins a quick version (assembly stage); --motion-blur 5 is the full render (final stage).'); process.exit(args.help ? 0 : 1); }
       const chainLib = await import('../lib/chain.mjs');
       if (sub === 'init') {
         const { SITE } = await import('../lib/registry.mjs');
         let src;
         if (args.board) src = await chainLib.structureFromBoard(String(args.board), typeof args.option === 'string' ? args.option : undefined, { site: typeof args.site === 'string' ? args.site : SITE });
+        else if (typeof args.plan === 'string') src = (await import('../lib/inventory.mjs')).planParts(chainLib.pieceDir(piece), args.plan);   // a structure proposed from the inventory
         else if (typeof args.parts === 'string') src = { parts: chainLib.partsFromList(args.parts) };
         else src = {};   // no source: sync an existing chain.json (install parts added since)
-        const r = await chainLib.initChain({ piece, title: typeof args.title === 'string' ? args.title : src.title, parts: src.parts, format: typeof args.format === 'string' ? args.format : undefined, join: typeof args.join === 'string' ? args.join : undefined, registry: args.registry, force: !!args.force });
+        // an open piece already has its title; a board option's title ("Six blocks") names the structure, not the film
+        const open = (await import('../lib/piece.mjs')).readPiece(chainLib.pieceDir(piece));
+        if (src.fills) {   // filled with the user's content: never render it grey on grey with no name
+          const look = await (await import('../lib/edit.mjs')).ensureLook(process.cwd(), open?.title ?? (typeof args.title === 'string' ? args.title : undefined));
+          if (look) console.log(`! the project had no look yet: installed ${look.join(', ')} (the user changes it in the studio's Style, or settle the brand on boards first)`);
+        }
+        const r = await chainLib.initChain({ piece, title: typeof args.title === 'string' ? args.title : open?.title ?? src.title, parts: src.parts, format: typeof args.format === 'string' ? args.format : undefined, join: typeof args.join === 'string' ? args.join : undefined, registry: args.registry, force: !!args.force });
         console.log(`✓ ${path.relative(process.cwd(), r.dir)}/chain.json · "${r.chain.title}" · ${r.chain.parts.length} parts, ${r.chain.format}`);
         for (const p of r.chain.parts) console.log(`  ${p.dir ?? '(no block)'}${p.name ? ` · ${p.name}` : ''}${p.seconds ? ` · ${p.seconds} s` : ''}${p.what ? `  — ${p.what}` : ''}`);
         for (const n of r.notes) console.log(`  ! ${n}`);
-        console.log(`\nNext: write each part's text and data into its CONFIG (the "what" above is the brief), then:\n  npx paper-motion chain ${piece} --motion-blur 5`);
+        if (src.fills) {
+          // the parts arrive with the inventory's content in their CONFIG: what is left is judgment, not typing
+          const { fillConfig } = await import('../lib/inventory.mjs');
+          r.chain.parts.forEach((part, i) => {
+            const fill = src.fills[i]; if (!part.dir || !fill || !Object.keys(fill).length) return;
+            const file = path.join(r.dir, part.dir, 'scene.html');
+            fs.writeFileSync(file, fillConfig(fs.readFileSync(file, 'utf8'), fill));
+            console.log(`  ${part.dir} · filled ${Object.keys(fill).join(', ')}`);
+          });
+        }
+        console.log([
+          '', 'Next:',
+          ...(open ? [`  npx paper-motion piece review ${piece} video   (the user edits and approves the video in the studio)`] : []),
+          src.fills ? `  check each part's CONFIG: the inventory's content is in; adjust what needs judgment` : `  write each part's text and data into its CONFIG (the "what" above is the brief)`,
+          `  npx paper-motion chain ${piece} --check       (plans and warns, renders nothing)`,
+          `  npx paper-motion chain ${piece} --drafts      (each part alone, quick)`,
+          `  npx paper-motion chain ${piece} --draft       (joined, quick)`,
+          `  npx paper-motion chain ${piece} --motion-blur 5   (the full render)`,
+        ].join('\n'));
         break;
       }
       await ensureDeps();
@@ -530,17 +568,107 @@ async function main() {
       break;
     }
 
+    case 'inventory': {
+      const inv = await import('../lib/inventory.mjs');
+      const { getIndex } = await import('../lib/registry.mjs');
+      const scenes = inv.scenesOf(await getIndex());
+      if (args._[1] === 'kinds') {
+        // what an inventory can hold, and what shows each kind
+        for (const [k, K] of Object.entries(inv.KINDS)) {
+          const shows = scenes.filter((b) => b.needs.some((n) => n.kind === k)).map((b) => b.id);
+          console.log(`${k.padEnd(9)} ${K.is}\n${' '.repeat(10)}fields: ${[...K.needs, ...(K.opt ?? []).map((f) => `${f}?`)].join(', ') || '—'}\n${' '.repeat(10)}shown by: ${shows.join(', ') || 'nothing yet'}`);
+        }
+        break;
+      }
+      const piece = args._[1];
+      if (!piece || args.help) { console.error('Usage: inventory <piece> [--from <url|file.md|folder|brand> … [--plain (no commands or code: the audience does not code)]] [--keep id,…] [--remove id,…] [--must id,…] [--set id.field=value] [--output id < what the command printed]\n                                   check pieces/<piece>/inventory.json and say what can show each item;\n                                   --from reads a site (and screenshots it), a README, a folder of files or the brand (its Facts and assets)\n                                   and adds what it finds as proposals for the user to keep or remove in the studio\n       inventory kinds        the kinds of content an inventory holds, their fields, and the blocks that show them'); process.exit(piece ? 0 : 1); }
+      const dir = (await import('../lib/chain.mjs')).pieceDir(piece);
+      const froms = process.argv.flatMap((a, i, all) => (a === '--from' && all[i + 1] && !all[i + 1].startsWith('--') ? [all[i + 1]] : a.startsWith('--from=') ? [a.slice(7)] : []));
+      if (froms.length) {
+        if (froms.some((f) => /^https?:/i.test(f))) await ensureDeps();
+        const { gather } = await import('../lib/gather.mjs');
+        const existing = inv.loadRaw(dir);
+        const { fresh, notes } = await gather(froms, { existing, plain: !!args.plain, log: (m) => console.log(m) });
+        inv.saveRaw(dir, [...existing, ...fresh]);
+        for (const n of notes) console.log(`  ${n}`);
+        console.log(`${fresh.length} new proposal${fresh.length === 1 ? '' : 's'}${existing.length ? ` (${existing.length} already there, untouched)` : ''}`);
+      }
+      // the agent's own edits to an item, the same ones the user makes in the studio
+      const ids = (v) => String(v).split(',').map((x) => x.trim()).filter(Boolean);
+      try {
+        if (typeof args.keep === 'string') for (const id of ids(args.keep)) inv.applyEdit(dir, { type: 'inv-status', id, value: 'kept' });
+        if (typeof args.remove === 'string') for (const id of ids(args.remove)) inv.applyEdit(dir, { type: 'inv-status', id, value: 'removed' });
+        if (typeof args.must === 'string') for (const id of ids(args.must)) inv.applyEdit(dir, { type: 'inv-must', id, value: true });
+        if (typeof args.set === 'string') {
+          const m = args.set.match(/^([^.=]+)\.([^=]+)=([\s\S]*)$/); if (!m) throw new Error('--set takes id.field=value');
+          inv.applyEdit(dir, { type: 'inv-field', id: m[1], key: m[2], value: m[3].replace(/\\n/g, '\n') });
+        }
+        if (typeof args.output === 'string') {
+          // what a command really printed, piped in: `<the command> 2>&1 | pamo inventory <piece> --output <id>`
+          if (process.stdin.isTTY) throw new Error('--output reads what the command printed from stdin: <the command> 2>&1 | pamo inventory <piece> --output <id>');
+          let piped = ''; for await (const c of process.stdin) piped += c;   // read as it comes: the command may still be running
+          const lines = inv.tidyOutput(piped);
+          if (!lines.length) throw new Error('--output: nothing came in on stdin (did the command print anything?)');
+          inv.editInventory(dir, (list) => { const it = list.find((i) => i.id === args.output); if (!it) throw new Error(`no item "${args.output}"`); if (it.kind !== 'command') throw new Error(`${it.id} is a ${it.kind}, not a command`); it.output = lines; });
+          console.log(`${args.output}: output set, ${lines.length} line${lines.length === 1 ? '' : 's'}`);
+        }
+      } catch (e) { console.error(`✗ ${e.message}`); process.exit(1); }
+      const { items, waiting, problems } = inv.readInventory(dir);
+      const { rows, notes } = inv.report(items, scenes);
+      console.log(`${problems.length ? '✗' : '✓'} ${path.relative(process.cwd(), inv.inventoryFile(dir))} · ${items.length} in${waiting.length ? `, ${waiting.length} proposed` : ''}`);
+      const w = Math.max(...[...items, ...waiting].map((i) => i.id.length), 4);
+      for (const { it, blocks } of rows) console.log(`  ${it.must ? '*' : ' '} ${it.id.padEnd(w)}  ${it.kind.padEnd(8)}  ${inv.describe(it)}\n      ${' '.repeat(w)}→ ${blocks.join(', ') || (it.kind === 'music' ? 'the bed under the piece' : it.kind === 'logo' ? 'the close' : 'nothing yet')}`);
+      // proposals: gathered, not yet the user's; a plan does not use them
+      for (const it of waiting) console.log(`  ? ${it.id.padEnd(w)}  ${it.kind.padEnd(8)}  ${inv.describe(it)}\n      ${' '.repeat(w)}  from ${it.source ?? '?'}${it.missing.length ? ` · still needs ${it.missing.join(', ')}` : ''}`);
+      for (const p of problems) console.log(`  ✗ ${p}`);
+      if (items.length) for (const n of notes) console.log(`  ! ${n}`);
+      const open = (await import('../lib/piece.mjs')).readPiece(dir);
+      if (waiting.length) console.log(`\n${waiting.length} proposal${waiting.length === 1 ? ' waits' : 's wait'} for the user: ${open ? `npx paper-motion piece review ${piece} inventory   (they keep or remove each in the studio)` : `set "status" on each in the file (delete it to keep, "removed" to drop), or open a piece first (piece init) so they decide in the studio`}`);
+      if (problems.length) process.exit(1);
+      if (!waiting.length) console.log(`\nNext: npx paper-motion plan ${piece} [--seconds 20]   (structures made from this content)`);
+      break;
+    }
+
+    case 'plan': {
+      const piece = args._[1];
+      if (!piece || args.help) { console.error('Usage: plan <piece> [--seconds n]   proposes structures from pieces/<piece>/inventory.json: each beat a block that shows\n                                   one of its items; writes plan.json and prints the options for a structure board'); process.exit(piece ? 0 : 1); }
+      const inv = await import('../lib/inventory.mjs');
+      const { getIndex } = await import('../lib/registry.mjs');
+      const dir = (await import('../lib/chain.mjs')).pieceDir(piece);
+      const open = (await import('../lib/piece.mjs')).readPiece(dir);
+      const { items, waiting, problems } = inv.readInventory(dir);
+      if (problems.length) { for (const p of problems) console.log(`  ✗ ${p}`); console.error(`fix the inventory first (npx paper-motion inventory ${piece})`); process.exit(1); }
+      if (waiting.length) console.log(`! ${waiting.length} proposal${waiting.length === 1 ? ' is' : 's are'} not in this plan: the user has not kept ${waiting.length === 1 ? 'it' : 'them'} yet (npx paper-motion piece review ${piece} inventory)`);
+      const scenes = inv.scenesOf(await getIndex());
+      const seconds = args.seconds ? Number(args.seconds) : undefined;
+      const options = inv.propose(items, scenes, { seconds, brief: open?.brief ?? {} });
+      if (!options.length) { console.error('nothing in the inventory can be shown by a block yet (npx paper-motion inventory kinds)'); process.exit(1); }
+      inv.writePlan(dir, options, { seconds });
+      for (const o of options) {
+        console.log(`\n${o.letter} · ${o.title} · ${o.seconds} s — ${o.why}`);
+        for (const b of o.beats) console.log(`  ${String(b.from).padStart(4)}–${String(b.to).padEnd(4)} ${b.name.padEnd(10)} ${`${b.id}${b.variant ? ` (${b.variant})` : ''}`.padEnd(22)} ${b.what}`);
+        if (o.left.length) console.log(`  left out: ${o.left.join(', ')}`);
+        for (const n of o.notes) console.log(`  ! ${n}`);
+      }
+      for (const n of inv.report(items, scenes).notes) console.log(`\n! ${n}`);
+      console.log(`\n✓ ${path.relative(process.cwd(), inv.planFile(dir))}\n\nShow them on a structure board (each plays its blocks in order):\n  npx paper-motion board --url --title "Structure" --ask "Which order tells it best?" --reply structure-1 --look brand \\\n${options.map((o) => `    --option '${inv.boardOption(o).replace(/'/g, `'\\''`)}'`).join(' \\\n')}\nor install one as it is, with its content in every part:\n  npx paper-motion chain init ${piece} --plan ${options[0].letter}`);
+      break;
+    }
+
     case 'piece': {
       const sub = args._[1], piece = args._[2];
-      if (!['init', 'review', 'working', 'status'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …]\n       piece review <piece> <stage> [--wait 30] [--no-wait]\n       piece working <piece> <stage>\n       piece status <piece>'); process.exit(args.help ? 0 : 1); }
+      if (!['init', 'review', 'working', 'status', 'ask'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …] [--no-studio] [--force]\n       piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open] [--no-studio] [--skip]\n       piece working <piece> <stage>\n       piece ask <piece> "the question you are asking in the chat" | --done\n       piece status <piece>\n  ask: run it right before you ask the user anything in the chat, so the studio sends them there (the next review or working clears it, or --done). --return <url> on any of these gives the studio a link back to you when you run in a browser.\n  Stages: brief, inventory (what the video can show), video (they edit it in the studio), final. review hands a stage to the user in the studio and prints what they did, one line each; it refuses while an earlier stage is not approved (--skip moves on without it, only when the user agreed). --no-wait returns at once with what is unread; --no-open does not open their browser; --no-studio runs without the studio.'); process.exit(args.help ? 0 : 1); }
       const P = await import('../lib/piece.mjs');
       const { pieceDir } = await import('../lib/chain.mjs');
       const dir = pieceDir(piece), studioLib = await import('../lib/studio.mjs'), q = `?p=${encodeURIComponent(path.basename(dir))}`;
       const studio = async () => (args.studio === false || args['no-studio'] ? null : studioLib.ensureStudio(process.cwd(), { bin: fileURLToPath(import.meta.url) }));
+      // where this agent runs, so the studio can take the user back to it
+      const host = async () => { if (sub !== 'status') P.setHost(dir, (await import('../lib/host.mjs')).hostApp({ url: typeof args.return === 'string' ? args.return : undefined })); };
       if (sub === 'init') {
         const brief = Object.fromEntries(P.BRIEF_KEYS.filter((k) => typeof args[k] === 'string').map((k) => [k, args[k]]));
         const p = P.initPiece({ piece, title: typeof args.title === 'string' ? args.title : undefined, brief, force: !!args.force });
         console.log(`✓ ${path.relative(process.cwd(), dir)}/piece.json · "${p.title}" · stage ${p.stage}`);
+        await host();
         const missing = P.BRIEF_KEYS.filter((k) => !p.brief[k]);
         if (missing.length) console.log(`  brief still empty: ${missing.join(', ')} (pass them, or write piece.json)`);
         const s = await studio().catch((e) => { console.log(`  ! ${e.message}`); return null; });
@@ -556,11 +684,34 @@ async function main() {
         if (fresh.length) { console.log(`\n${fresh.length} unread:`); for (const e of fresh) console.log(P.eventLine(p, e)); }
         break;
       }
+      if (sub === 'ask') {
+        if (!P.readPiece(dir)) { console.error(`no piece.json in ${path.relative(process.cwd(), dir)}`); process.exit(1); }
+        await host();
+        if (args.done) { P.clearAsk(dir); console.log('✓ cleared: the studio no longer sends the user to the chat'); break; }
+        const question = typeof args._[3] === 'string' ? args._[3].trim() : '';
+        if (!question) { console.error('piece ask: give the question in one line (the one you are asking in the chat), or --done'); process.exit(1); }
+        P.setAsk(dir, question);
+        console.log(`✓ the studio now tells the user you asked this in the chat${P.readPiece(dir).agent ? ', with a way back to you' : ''}. Ask it now; the next piece review or piece working clears it (or piece ask ${piece} --done).`);
+        break;
+      }
       const stage = args._[3];
+      await host();
       if (!P.STAGES.includes(stage)) { console.error(`piece ${sub}: give a stage (${P.STAGES.join(', ')})`); process.exit(1); }
-      if (sub === 'working') { P.updatePiece(dir, (p) => { p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working' }; }); console.log(`✓ ${stage}: working`); break; }
+      if (sub === 'working') { P.updatePiece(dir, (p) => { delete p.ask; p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working', since: new Date().toISOString() }; }); console.log(`✓ ${stage}: working`); break; }
       // review: hand the stage over and wait for the user's decision in the studio
-      P.toReview(dir, stage);
+      if (stage === 'inventory') {
+        // the user is asked whether each thing is true and worth showing: they cannot judge half an item
+        const inv = await import('../lib/inventory.mjs');
+        let r; try { r = inv.readInventory(dir); } catch (e) { console.error(`✗ ${e.message}`); process.exit(1); }
+        const short = [...r.items, ...r.waiting].filter((i) => i.missing.length);
+        if (!r.items.length && !r.waiting.length) { console.error(`✗ the inventory is empty: gather it first (inventory ${piece} --from <url|README.md|brand>)`); process.exit(1); }
+        if (short.length) {
+          console.error(`✗ ${short.length} item${short.length === 1 ? ' is' : 's are'} not complete yet: finish or remove ${short.length === 1 ? 'it' : 'them'} before the user sees the inventory`);
+          for (const i of short) console.error(`  ${i.id} (${i.kind}) needs ${i.missing.join(', ')}${i.kind === 'command' && i.missing.includes('output') ? `   →  ${i.command} 2>&1 | npx paper-motion inventory ${piece} --output ${i.id}    or    --remove ${i.id}` : `   →  --set ${i.id}.${i.missing[0]}=…    or    --remove ${i.id}`}`);
+          process.exit(1);
+        }
+      }
+      try { P.toReview(dir, stage, { skip: !!args.skip }); } catch (e) { console.error(`✗ ${e.message}`); process.exit(1); }
       const s = await studio();
       const url = s ? `${s.url}${q}` : null;
       // the first hand-over opens the studio in the user's browser; after that the open page follows the piece

@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { chooseRange, decodeBoard, replyLine } from "@/lib/board.mjs";
 import { recolor, setArgs } from "@/lib/customize.mjs";
 import { kit } from "@/lib/kit";
 import { buildTheme, loadResource, type Res, type Theme } from "@/lib/theme";
 import { ResourceStage } from "@/components/playground/resource-stage";
-import type { Beat } from "@/components/beats-strip";
+import { BeatsStrip, type Beat } from "@/components/beats-strip";
 import { ScriptPlayer } from "@/components/script-player";
 import { ClipReel, type Segment } from "@/components/clip-reel";
 import { composeScripts } from "@/lib/compose";
@@ -28,38 +28,73 @@ const enc = (o: object) => btoa(unescape(encodeURIComponent(JSON.stringify(o))))
 const inLook = (res: Full | undefined, values: Values | undefined, theme: Theme): Values =>
   res?.type === "background" && theme?.palette ? { ...(recolor(res, theme.palette) as Values), ...(values ?? {}) } : values ?? {};
 
-/** One option of a resource board: its live stage, label, note and the two actions. */
+const SCRIPTED = ["recipe", "shot", "block"];
+
+/**
+ * The bar under an option's picture: the letter it is called by as a pixel numeral, then what it is. Once chosen
+ * (or picked) the whole bar is a paper block with black type.
+ */
+function Caption({ label, chosen, multi, icon, title, children }: { label: string; chosen: boolean; multi: boolean; icon?: ReactNode; title: ReactNode; children?: ReactNode }) {
+  return (
+    <div className={`flex items-stretch border-y ${chosen ? "border-paper bg-paper text-ground" : "border-line"}`}>
+      <span className={`num flex w-[60px] shrink-0 items-center justify-center border-r text-[40px] ${chosen ? "border-ground text-ground" : "border-line text-figure"}`}>{label}</span>
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 px-4 py-3">
+        <div className="flex items-center gap-2">
+          {icon ? <span className={`shrink-0 ${chosen ? "" : "text-paper"}`}>{icon}</span> : null}
+          <span className="truncate text-[16px] font-medium leading-tight">{title}</span>
+        </div>
+        {children ? <div className={`flex items-center gap-3 font-mono text-[11.5px] leading-none ${chosen ? "" : "text-muted"}`}>{children}</div> : null}
+      </div>
+      {chosen ? <span className="flex w-11 shrink-0 items-center justify-center border-l border-ground"><IconCheck size={18} /><span className="sr-only">{multi ? "Picked" : "Chosen"}</span></span> : null}
+    </div>
+  );
+}
+
+/** The one thing to do with an option: paper until it is done, an outline that says so after. */
+function ChooseButton({ label, chosen, multi, kit = false, onChoose }: { label: string; chosen: boolean; multi: boolean; kit?: boolean; onChoose: () => void }) {
+  return (
+    <button type="button" onClick={onChoose} className={`btn min-w-0 flex-1 py-3 text-[14px] ${chosen ? "" : "btn-primary"}`}>
+      {chosen ? <IconCheck size={15} /> : kit ? <IconKit size={15} /> : null}{multi ? (chosen ? "Picked" : `Pick ${kit ? "kit " : ""}${label}`) : chosen ? "Chosen" : `Choose ${kit ? "kit " : ""}${label}`}
+    </button>
+  );
+}
+
+/** A cell of the contact sheet: the option's picture in the look, its caption bar, then what is said about it. */
+const cellClass = (chosen: boolean) => `flex flex-col bg-ground ${chosen ? "relative z-10 outline-paper" : ""}`;
+const Fact = ({ children }: { children: ReactNode }) => <li className="border-b border-line py-2 font-mono text-[11.5px] leading-snug text-muted">{children}</li>;
+
+/** One option of a resource board: its live stage, its letter and name, the note, and the two actions. */
 function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoose }: { o: Option; res: Full | undefined; theme: Theme; fragment: string; chosen: boolean; multi: boolean; tuned?: Values; onChoose: () => void }) {
   const Icon = res ? TYPE_ICONS[res.type] : null;
   const values = tuned ?? inLook(res, o.values, theme);
+  const beats = res && SCRIPTED.includes(res.type) ? (res as { beats?: Beat[] }).beats : undefined;
+  const duration = (res as { duration?: number } | undefined)?.duration;
+  const adjusted = o.values ? Object.keys(o.values).length : 0;
+  const facts: ReactNode[] = [];
+  if (adjusted) facts.push(<Fact key="adjusted">{adjusted} setting{adjusted > 1 ? "s" : ""} adjusted by your agent</Fact>);
+  if (res?.type === "background" && theme?.palette) facts.push(<Fact key="recolored">Recolored to your palette</Fact>);
+  if (res?.preview?.video && !MOVE_TYPES.includes(res.type) && theme) facts.push(<Fact key="sample">A sample render. Yours is built in your look.</Fact>);
+  if (tuned) facts.push(<li key="tuned" className="border-b border-line py-2"><span className="tag tag-paper">Tuned by you</span></li>);
   return (
-    <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
+    <article className={cellClass(chosen)}>
       <div className="relative aspect-video overflow-hidden bg-black [container-type:inline-size]">
-        {(res?.type === "recipe" || res?.type === "shot" || res?.type === "block") && !res.preview?.video && (res as { beats?: Beat[] }).beats?.length
-          ? <ScriptPlayer beats={(res as { beats?: Beat[] }).beats!} duration={(res as { duration?: number }).duration} theme={theme} title={res.title} compact />
+        {res && beats?.length && !res.preview?.video
+          ? <ScriptPlayer beats={beats} duration={duration} theme={theme} title={res.title} compact />
           : res ? <ResourceStage resource={res} values={values} theme={theme} compact /> : null}
-        <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-md bg-ground/80 px-2 font-mono text-[13px] text-figure backdrop-blur">{o.label}</span>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <div className="flex items-center gap-2">
-          {Icon ? <Icon size={14} className="text-paper" /> : null}
-          <span className="truncate text-[15px] font-medium">{res?.title ?? o.id}</span>
-          <code className="ml-auto shrink-0 font-mono text-[11px] text-faint">{o.id}</code>
-        </div>
-        {o.note ? <p className="mt-2 text-[13px] leading-snug text-muted">{o.note}</p> : null}
-        {o.values && Object.keys(o.values).length ? <p className="mt-1.5 font-mono text-[11px] text-faint">{Object.keys(o.values).length} setting{Object.keys(o.values).length > 1 ? "s" : ""} adjusted by your agent</p> : null}
-        {(res?.type === "recipe" || res?.type === "shot" || res?.type === "block") && (res as { beats?: Beat[] }).beats?.length ? <p className="mt-3 flex gap-3 font-mono text-[11px] text-faint"><span className="min-w-0 flex-1 truncate">{(res as { beats?: Beat[] }).beats!.map((b) => b.name).join(" · ")}</span><span className="shrink-0">{(res as { duration?: number }).duration} s</span></p> : null}
-        {res?.type === "background" && theme?.palette ? <p className="mt-1.5 font-mono text-[11px] text-faint">recolored to your palette</p> : null}
-        {res?.preview?.video && !MOVE_TYPES.includes(res.type) && theme ? <p className="mt-1.5 font-mono text-[11px] text-faint">sample render · built in your look</p> : null}
-        {tuned ? <p className="mt-1.5 font-mono text-[11px] text-paper">tuned by you</p> : null}
-        <div className="mt-4 flex gap-2">
-          <button type="button" onClick={onChoose} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
-            {chosen ? <IconCheck size={14} /> : null}{multi ? (chosen ? "Picked" : `Pick ${o.label}`) : chosen ? "Chosen" : `Choose ${o.label}`}
-          </button>
-          <Link href={`/r/${o.id}?from=${encodeURIComponent(fragment)}&label=${o.label}${Object.keys(values).length ? `&s=${enc(values)}` : ""}`} className="rounded-md border border-line px-3 py-2 text-[13px] text-figure hover:border-faint">Tune</Link>
+      <Caption label={o.label} chosen={chosen} multi={multi} icon={Icon ? <Icon size={15} /> : null} title={res?.title ?? o.id}>
+        <code className="truncate">{o.id}</code>
+      </Caption>
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        {o.note ? <p className="text-[14px] leading-snug text-muted">{o.note}</p> : null}
+        {beats?.length ? <BeatsStrip beats={beats} duration={duration} compact /> : null}
+        {facts.length ? <ul className="border-t border-line">{facts}</ul> : null}
+        <div className="mt-auto flex gap-2">
+          <ChooseButton label={o.label} chosen={chosen} multi={multi} onChoose={onChoose} />
+          <Link href={`/r/${o.id}?from=${encodeURIComponent(fragment)}&label=${o.label}${Object.keys(values).length ? `&s=${enc(values)}` : ""}`} className="btn px-5 py-3 text-[14px]">Tune</Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -67,27 +102,27 @@ function ResourceOption({ o, res, theme, fragment, chosen, multi, tuned, onChoos
 const beatSegments = (beats: Beat[], res: Record<string, Full>): Segment[] =>
   beats.map((b) => ({ name: b.name, what: b.what, seconds: Math.max(0.5, b.to - b.from), src: b.id && res[b.id]?.preview?.video ? `/${res[b.id].preview!.video}` : undefined }));
 
+
 /** An option that is a structure the agent proposes for this brief, instead of a recipe: its beats, built from scratch if chosen. */
 function StructureOption({ o, res, theme, chosen, multi, onChoose }: { o: Option; res: Record<string, Full>; theme: Theme; chosen: boolean; multi: boolean; onChoose: () => void }) {
   const st = o.structure!;
   const segments = beatSegments(st.beats, res);
   return (
-    <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
+    <article className={cellClass(chosen)}>
       <div className="relative aspect-video overflow-hidden bg-black">
         {segments.some((x) => x.src) ? <ClipReel segments={segments} theme={theme} /> : <ScriptPlayer beats={st.beats} duration={st.duration} theme={theme} title={st.title} compact />}
-        <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-md bg-ground/80 px-2 font-mono text-[13px] text-figure backdrop-blur">{o.label}</span>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <div className="flex items-center gap-2"><IconAgent size={14} className="text-paper" /><span className="truncate text-[15px] font-medium">{st.title}</span><span className="ml-auto shrink-0 font-mono text-[11px] text-faint">a structure for this brief · {st.duration} s</span></div>
-        <ul className="mt-2 space-y-1 text-[12.5px] text-muted">{st.beats.map((b) => <li key={b.name + b.from}><span className="font-mono text-[11px] text-faint">{b.from}–{b.to} s</span> <span className="text-figure">{b.name}</span> · {b.what}</li>)}</ul>
-        {o.note ? <p className="mt-2 text-[13px] leading-snug text-muted">{o.note}</p> : null}
-        <div className="mt-4 flex gap-2">
-          <button type="button" onClick={onChoose} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
-            {chosen ? <IconCheck size={14} /> : null}{multi ? (chosen ? "Picked" : `Pick ${o.label}`) : chosen ? "Chosen" : `Choose ${o.label}`}
-          </button>
+      <Caption label={o.label} chosen={chosen} multi={multi} icon={<IconAgent size={15} />} title={st.title}>
+        <span className="truncate">A structure for this brief</span><span className="ml-auto shrink-0">{st.duration} s</span>
+      </Caption>
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        {o.note ? <p className="text-[14px] leading-snug text-muted">{o.note}</p> : null}
+        <BeatsStrip beats={st.beats} duration={st.duration} />
+        <div className="mt-auto flex">
+          <ChooseButton label={o.label} chosen={chosen} multi={multi} onChoose={onChoose} />
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -99,26 +134,39 @@ function KitOption({ o, res, chosen, multi, onChoose }: { o: Option; res: Record
   const theme = useMemo(() => buildTheme(pal, font, res), [pal, font, res]);
   const c = theme?.palette;
   const moves = items.filter((i) => ["component", "transition", "text", "camera"].includes(res[i.id]?.type ?? ""));
+  const listed = [pal, font, bg, ...moves, recipe].filter((i): i is Pick => !!i);
   return (
-    <div className={`flex flex-col overflow-hidden rounded-xl border bg-surface transition-colors ${chosen ? "border-paper" : "border-line"}`}>
+    <article className={cellClass(chosen)}>
       <div className="relative aspect-[4/3] overflow-hidden" style={{ background: c?.ground ?? "#000" }}>
         {theme?.links.map((href) => <link key={href} rel="stylesheet" href={href} />)}
         {bg && res[bg.id] ? <div className="absolute inset-0 opacity-90"><ResourceStage resource={res[bg.id]} values={inLook(res[bg.id], bg.values, theme)} compact /></div> : null}
         <div className="absolute inset-0 flex flex-col justify-end p-5">
           <span className="leading-[0.95] tracking-[-0.02em]" style={{ fontFamily: theme?.vars["--pm-display"], color: c?.figure ?? "#fff", fontSize: "clamp(26px,6cqw,52px)", fontWeight: 600 }}>Your brand, moving.</span>
-          {c ? <span className="mt-3 flex h-2 w-full max-w-[200px] overflow-hidden rounded-sm">{[c.ground, c.surface, c.muted, c.figure, c.accent].map((h, i) => <span key={i} className="flex-1" style={{ background: h }} />)}</span> : null}
+          {c ? <span className="mt-3 flex h-2 w-full max-w-[200px] overflow-hidden">{[c.ground, c.surface, c.muted, c.figure, c.accent].map((h, i) => <span key={i} className="flex-1" style={{ background: h }} />)}</span> : null}
         </div>
-        <span className="absolute left-3 top-3 flex h-7 min-w-7 items-center justify-center rounded-md bg-ground/80 px-2 font-mono text-[13px] text-figure backdrop-blur">{o.label}</span>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        {o.note ? <p className="text-[13px] leading-snug text-muted">{o.note}</p> : null}
-        <ul className="mt-3 flex flex-col gap-1 text-[13px]">
-          {[pal, font, bg, ...moves, recipe].filter((i): i is Pick => !!i).map((i) => { const r = res[i.id], Icon = r ? TYPE_ICONS[r.type] : null; return <li key={i.id} className="flex items-center gap-2"><span className="w-4 text-paper">{Icon ? <Icon size={13} /> : null}</span><span className="truncate">{r?.title ?? i.id}</span><code className="ml-auto font-mono text-[10.5px] text-faint">{i.id}</code></li>; })}
+      <Caption label={o.label} chosen={chosen} multi={multi} icon={<IconKit size={15} />} title="Kit">
+        <span>{listed.length} resource{listed.length === 1 ? "" : "s"}</span>
+      </Caption>
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        {o.note ? <p className="text-[14px] leading-snug text-muted">{o.note}</p> : null}
+        <ul className="border-t border-line text-[13px]">
+          {listed.map((i) => { const r = res[i.id], Icon = r ? TYPE_ICONS[r.type] : null; return <li key={i.id} className="flex items-center gap-2.5 border-b border-line py-2"><span className="flex w-4 shrink-0 text-paper">{Icon ? <Icon size={14} /> : null}</span><span className="min-w-0 flex-1 truncate">{r?.title ?? i.id}</span><code className="shrink-0 font-mono text-[11px] text-faint">{i.id}</code></li>; })}
         </ul>
-        <button type="button" onClick={onChoose} className={`mt-4 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium ${chosen ? "bg-raised text-paper" : "bg-paper text-ground hover:bg-figure"}`}>
-          {chosen ? <IconCheck size={14} /> : <IconKit size={14} />}{multi ? (chosen ? "Picked" : `Pick kit ${o.label}`) : chosen ? "Chosen" : `Choose kit ${o.label}`}
-        </button>
+        <div className="mt-auto flex">
+          <ChooseButton label={o.label} chosen={chosen} multi={multi} kit onChoose={onChoose} />
+        </div>
       </div>
+    </article>
+  );
+}
+
+/** The line that goes back to the agent, in a code block, with its copy action flush under it. */
+function ReplyLine({ line, label, primary = false, onCopy }: { line: string; label: string; primary?: boolean; onCopy: () => void }) {
+  return (
+    <div className="code border-0 border-t">
+      <code className="block px-4 py-3 text-figure [overflow-wrap:anywhere]">{line}</code>
+      <button type="button" onClick={onCopy} className={`btn w-full ${primary ? "btn-primary" : "border-0 border-t border-line"}`}><IconCopy size={14} /> {label}</button>
     </div>
   );
 }
@@ -235,88 +283,124 @@ export function BoardView({ short = false }: { short?: boolean } = {}) {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-[720px] px-5 py-24 text-center md:px-8">
-        <IconAgent size={28} className="mx-auto text-paper" />
-        <h1 className="mt-5 font-serif text-[40px] leading-none tracking-[-0.02em]">{error === "empty" ? "No board in this link." : "This board can't be read."}</h1>
-        <p className="mt-4 text-[15px] leading-relaxed text-muted">{error === "empty" ? "A board is a link your agent builds so you can compare options. Ask it to propose something, or browse the library." : `The link seems cut or changed (${error}). Ask your agent to share it again.`}</p>
-        <Link href="/library" className="mt-8 inline-flex items-center gap-2 text-[14px] text-figure underline decoration-faint underline-offset-4">Open the library <IconArrow size={14} /></Link>
+      <div className="mx-auto w-full max-w-[1600px] px-5 py-16 md:px-8 md:py-24">
+        <p className="flex items-center gap-2 text-[13px] text-muted"><IconAgent size={15} className="text-paper" /> A board from your agent</p>
+        <h1 className="display mt-4 max-w-[14ch] text-[length:clamp(40px,6vw,88px)]">{error === "empty" ? "No board in this link." : "This board can't be read."}</h1>
+        <p className="mt-6 max-w-[54ch] text-[16px] leading-relaxed text-muted">{error === "empty" ? "A board is a link your agent builds so you can compare options. Ask it to propose something, or browse the library." : `The link seems cut or changed (${error}). Ask your agent to share it again.`}</p>
+        <Link href="/library" className="btn mt-8">Open the library <IconArrow size={14} /></Link>
       </div>
     );
   }
-  if (!board) return <div className="px-5 py-24 text-center font-mono text-[13px] text-faint">Opening the board…</div>;
+  if (!board) return <div className="mx-auto w-full max-w-[1600px] px-5 py-24 font-mono text-[13px] text-muted md:px-8">Opening the board…</div>;
 
-  const cols = board.options.length <= 2 ? "md:grid-cols-2" : board.options.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2 xl:grid-cols-4";
+  const n = board.options.length;
+  const cols = n <= 2 ? "md:grid-cols-2" : n === 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2 2xl:grid-cols-4";
+  const range = lo === hi ? `choose ${hi}` : `${lo} to ${hi}`;
+  // the decision column's top edge carries its state, as the studio's does
+  const edge = !reply ? "border-t-rule" : sent ? "border-t-ok" : sent === false ? "border-t-warn" : "border-t-paper";
   return (
-    <div className="mx-auto max-w-[1500px] px-5 pb-24 pt-10 md:px-8">
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2 text-[13px] text-muted"><IconAgent size={15} className="text-paper" /> Your agent proposes{board.reply ? <code className="font-mono text-[11px] text-faint">· {board.reply}</code> : null}</div>
-          <h1 className="mt-3 font-serif text-[40px] leading-[1.02] tracking-[-0.02em] md:text-[56px]">{board.title}</h1>
-          {board.ask ? <p className="mt-3 text-[17px] text-muted">{board.ask}</p> : null}
-        </div>
-        {theme ? (
-          <div className="flex items-center gap-3 rounded-full border border-line py-1.5 pl-2 pr-4 text-[12.5px] text-muted">
-            {theme.palette ? <span className="flex overflow-hidden rounded-full">{[theme.palette.ground, theme.palette.surface, theme.palette.figure, theme.palette.accent].map((h, i) => <span key={i} className="h-5 w-5" style={{ background: h }} />)}</span> : null}
-            <span>Shown in your look · {theme.label}</span>
-          </div>
-        ) : null}
-      </div>
+    <div className="mx-auto w-full max-w-[1600px] border-line min-[1601px]:border-x">
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+        {/* the question, and the options as a contact sheet */}
+        <div className="min-w-0 xl:pb-20">
+          <header className="px-5 pb-8 pt-10 md:px-8 md:pb-10 md:pt-14">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-muted"><span className="flex items-center gap-2"><IconAgent size={15} className="text-paper" /> Your agent proposes</span>{board.reply ? <code className="tag">{board.reply}</code> : null}</p>
+            <div className="mt-5 flex flex-wrap items-end justify-between gap-x-12 gap-y-5">
+              <h1 className="display min-w-0 max-w-[20ch] text-balance break-words text-[length:clamp(40px,6vw,88px)]">{board.title}</h1>
+              {board.ask ? <p className="max-w-[38ch] pb-1 text-[16px] leading-snug text-muted">{board.ask}</p> : null}
+            </div>
+          </header>
 
-      <div className={`mt-10 grid gap-5 ${cols}`}>
-        {board.options.map((o) => (board.kind === "kit"
-          ? <KitOption key={o.label} o={o} res={res} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
-          : o.structure ? <StructureOption key={o.label} o={o} res={res} theme={theme} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
-          : <ResourceOption key={o.label} o={o} res={o.id ? res[o.id] : undefined} theme={theme} fragment={fragment} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} tuned={tuned[o.label]} onChoose={() => (multi ? togglePick(o) : choose(o))} />))}
-      </div>
-      {multi && sequence ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3 text-[13px]"><span className="text-muted">Your sequence · <span className="text-figure">{sequence.title}</span></span><span className="font-mono text-[12px] text-faint">{+sequence.segments.reduce((a, x) => a + x.seconds, 0).toFixed(1)} s</span></div>
-          <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="relative aspect-video bg-black">{sequence.segments.some((x) => x.src) ? <ClipReel segments={sequence.segments} theme={theme} /> : <ScriptPlayer beats={sequence.beats} duration={sequence.duration} theme={theme} title="sequence" compact />}</div>
-            <ol className="space-y-2 p-5 text-[13px]">{sequence.segments.map((x, k) => <li key={k} className="flex gap-3"><span className="w-5 shrink-0 font-mono text-[11px] leading-5 text-faint">{k + 1}</span><span className="min-w-0 flex-1"><span className="text-figure">{x.name}</span>{x.what ? <span className="text-muted"> · {x.what}</span> : null}</span><span className="shrink-0 font-mono text-[11px] leading-5 text-faint">{+x.seconds.toFixed(1)} s</span></li>)}</ol>
-          </div>
-        </div>
-      ) : null}
-      {multi ? (
-        <div className="mt-6 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-surface px-5 py-4">
-          <span className="text-[14px] text-muted">{picked.length ? `${picked.length} picked` : "Pick what you like"} · {lo === hi ? `choose ${hi}` : `${lo} to ${hi}`}</span>
-          <button type="button" onClick={sendPicks} disabled={picked.length < lo} className="ml-auto flex items-center gap-2 rounded-md bg-paper px-4 py-2 text-[13.5px] font-medium text-ground hover:bg-figure disabled:cursor-not-allowed disabled:opacity-40"><IconAgent size={15} /> Send to my agent</button>
-        </div>
-      ) : null}
+          {theme ? (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line px-5 py-3 text-[13px] text-muted md:px-8">
+              {theme.palette ? <span className="flex border border-rule">{[theme.palette.ground, theme.palette.surface, theme.palette.figure, theme.palette.accent].map((h, i) => <span key={i} className="h-4 w-4" style={{ background: h }} />)}</span> : null}
+              <span>Shown in your look</span>
+              {theme.label.split(" · ").map((name) => <span key={name} className="tag">{name}</span>)}
+            </div>
+          ) : null}
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        {!none ? <button type="button" onClick={() => { setNone(true); setReply(null); }} className="text-[13.5px] text-muted underline decoration-faint underline-offset-4 hover:text-figure">None of these</button> : (
-          <div className="flex w-full max-w-[640px] gap-2">
-            <input autoFocus value={noneText} onChange={(e) => setNoneText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") sayNone(); }} placeholder="What would you rather see? (optional)" className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-[14px] text-figure outline-none placeholder:text-faint focus:border-faint" />
-            <button type="button" onClick={sayNone} className="rounded-md border border-line px-3.5 py-2 text-[13px] text-figure hover:border-faint">Tell my agent</button>
+          <div className={`sheet grid-cols-1 ${cols}`}>
+            {board.options.map((o) => (board.kind === "kit"
+              ? <KitOption key={o.label} o={o} res={res} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
+              : o.structure ? <StructureOption key={o.label} o={o} res={res} theme={theme} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} onChoose={() => (multi ? togglePick(o) : choose(o))} />
+              : <ResourceOption key={o.label} o={o} res={o.id ? res[o.id] : undefined} theme={theme} fragment={fragment} chosen={multi ? picked.includes(o.label) : chosen === o.label} multi={multi} tuned={tuned[o.label]} onChoose={() => (multi ? togglePick(o) : choose(o))} />))}
           </div>
-        )}
-      </div>
 
-      {reply ? (
-        <div className="corner-marks mt-8 rounded-xl border border-paper/50 bg-surface p-5">
-          {id && sent !== false ? (
-            <>
-              <div className="flex items-center gap-2 text-[15px] font-medium">{sent ? <IconCheck size={16} className="text-paper" /> : <span className="h-2 w-2 animate-pulse rounded-full bg-paper" />} {sent ? "Sent to your agent." : "Sending to your agent…"}</div>
-              <p className="mt-2 text-[13.5px] text-muted">{sent ? "If it is waiting, it already has your choice and keeps going. You can close this tab." : "One moment."}</p>
-              <details className="mt-3 text-[13px] text-muted">
-                <summary className="cursor-pointer hover:text-figure">If your agent was not waiting, paste this line in the chat</summary>
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-md bg-ground px-3 py-2 font-mono text-[13px] text-figure">{reply}</code>
-                  <button type="button" onClick={async () => setCopied(await copyText(reply))} className="flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-[12.5px] text-figure hover:border-faint"><IconCopy size={13} /> {copied ? "Copied" : "Copy"}</button>
+          {multi && sequence ? (
+            <section className="mt-12 border-t border-rule">
+              <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 px-5 py-5 md:px-8">
+                <div className="min-w-0">
+                  <p className="text-[13px] text-muted">Your sequence</p>
+                  <h2 className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-serif text-[28px] leading-none tracking-[-0.02em]">
+                    {sequence.title.split(" → ").map((part, k) => <span key={k} className="flex items-center gap-3">{k ? <IconArrow size={18} className="text-muted" /> : null}{part}</span>)}
+                  </h2>
                 </div>
-              </details>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-2 text-[14px] font-medium"><IconCheck size={16} className="text-paper" /> {sent === false ? "The site could not be reached. Paste this line in the chat with your agent:" : copied ? "Copied. Paste this line in the chat with your agent:" : "Paste this line in the chat with your agent:"}</div>
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-md bg-ground px-3 py-2 font-mono text-[13px] text-figure">{reply}</code>
-                <button type="button" onClick={async () => setCopied(await copyText(reply))} className="flex items-center gap-1.5 rounded-md bg-paper px-3 py-2 text-[12.5px] font-medium text-ground hover:bg-figure"><IconCopy size={13} /> Copy</button>
+                <span className="tag">{+sequence.segments.reduce((a, x) => a + x.seconds, 0).toFixed(1)} s</span>
               </div>
-            </>
-          )}
-          {chosen || picked.length ? <p className="mt-3 text-[13px] text-muted">It is also in <Link href="/kit" className="text-figure underline decoration-faint underline-offset-4">your kit</Link>, where every choice adds up.</p> : null}
+              <div className="sheet grid-cols-1 md:grid-cols-2">
+                <div className="relative aspect-video bg-black">{sequence.segments.some((x) => x.src) ? <ClipReel segments={sequence.segments} theme={theme} /> : <ScriptPlayer beats={sequence.beats} duration={sequence.duration} theme={theme} title="sequence" compact />}</div>
+                <ol className="text-[13.5px]">
+                  {sequence.segments.map((x, k) => (
+                    <li key={k} className="grid grid-cols-[30px_minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-line px-4 py-3 last:border-b-0">
+                      <span className="num text-[18px]">{String(k + 1).padStart(2, "0")}</span>
+                      <span className="flex min-w-0 flex-wrap gap-x-2 leading-snug"><span className="text-figure">{x.name}</span>{x.what ? <span className="text-muted">{x.what}</span> : null}</span>
+                      <span className="font-mono text-[11.5px] text-faint">{+x.seconds.toFixed(1)} s</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </section>
+          ) : null}
+        </div>
+
+        {/* your decision, beside the work */}
+        <aside className={`flex flex-col gap-7 border-t-4 px-5 pb-16 pt-7 md:px-8 xl:sticky xl:top-[52px] xl:h-[calc(100dvh-52px)] xl:overflow-y-auto xl:border-l xl:border-l-line xl:px-6 ${edge} ${multi ? "xl:pb-24" : "xl:pb-10"}`}>
+          <div>
+            <h2 className="font-serif text-[34px] leading-[0.98] tracking-[-0.02em]">{reply ? (chosen ? `You chose ${chosen}` : "Your answer") : multi ? (lo === hi ? `Pick ${hi}` : `Pick ${lo} to ${hi}`) : "Choose one"}</h2>
+            {!reply ? <p className="mt-3 text-[14px] leading-snug text-muted">{multi ? "Pick what you like, then send them to your agent as one line." : "Compare them playing. Your choice goes back to your agent as one line."}</p> : null}
+          </div>
+
+          {reply ? (
+            <div className={`border ${sent ? "border-ok" : sent === false ? "border-warn" : "border-paper"}`}>
+              {id && sent !== false ? (
+                <>
+                  <div className={`flex items-center gap-2.5 px-4 py-3 text-[14px] font-medium text-ground ${sent ? "bg-ok" : "bg-paper"}`}>{sent ? <IconCheck size={16} /> : <span className="h-2 w-2 animate-pulse bg-ground motion-reduce:animate-none" />} {sent ? "Sent to your agent." : "Sending to your agent…"}</div>
+                  <p className="px-4 py-3 text-[13.5px] leading-snug text-muted">{sent ? "If it is waiting, it already has your choice and keeps going. You can close this tab." : "One moment."}</p>
+                  <details className="border-t border-line text-[13px] text-muted">
+                    <summary className="cursor-pointer px-4 py-3 leading-snug hover:bg-figure hover:text-ground">If your agent was not waiting, paste this line in the chat</summary>
+                    <ReplyLine line={reply} label={copied ? "Copied" : "Copy"} onCopy={async () => setCopied(await copyText(reply))} />
+                  </details>
+                </>
+              ) : (
+                <>
+                  <div className={`flex items-start gap-2.5 px-4 py-3 text-[14px] font-medium leading-snug text-ground ${sent === false ? "bg-warn" : "bg-paper"}`}><IconCheck size={16} className="mt-0.5 shrink-0" /> {sent === false ? "The site could not be reached. Paste this line in the chat with your agent:" : copied ? "Copied. Paste this line in the chat with your agent:" : "Paste this line in the chat with your agent:"}</div>
+                  <ReplyLine line={reply} label="Copy" primary onCopy={async () => setCopied(await copyText(reply))} />
+                </>
+              )}
+              {chosen || picked.length ? <p className="border-t border-line px-4 py-3 text-[13px] leading-snug text-muted">It is also in <Link href="/kit" className="text-figure underline decoration-rule underline-offset-4 hover:decoration-figure">your kit</Link>, where every choice adds up.</p> : null}
+            </div>
+          ) : null}
+
+          <div className="border-t border-rule pt-5">
+            {!none ? <button type="button" onClick={() => { setNone(true); setReply(null); }} className="btn">None of these</button> : (
+              <div className="flex flex-col gap-2">
+                <input autoFocus value={noneText} onChange={(e) => setNoneText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") sayNone(); }} placeholder="What would you rather see? (optional)" className="box w-full font-sans text-[14px]" />
+                <button type="button" onClick={sayNone} className="btn w-full">Tell my agent</button>
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {/* boards that take several picks: what is picked so far, and the one send */}
+      {multi ? (
+        <div className="sticky bottom-0 z-30 flex flex-wrap items-stretch border-t border-rule bg-ground">
+          <span className="flex min-h-[52px] items-center px-4 text-[13px] sm:text-[14px] md:px-8">{picked.length ? `${picked.length} picked` : "Pick what you like"}</span>
+          <span className="flex items-center border-l border-line px-3 font-mono text-[12px] text-muted sm:px-4">{range}</span>
+          <span className="flex min-h-[52px] flex-1 items-stretch border-l border-line">
+            {Array.from({ length: Math.max(hi, picked.length) }, (_, k) => <span key={k} className={`num flex w-9 items-center justify-center border-r text-[24px] sm:w-11 ${picked[k] ? "border-ground bg-paper text-ground" : "border-line"}`}>{picked[k] ?? ""}</span>)}
+          </span>
+          <button type="button" onClick={sendPicks} disabled={picked.length < lo} className="btn btn-primary min-h-[52px] border-0 px-6 text-[14px] max-sm:w-full"><IconAgent size={15} /> Send to my agent</button>
         </div>
       ) : null}
     </div>

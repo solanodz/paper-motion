@@ -124,5 +124,18 @@
   "when": [
     "the one phrase that matters",
     "a promise or tagline"
+  ],
+  "needs": [
+    {
+      "kind": "line",
+      "has": [
+        "mark"
+      ],
+      "fill": {
+        "before": "$before",
+        "mark": "$mark",
+        "after": "$after"
+      }
+    }
   ]
 }
