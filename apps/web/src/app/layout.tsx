@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { HeaderNav } from "@/components/header-nav";
+import { LogoMark } from "@/components/logo";
 import { ShaderPreview } from "@/components/shader-preview";
 import { getResource } from "@/lib/registry";
 
@@ -23,14 +24,15 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  // the sign-off: the wordmark as liquid metal, one of the library's own backgrounds, as wide as the page
+  // the sign-off: mark and wordmark as liquid metal (one of the library's own backgrounds), as wide as the page
   const metal = getResource("liquid-metal")?.install.entry as { shader: string; props: Record<string, unknown>; image?: string } | undefined;
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${geistSerif.variable} ${geistPixel.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <header className="sticky top-0 z-40 border-b border-line bg-ground">
           <div className="flex h-[52px] items-stretch justify-between">
-            <Link href="/" className="flex shrink-0 items-center px-4 font-serif text-[19px] tracking-[-0.02em] sm:px-5 sm:text-[21px] md:px-8">
+            <Link href="/" className="flex shrink-0 items-center gap-2 px-4 font-serif text-[19px] tracking-[-0.02em] sm:px-5 sm:text-[21px] md:px-8">
+              <LogoMark size={18} className="sm:h-5 sm:w-5" />
               paper-motion
             </Link>
             {/* reads the pathname: on routes rendered per request it streams in after the shell */}
@@ -51,7 +53,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
           {metal ? (
             <div role="img" aria-label="paper-motion" className="relative">
-              <ShaderPreview entry={{ ...metal, props: { ...metal.props, scale: 0.94 } }} className="aspect-[5/1] min-h-[120px] w-full" />
+              <ShaderPreview
+                entry={{ ...metal, image: undefined, props: { ...metal.props, scale: 0.94, image: "/site/lockup.svg" } }}
+                className="aspect-[5/1] min-h-[120px] w-full"
+              />
               {/* the wordmark sinks into the bottom of the page: black rises over its lower half */}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ground from-15% via-ground/80 via-40% to-transparent to-70%" />
             </div>
