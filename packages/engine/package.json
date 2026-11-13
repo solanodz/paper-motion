@@ -36,6 +36,7 @@
     "templates/",
     "examples/",
     "!examples/**/renders/",
+    "!examples/**/stills/",
     "README.md",
     "CHANGELOG.md"
   ],
