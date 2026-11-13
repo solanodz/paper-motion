@@ -1,0 +1,430 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>landing-film-wide</title>
+<!--
+  paper-motion's own promo, 16:9 (1920×1080, 30 s), for the landing's "The making of a thirty-second film".
+  Make / Videos / Without / a timeline / ↗ — one word a cut, each in another Geist (serif, pixel, mono) on another
+  background → How it looks: "paper-motion" holds still while the brand's backgrounds cut under it, faster, then slower,
+  until one stays (grain-clay); the rest of the film plays on it → the library in a macOS browser, searching "dither"
+  → 164 named pieces of motion → the agent runs `board` in a macOS Terminal → 1 prompt to start → paper-motion in liquid
+  metal on black. The square cut's "Works with" agents beat is left out on purpose.
+  The edit is timed in `e` (the square cut's seconds); everything after the looks beat keeps its old timing in `x`
+  (x = e − SHIFT). TS stretches the edit to 30 s.
+  Render from examples/paper-motion-brand (so /brand resolves):
+    node ../../packages/engine/bin/pamo.mjs render pieces/landing-film-wide/scene.html --dpr 2 --motion-blur 4
+-->
+<style>
+  #stage { overflow: hidden; }
+  .abs { position: absolute; box-sizing: border-box; }
+  .ctr { position: absolute; left: 0; right: 0; text-align: center; white-space: pre; }
+  .mac { position: absolute; box-sizing: border-box; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,.16);
+         box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 30px 80px rgba(0,0,0,.55), 0 10px 30px rgba(0,0,0,.35); }
+  .lights { position: absolute; display: flex; gap: 8px; }
+  .lights i { display: block; width: 13px; height: 13px; border-radius: 50%; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.25); }
+  .lights i:nth-child(1) { background: #ff5f57; } .lights i:nth-child(2) { background: #febc2e; } .lights i:nth-child(3) { background: #28c840; }
+  .ui { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; }
+  .caret { display: inline-block; width: 2px; height: 1.15em; background: #0a84ff; vertical-align: -0.2em; margin-left: 1px; }
+  .cur { display: inline-block; width: 0.6em; height: 1.18em; background: #e6e6e6; vertical-align: -0.24em; }
+  .hl { background: #e9e4d8; color: #000; }
+  .row { position: absolute; left: 0; right: 0; height: 46px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1a1a1a; padding: 0 14px; }
+  .row .k { font-size: 14px; color: #8a8a8a; }
+  .row.on { background: #fff; color: #000; }
+  .row.on .k { color: #000; }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div id="ground" class="abs" style="inset:0"></div>
+  <div id="bgs" class="abs" style="inset:0"></div>
+  <div id="layer" class="abs" style="inset:0"></div>
+  <div id="flash" class="abs" style="background:#fff"></div>
+  <div id="chrome" class="abs" style="inset:0"></div>
+</main>
+<script type="module">
+import { scene, progress, ease, lerp, rng } from 'paper-motion';
+
+const W = 1920, H = 1080, D = 30;
+// the brand's three faces (brand/tokens.json), loaded straight from brand/assets/fonts
+const FONTS = [['Geist Serif', 'GeistSerif-Regular'], ['Geist Mono', 'GeistMono-Variable'], ['Geist Pixel', 'GeistPixel-Square']];
+for (const [fam, file] of FONTS) document.head.append(Object.assign(document.createElement('style'), { textContent: `@font-face{font-family:'${fam}';src:url('/brand/assets/fonts/${file}.woff2');font-weight:100 900}` }));
+await Promise.all(FONTS.map(([fam]) => document.fonts.load(`400 40px '${fam}'`)));
+const NAME = 'paper-motion';
+const SERIF = "'Geist Serif', serif", MONO = "'Geist Mono', monospace", PIXEL = "'Geist Pixel', monospace";
+const PAPER = '#E9E4D8', MUTED = '#8A8A8A';
+const s = scene({ width: W, height: H, fps: 30, duration: D, background: '#000' });
+await document.fonts.ready;
+
+// the edit: the square cut's seconds, with the looks beat added (SHIFT) and the agents beat gone; stretched to 30 s
+const SHIFT = 2.22, E = 25.25 + SHIFT, TS = D / E;
+const $ = (id) => document.getElementById(id);
+const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; };
+const add = (html, parent = $('layer')) => parent.appendChild(el(html));
+const P = (e, a, b, f = ease.linear) => progress(e, a, b, f);
+const on = (e, a, b) => e >= a && e < b;
+const vis = (node, v) => { node.style.display = v ? '' : 'none'; };
+const esc = (x) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const box = (node, x, y, w, h) => Object.assign(node.style, { left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px` });
+
+// scrambled text: resolved from the left; the rest flickers through glyphs until it lands
+const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%&*<>=+#@$';
+function scramble(text, p, t, seed = 1) {
+  if (p <= 0) return '';
+  if (p >= 1) return text;
+  const k = Math.floor(p * text.length), r = rng(seed * 997 + Math.floor(t * 18)).next;
+  let out = '';
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], g = GLYPHS[Math.floor(r() * GLYPHS.length)];
+    out += i < k || c === ' ' || c === '\n' ? c : g;
+  }
+  return out;
+}
+
+// ─── backgrounds: the brand's shader set (brand/shader-set/set.json), one layer each, shown one at a time ──────
+const SET = await fetch('/brand/shader-set/set.json').then((r) => r.json());
+const BG = Object.fromEntries(SET.entries.filter((x) => x.shader && !x.image).map((x) => [x.id, x]));
+BG.dither = { shader: 'Dithering', props: { colorBack: '#000000', colorFront: '#4a4a4a', shape: 'simplex', type: '4x4', size: 2, scale: 0.42, speed: 0.5 } };
+const USED = ['mesh-graphite', 'dither', 'warp-ochre', 'dither-sphere', 'mesh-sage', 'neuro-slate', 'grain-slate', 'grain-clay'];
+const layers = Object.fromEntries(USED.map((id) => {
+  const node = add(`<div class="abs" style="inset:0;display:none"></div>`, $('bgs'));
+  s.shader(node, BG[id].shader, BG[id].props);
+  return [id, node];
+}));
+
+// ─── chrome: the label on top, the site and licence along the foot ───────────────
+const chrome = $('chrome');
+chrome.style.fontFamily = MONO;
+chrome.innerHTML = `
+  <div class="abs" style="left:40px;top:22px;font-size:20px">paper-motion</div>
+  <div class="abs rule" style="left:40px;right:40px;top:56px;height:1px"></div>
+  <div class="abs rule" style="left:40px;right:40px;top:1022px;height:1px"></div>
+  <div class="abs" style="left:40px;top:1036px;font-size:20px">paper-motion.vercel.app</div>
+  <div class="abs" style="right:40px;top:1036px;font-size:20px">free · MIT</div>`;
+
+// ─── 1. the sentence, a word a cut: [from, to, word, face, size, colour, tracking, background] ─────────────
+const WORDS = [
+  [0, 0.5, 'Make', SERIF, 400, '#000', -0.035, 'paper'],
+  [0.5, 1.0, 'Videos', PIXEL, 330, '#fff', 0, 'mesh-graphite'],
+  [1.0, 1.75, 'Without', MONO, 300, '#fff', -0.03, 'dither'],
+  [1.75, 2.25, 'a timeline', SERIF, 330, '#fff', -0.03, 'warp-ochre'],
+  [2.25, 2.75, '↗', MONO, 300, '#000', 0, 'paper'],
+];
+// ─── 2. how it looks: the name holds, the backgrounds cut under it, faster then slower, until clay stays ────
+const LOOKS = [['dither-sphere', .34], ['mesh-sage', .28], ['neuro-slate', .22], ['warp-ochre', .17], ['dither', .14], ['grain-slate', .12],
+  ['mesh-graphite', .11], ['dither-sphere', .11], ['mesh-sage', .12], ['warp-ochre', .15], ['neuro-slate', .2], ['grain-slate', .28]];
+const LOOK0 = 2.75, CHOSEN = 'grain-clay';
+const LOOK_AT = (() => { let a = LOOK0; return LOOKS.map(([id, d]) => { const r = [a, a + d, id]; a += d; return r; }); })();
+const LANDED = LOOK_AT[LOOK_AT.length - 1][1];
+const word = add(`<div class="ctr" style="top:0;line-height:1"></div>`);
+const strike = add(`<div class="abs" style="height:14px;background:#fff;transform-origin:0 50%"></div>`);
+const lookLabel = add(`<div class="ctr" style="top:700px;font-family:${MONO};font-size:24px;color:rgba(255,255,255,.78)"></div>`);
+
+// ─── 3. the library, in a macOS browser ────────────────────────────────────────
+const LIB = [
+  ['whip-pan', 'component'], ['glitch', 'transition'], ['gray-dither', 'background'], ['scramble', 'text effect'],
+  ['dither-slate', 'background'], ['terminal-run', 'block'], ['dither-paper', 'background'], ['mask-reveal', 'transition'],
+  ['dither-sage', 'background'], ['search-type', 'block'], ['dither-clay', 'background'], ['dither-dissolve', 'block'],
+];
+const MARK = 'M6 6H34V13.5H13.5V34H6Z M16.5 16.5H41.5V22.5H22.5V41.5H16.5Z M25.5 25.5H41.5V41.5H25.5Z M44.5 25.5H50.5V50.5H25.5V44.5H44.5Z';
+const ICON = (d, w = 20) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="#a1a1a6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const BW = { x: 220, y: 118, w: 1480, h: 846 }, PILL = { w: 620, h: 36 };
+const browser = add(`<div class="abs" style="left:0;top:0;width:${W}px;height:${H}px;transform-origin:0 0"></div>`);
+const win = add(`<div class="mac ui" style="background:#1c1c1e;left:${BW.x}px;top:${BW.y}px;width:${BW.w}px;height:${BW.h}px"></div>`, browser);
+win.innerHTML = `
+  <div class="abs" style="left:0;right:0;top:0;height:56px;background:linear-gradient(#323234,#2b2b2d);border-bottom:1px solid #000"></div>
+  <div class="lights" style="left:20px;top:21px"><i></i><i></i><i></i></div>
+  <div class="abs" style="left:98px;top:17px;display:flex;gap:22px;align-items:center">
+    ${ICON('<rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M9 4.5v15"/>')}
+    ${ICON('<path d="M15 5l-7 7 7 7"/>')}
+    ${ICON('<path d="M9 5l7 7-7 7"/>').replace('#a1a1a6', '#5c5c60')}
+  </div>
+  <div id="pill" class="abs" style="left:${(BW.w - PILL.w) / 2}px;top:10px;width:${PILL.w}px;height:${PILL.h}px;border-radius:9px;background:#414145;overflow:hidden">
+    <div id="addr" class="abs" style="inset:0;padding:0 14px;font-size:15.5px;line-height:${PILL.h}px;color:#ececec;white-space:pre"></div>
+    <div id="load" class="abs" style="left:0;bottom:0;height:2.5px;background:#0a84ff;width:0"></div>
+  </div>
+  <div class="abs" style="right:22px;top:17px;display:flex;gap:24px">
+    ${ICON('<path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M6 11v8.5h12V11"/>')}
+    ${ICON('<path d="M12 5v14M5 12h14"/>')}
+    ${ICON('<rect x="3.5" y="7.5" width="12" height="12" rx="2.5"/><path d="M8.5 4.5h9.5a2.5 2.5 0 0 1 2.5 2.5v9.5"/>')}
+  </div>
+  <div id="page" class="abs" style="left:0;right:0;top:57px;bottom:0;background:#000;color:#fff">
+    <div class="abs" style="left:0;right:0;top:0;height:64px;border-bottom:1px solid #222"></div>
+    <div class="abs" style="left:40px;top:19px;display:flex;align-items:center;gap:12px">
+      <svg width="24" height="24" viewBox="6 6 44.5 44.5"><path d="${MARK}" fill="#fff"/></svg>
+      <span style="font-family:${SERIF};font-size:25px;letter-spacing:-0.02em">paper-motion</span>
+    </div>
+    <div class="abs" style="right:40px;top:23px;display:flex;gap:30px;font-family:${MONO};font-size:15px;color:#bdbdbd"><span style="color:#fff">Library</span><span>For agents</span><span>Kit</span></div>
+    <div class="abs" style="left:56px;top:104px;font-family:${SERIF};font-size:58px;letter-spacing:-0.03em;line-height:1">The library</div>
+    <div id="head" class="abs" style="left:58px;top:178px;font-family:${MONO};font-size:16px;color:${MUTED};white-space:pre"></div>
+    <div id="search" class="abs" style="left:56px;right:56px;top:212px;height:60px;border:1px solid rgba(255,255,255,.35)">
+      <svg class="abs" style="left:20px;top:18px" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bdbdbd" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+      <div id="q" class="abs" style="left:58px;top:0;right:20px;line-height:58px;font-family:${MONO};font-size:23px;white-space:pre"></div>
+    </div>
+    <div id="rows" class="abs" style="left:56px;right:56px;top:296px;bottom:0;font-family:${MONO}"></div>
+  </div>`;
+const rows = LIB.map(() => add(`<div class="row"><span class="n" style="font-size:21px;white-space:pre"></span><span class="k"></span></div>`, $('rows')));
+const flyer = add(`<div class="abs" style="font-family:${SERIF};color:#fff;white-space:pre;line-height:1;transform-origin:0 0;font-size:230px;letter-spacing:-0.02em"></div>`);
+flyer.textContent = NAME;
+const ROW0 = { x: BW.x + 56 + 260, y: BW.y + 57 + 296 + 23 };
+
+// ─── 4. the number ─────────────────────────────────────────────────────────────
+const num = add(`<div class="abs" style="font-family:${PIXEL};color:#fff;font-size:380px;line-height:1;white-space:pre"></div>`);
+const numCur = add(`<div class="abs" style="background:#fff"></div>`);
+const numLine = add(`<div class="abs" style="height:14px;background:#fff;transform-origin:0 50%"></div>`);
+const numSub = add(`<div class="abs" style="font-family:${MONO};font-size:52px;color:#fff;white-space:pre"></div>`);
+
+// ─── 5. the agent, in a macOS Terminal ─────────────────────────────────────────
+const TW = { x: 250, y: 150, w: 1420, h: 770 };
+const term = add(`<div class="mac ui" style="background:#1e1e1e"></div>`);
+term.innerHTML = `
+  <div class="abs" style="left:0;right:0;top:0;height:52px;background:linear-gradient(#38383a,#2f2f31);border-bottom:1px solid #000"></div>
+  <div class="lights" style="left:20px;top:19px"><i></i><i></i><i></i></div>
+  <div class="abs" style="left:0;right:0;top:0;line-height:52px;text-align:center;font-size:15px;color:#b4b4b8">
+    <svg style="vertical-align:-3px;margin-right:6px" width="17" height="15" viewBox="0 0 17 15"><path d="M1 3.2C1 2 1.9 1 3 1h3.4l1.6 1.8H14c1.1 0 2 .9 2 2V12c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2Z" fill="#6aa7e8"/></svg>my-brand — -zsh — 120×32</div>
+  <div id="tty" class="abs" style="left:26px;right:26px;top:72px;font-family:${MONO};font-size:28px;line-height:1.55;color:#e6e6e6;white-space:pre"></div>`;
+const shape = add(`<div class="abs"></div>`);   // the window, folding into the 1
+
+// ─── 6. one prompt to start ────────────────────────────────────────────────────
+const U = 92;   // the pixel 1, in units: a stem 7 tall, a flag and a 3-wide foot
+const flag = add(`<div class="abs" style="background:#fff;width:${U}px;height:${U}px"></div>`);
+const foot = add(`<div class="abs" style="background:#fff;height:${U}px"></div>`);
+const prompt = add(`<div class="abs" style="font-family:${MONO};font-size:86px;line-height:1.12;color:#fff;white-space:pre"></div>`);
+
+// ─── 7. paper-motion, in liquid metal ──────────────────────────────────────────
+const cv = document.createElement('canvas'), FS = 360, cx = cv.getContext('2d');
+cx.font = `400 ${FS}px ${SERIF}`;
+const m = cx.measureText(NAME), markS = FS * 0.66, gap = FS * 0.16, pad = 70;
+const wordW = m.actualBoundingBoxLeft + m.actualBoundingBoxRight, asc = m.actualBoundingBoxAscent, desc = m.actualBoundingBoxDescent;
+cv.width = Math.ceil(markS + gap + wordW + pad * 2); cv.height = Math.ceil(asc + desc + pad * 2);
+cx.font = `400 ${FS}px ${SERIF}`; cx.fillStyle = cx.strokeStyle = '#fff'; cx.lineWidth = 4; cx.lineJoin = 'round';
+const base = pad + asc;
+cx.save(); cx.translate(pad, base - markS); cx.scale(markS / 44.5, markS / 44.5); cx.translate(-6, -6); cx.fill(new Path2D(MARK)); cx.restore();
+const tx = pad + markS + gap + m.actualBoundingBoxLeft;
+cx.fillText(NAME, tx, base); cx.strokeText(NAME, tx, base);
+const LW = 1420, LH = LW * cv.height / cv.width;
+const logo = add(`<div class="abs" style="width:${LW}px;height:${LH}px;left:${(W - LW) / 2}px;top:${470 - LH / 2}px"></div>`);
+s.shader(logo, 'LiquidMetal', { fit: 'contain', scale: 1, shape: 'none', colorBack: '#00000000', colorTint: '#ffffff', image: cv.toDataURL('image/png'), repetition: 4, softness: 0.05, shiftRed: 0.3, shiftBlue: 0.3, distortion: 0.1, contour: 0.85, angle: 70, speed: 0.8 });
+const visit = add(`<div class="ctr" style="top:612px;font-family:${MONO};font-size:30px;letter-spacing:0;color:#8a8a8a;line-height:1.4;overflow:hidden;height:46px"><span style="display:inline-block">Visit paper-motion.vercel.app</span></div>`);
+
+// ─── the terminal's text ───────────────────────────────────────────────────────
+const LOGIN = 'Last login: Thu Nov 13 15:42:10 on ttys002';
+const PS1 = 'you@studio my-brand % ';
+// what is typed; "> " after a line break is zsh's continuation prompt, printed, not typed
+const CMD = 'npx paper-motion board --url \\\n> --title "How it looks" \\\n> --option mesh-sage --option grain-clay …';
+const typeAt = (() => { const r = rng(7).next; let acc = 0; return [...CMD].map((c, i) => (acc += c === '\n' ? 2.6 : CMD[i - 1] === '\n' || (CMD[i - 2] === '\n' && c === ' ') ? 0 : 0.6 + r() * 0.8)); })();
+const typeEnd = typeAt[typeAt.length - 1];
+const SITE = 'paper-motion.vercel.app', Q = 'dither';
+const LOCK = `<svg style="vertical-align:-1px;margin-right:6px" width="10" height="13" viewBox="0 0 10 13"><rect x=".5" y="5.5" width="9" height="7" rx="1.5" fill="#bdbdbd"/><path d="M2.5 5.5V4a2.5 2.5 0 0 1 5 0v1.5" stroke="#bdbdbd" stroke-width="1.4" fill="none"/></svg>`;
+const flash = $('flash');
+const probe = document.createElement('canvas').getContext('2d');
+probe.font = `400 230px ${SERIF}`; probe.letterSpacing = '-4.6px';
+const flyerW = probe.measureText(NAME).width;
+
+s.update((t) => {
+  const e = t / TS, x = e - SHIFT;   // x: the old timing, for everything after the looks beat
+  const blink = Math.floor(e * 2.4) % 2 === 0;
+
+  // which ground: a word's own, the look on the board, then the chosen one, then light for the end
+  const w = WORDS.find(([a, b]) => on(e, a, b));
+  const look = on(e, LOOK0, LANDED) ? LOOK_AT.find(([a, b]) => on(e, a, b))[2] : null;
+  const lightOn = x >= 20.8;
+  const bg = w ? w[7] : look ?? (lightOn ? 'black' : CHOSEN);   // the end: plain black under the metal
+  $('ground').style.background = bg === 'paper' ? PAPER : '#000';
+  for (const [id, node] of Object.entries(layers)) vis(node, id === bg);
+  const bright = bg === 'paper';
+  // on the chosen look the ground runs from black to light sand: the chrome inverts against whatever is under it
+  const mixed = bg === CHOSEN;
+  chrome.style.mixBlendMode = mixed ? 'difference' : 'normal';
+  chrome.style.color = mixed ? 'rgba(255,255,255,.75)' : bright ? 'rgba(0,0,0,.62)' : 'rgba(255,255,255,.6)';
+  chrome.querySelectorAll('.rule').forEach((r) => { r.style.background = mixed ? 'rgba(255,255,255,.35)' : bright ? 'rgba(0,0,0,.25)' : 'rgba(255,255,255,.22)'; });
+
+  // 1 · the sentence, cut word by word, each in another face
+  vis(word, false); vis(strike, false); vis(lookLabel, false);
+  if (w) {
+    const [a, b, txt, fam, size, col, tr] = w;
+    vis(word, true);
+    word.textContent = txt;
+    Object.assign(word.style, { fontFamily: fam, fontSize: `${size}px`, color: col, letterSpacing: `${tr}em`, top: `${540 - size * 0.62}px` });
+    const k = 1 + 0.06 * (1 - ease.outCubic(P(e, a, a + 0.35)));
+    const go = ease.outExpo(P(e, a, a + 0.4));
+    word.style.transform = txt === '↗' ? `translate(${-40 + 40 * go}px, ${40 - 40 * go}px)` : `scale(${k})`;
+    if (txt === 'a timeline') {
+      vis(strike, true);
+      const rg = document.createRange(); rg.selectNodeContents(word);
+      const tw = rg.getBoundingClientRect().width / k;
+      box(strike, 960 - tw / 2 - 16, 538, tw + 32, 14);
+      strike.style.transform = `scaleX(${ease.inOutCubic(P(e, a + 0.08, a + 0.32))})`;
+    }
+  }
+
+  // 2 · how it looks: the name stays put while the looks cut under it
+  if (e >= LOOK0 && x < 3.42) {
+    vis(word, true); vis(lookLabel, true);
+    word.textContent = NAME;
+    Object.assign(word.style, { fontFamily: SERIF, fontSize: '230px', color: '#fff', letterSpacing: '-0.02em', top: `${540 - 230 * 0.62}px` });
+    word.style.transform = `scale(${1 + 0.05 * (1 - ease.outCubic(P(e, LOOK0, LOOK0 + 0.4)))})`;
+    const landed = e >= LANDED;
+    lookLabel.innerHTML = landed
+      ? `<span style="display:inline-block;padding:6px 14px;border:1px solid rgba(255,255,255,.7);color:#fff;transform:scale(${1 + 0.15 * (1 - ease.outBack(P(e, LANDED, LANDED + 0.3)))})">✓ how it looks · ${CHOSEN}</span>`
+      : `how it looks · ${look}`;
+  }
+
+  // 3 · the browser: a Safari window opens; the name flies into its address bar and becomes the address
+  const bOn = on(x, 3.38, 8.05);
+  vis(browser, bOn); vis(flyer, on(x, 3.38, 3.95));
+  if (bOn) {
+    const o = ease.outCubic(P(x, 3.38, 3.7));
+    win.style.opacity = o; win.style.transform = `scale(${0.94 + 0.06 * o})`;
+    const f = ease.inOutExpo(P(x, 3.42, 3.88));
+    const px = BW.x + (BW.w - PILL.w) / 2 + 14, py = BW.y + 10 + 9;
+    Object.assign(flyer.style, { left: `${lerp((W - flyerW) / 2, px, f)}px`, top: `${lerp(540 - 230 * 0.62, py, f)}px`, transform: `scale(${lerp(1, 15.5 / 230, f)})` });
+
+    // the address bar: focused and typed, then entered: the page loads, the address settles in the middle with a lock
+    const addr = $('addr'), pill = $('pill');
+    const focused = x < 4.6;
+    pill.style.boxShadow = focused ? '0 0 0 3.5px rgba(10,132,255,.55)' : 'none';
+    if (x < 3.9) { addr.style.textAlign = 'left'; addr.innerHTML = ''; }
+    else if (focused) {
+      const typed = SITE.slice(0, 12 + Math.round(P(x, 4.0, 4.55) * (SITE.length - 12)));
+      addr.style.textAlign = 'left';
+      addr.innerHTML = `${esc(typed)}${blink || x < 4.6 ? '<span class="caret"></span>' : ''}`;
+    } else { addr.style.textAlign = 'center'; addr.innerHTML = `${LOCK}${SITE}`; }
+    const ld = P(x, 4.6, 4.85);
+    $('load').style.width = `${ld * 100}%`; $('load').style.opacity = x < 4.95 ? 1 : 0;
+
+    // the page: the library loads, its search takes the focus, "dither" is typed and the list follows
+    const page = $('page');
+    page.style.opacity = ease.outCubic(P(x, 4.7, 4.9));
+    const q = Q.slice(0, Math.round(P(x, 5.6, 6.1) * Q.length));
+    const sFocus = x >= 5.3;
+    $('search').style.borderColor = sFocus ? '#fff' : 'rgba(255,255,255,.35)';
+    $('search').style.boxShadow = sFocus ? '0 0 0 4px rgba(255,255,255,.14)' : 'none';
+    $('q').innerHTML = q ? `${esc(q)}${blink || x < 6.2 ? '<span class="caret" style="background:#fff"></span>' : ''}`
+      : `${sFocus && blink ? '<span class="caret" style="background:#fff;margin:0 2px 0 0"></span>' : ''}<span style="color:#6a6a6a">Search 164 pieces of motion</span>`;
+    $('head').textContent = x < 6.2 ? '164 pieces of motion' : scramble('6 results for "dither"', P(x, 6.2, 6.6), t, 3);
+    const show = q ? LIB.map((r, i) => [r, i]).filter(([[n]]) => n.includes(q)) : LIB.map((r, i) => [r, i]);
+    rows.forEach((r) => vis(r, false));
+    show.forEach(([[n, k], i], j) => {
+      const r = rows[i];
+      const inT = q ? 1 : P(x, 4.78 + j * 0.04, 4.98 + j * 0.04);
+      if (inT <= 0 || j > 9) return;
+      vis(r, true);
+      r.style.top = `${j * 46}px`; r.style.opacity = inT; r.style.transform = `translateY(${(1 - ease.outCubic(inT)) * 14}px)`;
+      const at = q ? n.indexOf(q) : -1, sel = q === Q && j === 0 && x >= 6.75;
+      r.querySelector('.n').innerHTML = at < 0 ? esc(n) : `${esc(n.slice(0, at))}<span class="${sel ? '' : 'hl'}">${esc(q)}</span>${esc(n.slice(at + q.length))}`;
+      r.querySelector('.k').textContent = sel ? `${k}  ↵` : k;
+      r.classList.toggle('on', sel);
+    });
+
+    // the camera leans in on the chosen row
+    const z = ease.inOutCubic(P(x, 6.85, 8.05));
+    browser.style.transform = `translate(${ROW0.x * -0.16 * z}px, ${ROW0.y * -0.16 * z}px) scale(${1 + 0.16 * z})`;
+  }
+
+  // 4 · the number: counted up in pixel type, its rule growing under it, the words decoding below
+  const nOn = on(x, 8.05, 11.5);
+  vis(num, nOn); vis(numLine, nOn); vis(numSub, nOn); vis(numCur, false);
+  const NX = 420, NY = 250, DW = 380 * 0.6 * 3;
+  if (nOn) {
+    const c = Math.round(164 * ease.outCubic(P(x, 8.1, 9.25)));
+    num.textContent = String(c).padStart(3, '0');
+    Object.assign(num.style, { left: `${NX}px`, top: `${NY}px` });
+    box(numLine, NX, NY + 400, DW + 40, 14);
+    numLine.style.transform = `scaleX(${c / 164})`;
+    Object.assign(numSub.style, { left: `${NX}px`, top: `${NY + 450}px` });
+    numSub.textContent = scramble('named pieces of motion', P(x, 9.2, 9.7), t, 5);
+    if (x >= 9.55) {
+      // the cursor blinks, then opens into a white field
+      const g = ease.inExpo(P(x, 11.15, 11.5));
+      vis(numCur, g > 0 || Math.floor((x - 9.55) * 2.4) % 2 === 0);
+      box(numCur, lerp(NX + DW + 70, 0, g), lerp(NY + 40, 0, g), lerp(380 * 0.42, W, g), lerp(380 * 0.74, H, g));
+    }
+  }
+
+  // white fields between beats: after the number, and before the logo
+  const white = on(x, 11.5, 11.95) || on(x, 20.8, 21.25);
+  vis(flash, white || on(x, 11.95, 12.2) || on(x, 20.35, 20.8));
+  flash.style.opacity = 1;
+  if (white) box(flash, 0, 0, W, H);
+
+  // 5 · the terminal: the white field closes onto its cursor; the command types itself; the answer comes back
+  const tOn = on(x, 11.95, 16.45);
+  vis(term, tOn);
+  if (tOn) {
+    box(term, TW.x, TW.y, TW.w, TW.h);
+    const k = typeAt.findIndex((v) => v > (x - 12.35) / (15.0 - 12.35) * typeEnd);
+    const n = x >= 15.0 ? CMD.length : x < 12.35 ? 0 : (k < 0 ? CMD.length : k);
+    const muted = (s2) => `<span style="color:#8a8a8a">${s2}</span>`;
+    const ps1 = `<span style="color:#9ccf8a">you@studio</span> <span style="color:#7fb4e6">my-brand</span> % `;
+    const typed = esc(CMD.slice(0, n)).replace(/\n&gt; /g, `\n${muted('&gt;')} `);
+    let html = `${muted(LOGIN)}\n${ps1}`;
+    if (x >= 16.2) html = `${ps1}`;   // cleared
+    else {
+      html += typed;
+      if (x >= 15.3) html += `\n<span style="text-decoration:underline;text-underline-offset:7px">https://paper-motion.vercel.app/b/cp3unv84</span>`;
+      if (x >= 15.55) html += `\n<span style="color:#3ecf8e">✓</span> paper-motion: C · grain-clay (bg-3)\n${ps1}`;
+    }
+    const typing = x < 15.0 || x >= 15.55;
+    $('tty').innerHTML = html + (typing && (blink || x < 15.0) ? '<span class="cur"></span>' : '');
+    // the white field closing onto the cursor
+    if (x < 12.2) {
+      const g = ease.outExpo(P(x, 11.95, 12.2)), cr = $('tty').querySelector('.cur')?.getBoundingClientRect();
+      const tx2 = cr ? cr.left : TW.x + 380, ty2 = cr ? cr.top : TW.y + 116;
+      box(flash, lerp(0, tx2, g), lerp(0, ty2, g), lerp(W, 17, g), lerp(H, 33, g));
+    }
+  }
+
+  // the window folds into a rounded square, an app icon, then into the stem of a 1
+  const SX = 960 - U / 2, SY = 540 - U * 3.5;
+  const fOn = on(x, 16.45, 20.35);
+  vis(shape, fOn);
+  if (fOn) {
+    const a = ease.inOutExpo(P(x, 16.45, 16.95)), b = ease.inOutExpo(P(x, 17.05, 17.45));
+    const sq = 230;
+    let sx = lerp(TW.x, 960 - sq / 2, a), sy = lerp(TW.y, 540 - sq / 2, a), sw = lerp(TW.w, sq, a), sh = lerp(TW.h, sq, a);
+    sx = lerp(sx, SX, b); sy = lerp(sy, SY, b); sw = lerp(sw, U, b); sh = lerp(sh, U * 7, b);
+    box(shape, sx, sy, sw, sh);
+    shape.style.borderRadius = `${lerp(14, 54, a) * (1 - b)}px`;
+    shape.style.background = b > 0 ? '#fff' : a > 0.6 ? '#8a8a8a' : '#1e1e1e';
+    shape.style.boxShadow = b > 0 ? 'none' : '0 30px 80px rgba(0,0,0,.5)';
+    shape.style.border = a < 0.6 ? '1px solid rgba(255,255,255,.16)' : 'none';
+  }
+
+  // 6 · the 1 builds its flag and foot, slides left, and the words decode beside it
+  const oneOn = on(x, 17.7, 20.35);
+  vis(flag, oneOn); vis(foot, oneOn); vis(prompt, oneOn);
+  if (oneOn) {
+    const grow = ease.outExpo(P(x, 17.7, 17.95)), back = ease.inExpo(P(x, 19.95, 20.2));
+    const slide = ease.inOutCubic(P(x, 17.9, 18.45)) * (1 - ease.inOutCubic(P(x, 20.0, 20.3)));
+    const sx = SX - 330 * slide;
+    box(shape, sx, SY, U, U * 7);
+    const g = grow * (1 - back);
+    box(flag, sx - U * g, SY + U, U * g, U);
+    box(foot, sx - U * g, SY + U * 6, U + 2 * U * g, U);
+    Object.assign(prompt.style, { left: `${sx + U * 2 + 150}px`, top: `${540 - 96}px` });
+    prompt.textContent = x >= 19.95 ? scramble('prompt\nto start', 1 - P(x, 19.95, 20.15), t, 9) : scramble('prompt\nto start', P(x, 18.15, 18.9), t, 9);
+  }
+
+  // the stem opens into a white field, which goes out to black under the metal
+  if (on(x, 20.35, 20.8)) {
+    const g = ease.inOutExpo(P(x, 20.35, 20.8));
+    box(flash, lerp(SX, 0, g), lerp(SY, 0, g), lerp(U, W, g), lerp(U * 7, H, g));
+  }
+  if (on(x, 20.8, 21.25)) flash.style.opacity = 1 - ease.outCubic(P(x, 20.8, 21.1));
+
+  // 7 · paper-motion, in liquid metal on black, slides in; the address rises under it, small and grey, in mono
+  vis(logo, lightOn); vis(visit, lightOn);
+  if (lightOn) {
+    const l = ease.outExpo(P(x, 20.85, 21.7));
+    logo.style.transform = `translateX(${(1 - l) * -620}px)`;
+    logo.style.filter = `blur(${(1 - l) * 18}px)`;
+    const v = ease.outExpo(P(x, 22.6, 23.3));
+    visit.firstChild.style.transform = `translateY(${(1 - v) * 100}%)`;
+  }
+});
+
+await s.start();
+</script>
+</body>
+</html>
