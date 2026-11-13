@@ -122,7 +122,11 @@ export function llmsTxt(items, site, { full = false } = {}) {
    (an approval, a change to make, or an edit they already made by hand: the brief, words on screen, lengths, joins,
    order; build on those, never undo them). Quick renders for review: \`chain <piece> --drafts\` (each part on its
    own) and \`chain <piece> --draft\` (joined). Only when the user can't open a browser, run the same stages in the
-   chat.
+   chat. Between your turns keep \`npx paper-motion piece listen <piece>\` running in the background: it returns as
+   soon as the user needs you (a message, an answer, an approval), with lines like review's, so they never have to
+   come back to the chat (start it again after; exit 3 means nothing in 9 minutes). Say what you are doing with
+   \`piece working <piece> <stage> --on "…"\`, ask with \`piece ask <piece> "…"\` (they answer in the studio), and
+   reply there with \`piece say <piece> "…"\`. The studio only shows what it can check about you.
 3. **Interview.** Follow the \`make-video\` skill. Without the skills, ask at least: what the brand is in one plain
    line; what this video is for and where it plays (format: 16:9, 9:16, 1:1); its ground, text and accent colors or
    "no brand yet"; three words for the feel and one thing it must never look like; the one action at the end.
@@ -164,9 +168,11 @@ export function llmsTxt(items, site, { full = false } = {}) {
    builds the video itself from what they kept, and then they edit it there, live (words, how each part arrives,
    backgrounds, settings, lengths, transitions, order, adding and swapping parts, colours, type, pace); every edit
    reaches you as a line. Review \`video\` to wait for their approval; they can render the final from the studio. \`chain --check\` warns when the total drifts from the brief's
-   length. Boards you share while a piece is open also appear in its studio (Look or Structure), so the user finds them
-   there; if your shell caps how long a command may run, share with \`--no-wait\` and then
-   \`npx paper-motion board --await <id> --wait 2\` until it prints the line (exit code 3 = not yet).
+   length. While a piece is open and its studio runs, \`board --url\` puts the options into the studio, on the step
+   they decide (How it looks for palettes, type, backgrounds and moves; Your video for transitions and structures),
+   instead of making a link; it waits there and prints the same reply line, and a palette, font pair or background
+   the user picks is applied already. \`--link\` makes a link anyway. If your shell caps how long a command may run,
+   use \`--no-wait\` and then \`npx paper-motion board --await <c1…> --wait 2\` (exit code 3 = not yet).
 
 ## Choosing well: the metadata
 

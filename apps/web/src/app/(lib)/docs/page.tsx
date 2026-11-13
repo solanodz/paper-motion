@@ -8,12 +8,13 @@ export const metadata: Metadata = { title: "For agents" };
 
 // the same prompt the home page hands to the user
 
-// the four stages of a piece, the same ones the studio shows (the user sees three steps: What it says, Your video,
-// Export): what the agent prepares before handing each one over
+// the five stages of a piece (the user sees four steps on one page: What you want to say, which holds the brief and
+// the content, How it looks, Your video, Export): what the agent prepares before handing each one over
 const STAGES: { t: string; id: string; d: string; cmds: string[] }[] = [
   { t: "Brief", id: "brief", d: "Interview the user, then fill the five fields: what, who, format, tone and action.", cmds: ["piece init"] },
   { t: "Content", id: "inventory", d: "Gather what the video can really show from their site, files and brand. They keep, remove or correct each thing.", cmds: ["inventory --from"] },
-  { t: "Video", id: "video", d: "The studio builds the first cut from what they kept. They edit it themselves; you do what they ask for.", cmds: ["piece review video"] },
+  { t: "Look", id: "look", d: "Colours, type, background and movement, chosen by watching their own sentence. Done already when the brand settles them; you may suggest options.", cmds: ["board --url"] },
+  { t: "Video", id: "video", d: "The studio builds the first cut. They edit it scene by scene; you listen in the background and do what they ask for.", cmds: ["piece listen"] },
   { t: "Final", id: "final", d: "The full render, from the studio or by you.", cmds: ["chain --motion-blur 5"] },
 ];
 
@@ -38,11 +39,20 @@ const RUN: { stage: string; id: string; steps: Step[] }[] = [
     { say: "A command found in a README has no output until it runs. Run it and pipe what it really printed; never invent one." },
     { cmd: "<the command> 2>&1 | npx paper-motion inventory paper-motion --output <id>" },
     { cmd: "npx paper-motion piece review paper-motion inventory" },
-    { say: "In the studio the user keeps, removes or corrects each thing, stars what must appear and adds their own. When they press Make my video, the studio builds the first cut itself: the planner's structure, every part filled with their content." },
+    { say: "In the studio the user keeps, removes or corrects each thing, stars what must appear and adds their own, then moves on to How it looks." },
+  ] },
+  { stage: "Look", id: "look", steps: [
+    { say: "If the brand already settles colours, type and a background, this step opens done. To suggest options, use the same board command: with the studio running they go into How it looks, not into a link." },
+    { cmd: `npx paper-motion board --url --title "Looks for paper-motion" --ask "Which feels like it?" --option sage-night --option slate-sea --option clay-desert --option ochre-sun` },
+    { say: "It prints where they show and waits for the pick, then the same reply line: paper-motion: C · clay-desert. A palette, font pair or background they pick is already applied to brand/. When they press Make my video, the studio builds the first cut itself: the planner's structure, every scene filled with their content." },
   ] },
   { stage: "Video", id: "video", steps: [
-    { cmd: "npx paper-motion piece review paper-motion video" },
-    { say: "The user edits it live: words and numbers, how a sentence arrives, backgrounds, settings, lengths, transitions, order, and the whole video's colours, type and pace. Each edit prints as one line; build on them, never undo them. Do only what they ask for in Ask your agent (a changes line), then review again." },
+    { cmd: "npx paper-motion piece review paper-motion video --no-wait" },
+    { say: "Then keep listening in the background, so the user never has to come back to the chat. It returns as soon as they need you, with lines like review's; start it again after (exit 3 means nothing in 9 minutes)." },
+    { cmd: "npx paper-motion piece listen paper-motion" },
+    { say: "The user edits it scene by scene: text, animation, background, speed and the transition into the next; order, scenes added or removed. Each edit is a line; build on them, never undo them. Do only what they ask for in Ask your agent (a changes line). Say what you are doing, and answer them in the studio:" },
+    { cmd: `npx paper-motion piece working paper-motion video --on "warmer words for the ending"` },
+    { cmd: `npx paper-motion piece say paper-motion "Done: the ending is warmer now."` },
   ] },
   { stage: "Final", id: "final", steps: [
     { say: "The user renders it from the studio's Export step. Or render it yourself:" },
@@ -53,9 +63,9 @@ const RUN: { stage: string; id: string; steps: Step[] }[] = [
 ];
 
 const WHO: [string, React.ReactNode][] = [
-  ["The user", "Sees each stage in the studio, a local page, and edits the video there themselves: words, backgrounds, transitions, lengths, order, colours and type. Approves each stage or asks for changes."],
-  ["The agent", <>Hands over a stage with <code className="font-mono text-[13px] text-figure">piece review</code> and waits. The decision arrives on its own, as lines the command prints: an approval, a change to make, or an edit the user already made. Build on those edits, never undo them.</>],
-  ["Boards", "For the brand's look before a piece (palette, type, backgrounds, moves): links the user opens to compare options and choose. Inside a piece the user changes the look in the studio."],
+  ["The user", "Makes the piece on one page, the studio, in four steps: what it says, how it looks, the video scene by scene, export. Edits everything there themselves and approves each step."],
+  ["The agent", <>Hands over a stage with <code className="font-mono text-[13px] text-figure">piece review</code>, then keeps <code className="font-mono text-[13px] text-figure">piece listen</code> running in the background: what the user does arrives on its own, as lines (an approval, a change to make, an answer, a pick, an edit they already made). Build on those edits, never undo them. The studio only shows what it can check about the agent: listening, working on something, asking, or not connected.</>],
+  ["Boards", "Visual choices the agent suggests. While a piece is open and its studio runs, they appear in the studio on the step they decide; otherwise they are links on this site the user opens to compare and choose."],
   ["Without a browser", "Only when the user can't open one, run the same stages in the chat."],
 ];
 
@@ -77,13 +87,16 @@ const COMMANDS: Group[] = [
       [`npx paper-motion piece init <piece> --what "…" --who "…" --format "…" --tone "…" --action "…"`, "Writes the brief, after the interview."],
       ["npx paper-motion piece review <piece> <stage>", "Hands a stage to the user. The first time it opens the studio in their browser. It waits for their decision and prints what they did, one line each. It refuses while an earlier stage is not approved; --skip moves on without it, only when the user agreed."],
       ["npx paper-motion piece working <piece> <stage>", "Marks a stage as yours: when you start it, or after the user asked for a change. The studio shows you are on it. Fix it, re-render, then review again."],
-      ["npx paper-motion piece ask <piece> \"<question>\"", "Run it right before you ask the user anything in the chat. The studio shows the question across the top with a button back to you, so they are never left waiting in the wrong place. The next review or working clears it."],
+      ["npx paper-motion piece listen <piece>", "Keep it running in the background between your turns. It returns as soon as the user needs you (a message, an answer, an approval, a pick) with lines like review's, and marks them read; exit 3 after 9 minutes with nothing: start it again."],
+      ["npx paper-motion piece ask <piece> \"<question>\"", "The studio shows the question with a box to answer it; their answer reaches piece listen. Ask it in the chat too. It closes when they answer, or with your next review or working."],
+      ["npx paper-motion piece working <piece> <stage> --on \"…\"", "Says what you are doing, in plain words; the studio shows it with how long, until you listen or review again (20 minutes at most)."],
+      ["npx paper-motion piece say <piece> \"…\"", "A short reply the user reads in the studio, under Ask your agent."],
       ["npx paper-motion piece status <piece>", "Shows where everything stands and what you haven't read."],
       ["npx paper-motion studio --stop", "Ends the background studio when the piece is done."],
     ],
   },
   {
-    id: "boards", title: "Boards", stages: "the brand", note: "One link per visual decision, with two to four options from the registry.",
+    id: "boards", title: "Boards", stages: "look, video", note: "Two to four options from the registry for one visual decision. With a piece open and its studio running they go into the studio (no link); --link makes one anyway.",
     rows: [
       [`npx paper-motion search --type background --mode dark --near "#0a0f1f,#eef1f8,#3d6bff"`, "Filters the registry by its metadata. With --near it sorts by color fit to the brand's ground, text and accent."],
       [BOARD_CMD, "Prints the board's link, keeps running, and prints the choice the moment the user makes it (it waits 10 minutes by default). The options play live in the look you pass."],
@@ -125,7 +138,7 @@ const COMMANDS: Group[] = [
   },
 ];
 
-const NAV: [string, string][] = [["#prompt", "Starter prompt"], ["#stages", "Four stages"], ["#run", "One piece, start to finish"], ["#commands", "Commands"], ["#entry", "Entry points"]];
+const NAV: [string, string][] = [["#prompt", "Starter prompt"], ["#stages", "Five stages"], ["#run", "One piece, start to finish"], ["#commands", "Commands"], ["#entry", "Entry points"]];
 
 export default function DocsPage() {
   const { site, count } = getIndex();
@@ -177,12 +190,12 @@ export default function DocsPage() {
 
       <section id="stages" className="scroll-mt-[96px] pt-20">
         <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 pb-9">
-          <h2 className="title">Four stages</h2>
+          <h2 className="title">Five stages</h2>
           <p className="max-w-[46ch] pb-1 text-[15px] leading-relaxed text-muted">
-            A video is made in four stages. The user approves each one in the studio, and edits the video there themselves. Nothing moves on until they do.
+            A video is made in five stages; the user sees them as four steps on one page, the studio (the brief and the content share the first). They decide each one there, and edit the video themselves.
           </p>
         </div>
-        <ol className="sheet sm:grid-cols-2 xl:grid-cols-4">
+        <ol className="sheet sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {STAGES.map((s, i) => (
             <li key={s.t} className="group relative flex gap-4 px-4 pb-4 pt-3.5 transition-colors duration-150 hover:bg-paper hover:text-ground sm:min-h-[196px] sm:flex-col xl:min-h-[232px] sm:gap-0">
               <span className="num w-11 shrink-0 text-[26px] group-hover:!text-ground">0{i + 1}</span>

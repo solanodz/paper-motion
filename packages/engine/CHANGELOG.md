@@ -2,6 +2,84 @@
 
 All notable changes to the `paper-motion` npm package. Dates are release dates on npm.
 
+## 0.5.0 · 2026-11-13
+
+**Studio v2: one page, four steps, an honest agent.** The user makes a piece in the studio alone (What you want to
+say, How it looks, Your video, Export); the agent listens in the background, and its visual choices come into the
+studio instead of links. Five phases, one end-to-end check (`scripts/check-studio.mjs`, 53 checks).
+
+Studio v2, phase 1 ([spec](../../docs/spec-studio-v2.md), [plan](../../docs/plan-studio-v2.md)): an honest connection with the agent.
+
+- **`piece listen <piece>`**: the agent keeps it running in the background between turns. It returns as soon as the
+  user does something that needs the agent (a message, an answer, an approval, a choice), printing it as lines and
+  marking them read, or exits 3 after 9 minutes with nothing. The user no longer has to go to the chat to say
+  "continue".
+- **The studio only says what it can check about the agent:** listening (a command of the agent is waiting on the
+  piece, and its process is alive), working on something (said with `piece working … --on "…"`, for up to 20
+  minutes), asking you, or not connected. "Your agent waits" and "tell your agent continue" are gone. A command
+  that was killed stops showing as listening at once.
+- **Questions are answered in the studio.** `piece ask` shows the question with an answer box; the answer reaches
+  `piece listen` as an `answered "…": "…"` line. **Answered in the chat** closes it.
+- **Ask your agent is a thread:** each message shows Sent, then Read with the time; `piece say <piece> "…"` puts the
+  agent's reply there. A message no longer moves the stage to "changes".
+- `scripts/check-studio.mjs` drives a fresh project end to end (headless Chrome for the user, real `pamo` commands
+  for the agent).
+
+Studio v2, phase 2: one page, four steps, and How it looks.
+
+- **A new stage, `look`**, between `inventory` and `video` (`STAGES`: brief, inventory, look, video, final). A
+  project whose brand already settles colours, type and a background starts with it done; older pieces get it as
+  approved.
+- **The stepper:** What you want to say · How it looks · Your video · Export. Steps ahead stay locked until reached;
+  earlier ones reopen. Style moved into How it looks.
+- **How it looks:** colours, type, background and movement (pace, and how words arrive), each a still card. Pointing
+  at one plays it in a single live preview of the user's own first sentence (`line-in`, with the look laid over the
+  brand only for that preview: `?embed&look=…`, read by `runtime/brand.js`). Choosing writes `brand/`: the palette
+  (the brand's library backgrounds take its colours again), the font pair, a colour by hand, the brand's main
+  background (added from the library in its colours when needed), pace and the default entrance
+  (`brand/motion.json` `entrance`, which `line-in` uses when a part sets none). **Make my video** builds the first
+  version, which used to happen on approving the content.
+- **A still of every background** (`apps/web/public/previews/<id>.jpg`, from `scripts/render-backgrounds.mjs`), so
+  cards never run a shader.
+
+Studio v2, phase 3: the agent's choices come into the studio ([ADR 0005](../../docs/adr/0005-the-studio-replaces-board-links-during-a-piece.md)).
+
+- With a piece open and its studio running, **`pamo board --url …` puts the options into the studio** instead of a
+  link, on the step they decide: palettes, font pairs, backgrounds and moves in How it looks (kits as a whole look
+  at its top), transitions, structures and blocks in Your video. The step shows a dot; the options come first in
+  their section, marked **Suggested by your agent**, with the agent's question and notes, and play in the preview
+  when pointed at. The command waits (the studio shows the agent listening) and prints the same reply line, built
+  with `replyLine`. **None of these** sends what the user would rather see. `--link` makes a link anyway.
+- A palette, font pair or background picked there is applied to `brand/` at once, like any card; moves,
+  transitions and structures go to the agent as the line.
+- `board --await c1` waits again for a studio choice, `board --forget c1` takes it out.
+
+Studio v2, phase 4: Your video as scenes.
+
+- **A list of scenes instead of the strip:** each with its number, a still of itself, what it says and how long it
+  plays; drag to reorder; **Add a scene** at the end asks what it is for.
+- **Stills of the real scenes** (the user's words, brand and settings), rendered by the studio one at a time after a
+  scene changes (`pieces/<piece>/.stills/`), never while a final renders; until then the library's still shows.
+- **Five tabs:** Text, Animation (with the block's own settings), Background, Speed (length is speed) and Next scene
+  (the transition, chosen by watching, or the same between every scene).
+- **Nothing rebuilds by itself.** Something new kept in What you want to say offers **Add it to the video**; approving
+  the content again never takes a built piece back to How it looks.
+- **The playing scene no longer restarts when the page redraws** (a still arriving, the agent's state changing): it is
+  moved without reloading (`moveBefore`, where the browser has it), and a still only updates its thumbnail.
+
+Studio v2, phase 5: light on the machine.
+
+- An embedded preview that ended stops its frame loop (a click starts it again): an idle studio draws nothing. The
+  check measures it: 0 shader draws and 0 animation frames for 5 s after a scene ends, and at most one live preview
+  on the page.
+- **Fixed for npm installs:** the site's `registry.json` lists params by name only, so an installed studio had no
+  block settings or entrances to offer (since 0.4) and, now, no palettes' colours, font pairs or backgrounds. It
+  fetches the full resource of those (`/r/<id>.json`) when it starts. `scripts/check-studio.mjs` runs against an
+  installed package with `PAMO_BIN=…`.
+- The site's making-of, hero and docs page tell the four steps, the five stages behind them, `piece listen` and the
+  choices in the studio.
+
+
 ## 0.4.1 · 2026-11-12
 
 - **The studio's live previews are much lighter.** A scene opened with `?embed` draws its shaders at the size it is

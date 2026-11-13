@@ -11,11 +11,23 @@ const get = (p, json) => fetch(p).then((r) => (r.ok ? (json ? r.json() : r.text(
 const sections = (md) => Object.fromEntries((md ?? '').split(/^## /m).slice(1).map((b) => { const i = b.indexOf('\n'); return [b.slice(0, i).trim(), b.slice(i + 1).trim()]; }));
 
 export async function loadBrand(root = '/brand') {
-  const [tokens, identityMd, motion, sound, setRaw] = await Promise.all([
+  let [tokens, identityMd, motion, sound, setRaw] = await Promise.all([
     get(`${root}/tokens.json`, true), get(`${root}/IDENTITY.md`), get(`${root}/motion.json`, true), get(`${root}/sound.json`, true), get(`${root}/shader-set/set.json`, true),
   ]);
   const identity = sections(identityMd);
-  const set = Array.isArray(setRaw) ? { entries: setRaw } : setRaw ?? { entries: [] };
+  let set = Array.isArray(setRaw) ? { entries: setRaw } : setRaw ?? { entries: [] };
+  // the studio's How it looks preview lays a look over the brand: `?embed&look=<base64url json>` (colours by role,
+  // fonts, a background entry, pace, entrance). Only an embedded preview reads it; a render never passes ?embed.
+  const q = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
+  let look = null;
+  if (q.has('embed') && q.get('look')) { try { look = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(q.get('look').replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)))); } catch { look = null; } }
+  if (look) {
+    tokens = { ...(tokens ?? {}) };
+    if (look.colors) { tokens.colors = { ...(tokens.colors ?? {}), ...Object.fromEntries(Object.entries(look.colors).filter(([, v]) => v).map(([k, v]) => [k, { hex: v }])) }; delete tokens.ramp; }
+    if (look.fonts) tokens.fonts = look.fonts;
+    if (look.background) set = { ...set, entries: [look.background, ...(set.entries ?? []).filter((e) => e.id !== look.background.id)] };
+    if (look.pace || look.entrance) motion = { ...(motion ?? {}), ...(look.pace ? { pace: look.pace } : {}), ...(look.entrance ? { entrance: look.entrance } : {}) };
+  }
 
   // fonts: stylesheets and files, all loaded before the first frame
   const fonts = Object.values(tokens?.fonts ?? {}).filter(Boolean);

@@ -35,7 +35,7 @@ const CONFIG = {
   background: null,                      // a shader-set id, or null for the brand's first entry
   text: 'Video editing without the timeline',
   mark: 'without the timeline',          // the words that land in the accent; empty for none
-  entrance: 'rise',                      // rise · focus · scramble · type · track · flip · pop · bar
+  entrance: 'rise',                      // rise · focus · scramble · type · track · flip · pop · bar; null for the brand's
   align: 'center',                       // center or left
   format: [1920, 1080],
 };
@@ -64,7 +64,7 @@ Object.assign($('rule').style, { background: accent, width: `${Math.min(W * 0.18
 await document.fonts.ready;
 
 // one entrance, chosen by name; each is the library's own move, so they read as a family
-const E = CONFIG.entrance, T0 = 0.3, ENTER = 1.4;
+const E = CONFIG.entrance ?? B.motion?.entrance ?? 'rise', T0 = 0.3, ENTER = 1.4;   // null: the brand's own entrance
 const each = (fn) => { let off = 0; const n = Math.max(1, text.replace(/\s/g, '').length); return (t) => segs.forEach((e) => { const share = e.textContent.replace(/\s/g, '').length / n; fn(e, t, T0 + off * ENTER, Math.max(0.35, share * ENTER)); off += share; }) || (off = 0); };
 let enter;
 if (E === 'focus') enter = (t) => blurIn(line, t, { start: T0, duration: 1.1, blur: size * 0.18 });

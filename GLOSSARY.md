@@ -86,8 +86,24 @@ A skill's entrance for someone who already decided: it takes what they bring (fo
 _Avoid_: expert mode, skip
 
 **Studio**:
-The local page where the user makes one piece in three steps: What it says (the brief and the content they keep), Your video (every part playing live, edited in place: words, motion, backgrounds, settings, lengths, transitions, order, parts added or swapped, the brand's colours and type) and Export. Everything that needs no judgment is done there by the user; the agent reads each change and does what they ask for. The agent hands each stage over and reads back what the user did.
+The one local page where the user makes a piece, in four steps: What you want to say (the brief and the content they keep), How it looks (colours, type, background, movement, chosen by watching their own sentence), Your video (its scenes in a list, each edited in place: text, animation, background, speed, the transition into the next) and Export. It is the only address the user opens while a piece is open: the agent's choices come into it, not as links ([ADR 0005](docs/adr/0005-the-studio-replaces-board-links-during-a-piece.md)). It says only what it can check about the agent: asking, listening, working, or not connected.
 _Avoid_: dashboard, editor, review app
+
+**Step**:
+One of the studio's four screens, in order: What you want to say, How it looks, Your video, Export. Underneath, steps track the piece's stages (brief and inventory, look, video, final).
+_Avoid_: stage (the agent's word, in piece.json), page, tab
+
+**Scene**:
+A part of the video as the studio names it to the user: one block or shot, playing whole, faster or slower as its length says. `chain.json` still calls it a part.
+_Avoid_: clip, slide, shot (a shot is one kind of resource)
+
+**Choice**:
+Options the agent puts into the studio for the user to decide (`pamo board` while a piece is open). They appear on the step they belong to, marked as suggested by the agent; picking one sends the agent the same reply line a board does.
+_Avoid_: suggestion card, proposal
+
+**Listening**:
+The agent waiting on the piece between its turns (`pamo piece listen`, running in the background), so what the user does in the studio reaches it without going to the chat. The studio shows it only while it is true.
+_Avoid_: connected (say what it is doing), online
 
 **Inventory**:
 The list of what a piece can really show, written before its structure: figures, screenshots, commands, lines, each with its kind and where it came from. The agent gathers it from what the user already has (their site, a README, the brand's Facts, their files) as proposals; the user keeps what is true and removes the rest in the studio, and only what they kept goes into a piece. Blocks and shots declare the kinds they show, so a structure is proposed from the inventory and each part arrives with that content in place.

@@ -18,10 +18,13 @@
 // joined draft or the final were made from something that has changed since (`media.assemblyStale`, `finalStale`).
 import fs from 'node:fs';
 import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pieceDir, JOINS, chainSig, readSigs, readJob } from './chain.mjs';
-import { STAGES, BRIEF_KEYS, readPiece, updatePiece, addEvent, eventLine, sceneTexts, setSceneText, listening } from './piece.mjs';
+import { STAGES, BRIEF_KEYS, readPiece, updatePiece, addEvent, eventLine, sceneTexts, setSceneText, listening, agentState, settleChoice } from './piece.mjs';
+import { replyLine } from './live-board.js';
+import { setArgs } from './customize.mjs';
 import { videoView, editVideo, styleView, editStyle, undo, canUndo } from './edit.mjs';
 import { KINDS, EDITABLE, ADDABLE, MULTI, PLAIN, GROUPS, listText, loadRaw, normalize, candidates, scenesOf, describe, applyEdit, evalFill, fillConfig } from './inventory.mjs';
 
@@ -63,6 +66,9 @@ const joinErrors = new Map();   // piece folder → why the studio's last join f
 // the blocks and shots that show content and the library's backgrounds, read once when the studio starts (the
 // registry may be the site); LIVE is the scene server the page's live previews play from
 let SCENES = [], BACKGROUNDS = [], TITLES = new Map(), PALETTES = [], FONTPAIRS = [], LIVE = null;
+// How it looks: the library's palettes (every colour by role), font pairs (families and their stylesheets) and
+// background resources (to recolour them into a palette), read with the index
+let LOOK = { palettes: [], fonts: [], bgItems: new Map(), entrances: [], items: new Map() };
 const building = new Set(), rendering = new Map();   // pieces whose first version or final is being made by the studio
 // a resource's sample (clip and still): the repo's own when the studio runs inside it (new blocks show before the
 // site has them), else the site's
@@ -151,6 +157,129 @@ function libraryView() {
   };
 }
 
+// ── scene stills: one small frame of each scene as it really is (the user's words, brand and settings), for the
+// list in Your video. Rendered one at a time, only when a scene changed, never while a final renders. Until a
+// scene has one, the list shows the library's still of its block.
+const stillJobs = [];
+let stillBusy = false;
+function sceneStill(cwd, dir, x, stamp) {
+  const d = path.join(dir, '.stills'), img = path.join(d, `${x.dir}.png`), meta = path.join(d, `${x.dir}.json`), key = `${x.mtime}-${stamp}`;
+  const have = fs.existsSync(img), was = readJson(meta, {}).key;
+  if (was !== key && LIVE && !stillJobs.some((j) => j.img === img)) {
+    stillJobs.push({ dir, img, meta, key, url: `${LIVE}/${path.relative(cwd, path.join(dir, x.dir, 'scene.html')).split(path.sep).map(encodeURIComponent).join('/')}?render`, t: (Number(x.duration) || 4) * 0.62 });
+    setTimeout(runStills, 400);
+  }
+  return have ? fileUrl(cwd, img) : null;
+}
+async function runStills() {
+  if (stillBusy) return;
+  stillBusy = true;
+  try {
+    const { renderStills } = await import('./render.mjs');
+    while (stillJobs.length) {
+      const j = stillJobs[0];
+      if (rendering.has(j.dir) || building.has(j.dir)) { await new Promise((r) => setTimeout(r, 3000)); continue; }
+      stillJobs.shift();
+      const out = fs.mkdtempSync(path.join(os.tmpdir(), 'pm-still-'));
+      try {
+        const r = await renderStills({ url: j.url, times: [j.t], outDir: out, dpr: 0.35, sheet: false });
+        fs.mkdirSync(path.dirname(j.img), { recursive: true });
+        fs.copyFileSync(r.files[0], j.img);
+        fs.writeFileSync(j.meta, JSON.stringify({ key: j.key }));
+      } catch { /* the list keeps the library's still */ } finally { fs.rmSync(out, { recursive: true, force: true }); }
+    }
+  } finally { stillBusy = false; }
+}
+
+// ── How it looks ────────────────────────────────────────────────────────────────────────────────────────────
+const b64url = (o) => Buffer.from(JSON.stringify(o), 'utf8').toString('base64url');
+const hexOf = (v) => (typeof v === 'string' ? v : v?.hex ?? null);
+/** The sentence the look is judged with: the first one the user must show, else the first they kept, else the brief. */
+function headline(cwd, dir) {
+  try { const items = normalize(loadRaw(dir), { cwd }).items.filter((i) => i.kind === 'line'); return (items.find((i) => i.must) ?? items[0])?.text ?? readPiece(dir)?.brief?.what ?? ''; } catch { return readPiece(dir)?.brief?.what ?? ''; }
+}
+/** The brand's look as it is, and every option How it looks offers, as the page shows them (stills, no shaders). */
+function lookView(cwd, dir) {
+  const t = readJson(path.join(cwd, 'brand/tokens.json'), {}), m = readJson(path.join(cwd, 'brand/motion.json'), {});
+  const set = readJson(path.join(cwd, 'brand/shader-set/set.json'), {}), entries = (set.entries ?? []).filter((e) => e.shader && !e.image);
+  const colors = { ground: hexOf(t.colors?.ground), figure: hexOf(t.colors?.figure), accent: hexOf(t.colors?.accent) };
+  const same = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
+  const palette = LOOK.palettes.find((x) => ['ground', 'figure', 'accent'].every((k) => same(x.colors[k], colors[k])))?.id ?? (colors.ground ? 'custom' : null);
+  const font = LOOK.fonts.find((f) => same(f.fonts.display.family, t.fonts?.display?.family) && same(f.fonts.text?.family, t.fonts?.text?.family))?.id ?? null;
+  const mine = new Set(entries.map((e) => e.id));
+  return {
+    current: { colors, palette, font, display: t.fonts?.display?.family ?? null, text: t.fonts?.text?.family ?? null, background: entries[0]?.id ?? null, pace: m.pace ?? 'medium', entrance: m.entrance ?? null },
+    headline: headline(cwd, dir), live: !!LIVE,
+    palettes: LOOK.palettes.map((x) => ({ id: x.id, title: x.title, colors: x.colors })),
+    fonts: LOOK.fonts.map((f) => ({ id: f.id, title: f.title, display: f.fonts.display.family, text: f.fonts.text?.family ?? null, css: [f.fonts.display.css, f.fonts.text?.css].filter(Boolean) })),
+    backgrounds: [
+      ...entries.map((e) => ({ id: e.id, title: TITLES.get(e.id) ?? e.id, mine: true, poster: fs.existsSync(path.join(LOCAL_PREVIEWS, `${e.id}.jpg`)) || TITLES.has(e.id) ? preview(e.id, 'jpg') : null, colors: (e.props?.colors ?? [e.props?.colorBack, e.props?.colorFront]).filter(Boolean).slice(0, 4) })),
+      ...BACKGROUNDS.filter((b) => !mine.has(b.id)).map((b) => ({ id: b.id, title: b.title, mine: false, poster: preview(b.id, 'jpg'), colors: b.colors ?? [] })),
+    ],
+    entrances: LOOK.entrances, paces: ['calm', 'medium', 'fast'],
+  };
+}
+/**
+ * The look preview: the user's sentence in `line-in`, playing live from .try/look/, with a look laid over the brand
+ * for this preview only (`?embed&look=…`, read by runtime/brand.js). `o` changes any of palette, colors, font,
+ * background, pace, entrance; what it leaves out is the brand's own. One preview plays at a time.
+ */
+async function lookPreview(cwd, piece, o = {}) {
+  if (!LIVE) throw new Error('the live preview is not ready yet');
+  const dir = pieceDir(piece, cwd), sub = path.join('.try', 'look'), file = path.join(dir, sub, 'scene.html');
+  if (!fs.existsSync(file)) { const { add } = await import('./registry.mjs'); await add(['line-in'], { cwd, force: true, name: path.join(path.relative(path.join(cwd, 'pieces'), dir), sub) }); }
+  const text = headline(cwd, dir), html = fs.readFileSync(file, 'utf8'), want = fillConfig(html, { text, mark: '', entrance: null, background: null });
+  if (want !== html) fs.writeFileSync(file, want);
+  const t = readJson(path.join(cwd, 'brand/tokens.json'), {}), set = readJson(path.join(cwd, 'brand/shader-set/set.json'), {});
+  const pal = o.palette ? LOOK.palettes.find((x) => x.id === o.palette)?.colors : null;
+  const colors = { ...Object.fromEntries(Object.entries(t.colors ?? {}).map(([k, v]) => [k, hexOf(v)])), ...(pal ?? {}), ...(o.colors ?? {}) };
+  const look = {};
+  if (pal || o.colors) look.colors = colors;
+  if (o.font) { const f = LOOK.fonts.find((x) => x.id === o.font); if (f) look.fonts = f.fonts; }
+  // the background: the one asked for, else the brand's first; recoloured whenever the colours are not the brand's own
+  const entries = (set.entries ?? []).filter((e) => e.shader && !e.image), bgId = o.background ?? entries[0]?.id;
+  const item = LOOK.bgItems.get(bgId), own = entries.find((e) => e.id === bgId);
+  if (item && (o.background || look.colors)) {
+    const { recolor } = await import('./customize.mjs');
+    const e = item.install?.entry ?? {};
+    look.background = { ...e, id: bgId, props: { ...(e.props ?? {}), ...recolor(item, colors) } };
+  } else if (own && o.background) look.background = own;
+  if (o.pace) look.pace = o.pace;
+  if (o.entrance) look.entrance = o.entrance;
+  return { url: `${LIVE}/${path.relative(cwd, file).split(path.sep).map(encodeURIComponent).join('/')}?embed&look=${b64url(look)}&v=${Date.now()}` };
+}
+
+// ── choices from the agent (ADR 0005): what each option's card needs, and what the studio applies on a pick ──────
+const COLOR_ROLES = ['ground', 'figure', 'muted', 'surface', 'accent'];
+function itemFace(o) {
+  const it = LOOK.items.get(o.id), type = it?.type ?? null, face = { id: o.id, type, title: `${it?.title ?? o.id}${Object.keys(o.values ?? {}).length ? ', tuned' : ''}` };
+  if (type === 'palette') face.colors = { ...(LOOK.palettes.find((x) => x.id === o.id)?.colors ?? {}), ...Object.fromEntries(Object.entries(o.values ?? {}).filter(([k]) => COLOR_ROLES.includes(k))) };
+  else if (type === 'font-pair') { const f = LOOK.fonts.find((x) => x.id === o.id); if (f) Object.assign(face, { display: f.fonts.display.family, text: f.fonts.text?.family ?? null, css: [f.fonts.display.css, f.fonts.text?.css].filter(Boolean) }); }
+  else Object.assign(face, { poster: preview(o.id, 'jpg'), clip: type === 'background' ? null : preview(o.id, 'webm') });
+  return face;
+}
+function choiceView(c) {
+  const opt = (o) => {
+    const base = { label: o.label, note: o.note ?? null };
+    if (o.structure) return { ...base, title: o.structure.title, seconds: o.structure.duration, beats: o.structure.beats.map((b) => ({ name: b.name, what: b.what, id: b.id ?? null, from: b.from, to: b.to })) };
+    if (c.board.kind === 'kit') return { ...base, title: `Look ${o.label}`, items: o.items.map(itemFace) };
+    return { ...base, ...itemFace(o) };
+  };
+  return { id: c.id, title: c.board.title, ask: c.board.ask ?? null, where: c.where, status: c.status, line: c.line ?? null, options: c.board.options.map(opt) };
+}
+/** After a pick: what the studio itself applies to brand/ (palette, font pair, background); the rest is the agent's. */
+async function applyChoice(cwd, dir, c, label) {
+  const o = c.board.options.find((x) => x.label === label); if (!o) return;
+  for (const x of c.board.kind === 'kit' ? o.items : [o]) {
+    const type = LOOK.items.get(x.id)?.type;
+    if (type === 'palette') {
+      await editStyle(cwd, dir, { type: 'palette', value: x.id });
+      for (const k of ['ground', 'figure', 'accent']) if (x.values?.[k]) await editStyle(cwd, dir, { type: 'color', key: k, value: x.values[k] });
+    } else if (type === 'font-pair') await editStyle(cwd, dir, { type: 'font', value: x.id });
+    else if (type === 'background') await editStyle(cwd, dir, { type: 'background', value: x.id });
+  }
+}
+
 /** What the page shows for one piece. */
 export function view(cwd, piece) {
   const dir = pieceDir(piece, cwd), p = readPiece(dir);
@@ -177,13 +306,16 @@ export function view(cwd, piece) {
     video: (() => {
       const v = videoView(cwd, dir, SCENES); if (!v) return null;
       const rel = path.relative(cwd, dir).split(path.sep).map(encodeURIComponent).join('/');
-      for (const x of v.parts) { x.live = LIVE ? `${LIVE}/${rel}/${encodeURIComponent(x.dir)}/scene.html?embed&rate=${x.rate}&v=${x.mtime}-${styleView(cwd).stamp}` : null; x.poster = preview(x.id, 'jpg'); x.clip = preview(x.id, 'webm');
+      const stamp = styleView(cwd).stamp;
+      for (const x of v.parts) { x.still = sceneStill(cwd, dir, x, stamp); x.live = LIVE ? `${LIVE}/${rel}/${encodeURIComponent(x.dir)}/scene.html?embed&rate=${x.rate}&v=${x.mtime}-${styleView(cwd).stamp}` : null; x.poster = preview(x.id, 'jpg'); x.clip = preview(x.id, 'webm');
         if (x.motion) x.motion.demos = x.motion.options.map((o) => ({ value: o, title: TITLES.get(x.motion.previews[o]) ?? o, poster: x.motion.previews[o] ? preview(x.motion.previews[o], 'jpg') : null, clip: x.motion.previews[o] ? preview(x.motion.previews[o], 'webm') : null })); }
       return v;
     })(),
     building: building.has(dir), rendering: rendering.get(dir) ?? null, undo: canUndo(dir),
     library: libraryView(),
     style: { ...styleView(cwd), palettes: PALETTES, fontpairs: FONTPAIRS },
+    lookOptions: lookView(cwd, dir),   // How it looks: the brand's look now and every option, as stills
+    choices: (p.choices ?? []).map(choiceView),   // what the agent put into the studio for the user to decide
     look: {
       colors: Object.entries(tokens.colors ?? {}).map(([k, v]) => [k, v?.hex ?? v]),
       fonts: Object.entries(tokens.fonts ?? {}).map(([k, v]) => [k, v?.family ?? v, v?.css ?? null]),
@@ -195,7 +327,13 @@ export function view(cwd, piece) {
     job: film.job,
     ask: p.ask ?? null,
     // is a command of the agent waiting on this piece, how many of the user's moves it hasn't read, and the way back to it
-    agent: { listening: !!listening(dir), app: p.agent?.app ?? null, focus: process.platform === 'darwin' && !!p.agent?.path, url: p.agent?.url ?? null },
+    // only what can be checked: a question open, a command waiting on the piece now, or what it said it is doing (20 min)
+    agent: { ...agentState(dir, p), app: p.agent?.app ?? null, focus: process.platform === 'darwin' && !!p.agent?.path, url: p.agent?.url ?? null },
+    // the conversation in the studio: what the user sent (and when the agent read it) and the agent's replies
+    thread: [
+      ...p.events.filter((e) => (e.kind === 'changes' && !e.part) || e.kind === 'answer').map((e) => ({ who: 'you', text: e.kind === 'answer' ? `${e.q ? `“${e.q}” ` : ''}${e.text}` : e.text, at: e.at, read: e.readAt ?? (e.n <= (p.seen ?? 0) ? e.at : null) })),
+      ...(p.notes ?? []).map((x) => ({ who: 'agent', text: x.text, at: x.at })),
+    ].sort((x, y) => x.at.localeCompare(y.at)),
     unread: p.events.filter((e) => e.n > (p.seen ?? 0)).length,
   };
 }
@@ -243,7 +381,9 @@ function act(cwd, piece, a, queue) {
         }
         p.stages[a.stage] = { status: 'approved', at: new Date().toISOString() };
         const next = STAGES[STAGES.indexOf(a.stage) + 1];
-        if (next) { p.stage = next; if (p.stages[next].status === 'pending') p.stages[next] = { status: 'working', since: new Date().toISOString() }; }
+        // How it looks is the user's step: it opens ready to choose (or done, when the brand already settles it)
+        if (next === 'look') { if (STAGES.indexOf(p.stage) < STAGES.indexOf('look')) p.stage = next; if (p.stages.look.status !== 'approved') p.stages.look = { status: 'review', since: new Date().toISOString() }; }
+        else if (next && !(a.stage === 'look' && STAGES.indexOf(p.stage) > STAGES.indexOf('look'))) { p.stage = next; if (p.stages[next].status === 'pending') p.stages[next] = { status: 'working', since: new Date().toISOString() }; }
         addEvent(p, { kind: 'approve', stage: a.stage });
         break;
       }
@@ -254,6 +394,30 @@ function act(cwd, piece, a, queue) {
         break;
       }
       case 'reopen': { p.stages[a.stage] = { status: 'review' }; addEvent(p, { kind: 'reopen', stage: a.stage }); break; }
+      case 'message': {   // Ask your agent: a request, read as a changes line, that leaves the stage where it is
+        const t = text(a.text); if (!t) throw new Error('say what you need');
+        addEvent(p, { kind: 'changes', stage: p.stage, text: t, msg: true });
+        break;
+      }
+      case 'answer': {   // the agent's open question, answered here
+        const t = text(a.text); if (!t) throw new Error('write your answer');
+        addEvent(p, { kind: 'answer', text: t, q: p.ask?.text ?? null });
+        delete p.ask;
+        break;
+      }
+      case 'ask-close': { delete p.ask; break; }   // answered in the chat instead
+      case 'choose': {   // a pick on a choice the agent put here, or none of them with what they'd rather see
+        const c = (p.choices ?? []).find((x) => x.id === a.choice); if (!c) throw new Error('no such choice');
+        let line;
+        if (a.none) line = replyLine(c.board, { none: true, text: text(a.text) });
+        else {
+          const o = c.board.options.find((x) => x.label === a.label); if (!o) throw new Error('no such option');
+          const it = o.id ? LOOK.items.get(o.id) : null;
+          line = replyLine(c.board, { label: o.label, setArgs: it && o.values && Object.keys(o.values).length ? setArgs(it, o.values) : [] });
+        }
+        settleChoice(p, c.id, line);
+        break;
+      }
       case 'approve-part': { p.parts[a.part] = { ...(p.parts[a.part] ?? {}), status: 'approved', note: undefined }; addEvent(p, { kind: 'approve', stage: 'parts', part: a.part }); break; }
       case 'brief': {
         if (!BRIEF_KEYS.includes(a.key)) throw new Error('bad brief key');
@@ -444,10 +608,28 @@ function sendFile(req, res, f) {
 
 export function startStudio({ cwd = process.cwd(), port = 4317, log = console.log } = {}) {
   const queue = renderQueue(cwd, log);
-  import('./registry.mjs').then((r) => r.getIndex()).then((i) => {   // offline: items show without their blocks
+  import('./registry.mjs').then(async (r) => {
+    const i = await r.getIndex();
+    // the site's index is light (params by name only, no install data): the studio needs the full resource of every
+    // palette, font pair and background (How it looks) and of every block and shot (their settings and entrances),
+    // fetched a few at a time when the index lacks it (a local registry already has it)
+    const light = (i.items ?? []).filter((x) => ['palette', 'font-pair', 'background', 'block', 'shot'].includes(x.type) && (!x.install || (x.params ?? []).some((q) => typeof q === 'string')));
+    for (let k = 0; k < light.length; k += 8) {
+      const full = await Promise.all(light.slice(k, k + 8).map((x) => r.getItem(x.id).catch(() => null)));
+      for (const f of full) if (f) { const at = i.items.findIndex((x) => x.id === f.id); if (at >= 0) i.items[at] = { ...i.items[at], ...f }; }
+    }
+    return i;
+  }).then((i) => {   // offline: items show without their blocks
     SCENES = scenesOf(i); TITLES = new Map((i.items ?? []).map((x) => [x.id, x.title]));
     PALETTES = (i.items ?? []).filter((x) => x.type === 'palette').map((x) => ({ id: x.id, title: x.title, colors: x.colors ?? [] }));
     FONTPAIRS = (i.items ?? []).filter((x) => x.type === 'font-pair').map((x) => ({ id: x.id, title: x.title }));
+    const def = (x, k) => x.params?.find((q) => q.name === k)?.default;
+    LOOK.palettes = (i.items ?? []).filter((x) => x.type === 'palette').map((x) => ({ id: x.id, title: x.title, colors: Object.fromEntries(['ground', 'figure', 'muted', 'surface', 'accent'].map((k) => [k, def(x, k)]).filter(([, v]) => v)) }));
+    LOOK.fonts = (i.items ?? []).filter((x) => x.type === 'font-pair' && x.install?.entry?.fonts?.display).map((x) => ({ id: x.id, title: x.title, fonts: x.install.entry.fonts, type: x.install.entry.type ?? null }));
+    LOOK.bgItems = new Map((i.items ?? []).filter((x) => x.type === 'background').map((x) => [x.id, x]));
+    LOOK.items = new Map((i.items ?? []).map((x) => [x.id, x]));
+    const li = (i.items ?? []).find((x) => x.id === 'line-in');
+    LOOK.entrances = (li?.params?.find((q) => q.name === 'entrance')?.options ?? []).map((o) => { const r = li.repeat?.previews?.[o]; return { value: o, title: TITLES.get(r) ?? o, poster: r ? preview(r, 'jpg') : null, clip: r ? preview(r, 'webm') : null }; });
     BACKGROUNDS = (i.items ?? []).filter((x) => x.type === 'background' && x.install?.entry?.shader && !x.install.entry.image).map((x) => ({ id: x.id, title: x.title, colors: x.colors ?? [], entry: { shader: x.install.entry.shader, props: x.install.entry.props, background: x.install.entry.background } }));
   }).catch(() => {});
   // the page's live previews (a block with the user's content, a background) play from a scene server on this project
@@ -473,8 +655,10 @@ export function startStudio({ cwd = process.cwd(), port = 4317, log = console.lo
             const a = JSON.parse(body || '{}');
             if (/^(v-|style-)|^undo$|^render$/.test(a.type)) return json(res, 200, await actVideo(cwd, piece, a, log));
             const r = act(cwd, piece, a, queue);
-            // keeping the content builds the first version of the video, by itself: the user lands on something to edit
-            if (a.type === 'approve' && a.stage === 'inventory') buildFirst(cwd, piece, log);
+            // a pick on the agent's palette, font pair or background is applied at once, like any card here
+            if (a.type === 'choose' && !a.none) { const dir = pieceDir(piece, cwd), c = (readPiece(dir).choices ?? []).find((x) => x.id === a.choice); if (c) await applyChoice(cwd, dir, c, a.label); }
+            // choosing how it looks builds the first version of the video, by itself: the user lands on something to edit
+            if (a.type === 'approve' && a.stage === 'look') buildFirst(cwd, piece, log);
             return json(res, 200, r);
           } catch (e) { return json(res, 400, { error: e.message.split('\n')[0] }); }
         }
@@ -486,6 +670,10 @@ export function startStudio({ cwd = process.cwd(), port = 4317, log = console.lo
         const f = path.join(LOCAL_PREVIEWS, path.basename(u.pathname));
         if (!fs.existsSync(f)) { res.writeHead(404); return res.end(); }
         return sendFile(req, res, f);
+      }
+      if (u.pathname === '/api/look' && req.method === 'POST') {   // How it looks: the user's sentence with a look laid over
+        let body = ''; for await (const c of req) body += c;
+        try { return json(res, 200, await lookPreview(cwd, u.searchParams.get('p'), JSON.parse(body || '{}'))); } catch (e) { return json(res, 400, { error: e.message.split('\n')[0] }); }
       }
       if (u.pathname === '/api/try' && req.method === 'POST') {   // a block playing live with one item's content
         let body = ''; for await (const c of req) body += c;
