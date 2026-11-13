@@ -1,5 +1,24 @@
 # paper-motion
 
+> [!IMPORTANT]
+> **Archived (2026-11-13). This experiment is over, and paper-motion is no longer developed.**
+>
+> We tested paper-motion blind against a coding agent with nothing: six tests on four made-up brands, two videos each, judged by an agent
+> that didn't know which was which.
+>
+> - **0.5 as it is here** (studio, plan, library of 164 parts) made the videos worse: 3.3 against 4.3 for the agent
+>   alone.
+> - **0.5 used only as a library** made them worse too: 3.2 against 3.8.
+> - **A rewrite built around a blind critic** never shipped a video you wouldn't post (6 of 6, against 5 of 6 for the
+>   agent alone). But across three briefs it only edged the agent alone by 0.13: 3.90 against 3.77. That is under
+>   the bar we set before testing, and it took about three times longer.
+>
+> Today's agents make these videos well on their own. The full results are in
+> [docs/bake-off-results.md](docs/bake-off-results.md). The critic version (render any page, read it as frames,
+> hand it to a blind critic) is on the branch [`lean`](../../tree/lean), unpublished.
+>
+> The npm package `paper-motion@0.5.0` and the site stay up as they are, with no further changes.
+
 **Creative-directed videos for people who use coding agents.**
 
 <p><img src="docs/images/paper-motion.webp" width="100%" alt="paper-motion's promo, made with paper-motion: a prompt in the terminal, the render, a wall of the brand's shader loops, a dive into one of them, and the install command"></p>
