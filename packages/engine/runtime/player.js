@@ -46,7 +46,8 @@ export function mountPlayer(scene, startT = 0) {
     if (!embed) { try { sessionStorage.setItem(`pm:t:${location.pathname}`, String(t)); } catch { /* storage blocked */ } }
     busy = true; await scene.seek(t); busy = false;
   }
-  function setPlaying(p) { playing = p; playBtn.textContent = p ? '❚❚' : '▶'; last = performance.now(); }
+  let looping = false;   // the frame loop runs only while something plays (an embedded preview that ended is idle)
+  function setPlaying(p) { playing = p; playBtn.textContent = p ? '❚❚' : '▶'; last = performance.now(); if (p && !looping) { looping = true; requestAnimationFrame(tick); } }
 
   // embedded, it draws at most 30 frames a second: a preview beside an editor, not the render
   const step = embed ? 1000 / 30 - 2 : 0;
@@ -60,9 +61,10 @@ export function mountPlayer(scene, startT = 0) {
       show(nt);
     }
     last = now;
+    if (embed && !playing) { looping = false; return; }
     requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
+  looping = true; requestAnimationFrame(tick);
 
   playBtn.onclick = () => setPlaying(!playing);
   if (embed) addEventListener('click', () => { if (!playing) show(0); setPlaying(true); });

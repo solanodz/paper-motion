@@ -1,11 +1,12 @@
 "use client";
 
-// What the monitor shows as paper-motion's own film takes shape, one scene per stage. Color only arrives through the
-// film's own shaders; type and interface stay black and white.
+// What the monitor shows as paper-motion's own film takes shape, one scene per step. Color only arrives through a
+// shader, in the brand sheet's tints; type and interface stay black and white.
 // The film is real: library blocks rendered by the engine on the chosen look (film.tsx).
 // The monitor is a container: everything inside is sized in cqi, so the same scene reads at 1440 and in a phone stack.
 import { memo, type ReactNode } from "react";
 import { IconCheck } from "@/components/icons";
+import { ShaderPreview } from "@/components/shader-preview";
 import { Film, Part, SCENES } from "./film";
 
 type Entry = { shader: string; props: Record<string, unknown>; image?: string; background?: string };
@@ -34,19 +35,9 @@ function Frame({ where, state, free, children }: { where: string; state: ReactNo
 // 0 · the opening: the finished film, playing
 const Opening = () => <Film />;
 
-// 1 · Brief: the film's one line, written down
-function Brief({ done, free }: { done: boolean; free: boolean }) {
-  return (
-    <Frame free={free} where="the brief" state={done ? <Done>approved</Done> : <Waiting>writing</Waiting>}>
-      <p className="max-w-[18ch] font-serif text-[length:max(26px,5.6cqi)] leading-[1.02] tracking-[-0.025em]">Art-directed video, made from a conversation with your agent.</p>
-      <p className={`mt-[3cqi] font-mono text-muted ${small}`}>for people who build with coding agents · 16:9 · 30 s · ends on paper-motion.app</p>
-    </Frame>
-  );
-}
-
 export const BEATS = SCENES.map((x) => ({ id: x.id, beat: x.beat, s: x.d }));
 
-// 2 · Content: what the film can really show, read from the site and the README; the user keeps what is true
+// 1 · What you want to say: what the film can really show, read from the site and the README; the user keeps what is true
 const THINGS: { kind: string; what: string; k?: number }[] = [
   { kind: "a sentence", what: "Art-directed video, made from a conversation", k: 0 },
   { kind: "a command", what: "the one line your agent runs", k: 1 },
@@ -77,13 +68,33 @@ function Content({ done, free }: { done: boolean; free: boolean }) {
   );
 }
 
+// 2 · How it looks: four looks the agent suggested, each playing with the film's own sentence, one chosen
+function Looks({ looks, done, still, free }: { looks: Look[]; done: boolean; still: boolean; free: boolean }) {
+  return (
+    <Frame free={free} where="how it looks, in the studio" state={done ? <Done>C, clay</Done> : <Waiting>suggested by your agent</Waiting>}>
+      <div className={`grid grid-cols-2 gap-[max(6px,1cqi)] ${free ? "" : "mx-auto w-[min(100%,70cqi)]"}`}>
+        {looks.map((l) => {
+          const on = done && l.label === "C", off = done && !on;
+          return (
+            <div key={l.id} className={`relative aspect-video overflow-hidden bg-black transition-opacity duration-700 ${on ? "outline outline-1 outline-offset-[3px] outline-figure" : ""} ${off ? "opacity-25" : ""}`}>
+              <ShaderPreview entry={l.entry} still={still} className="!absolute inset-0" />
+              <span className={`absolute left-[5%] top-[7%] flex items-baseline gap-[0.6em] font-mono text-figure ${small}`}><span className="font-pixel">{l.label}</span>{l.title}</span>
+              <span className="absolute bottom-[9%] left-[5%] right-[5%] font-serif text-[length:max(14px,2.4cqi)] leading-[1.05] tracking-[-0.02em] text-figure">Video editing without the timeline</span>
+            </div>
+          );
+        })}
+      </div>
+    </Frame>
+  );
+}
+
 // 3 · Video: the studio built it from what was kept; the user edits it, live
 function Video({ done, free }: { done: boolean; free: boolean }) {
   return (
-    <Frame free={free} where="your video, in the studio" state={done ? <Done>approved</Done> : <Waiting>building from what you kept</Waiting>}>
+    <Frame free={free} where="your video, scene by scene" state={done ? <Done>approved</Done> : <Waiting>building from what you kept</Waiting>}>
       <div className={free ? "" : "mx-auto w-[min(100%,74cqi)]"}>
         <Film timeline />
-        <p className={`mt-[1.4cqi] font-mono text-muted ${small}`}>words · motion · background · tune · transition · length · order · style</p>
+        <p className={`mt-[1.4cqi] font-mono text-muted ${small}`}>text · animation · background · speed · next scene · order</p>
       </div>
     </Frame>
   );
@@ -102,10 +113,9 @@ function Final({ done }: { done: boolean }) {
 /** Stages 0 and 4 are films and keep 16:9 even when `free`; the rest are scenes with a label. */
 export const isFilm = (stage: number) => stage === 0 || stage === 4;
 
-// `looks` and `still` are kept for the callers; no stage plays a shader of its own any more
-export const Screen = memo(function Screen({ stage, done, free = false }: { stage: number; done: boolean; looks: Look[]; still: boolean; free?: boolean }) {
-  if (stage === 1) return <Brief done={done} free={free} />;
-  if (stage === 2) return <Content done={done} free={free} />;
+export const Screen = memo(function Screen({ stage, done, looks, still, free = false }: { stage: number; done: boolean; looks: Look[]; still: boolean; free?: boolean }) {
+  if (stage === 1) return <Content done={done} free={free} />;
+  if (stage === 2) return <Looks looks={looks} done={done} still={still} free={free} />;
   if (stage === 3) return <Video done={done} free={free} />;
   if (stage === 4) return <Final done={done} />;
   return <Opening />;

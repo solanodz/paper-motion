@@ -52,6 +52,42 @@
   @keyframes pulse { 50% { opacity: .3; } }
   .turn b { font-weight: 500; margin-right: 8px; } .turn .tx { color: var(--muted); }
   .turn .grow { flex: 1; }
+  .turn.asking { background: #15130f; } .turn .q { font: 400 16px/1.3 var(--serif); margin-left: 4px; }
+  .turn .ans { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+  .turn .ans input { width: 300px; background: var(--surface); border: 1px solid var(--rule); padding: 7px 10px; }
+  .turn .ans input:focus { outline: none; border-color: var(--paper); }
+  .look { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; max-width: 1360px; margin: 0 auto; padding: 28px 22px 110px; }
+  .lkpv { position: sticky; top: 112px; align-self: start; }
+  .lkbox { position: relative; aspect-ratio: 16 / 9; background: #000; border: 1px solid var(--line); overflow: hidden; }
+  .lkbox iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .lkbox .msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+  .lkagain { position: absolute; right: 10px; bottom: 10px; z-index: 2; background: rgba(0,0,0,.7); border: 1px solid var(--rule); padding: 6px 10px; font-size: 12.5px; }
+  .lkopts h1 { font: 400 40px/1.05 var(--serif); margin: 0; } .lkopts .sub { color: var(--muted); margin: 8px 0 4px; }
+  .lkopts section { border-top: 1px solid var(--line); padding: 18px 0 20px; margin-top: 14px; }
+  .lkopts h2 { font: 400 22px/1.1 var(--serif); margin: 0 0 12px; }
+  .lkg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+  .lkc { position: relative; padding: 0; border: 1px solid var(--line); background: var(--surface); text-align: left; overflow: hidden; }
+  .lkc:hover { border-color: var(--rule); } .lkc.on { border-color: var(--paper); outline: 1px solid var(--paper); }
+  .lkf { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #111 center / cover; }
+  .lkf img, .lkf video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .lkf .yours { position: absolute; left: 6px; top: 6px; background: var(--paper); color: #000; font: 500 10px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 4px 5px; }
+  .lkn { padding: 7px 9px; font-size: 12.5px; display: flex; justify-content: space-between; gap: 6px; }
+  .sw { position: absolute; inset: 0; display: grid; place-items: center; } .sw b { font-size: 30px; font-weight: 400; } .sw i { position: absolute; left: 0; right: 0; bottom: 0; height: 18%; }
+  .spec { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 2px; padding: 6px; } .spec b { font-size: 30px; font-weight: 400; line-height: 1; } .spec span { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lkcols { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; } .lkcols label { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
+  .lkcols input { width: 34px; height: 26px; border: 1px solid var(--rule); background: none; padding: 0; }
+  .seg { display: inline-flex; border: 1px solid var(--rule); } .seg button { background: none; border: 0; padding: 7px 13px; color: var(--muted); } .seg button + button { border-left: 1px solid var(--rule); } .seg button.on { background: var(--paper); color: #000; }
+  .steps button:disabled { opacity: .35; cursor: default; }
+  .agentsug { margin: 4px 0 16px; padding: 12px; border: 1px solid var(--paper); background: #15130f; }
+  .agentnote { font-size: 13px; margin-bottom: 4px; } .agentnote b { font-weight: 500; }
+  .sugb { position: absolute; left: 6px; top: 6px; z-index: 2; background: var(--paper); color: #000; font: 500 10px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 4px 5px; }
+  .chnote { margin: 0; padding: 0 9px 9px; font-size: 12px; color: var(--muted); }
+  .agentsug .none { display: flex; gap: 8px; margin-top: 10px; } .agentsug .none input { flex: 1; background: var(--surface); border: 1px solid var(--rule); padding: 6px 9px; }
+  .beats { position: absolute; inset: 0; padding: 26px 9px 6px; display: grid; gap: 2px; align-content: start; font-size: 11px; overflow: hidden; } .beats span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); } .beats b { color: var(--figure); font-weight: 500; }
+  .kitf { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); } .kitf > * { width: 100%; height: 100%; object-fit: cover; display: grid; place-items: center; font-size: 26px; font-weight: 400; }
+  .steps .sdot { width: 7px; height: 7px; background: var(--warn); display: inline-block; margin-left: 4px; }
+  .center .agentsug { max-width: 980px; }
+  .nbadge { background: var(--warn); color: #000; font: 500 11px/1 var(--mono); padding: 3px 5px; }
   main { min-height: calc(100vh - 97px); }
 
   /* 1 · what it says */
@@ -81,7 +117,14 @@
   .nextbar { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 
   /* 2 · your video */
-  .editor { display: grid; grid-template-columns: minmax(0, 1fr) 372px; min-height: calc(100vh - 97px); }
+  .editor { display: grid; grid-template-columns: 272px minmax(0, 1fr) 372px; min-height: calc(100vh - 97px); }
+  .scenes { border-right: 1px solid var(--line); padding: 14px 12px 40px; overflow-y: auto; max-height: calc(100vh - 97px); position: sticky; top: 97px; }
+  .scenes .part { width: auto; display: grid; grid-template-columns: 22px 104px minmax(0, 1fr); gap: 9px; align-items: center; padding: 7px; margin-bottom: 6px; }
+  .scenes .part .n { position: static; background: none; padding: 0; font-size: 15px; color: var(--muted); }
+  .scenes .part .th { width: 104px; border: 1px solid var(--line); }
+  .scenes .part .meta { padding: 0; min-width: 0; }
+  .scenes .part.drop { box-shadow: 0 -3px 0 var(--paper); }
+  .addscn { width: 100%; margin-top: 4px; border-style: dashed; }
   .center { padding: 20px 24px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; min-width: 0; }
   .player { position: relative; aspect-ratio: 16/9; background: #000; border: 1px solid var(--line); width: min(100%, calc(56vh * 16 / 9)); margin: 0 auto; overflow: hidden; }
   .player.tall { aspect-ratio: 9/16; width: min(100%, calc(56vh * 9 / 16)); } .player.sq { aspect-ratio: 1; width: min(100%, 56vh); }
@@ -112,7 +155,7 @@
   .insp h2 { margin: 6px 0 0; font: 400 26px/1.1 var(--serif); }
   .insp .sum { margin-top: 6px; }
   .tabs { display: flex; margin: 16px 0 14px; border: 1px solid var(--rule); }
-  .tabs button { flex: 1; background: none; border: 0; padding: 8px 4px; font-size: 12.5px; color: var(--muted); }
+  .tabs button { flex: 1; background: none; border: 0; padding: 8px 3px; font-size: 12px; color: var(--muted); white-space: nowrap; }
   .tabs button + button { border-left: 1px solid var(--rule); }
   .tabs button.on { background: var(--paper); color: #000; }
   .pane { display: grid; gap: 14px; }
@@ -158,9 +201,15 @@
   .fonts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .font { padding: 10px 12px; border: 1px solid var(--line); background: none; text-align: left; font-size: 14px; }
   .font:hover { border-color: var(--rule); } .font.on { border-color: var(--paper); }
-  .ask { position: fixed; right: 18px; bottom: 18px; z-index: 40; width: 360px; background: var(--surface); border: 1px solid var(--rule); padding: 12px; display: none; }
-  .ask.on { display: grid; gap: 8px; }
-  .ask textarea { width: 100%; min-height: 80px; background: var(--ground); border: 1px solid var(--rule); padding: 8px; resize: vertical; }
+  .ask { position: fixed; right: 18px; bottom: 18px; z-index: 40; width: 380px; max-height: min(640px, 76vh); background: var(--surface); border: 1px solid var(--rule); display: none; flex-direction: column; }
+  .ask.on { display: flex; }
+  .ask .hd { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--line); }
+  .ask .th { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 80px; }
+  .ask .cmp { padding: 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+  .ask textarea { width: 100%; min-height: 70px; background: var(--ground); border: 1px solid var(--rule); padding: 8px; resize: vertical; }
+  .msg { max-width: 90%; padding: 8px 10px; border: 1px solid var(--line); background: var(--ground); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.you { align-self: flex-end; border-color: var(--rule); } .msg.agent { align-self: flex-start; border-left: 2px solid var(--paper); }
+  .msg .st { font: 500 10.5px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-top: 6px; } .msg .st.read { color: var(--ok); }
   #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; background: var(--paper); color: #000; padding: 9px 14px; font-size: 13px; transition: .2s; z-index: 80; pointer-events: none; max-width: 80vw; }
   #toast.on { opacity: 1; transform: translateX(-50%); }
 
@@ -177,16 +226,18 @@
 </head>
 <body>
 <div id="app"></div>
+<div id="park" hidden></div>
 <div class="scrim" id="scrim"></div>
 <aside class="sheet" id="sheet" role="dialog"></aside>
-<div class="ask" id="ask"><div style="display:flex;justify-content:space-between;align-items:center"><b>Ask your agent</b><button class="btn sm" data-ask-close>Close</button></div>
-  <p class="hint">For anything the controls can't do: "make it more playful", "add our pricing", "use the photo of the team".</p>
-  <textarea id="askText" aria-label="What to ask"></textarea><button class="btn primary" data-ask-send>Send</button></div>
+<div class="ask" id="ask" role="dialog" aria-label="Ask your agent"><div class="hd"><b>Ask your agent</b><button class="btn sm" data-ask-close>Close</button></div>
+  <div class="th" id="thread"></div>
+  <div class="cmp"><p class="hint">For anything the controls can't do: "make it more playful", "add our pricing", "use the photo of the team".</p>
+  <textarea id="askText" aria-label="What to ask"></textarea><button class="btn primary" data-ask-send>Send</button></div></div>
 <div id="toast" role="status"></div>
 <script>
 // ─── state, helpers ────────────────────────────────────────────────────────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
-let piece = params.get('p'), P = null, raw = '', view = null, sel = null, tab = 'words', misses = 0, playing = null;
+let piece = params.get('p'), P = null, raw = '', view = null, sel = null, tab = 'text', misses = 0, playing = null;
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const $ = (id) => document.getElementById(id);
 const I = {
@@ -195,7 +246,8 @@ const I = {
 };
 const icon = (n) => `<svg class="ico" viewBox="0 0 20 20">${I[n]}</svg>`;
 let tt; const toast = (t, ms = 1900) => { const e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), ms); };
-const STEP = { brief: 'what', inventory: 'what', video: 'video', final: 'export' };
+const STEP = { brief: 'what', inventory: 'what', look: 'look', video: 'video', final: 'export' };
+const ORDER = ['what', 'look', 'video', 'export'];
 const tile = (o, attr, on) => `<button class="tile${on ? ' on' : ''}" ${attr} ${o.clip ? `data-clip="${esc(o.clip)}"` : ''}><div class="ph" ${o.poster ? `style="background-image:url('${esc(o.poster)}')"` : ''}></div><div class="lb">${esc(o.title)}${o.summary ? `<small>${esc(o.summary)}</small>` : ''}</div></button>`;
 const swatch = (b) => `<div class="ph" data-swatch="${esc(JSON.stringify(b.entry ?? {}))}"><div class="bars">${(b.colors?.length ? b.colors : ['#111', '#333']).map((c) => `<i style="background:${esc(c)}"></i>`).join('')}</div></div>`;
 
@@ -209,6 +261,9 @@ async function load() {
   if (!res.ok) { $('app').innerHTML = `<div class="empty">There is no piece “${esc(piece)}” in this project.</div>`; return; }
   const text = await res.text();
   if (text === raw) return;
+  // a scene's still arriving changes only its thumbnail: no redraw, so the player never reloads under the user
+  const noStills = (t) => t.replace(/"still":(?:"[^"]*"|null),?/g, '');
+  if (raw && P && noStills(text) === noStills(raw)) { raw = text; P = JSON.parse(text); paintStills(); return; }
   raw = text; P = JSON.parse(text);
   if (!view) view = STEP[P.stage] ?? 'what';
   render();
@@ -228,25 +283,46 @@ function renderList(list) {
 // ─── the frame: steps, whose turn it is ───────────────────────────────────────────────────────────────────────────
 function turn() {
   if (misses >= 3) return ['off', 'The studio stopped', 'Ask your agent to start it again.'];
-  if (P.ask) return ['ask', 'Your agent asked you something in the chat', P.ask.text];
   if (P.building) return ['agent', 'Building your video', 'From what you kept. A few seconds.'];
   if (P.rendering) return ['agent', 'Rendering the final', P.rendering.joining ? 'Joining the parts' : P.rendering.part ? `Part ${P.rendering.part} of ${P.rendering.of}` : 'Starting'];
-  const st = P.stages[P.stage]?.status, A = P.agent ?? {};
-  if (st === 'review') return ['yours', 'Your turn', A.listening ? 'Your agent waits while you edit. Every change reaches it.' : 'Edit freely; when you are done, tell your agent “continue” in the chat.'];
-  if (st === 'approved' && P.stage === 'final') return ['done', 'Finished', 'Your files are in Export.'];
-  return ['agent', 'Your agent is working', 'It shows up here when it is ready for you.'];
+  // only what the studio can check: a question open, a command waiting on the piece, or what the agent said it is doing
+  const A = P.agent ?? {};
+  if (A.state === 'ask' && P.ask) return ['asking', 'Your agent asks', P.ask.text];
+  if (A.state === 'listen') return ['listen', 'Your agent is listening.', 'What you do here reaches it.'];
+  if (A.state === 'work') return ['agent', 'Your agent is working', `${A.working?.on ? `on ${A.working.on} · ` : ''}for ${since(A.working?.at)}`];
+  if (P.stages.final?.status === 'approved' && P.stage === 'final') return ['done', 'Finished', 'Your files are in Export.'];
+  return ['off', 'Your agent isn’t connected.', 'What you send is kept, and it reads it when it’s back.'];
 }
+// how long ago, in plain words
+function since(at) { const s = Math.max(0, Math.round((Date.now() - Date.parse(at)) / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.round(s / 60)} min` : `${Math.round(s / 3600)} h`; }
+const hhmm = (at) => new Date(at).toTimeString().slice(0, 5);
+const notesKey = () => `pm:notes:${piece}`;
+function seenNotes() { try { return sessionStorage.getItem(notesKey()) ?? ''; } catch { return ''; } }
+function markNotes() { const last = (P?.thread ?? []).filter((m) => m.who === 'agent').at(-1)?.at; if (last) try { sessionStorage.setItem(notesKey(), last); } catch { /* storage blocked */ } }
+// Ask your agent, as a thread: what the user sent (Sent, then Read with the time) and the agent's replies
+function paintThread() {
+  const th = $('thread'); if (!th || !P) return;
+  const T = P.thread ?? [], off = P.agent?.state !== 'listen';
+  th.innerHTML = T.length ? T.map((m) => `<div class="msg ${m.who}"><div>${esc(m.text)}</div><div class="st ${m.read ? 'read' : ''}">${m.who === 'agent' ? `Your agent · ${hhmm(m.at)}` : m.read ? `Read ${hhmm(m.read)}` : off ? 'Sent · your agent reads it when it’s back' : 'Sent'}</div></div>`).join('')
+    : '<p class="hint">Nothing yet. What you send here reaches your agent, and you see when it has read it.</p>';
+  th.scrollTop = th.scrollHeight;
+  if ($('ask').classList.contains('on')) markNotes();
+}
+setInterval(() => { const el = $('since'); if (el && P?.agent?.working) el.textContent = `${P.agent.working.on ? `on ${P.agent.working.on} · ` : ''}for ${since(P.agent.working.at)}`; }, 10000);
 function frame(body) {
   const [k, head, tx] = turn(), step = STEP[P.stage], A = P.agent ?? {};
-  const done = (s) => ({ what: P.stages.inventory?.status === 'approved', video: P.stages.video?.status === 'approved', export: P.stages.final?.status === 'approved' }[s]);
-  document.title = `${k === 'yours' ? '● ' : ''}${P.title} · studio`;
+  const done = (s) => ({ what: P.stages.inventory?.status === 'approved', look: P.stages.look?.status === 'approved' && P.stages.inventory?.status === 'approved', video: P.stages.video?.status === 'approved', export: P.stages.final?.status === 'approved' }[s]);
+  const reached = Math.max(ORDER.indexOf(step), P.video ? 2 : 0, P.stages.video?.status === 'approved' || P.media?.final ? 3 : 0);
+  document.title = `${k === 'asking' ? '● ' : ''}${P.title} · studio`;
+  const unreadNotes = (P.thread ?? []).filter((m) => m.who === 'agent' && m.at > seenNotes()).length;
   return `<header class="top"><a class="back" href="/">${icon('back')}Pieces</a><div class="ttl">${esc(P.title)}</div>
-    <nav class="steps" aria-label="Steps">${[['what', 'What it says'], ['video', 'Your video'], ['export', 'Export']].map(([id, t], i) => `<button class="${view === id ? 'on' : ''}" data-view="${id}"><b>${i + 1}</b>${t}${done(id) ? '<i title="approved"></i>' : ''}</button>`).join('')}</nav>
+    <nav class="steps" aria-label="Steps">${[['what', 'What you want to say'], ['look', 'How it looks'], ['video', 'Your video'], ['export', 'Export']].map(([id, t], i) => `<button class="${view === id ? 'on' : ''}" data-view="${id}" ${i > reached && !waitingOn(id) ? 'disabled' : ''}><b>${i + 1}</b>${t}${done(id) ? '<i title="done"></i>' : ''}${waitingOn(id) ? '<em class="sdot" title="Your agent suggests something here"></em>' : ''}</button>`).join('')}</nav>
     <button class="btn" data-undo ${P.undo ? `title="Undo ${esc(P.undo)}"` : 'disabled'}>${icon('undo')}Undo</button>
-    <button class="btn" data-style>${icon('style')}Style</button>
-    <button class="btn" data-ask>${icon('ask')}Ask your agent</button></header>
-    <div class="turn ${k}"><i class="mk"></i><span><b>${esc(head)}</b><span class="tx">${esc(tx)}</span></span><span class="grow"></span>
-      ${A.focus && (k === 'yours' || k === 'ask') ? `<button class="btn sm" data-focus>Go to ${esc(A.app)} ${icon('out')}</button>` : ''}</div>
+    <button class="btn" data-ask>${icon('ask')}Ask your agent${unreadNotes ? `<span class="nbadge">${unreadNotes}</span>` : ''}</button></header>
+    <div class="turn ${k}"><i class="mk"></i>${k === 'asking'
+      ? `<span class="lbl">${esc(head)}</span><span class="q">${esc(tx)}</span><span class="ans"><input id="ansText" placeholder="Your answer" aria-label="Your answer"><button class="btn primary sm" data-ans-send>Answer</button><button class="btn sm" data-ans-chat>Answered in the chat</button></span>`
+      : `<span><b>${esc(head)}</b> <span class="tx" ${k === 'agent' && A.working ? 'id="since"' : ''}>${esc(tx)}</span></span><span class="grow"></span>
+      ${A.focus && k === 'off' ? `<button class="btn sm" data-focus>Go to ${esc(A.app)} ${icon('out')}</button>` : ''}`}</div>
     <main>${body}</main>`;
 }
 
@@ -266,7 +342,7 @@ function whatHTML() {
       ${sentence(i) && i.status !== 'removed' ? `<div class="t">${inline(i).map(([k, v]) => `<span class="edit" contenteditable="plaintext-only" spellcheck="false" data-inv="${esc(i.id)}" data-key="${esc(k)}" data-placeholder="${esc(k)}">${esc(v)}</span>`).join(i.kind === 'change' ? ' → ' : ' ')}</div>` : `<div class="t">${esc(i.what)}</div>`}
       <div class="s">From ${esc(i.source || 'you')}${i.missing?.length ? ` · still needs ${esc(i.missing.join(', ').toLowerCase())}` : ''}</div></div>
     <div class="acts">${i.status === 'removed' ? `<button class="btn sm" data-inv-set="${esc(i.id)}" data-v="kept">Keep it</button>`
-      : `${i.status === 'proposed' ? `<button class="btn sm primary" data-inv-set="${esc(i.id)}" data-v="kept">Keep</button>` : `<button class="btn sm${i.must ? ' on' : ''}" data-inv-must="${esc(i.id)}" data-v="${i.must ? '' : '1'}">★ ${i.must ? 'Must appear' : 'Must?'}</button>`}<button class="btn sm" data-inv-set="${esc(i.id)}" data-v="removed">Not this</button>`}</div></div>`).join('');
+      : `${i.status === 'proposed' ? `<button class="btn sm primary" data-inv-set="${esc(i.id)}" data-v="kept">Keep</button>` : `${P.video && !inVideo(i) ? `<button class="btn sm primary" data-addto="${esc(i.group ?? '')}">Add it to the video</button>` : ''}<button class="btn sm${i.must ? ' on' : ''}" data-inv-must="${esc(i.id)}" data-v="${i.must ? '' : '1'}">★ ${i.must ? 'Must appear' : 'Must?'}</button>`}<button class="btn sm" data-inv-set="${esc(i.id)}" data-v="removed">Not this</button>`}</div></div>`).join('');
   const atInv = ['brief', 'inventory'].includes(P.stage), hasVideo = !!P.video;
   return `<div class="what">
     <h1>What your video says</h1>
@@ -278,31 +354,105 @@ function whatHTML() {
     ${inv.kinds && Object.keys(inv.kinds).length ? `<div class="addfact"><select id="addKind" aria-label="What is it">${Object.entries(inv.kinds).map(([id, k]) => `<option value="${id}">${esc(k.name)}</option>`).join('')}</select><input id="addText" placeholder="Add something true: a sentence, or a number and what it counts (163 pieces of motion)"><button class="btn" data-add-fact>Add</button></div>` : ''}
     <div class="nextbar"><span class="muted">${kept} thing${kept === 1 ? '' : 's'} in your video${wait ? ` · ${wait} still to decide` : ''}${inv.moments ? ` · a ${inv.seconds} s video holds about ${inv.moments} moments` : ''}</span>
       ${hasVideo ? `<button class="btn primary" data-view="video">Edit your video →</button>`
-        : atInv && P.stages.inventory?.status === 'review' && (kept || wait) ? `<button class="btn primary" data-make>${wait ? 'Keep the rest and make my video →' : 'Make my video →'}</button>`
+        : atInv && P.stages.inventory?.status === 'review' && (kept || wait) ? `<button class="btn primary" data-make>${wait ? 'Keep the rest. Next: how it looks →' : 'Next: how it looks →'}</button>`
         : P.building ? '<span class="muted">Building your video…</span>' : ''}</div></div>`;
 }
 
-// ─── 2 · your video ───────────────────────────────────────────────────────────────────────────────────────────────
+// ─── 2 · how it looks ────────────────────────────────────────────────────────────────────────────────────────
+// Every option is a still; pointing at one shows it in the single live preview, with the user's own sentence.
+let lookShown = null, lookHover = null, lookTimer = 0;
+const fontCss = new Set();
+function loadFonts(urls) { for (const u of urls) if (u && !fontCss.has(u)) { fontCss.add(u); document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: u })); } }
+async function showLook(patch) {
+  const key = JSON.stringify(patch ?? {});
+  if (key === lookShown || !$('lookPlayer')) return;
+  lookShown = key;
+  try {
+    const r = await (await fetch(`/api/look?p=${encodeURIComponent(piece)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: key })).json();
+    const box = $('lookPlayer'); if (!box || !r.url || lookShown !== key) return;
+    let f = box.querySelector('iframe'); if (!f) { f = document.createElement('iframe'); f.title = 'How it looks'; box.append(f); }
+    f.src = r.url; box.querySelector('.msg')?.remove();
+  } catch { /* the preview is starting */ }
+}
+function hoverLook(patch) { clearTimeout(lookTimer); lookTimer = setTimeout(() => { lookHover = patch; showLook(patch); }, 160); }
+// ─── the agent's suggestions: on the step and section they decide, first, marked as the agent's ─────────────────
+const waitingOn = (stepId) => (P.choices ?? []).some((c) => c.status === 'waiting' && (c.where?.step === stepId || (stepId === 'video' && c.where?.step !== 'look')));
+function choiceFace(o) {
+  if (o.beats) return `<div class="beats">${o.beats.map((b) => `<span><b>${esc(b.name)}</b> ${esc(b.what)}</span>`).join('')}</div>`;
+  if (o.items) return `<div class="kitf">${o.items.map((x) => x.colors ? `<i style="background:${x.colors.ground};border-bottom:5px solid ${x.colors.accent}"></i>` : x.display ? `<b style="font-family:'${esc(x.display)}'">Aa</b>` : x.poster ? `<img src="${esc(x.poster)}" alt="">` : '').join('')}</div>`;
+  if (o.colors) return `<div class="sw" style="background:${o.colors.ground};color:${o.colors.figure}"><b style="font-family:var(--serif)">Aa</b><i style="background:${o.colors.accent}"></i></div>`;
+  if (o.display) return `<div class="spec"><b style="font-family:'${esc(o.display)}'">Aa</b><span style="font-family:'${esc(o.text ?? o.display)}'">${esc(o.title)}</span></div>`;
+  return o.poster ? `<img src="${esc(o.poster)}" alt="" loading="lazy">` : '';
+}
+const lkPatch = (o) => (o.colors ? { palette: o.id, colors: o.colors } : o.display ? { font: o.id } : o.type === 'background' ? { background: o.id } : null);
+function sug(step, section) {
+  const list = (P.choices ?? []).filter((c) => c.status === 'waiting' && (c.where?.step === step || (step === 'video' && c.where?.step !== 'look')) && (!section || c.where?.section === section));
+  return list.map((c) => {
+    for (const o of c.options) if (o.css) loadFonts(o.css); else for (const x of o.items ?? []) if (x.css) loadFonts(x.css);
+    const cards = c.options.map((o) => { const lk = lkPatch(o);
+      return `<button class="lkc" data-choose="${c.id}" data-label="${o.label}" ${lk ? `data-lk='${JSON.stringify(lk)}'` : ''} ${o.clip ? `data-clip="${esc(o.clip)}"` : ''}><span class="sugb">Suggested by your agent</span><div class="lkf ${o.clip ? 'ph' : ''}" ${o.clip ? `style="background-image:url('${esc(o.poster)}')"` : ''}>${o.clip ? '' : choiceFace(o)}</div><div class="lkn"><span><b>${o.label}</b> · ${esc(o.title)}</span></div>${o.note ? `<p class="chnote">${esc(o.note)}</p>` : ''}</button>`; }).join('');
+    return `<div class="agentsug"><div class="agentnote"><b>Your agent suggests ${c.options.length === 2 ? 'two' : c.options.length === 3 ? 'three' : c.options.length === 4 ? 'four' : ''}.</b> ${esc(c.ask ?? c.title)}</div>
+      <div class="lkg">${cards}</div>
+      <div class="none"><input data-nonetext="${c.id}" placeholder="None of these? Say what you’d rather see" aria-label="What you would rather see"><button class="btn sm" data-none="${c.id}">None of these</button></div></div>`;
+  }).join('');
+}
+function lookHTML() {
+  const L = P.lookOptions; if (!L) return '<div class="empty">How it looks is loading…</div>';
+  const C = L.current, card = (on, attrs, face, name, sub = '') => `<button class="lkc ${on ? 'on' : ''}" ${attrs}><div class="lkf">${face}</div><div class="lkn"><span>${esc(name)}</span>${sub ? `<span class="muted">${esc(sub)}</span>` : ''}</div></button>`;
+  loadFonts(L.fonts.flatMap((f) => f.css));
+  const swatch = (c) => `<div class="sw" style="background:${c.ground};color:${c.figure}"><b style="font-family:var(--serif)">Aa</b><i style="background:${c.accent}"></i></div>`;
+  const pals = L.palettes.map((x) => card(C.palette === x.id, `data-lpal="${x.id}" data-lk='${JSON.stringify({ palette: x.id })}'`, swatch(x.colors), x.title)).join('');
+  const fonts = L.fonts.map((f) => card(C.font === f.id, `data-lfont="${f.id}" data-lk='${JSON.stringify({ font: f.id })}'`, `<div class="spec"><b style="font-family:'${esc(f.display)}'">Aa</b><span style="font-family:'${esc(f.text ?? f.display)}'">${esc(L.headline.slice(0, 28))}</span></div>`, f.title)).join('');
+  const bgFace = (b) => b.poster ? `<img src="${esc(b.poster)}" alt="" loading="lazy">` : `<div style="position:absolute;inset:0;background:linear-gradient(135deg, ${(b.colors.length ? b.colors : ['#222', '#555']).join(',')})"></div>`;
+  const bgs = L.backgrounds.slice(0, 24).map((b) => card(C.background === b.id, `data-lbg="${b.id}" data-lk='${JSON.stringify({ background: b.id })}'`, `${bgFace(b)}${b.mine ? '<span class="yours">Yours</span>' : ''}`, b.title)).join('');
+  const enters = L.entrances.map((e) => `<button class="lkc ${C.entrance === e.value ? 'on' : ''}" data-lenter="${e.value}" data-lk='${JSON.stringify({ entrance: e.value })}' ${e.clip ? `data-clip="${esc(e.clip)}"` : ''}><div class="lkf ph" style="background-image:url('${esc(e.poster ?? '')}')"></div><div class="lkn"><span>${esc(e.title)}</span></div></button>`).join('');
+  return `<div class="look">
+    <div class="lkpv"><div class="lbl" style="margin-bottom:8px">Your video, with your own sentence</div>
+      <div class="lkbox" id="lookPlayer"><button class="lkagain" data-look-replay>↻ Play again</button>${L.live ? '' : '<div class="msg">The live preview is starting…</div>'}</div>
+      <p class="hint" style="margin-top:10px">Point at any option to see it here; click it to choose. Your scenes follow.</p></div>
+    <div class="lkopts" id="lookOpts">
+      <h1>How it looks</h1>
+      <p class="sub">${P.stages.look?.status === 'approved' ? 'Your brand already has a look, so this step is done. Change anything you like.' : 'Choose its colours, type, background and movement.'}</p>
+      ${sug('look', 'kit')}
+      <section><h2>Colours</h2>${sug('look', 'colours')}<div class="lkg">${pals}</div>
+        <div class="lkcols">${['ground', 'figure', 'accent'].map((k) => `<label>${{ ground: 'Background', figure: 'Text', accent: 'Accent' }[k]} <input type="color" data-lcol="${k}" value="${esc(C.colors[k] ?? '#000000')}"></label>`).join('')}</div></section>
+      <section><h2>Type</h2>${sug('look', 'type')}<div class="lkg">${fonts}</div></section>
+      <section><h2>Background</h2>${sug('look', 'background')}<p class="hint">The stills are in the library’s colours: point at one to see it in yours.</p><div class="lkg">${bgs}</div></section>
+      <section><h2>Movement</h2>${sug('look', 'movement')}<div class="seg">${L.paces.map((x) => `<button class="${C.pace === x ? 'on' : ''}" data-lpace="${x}">${x[0].toUpperCase() + x.slice(1)}</button>`).join('')}</div>
+        <p class="hint" style="margin:14px 0 0">How words arrive</p><div class="lkg">${enters}</div></section>
+    </div>
+    <div class="nextbar"><span class="muted">${P.video ? 'Your scenes already use this look.' : 'Next, your video is built from what you kept, in this look.'}</span>
+      ${P.building ? '<span class="muted">Building your video…</span>' : P.video ? '<button class="btn primary" data-view="video">Back to your video →</button>' : '<button class="btn primary" data-build>Next: make my video →</button>'}</div></div>`;
+}
+
+// ─── 3 · your video ───────────────────────────────────────────────────────────────────────────────────────────────
 const cur = () => P.video?.parts.find((p) => p.dir === sel) ?? P.video?.parts[0];
 const joinName = (id) => P.library?.joins.find((j) => j.id === id)?.title ?? id;
-const firstWords = (p) => { const w = p.words.find((f) => f.kind === 'text' && f.value) ?? p.words.find((f) => f.value); return w ? String(w.value).split('\n')[0] : p.summary; };
+const firstWords = (p) => { const w = p.words.find((f) => f.kind === 'text' && f.value) ?? p.words.find((f) => f.value); return w ? String(w.value).split('\n')[0].replace(/\s*\|\s*/g, ' ') : p.summary; };
+// is a kept item shown by some scene already (the video never rebuilds by itself: the user adds what is new)
+const inVideo = (i) => (P.video?.parts ?? []).some((x) => (x.shows ?? []).includes(i.id));
+function paintStills() {
+  for (const x of P.video?.parts ?? []) { const th = document.querySelector(`.scenes .part[data-part="${CSS.escape(x.dir)}"] .th`); if (th) th.style.backgroundImage = `url('${x.still ?? x.poster}')`; }
+}
 function videoHTML() {
   const V = P.video;
-  if (!V) return `<div class="empty">${P.building ? 'Building your video from what you kept…' : 'Your video appears here once you keep what it says.'}<div style="margin-top:16px"><button class="btn" data-view="what">Go to What it says</button></div></div>`;
+  if (!V) return `<div class="empty">${P.building ? 'Building your video from what you kept…' : 'Your video appears here once you choose how it looks.'}<div style="margin-top:16px"><button class="btn" data-view="${P.stages.inventory?.status === 'approved' ? 'look' : 'what'}">${P.stages.inventory?.status === 'approved' ? 'Go to How it looks' : 'Go to What you want to say'}</button></div></div>`;
   const p = cur(); sel = p?.dir;
   const shape = V.format === '1080x1920' ? ' tall' : V.format === '1080x1080' ? ' sq' : '';
-  return `<div class="editor"><div class="center">
+  // scenes, not a timeline: a list like slides, each with a still of itself, what it says and how long it plays
+  return `<div class="editor">
+    <aside class="scenes" id="track"><p class="lbl" style="margin:2px 2px 10px">Your scenes · drag to reorder</p>
+      ${V.parts.map((x, i) => `<div class="part${x.dir === sel ? ' sel' : ''}" draggable="true" data-part="${esc(x.dir)}">
+        <span class="n">${String(i + 1).padStart(2, '0')}</span>
+        <div class="th" style="background-image:url('${esc(x.still ?? x.poster)}')"></div>
+        <div class="meta"><div class="nm">${esc(firstWords(x))}</div><div class="tx">${esc(x.title)} · ${Number(x.seconds).toFixed(1)} s</div></div></div>`).join('')}
+      <button class="btn addscn" data-addat="${V.parts.length}">${icon('add')}Add a scene</button></aside>
+    <div class="center">${sug('video')}
       <div class="player${shape}" id="player"><span class="badge" id="pbadge"></span></div>
-      <div class="pbar"><span id="pinfo"></span><span class="grow"></span><span>${V.total} s · ${V.parts.length} parts</span>
+      <div class="pbar"><span id="pinfo"></span><span class="grow"></span><span>${V.total} s · ${V.parts.length} scenes</span>
         <button class="btn sm" data-playall>${icon('play')}${playing ? 'Stop' : 'Play the whole video'}</button>
         ${P.stage === 'video' && P.stages.video?.status === 'review' ? `<button class="btn primary sm" data-approve="video">It looks right → Export</button>` : `<button class="btn sm" data-view="export">Export →</button>`}</div>
-      <div><p class="lbl" style="margin:4px 0 8px">Your video, in order · drag to reorder · ＋ adds a part · the arrow is the transition</p>
-      <div class="track" id="track">${V.parts.map((x, i) => `${i === 0 ? `<div class="addp"><button data-addat="0" title="Add a part here">${icon('add')}</button></div>` : ''}
-        <div class="part${x.dir === sel ? ' sel' : ''}" draggable="true" data-part="${esc(x.dir)}" data-clip="${esc(x.clip)}">
-          <div class="th" style="background-image:url('${esc(x.poster)}')"><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="sec">${Number(x.seconds).toFixed(1)}s</span></div>
-          <div class="meta"><div class="nm">${esc(x.title)}</div><div class="tx">${esc(firstWords(x))}</div></div></div>
-        ${x.join ? `<div class="join"><button data-joinof="${esc(x.dir)}" title="Transition: ${esc(joinName(x.join))}">${icon('join')}</button><small>${esc(joinName(x.join))}</small></div>` : ''}
-        <div class="addp"><button data-addat="${i + 1}" title="Add a part here">${icon('add')}</button></div>`).join('')}</div></div>
+      <p class="hint" style="text-align:center">Each scene plays once and holds its last frame; click it to play it again.</p>
     </div><aside class="insp" id="insp">${p ? inspHTML(p) : ''}</aside></div>`;
 }
 function inspHTML(p) {
@@ -318,19 +468,23 @@ function inspHTML(p) {
   };
   const B = P.inventory?.backgrounds ?? { mine: [], library: [] };
   const panes = {
-    words: p.words.length ? p.words.map(fld).join('') : '<p class="hint">This part has no words of its own.</p>',
-    motion: p.motion ? `<p class="hint">How it arrives. Point at one to see it move.</p><div class="tiles">${p.motion.demos.map((d) => tile(d, `data-motion="${esc(d.value)}"`, d.value === p.motion.value)).join('')}</div>`
-      : `<p class="hint">This part has its own way of moving.</p><div class="tiles">${tile({ title: p.title, summary: p.summary, poster: p.poster, clip: p.clip }, 'disabled', true)}</div><button class="btn sm" data-swap>Show it another way</button>`,
+    text: p.words.length ? p.words.map(fld).join('') : '<p class="hint">This scene has no words of its own.</p>',
+    anim: `${p.motion ? `<p class="hint">How it arrives. Point at one to see it move.</p><div class="tiles">${p.motion.demos.map((d) => tile(d, `data-motion="${esc(d.value)}"`, d.value === p.motion.value)).join('')}</div>`
+      : `<p class="hint">This scene has its own way of moving.</p><div class="tiles">${tile({ title: p.title, summary: p.summary, poster: p.poster, clip: p.clip }, 'disabled', true)}</div><button class="btn sm" data-swap>Show it another way</button>`}
+      ${p.tune.length ? `<p class="lbl" style="margin-top:6px">Its settings</p>${p.tune.map((t) => t.kind === 'number'
+        ? `<div class="slider"><div>${esc(t.label)}<em id="tv-${esc(t.name)}">${esc(t.value)}</em></div><input type="range" min="${t.min}" max="${t.max}" step="${t.step}" value="${esc(t.value)}" data-tune="${esc(t.name)}"></div>`
+        : `<div class="fld">${esc(t.label)}<div class="seg">${t.options.map((o) => `<button class="btn sm${String(t.value) === String(o) ? ' on' : ''}" data-tunev="${esc(t.name)}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`).join('')}` : ''}`,
     bg: !p.takesBackground ? '<p class="hint">This part draws its own background, so it has none to change. Show it another way to use one.</p>' : `<p class="hint">Behind this part. Point at one to see it move.</p><div class="tiles">${[{ id: '', title: "Your brand's first", colors: [] , entry: null }, ...B.mine].map((b) => `<button class="tile${(p.background ?? '') === b.id ? ' on' : ''}" data-bg="${esc(b.id)}">${b.entry ? swatch(b) : '<div class="ph" style="display:grid;place-items:center;color:var(--muted);font-size:12px">default</div>'}<div class="lb">${esc(b.title)}</div></button>`).join('')}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-bgall>Use this background on every part</button>${B.library.length ? `<button class="btn sm" data-bgmore>More backgrounds (${B.library.length})</button>` : ''}</div>`,
-    tune: `${p.tune.map((t) => t.kind === 'number'
-        ? `<div class="slider"><div>${esc(t.label)}<em id="tv-${esc(t.name)}">${esc(t.value)}</em></div><input type="range" min="${t.min}" max="${t.max}" step="${t.step}" value="${esc(t.value)}" data-tune="${esc(t.name)}"></div>`
-        : `<div class="fld">${esc(t.label)}<div class="seg">${t.options.map((o) => `<button class="btn sm${String(t.value) === String(o) ? ' on' : ''}" data-tunev="${esc(t.name)}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`).join('')}
-      <div class="slider"><div>Length<em id="tv-seconds">${Number(p.seconds).toFixed(1)} s</em></div><input type="range" min="${p.range.min}" max="${p.range.max}" step="0.1" value="${p.seconds}" data-seconds data-natural="${p.duration}"></div>
-      <p class="hint" id="tv-pace">${pace(p.seconds, p.duration)}</p>`,
+    speed: `<div class="slider"><div>Length<em id="tv-seconds">${Number(p.seconds).toFixed(1)} s</em></div><input type="range" min="${p.range.min}" max="${p.range.max}" step="0.1" value="${p.seconds}" data-seconds data-natural="${p.duration}"></div>
+      <p class="hint" id="tv-pace">${pace(p.seconds, p.duration)}</p>
+      <p class="hint">This scene always plays whole: its own length is ${Number(p.duration).toFixed(1)} s. Shorter plays it faster, longer slower.</p>`,
+    next: !p.join ? '<p class="hint">This is the last scene: the video ends here.</p>'
+      : `<p class="hint">How it passes to scene ${P.video.parts.indexOf(p) + 2}. Point at one to see it move.</p><div class="tiles">${(P.library?.joins ?? []).map((j) => tile(j, `data-joinp="${esc(j.id)}"`, p.join === j.id)).join('')}</div>
+        <button class="btn sm" data-joinallp>Use ${esc(joinName(p.join))} between every scene</button>`,
   };
-  return `<div class="lbl">Part ${n} of ${P.video.parts.length}</div><h2>${esc(p.title)}</h2><p class="hint sum">${esc(p.summary)}</p>
-    <div class="tabs">${[['words', 'Words'], ['motion', 'Motion'], ['bg', 'Background'], ['tune', 'Tune']].map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>
+  return `<div class="lbl">Scene ${n} of ${P.video.parts.length}</div><h2>${esc(p.title)}</h2><p class="hint sum">${esc(p.summary)}</p>
+    <div class="tabs">${[['text', 'Text'], ['anim', 'Animation'], ['bg', 'Background'], ['speed', 'Speed'], ['next', 'Next scene']].map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>
     <div class="pane">${panes[tab]}</div>
     <div class="partacts"><button class="btn sm" data-swap>Show it another way</button><button class="btn sm" data-dup>Duplicate</button><button class="btn sm" data-remove>Remove</button></div>`;
 }
@@ -363,18 +517,25 @@ function exportHTML() {
 // ─── drawing ──────────────────────────────────────────────────────────────────────────────────────────────────────
 function render() {
   if (!P) return;
+  paintThread();   // the thread lives outside the page body, so it is painted even while a field has focus
   // a field being typed in is never redrawn under the cursor: the page catches up when it loses focus
   const a = document.activeElement;
   if (a && a.closest?.('#app') && (a.matches('input, textarea, select') || a.isContentEditable)) { pending = true; return; }
   pending = false;
-  const body = view === 'what' ? whatHTML() : view === 'video' ? videoHTML() : exportHTML();
-  const keepPlayer = $('player')?.querySelector('iframe');
-  const scroll = { insp: $('insp')?.scrollTop ?? 0, track: $('track')?.scrollLeft ?? 0 };
+  const body = view === 'what' ? whatHTML() : view === 'look' ? lookHTML() : view === 'video' ? videoHTML() : exportHTML();
+  const keepPlayer = $('player')?.querySelector('iframe'), keepLook = $('lookPlayer')?.querySelector('iframe');
+  // live previews survive a redraw: parked outside the page body and moved back without reloading (moveBefore keeps an
+  // iframe alive where the browser has it; elsewhere it reloads, as before)
+  const park = $('park'), keep = (f, into) => { if (!f || !into) return; if (into.moveBefore && f.isConnected) into.moveBefore(f, null); else into.append(f); };
+  keep(keepPlayer, park); keep(keepLook, park);
+  const scroll = { insp: $('insp')?.scrollTop ?? 0, track: $('track')?.scrollTop ?? 0 };
   $('app').innerHTML = frame(body);
-  if (keepPlayer && $('player')) { $('player').append(keepPlayer); }
+  keep(keepPlayer, $('player')); keep(keepLook, $('lookPlayer'));
+  for (const f of park.querySelectorAll('iframe')) f.remove();   // a preview whose step is gone
+  if (view === 'look') showLook(lookHover);
   paintPlayer();
   if ($('insp')) $('insp').scrollTop = scroll.insp;
-  if ($('track')) $('track').scrollLeft = scroll.track;
+  if ($('track')) $('track').scrollTop = scroll.track;
   if (sheetOpen) paintSheet();
 }
 let pending = false;
@@ -391,7 +552,7 @@ function paintSheet() {
   const head = (small, title) => `<header><div><span class="lbl">${esc(small)}</span><h2>${esc(title)}</h2></div><button class="btn sm" data-close>Close</button></header>`;
   const L = P.library ?? { intents: [], joins: [] };
   let h = '';
-  if (s.kind === 'add') h = head(`Add a part · position ${s.arg + 1}`, 'What do you want to add?') + `<p class="hint" style="margin-top:14px">Point at one to see it move. It arrives with something you kept, when it can show it.</p>` + L.intents.map((g) => `<div class="grp"><h3 class="lbl">${esc(g.title)}</h3><div class="tiles">${g.blocks.map((b) => tile(b, `data-addblock="${esc(b.id)}"`)).join('')}</div></div>`).join('');
+  if (s.kind === 'add') h = head(`Add a scene${s.arg ? ` · after scene ${s.arg}` : ' · at the start'}`, 'What is it for?') + `<p class="hint" style="margin-top:14px">Point at one to see it move. It arrives with something you kept, when it can show it.</p>` + L.intents.map((g) => `<div class="grp"><h3 class="lbl">${esc(g.title)}</h3><div class="tiles">${g.blocks.map((b) => tile(b, `data-addblock="${esc(b.id)}"`)).join('')}</div></div>`).join('');
   else if (s.kind === 'swap') { const p = cur(), mine = L.intents.find((g) => g.blocks.some((b) => b.id === p.id)); h = head(`Part ${P.video.parts.indexOf(p) + 1}`, 'Show it another way') + `<p class="hint" style="margin-top:14px">Same content, shown differently. Point at one to see it move.</p>` + [mine, ...L.intents.filter((g) => g !== mine)].filter(Boolean).map((g, i) => `<div class="grp"><h3 class="lbl">${i ? esc(g.title) : `${esc(g.title)} · like this part`}</h3><div class="tiles">${g.blocks.map((b) => tile(b, `data-swapto="${esc(b.id)}"`, b.id === p.id)).join('')}</div></div>`).join(''); }
   else if (s.kind === 'join') { const p = P.video.parts.find((x) => x.dir === s.arg), i = P.video.parts.indexOf(p); h = head(`Between part ${i + 1} and ${i + 2}`, 'How one leads to the next') + `<p class="hint" style="margin-top:14px">Point at one to see it move.</p><div class="grp"><div class="tiles">${L.joins.map((j) => tile(j, `data-setjoin="${esc(j.id)}"`, p.join === j.id)).join('')}</div></div><button class="btn sm" data-joinall style="margin-top:16px">Use ${esc(joinName(p.join))} everywhere</button>`; }
   else if (s.kind === 'bgmore') { const B = P.inventory?.backgrounds ?? { library: [] }; h = head('Backgrounds', 'Add a background') + `<p class="hint" style="margin-top:14px">Point at one to see it move. Adding one puts it in your brand, in your colours, and uses it on this part.</p><div class="grp"><div class="tiles">${B.library.map((b) => `<button class="tile" data-bgadd="${esc(b.id)}">${swatch(b)}<div class="lb">${esc(b.title)}</div></button>`).join('')}</div></div>`; }
@@ -419,22 +580,36 @@ document.addEventListener('click', async (e) => {
   else if (d.tab) { tab = d.tab; render(); }
   else if ('undo' in d) act({ type: 'undo' });
   else if ('style' in d) openSheet('style');
-  else if ('ask' in d) $('ask').classList.add('on');
+  else if ('ask' in d) { $('ask').classList.add('on'); markNotes(); paintThread(); render(); }
   else if ('askClose' in d) $('ask').classList.remove('on');
-  else if ('askSend' in d) { const t = $('askText').value.trim(); if (!t) return; await act({ type: 'changes', stage: P.stage, text: t }, true); $('askText').value = ''; $('ask').classList.remove('on'); toast(P.agent?.listening ? 'Sent to your agent' : 'Saved. Tell your agent “continue” in the chat', 3600); }
+  else if ('askSend' in d) { const t = $('askText').value.trim(); if (!t) return; $('askText').value = ''; await act({ type: 'message', text: t }, true); toast(P.agent?.state === 'listen' ? 'Sent to your agent' : 'Kept for your agent: it reads it when it’s back', 3200); }
+  else if ('ansSend' in d) { const t = $('ansText')?.value.trim(); if (!t) return; await act({ type: 'answer', text: t }, true); toast(P.agent?.listening ? 'Your agent got your answer' : 'Kept: your agent reads your answer when it’s back', 3200); }
+  else if ('ansChat' in d) { await act({ type: 'ask-close' }, true); toast('Closed'); }
   else if ('focus' in d) fetch(`/api/focus?p=${encodeURIComponent(piece)}`, { method: 'POST' });
   else if (d.approve) { await act({ type: 'approve', stage: d.approve }); if (d.approve === 'video') { view = 'export'; render(); } }
-  else if ('make' in d) { if (P.inventory.items.some((i) => i.status === 'proposed')) await act({ type: 'inv-rest', value: 'kept' }, true); await act({ type: 'approve', stage: 'inventory' }, true); view = 'video'; toast('Building your video…', 3000); render(); }
+  else if ('make' in d) { if (P.inventory.items.some((i) => i.status === 'proposed')) await act({ type: 'inv-rest', value: 'kept' }, true); await act({ type: 'approve', stage: 'inventory' }, true); view = 'look'; lookShown = null; render(); scrollTo({ top: 0 }); }
+  else if ('build' in d) { await act({ type: 'approve', stage: 'look' }, true); view = 'video'; if (!P.video) toast('Building your video…', 3000); render(); scrollTo({ top: 0 }); }
+  else if (d.lpal) { await act({ type: 'style-palette', value: d.lpal }); lookShown = null; showLook(null); }
+  else if (d.lfont) { await act({ type: 'style-font', value: d.lfont }); lookShown = null; showLook(null); }
+  else if (d.lbg) { await act({ type: 'style-background', value: d.lbg }); lookShown = null; showLook(null); }
+  else if (d.lenter) { await act({ type: 'style-entrance', value: d.lenter }); lookShown = null; showLook(null); }
+  else if (d.lpace) { await act({ type: 'style-pace', value: d.lpace }); lookShown = null; showLook(null); }
+  else if ('lookReplay' in d) { lookShown = null; showLook(lookHover); }
+  else if (d.choose) { const r = await act({ type: 'choose', choice: d.choose, label: d.label }, true); if (!r?.error) toast(`${P.agent?.listening ? 'Sent to your agent' : 'Kept for your agent'}: ${d.label}`, 2800); lookShown = null; if (view === 'look') showLook(null); }
+  else if (d.none) { const t = document.querySelector(`[data-nonetext="${d.none}"]`)?.value.trim() ?? ''; await act({ type: 'choose', choice: d.none, none: true, text: t }, true); toast('Your agent will look for others', 2800); }
   else if (d.invSet) act({ type: 'inv-status', id: d.invSet, value: d.v }, true);
   else if (d.invMust) act({ type: 'inv-must', id: d.invMust, value: !!d.v }, true);
   else if ('addFact' in d) { const k = $('addKind').value, t = $('addText').value.trim(); if (!t) return toast('Write it first'); const m = t.match(/^([\d.,]+%?)\s+(.+)$/); const fields = k === 'line' ? { text: t } : k === 'figure' && m ? { value: m[1], label: m[2] } : k === 'share' && m ? { value: m[1].replace('%', ''), label: m[2] } : { text: t, label: t }; const r = await act({ type: 'inv-add', kind: k, fields }, true); if (!r.error) { $('addText').value = ''; toast('Added'); } }
   else if (d.addat !== undefined) openSheet('add', Number(d.addat));
-  else if (d.addblock) { closeSheet(); const r = await act({ type: 'v-add', at: sheetOpenAt, block: d.addblock }); if (r.part) { sel = r.part; tab = 'words'; render(); } }
+  else if (d.addblock) { closeSheet(); const r = await act({ type: 'v-add', at: sheetOpenAt, block: d.addblock }); if (r.part) { sel = r.part; tab = 'text'; render(); } }
   else if ('swap' in d) openSheet('swap');
   else if (d.swapto) { closeSheet(); const r = await vact('swap', { block: d.swapto }); if (r.part) { sel = r.part; render(); } }
   else if ('dup' in d) { const r = await vact('duplicate'); if (r.part) { sel = r.part; render(); } }
   else if ('remove' in d) { const i = P.video.parts.findIndex((x) => x.dir === sel); const r = await vact('remove'); if (!r.error) { sel = P.video.parts[Math.max(0, i - 1)]?.dir; render(); toast('Removed. Undo brings it back.'); } }
   else if (d.joinof) openSheet('join', d.joinof);
+  else if (d.addto !== undefined) { view = 'video'; render(); scrollTo({ top: 0 }); openSheet('add', P.video.parts.length); }
+  else if (d.joinp) act({ type: 'v-join', part: sel, value: d.joinp });
+  else if ('joinallp' in d) { const p = cur(); act({ type: 'v-join', part: p.dir, value: p.join, all: true }); }
   else if (d.setjoin) { const at = sheetOpen.arg; closeSheet(); act({ type: 'v-join', part: at, value: d.setjoin }); }
   else if ('joinall' in d) { const p = P.video.parts.find((x) => x.dir === sheetOpen.arg); closeSheet(); act({ type: 'v-join', part: p.dir, value: p.join, all: true }); }
   else if (d.motion) vact('motion', { value: d.motion });
@@ -464,7 +639,8 @@ function playAll() {
 }
 let onEnded = null;
 addEventListener('message', (e) => { if (e.data?.pm === 'ended' && onEnded && e.source === $('player')?.querySelector('iframe')?.contentWindow) onEnded(); });
-document.addEventListener('change', (e) => {
+document.addEventListener('change', async (e) => {
+  if (e.target.dataset?.lcol) { await act({ type: 'style-color', key: e.target.dataset.lcol, value: e.target.value }); lookShown = null; showLook(null); return; }
   const d = e.target.dataset;
   if (d.word !== undefined) vact('word', { key: d.word, value: e.target.value });
   else if (d.tune) vact('tune', { key: d.tune, value: e.target.value });
@@ -493,6 +669,9 @@ document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.target.closest('input, textarea, [contenteditable]') && P?.undo) { e.preventDefault(); act({ type: 'undo' }); }
 });
 // samples play while the pointer is on them: a block's clip, or a background's shader running live
+document.addEventListener('mouseover', (e) => {
+  if (view === 'look') { const k = e.target.closest?.('[data-lk]'); if (k) hoverLook(JSON.parse(k.dataset.lk)); else if (lookHover && !e.target.closest?.('#lookPlayer')) hoverLook(null); }
+});
 document.addEventListener('mouseover', (e) => {
   const c = e.target.closest?.('[data-clip]'); const ph = c?.querySelector('.ph, .th');
   if (ph && c.dataset.clip && !ph.querySelector('video')) { const v = document.createElement('video'); Object.assign(v, { src: c.dataset.clip, muted: true, loop: true, autoplay: true, playsInline: true }); ph.append(v); }

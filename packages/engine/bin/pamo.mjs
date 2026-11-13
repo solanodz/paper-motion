@@ -364,7 +364,7 @@ async function main() {
         const { parseSet, setArgs } = await import('../lib/customize.mjs');
         const reg = resolveRegistry(args.registry), { items } = await getIndex(reg), index = Object.fromEntries(items.map((i) => [i.id, i]));
         const opts = process.argv.flatMap((a, i, all) => (a === '--option' ? [all[i + 1]] : a.startsWith('--option=') ? [a.slice(9)] : [])).filter(Boolean);
-        if (!opts.length || !args.title || args.help) { console.error('Usage: board --url --title "…" [--ask "…"] [--reply name] [--look palette[:key=value,…],font | --look brand] --option id[:key=value,…] [--note "why"] … [--kit] [--choose 1-3] [--wait minutes | --no-wait] [--long] [--site url]\n       board --await <id|link> [--wait minutes]   (wait again for a board already shared)\n       board --forget <id>\n  On a recipe board an option may be a structure of your own: --option "@Title | 18 | Hook 0-2 [word-swap] one line; Proof 2-12 [browser-frame] three shots; Close 12-18 [svg-logo] the action" (a [block-id] makes the board play that clip for the beat).\n  Prints a live board link: short (/b/<id>, stored on the site for 90 days) when the site answers, long (the board in the URL fragment) otherwise or with --long. Values after the colon are your adjustments; the reply line carries every non-default value.\n  With a short link the command keeps running until the user chooses in the browser (10 min; --wait 3 changes it, in minutes; --no-wait returns at once) and prints the reply line, the same one they could paste. If your shell caps how long a command runs, share with --no-wait and then wait in short steps: board --await <id> --wait 2, again until it prints the line (exit code 3 means not yet). Values take lists and several keys: --option graphite:accent=#B8F03C,ramp=["#0A0A0B","#B8F03C"] (quote it for the shell); --look brand uses the palette, colors and font pair this project installed. --choose lets them pick several options (a count, or min-max). --forget deletes a stored board early.'); process.exit(args.help ? 0 : 1); }
+        if (!opts.length || !args.title || args.help) { console.error('Usage: board --url --title "…" [--ask "…"] [--reply name] [--look palette[:key=value,…],font | --look brand] --option id[:key=value,…] [--note "why"] … [--kit] [--choose 1-3] [--wait minutes | --no-wait] [--long] [--site url] [--link]  (with a piece open and its studio running the options go into the studio, not a link; --link makes a link anyway)\n       board --await <id|link> [--wait minutes]   (wait again for a board already shared)\n       board --forget <id>\n  On a recipe board an option may be a structure of your own: --option "@Title | 18 | Hook 0-2 [word-swap] one line; Proof 2-12 [browser-frame] three shots; Close 12-18 [svg-logo] the action" (a [block-id] makes the board play that clip for the beat).\n  Prints a live board link: short (/b/<id>, stored on the site for 90 days) when the site answers, long (the board in the URL fragment) otherwise or with --long. Values after the colon are your adjustments; the reply line carries every non-default value.\n  With a short link the command keeps running until the user chooses in the browser (10 min; --wait 3 changes it, in minutes; --no-wait returns at once) and prints the reply line, the same one they could paste. If your shell caps how long a command runs, share with --no-wait and then wait in short steps: board --await <id> --wait 2, again until it prints the line (exit code 3 means not yet). Values take lists and several keys: --option graphite:accent=#B8F03C,ramp=["#0A0A0B","#B8F03C"] (quote it for the shell); --look brand uses the palette, colors and font pair this project installed. --choose lets them pick several options (a count, or min-max). --forget deletes a stored board early.'); process.exit(args.help ? 0 : 1); }
         const LABELS = ['A', 'B', 'C', 'D'];
         // commas only separate at the top level (not inside [..], {..} or quotes), and only before a new "key=":
         // so ramp=["#000","#111"] and multi-value colors survive
@@ -420,6 +420,31 @@ async function main() {
         } else if (typeof args.look === 'string') for (const spec of splitLook(args.look)) { const o = await parseOne(spec); const t = index[o.id]?.type; if (t === 'palette') look.palette = o; else if (t === 'font-pair') look.font = o; else throw new Error(`--look takes a palette and a font pair (or "brand"), not "${o.id}"`); }
         const choose = args.choose === undefined ? undefined : /^\d+-\d+$/.test(String(args.choose)) ? String(args.choose).split('-').map(Number) : Number(args.choose);
         const board = { v: 1, kind: args.kit ? 'kit' : 'resource', title: String(args.title), ...(args.ask ? { ask: String(args.ask) } : {}), ...(args.reply ? { reply: String(args.reply) } : {}), ...(Object.keys(look).length ? { look } : {}), ...(choose !== undefined ? { choose } : {}), options };
+        // a piece open with its studio running: the options go into the studio, on the step they decide, not into a
+        // link; the command waits there and prints the same reply line (ADR 0005). --link makes a site link anyway.
+        if (!args.link) {
+          const PCs = await import('../lib/piece.mjs');
+          const pdirS = PCs.activePiece(process.cwd(), typeof args.piece === 'string' ? args.piece : undefined);
+          const st = pdirS ? await (await import('../lib/studio.mjs')).findStudio(process.cwd()) : null;
+          if (st) {
+            const { validateBoard } = await import('../lib/live-board.js');
+            const errs = validateBoard(board, index); if (errs.length) { console.error(`✗ ${errs.join('; ')}`); process.exit(1); }
+            const type = board.kind === 'kit' ? 'kit' : board.options[0].structure ? 'structure' : index[board.options[0].id]?.type;
+            const PLACE = { palette: ['look', 'colours', 'How it looks · Colours'], 'font-pair': ['look', 'type', 'How it looks · Type'], background: ['look', 'background', 'How it looks · Background'],
+              text: ['look', 'movement', 'How it looks · Movement'], component: ['look', 'movement', 'How it looks · Movement'], camera: ['look', 'movement', 'How it looks · Movement'], kit: ['look', 'kit', 'How it looks'],
+              transition: ['video', 'joins', 'Your video'], structure: ['video', 'structure', 'Your video'], recipe: ['video', 'structure', 'Your video'], block: ['video', 'scenes', 'Your video'], shot: ['video', 'scenes', 'Your video'] };
+            const [step, section, label] = PLACE[type] ?? ['video', 'other', 'Your video'];
+            const cid = PCs.addChoice(pdirS, { board, where: { step, section, type } });
+            console.log(`in the studio, on ${label}: ${st.url}?p=${encodeURIComponent(path.basename(pdirS))}  (choice ${cid}; no link to share)`);
+            if (args['no-wait']) { console.error(`the user chooses in the studio; wait for it with: board --await ${cid}`); break; }
+            const minutes = Number.isFinite(Number(args.wait)) && args.wait !== undefined && args.wait !== true ? Number(args.wait) : 10;
+            console.error(`waiting up to ${minutes} min for their choice in the studio…`);
+            const line = await PCs.awaitChoiceIn(pdirS, cid, { timeout: minutes * 60 * 1000 });
+            if (!line) { console.error(`no choice yet: wait again with board --await ${cid}`); process.exit(3); }
+            console.log(line);
+            break;
+          }
+        }
         const site = typeof args.site === 'string' ? args.site : SITE;
         let frag, short = null;
         try { frag = await encodeBoard(board, index); } catch (e) { console.error(e.message); process.exit(1); }
@@ -441,6 +466,22 @@ async function main() {
           if (pdir) PC.markBoard(pdir, short.id, choice.line);
           console.log(choice.line);
         } else if (!short && wait) console.error('(no short link, so no waiting: the user will paste the line from the board)');
+        break;
+      }
+      if (args.await && /^c\d+$/.test(String(args.await))) {   // a choice in the studio
+        const PCs = await import('../lib/piece.mjs'), pdirS = PCs.activePiece(process.cwd(), typeof args.piece === 'string' ? args.piece : undefined);
+        if (!pdirS) { console.error('no open piece here (pass --piece)'); process.exit(1); }
+        const minutes = Number.isFinite(Number(args.wait)) && args.wait !== undefined && args.wait !== true ? Number(args.wait) : 10;
+        console.error(`waiting up to ${minutes} min for their choice in the studio…`);
+        const line = await PCs.awaitChoiceIn(pdirS, String(args.await), { timeout: minutes * 60 * 1000 });
+        if (!line) { console.error('no choice yet: run it again'); process.exit(3); }
+        console.log(line);
+        break;
+      }
+      if (args.forget && /^c\d+$/.test(String(args.forget))) {
+        const PCs = await import('../lib/piece.mjs'), pdirS = PCs.activePiece(process.cwd(), typeof args.piece === 'string' ? args.piece : undefined);
+        if (!pdirS) { console.error('no open piece here (pass --piece)'); process.exit(1); }
+        PCs.forgetChoice(pdirS, String(args.forget)); console.log(`took choice ${args.forget} out of the studio`);
         break;
       }
       if (args.await) {
@@ -657,7 +698,7 @@ async function main() {
 
     case 'piece': {
       const sub = args._[1], piece = args._[2];
-      if (!['init', 'review', 'working', 'status', 'ask'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …] [--no-studio] [--force]\n       piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open] [--no-studio] [--skip]\n       piece working <piece> <stage>\n       piece ask <piece> "the question you are asking in the chat" | --done\n       piece status <piece>\n  ask: run it right before you ask the user anything in the chat, so the studio sends them there (the next review or working clears it, or --done). --return <url> on any of these gives the studio a link back to you when you run in a browser.\n  Stages: brief, inventory (what the video can show), video (they edit it in the studio), final. review hands a stage to the user in the studio and prints what they did, one line each; it refuses while an earlier stage is not approved (--skip moves on without it, only when the user agreed). --no-wait returns at once with what is unread; --no-open does not open their browser; --no-studio runs without the studio.'); process.exit(args.help ? 0 : 1); }
+      if (!['init', 'review', 'working', 'status', 'ask', 'listen', 'say'].includes(sub) || !piece || args.help) { console.error('Usage: piece init <piece> [--title "…"] [--what …] [--who …] [--format …] [--tone …] [--action …] [--no-studio] [--force]\n       piece review <piece> <stage> [--wait 30 (minutes)] [--no-wait] [--no-open] [--no-studio] [--skip]\n       piece listen <piece> [--wait 9 (minutes)]\n       piece working <piece> <stage> [--on "what you are doing, in plain words"]\n       piece say <piece> "a short reply the user reads in the studio"\n       piece ask <piece> "the question" | --done\n       piece status <piece>\n  listen: run it in the background between your turns; it returns as soon as the user does something that needs you (a message, an answer, an approval, a choice), printing it as lines, or after --wait minutes with nothing (exit 3: start it again). While it runs the studio says you are listening.\n  ask: run it right before you ask the user anything in the chat, so the studio sends them there (the next review or working clears it, or --done). --return <url> on any of these gives the studio a link back to you when you run in a browser.\n  Stages: brief, inventory (what the video can show), video (they edit it in the studio), final. review hands a stage to the user in the studio and prints what they did, one line each; it refuses while an earlier stage is not approved (--skip moves on without it, only when the user agreed). --no-wait returns at once with what is unread; --no-open does not open their browser; --no-studio runs without the studio.'); process.exit(args.help ? 0 : 1); }
       const P = await import('../lib/piece.mjs');
       const { pieceDir } = await import('../lib/chain.mjs');
       const dir = pieceDir(piece), studioLib = await import('../lib/studio.mjs'), q = `?p=${encodeURIComponent(path.basename(dir))}`;
@@ -689,15 +730,31 @@ async function main() {
         await host();
         if (args.done) { P.clearAsk(dir); console.log('✓ cleared: the studio no longer sends the user to the chat'); break; }
         const question = typeof args._[3] === 'string' ? args._[3].trim() : '';
-        if (!question) { console.error('piece ask: give the question in one line (the one you are asking in the chat), or --done'); process.exit(1); }
+        if (!question) { console.error('piece ask: give the question in one line, or --done'); process.exit(1); }
         P.setAsk(dir, question);
-        console.log(`✓ the studio now tells the user you asked this in the chat${P.readPiece(dir).agent ? ', with a way back to you' : ''}. Ask it now; the next piece review or piece working clears it (or piece ask ${piece} --done).`);
+        console.log(`✓ the studio shows your question with a box to answer it; their answer reaches piece listen ${piece} as an "answered" line. Ask it in the chat too. It closes when they answer, or with the next piece review or piece working (or piece ask ${piece} --done).`);
+        break;
+      }
+      if (sub === 'listen') {
+        if (!P.readPiece(dir)) { console.error(`no piece.json in ${path.relative(process.cwd(), dir)}`); process.exit(1); }
+        await host();
+        const minutes = Number.isFinite(Number(args.wait)) && args.wait !== undefined && args.wait !== true ? Number(args.wait) : 9;
+        const r = await P.listenFor(dir, { timeout: minutes * 60 * 1000 });
+        for (const l of r.lines) console.log(l);
+        if (!r.done) { console.log(`(nothing from the user in ${minutes} min: run piece listen ${piece} again)`); process.exit(3); }
+        break;
+      }
+      if (sub === 'say') {
+        if (!P.readPiece(dir)) { console.error(`no piece.json in ${path.relative(process.cwd(), dir)}`); process.exit(1); }
+        const text = typeof args._[3] === 'string' ? args._[3].trim() : '';
+        if (!text) { console.error('piece say: give the reply in one or two plain sentences'); process.exit(1); }
+        P.addNote(dir, text); console.log('✓ the user sees it in the studio, under Ask your agent');
         break;
       }
       const stage = args._[3];
       await host();
       if (!P.STAGES.includes(stage)) { console.error(`piece ${sub}: give a stage (${P.STAGES.join(', ')})`); process.exit(1); }
-      if (sub === 'working') { P.updatePiece(dir, (p) => { delete p.ask; p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working', since: new Date().toISOString() }; }); console.log(`✓ ${stage}: working`); break; }
+      if (sub === 'working') { P.updatePiece(dir, (p) => { p.stage = stage; p.stages[stage] = { ...p.stages[stage], status: 'working', since: new Date().toISOString() }; }); P.setWorking(dir, typeof args.on === 'string' ? args.on : null); console.log(`✓ ${stage}: working${typeof args.on === 'string' ? ` on ${args.on}` : ''} (the studio shows it until you listen or review, or for 20 minutes)`); break; }
       // review: hand the stage over and wait for the user's decision in the studio
       if (stage === 'inventory') {
         // the user is asked whether each thing is true and worth showing: they cannot judge half an item

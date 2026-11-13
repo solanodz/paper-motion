@@ -320,18 +320,46 @@ export async function ensureLook(cwd, name) {
   return installed;
 }
 
+// the brand's backgrounds that come from the library take its colours again (after the palette or a colour changed)
+async function recolorBackgrounds(cwd) {
+  const setFile = path.join(cwd, 'brand/shader-set/set.json'), set = readJson(setFile, {});
+  const { add, getIndex } = await import('./registry.mjs');
+  const index = new Set(((await getIndex().catch(() => ({ items: [] }))).items ?? []).filter((x) => x.type === 'background').map((x) => x.id));
+  const ids = (set.entries ?? []).filter((e) => e.shader && !e.image && index.has(e.id)).map((e) => e.id);
+  if (!ids.length) return;
+  const order = (set.entries ?? []).map((e) => e.id);
+  await add(ids, { cwd, palette: 'brand', force: true });
+  const after = readJson(setFile, {});   // keep the order the user had: the first is the brand's background
+  after.entries = [...(after.entries ?? [])].sort((x, y) => (order.indexOf(x.id) + 1 || 1e9) - (order.indexOf(y.id) + 1 || 1e9));
+  writeJson(setFile, after);
+}
+
 export async function editStyle(cwd, dir, a) {
-  const tokens = path.join(cwd, 'brand/tokens.json'), motion = path.join(cwd, 'brand/motion.json');
-  snapshot(cwd, dir, [tokens, motion, path.join(cwd, 'brand/fonts.css')], 'the style');
+  const tokens = path.join(cwd, 'brand/tokens.json'), motion = path.join(cwd, 'brand/motion.json'), setFile = path.join(cwd, 'brand/shader-set/set.json');
+  snapshot(cwd, dir, [tokens, motion, path.join(cwd, 'brand/fonts.css'), setFile], 'the style');
   if (a.type === 'palette' || a.type === 'font') {
     const { add } = await import('./registry.mjs');
     await add([a.value], { cwd, force: true });
+    if (a.type === 'palette') await recolorBackgrounds(cwd);
     return { say: `${a.type === 'palette' ? 'Colours' : 'Type'}: ${a.value}` };
   }
   if (a.type === 'color') {
     if (!/^#[0-9a-f]{6}$/i.test(a.value) || !['ground', 'figure', 'accent'].includes(a.key)) throw new Error('bad colour');
-    const t = readJson(tokens, {}); t.colors ??= {}; t.colors[a.key] = { ...(t.colors[a.key] ?? {}), hex: a.value.toUpperCase() }; writeJson(tokens, t);
+    const t = readJson(tokens, {}); t.colors ??= {}; t.colors[a.key] = { ...(t.colors[a.key] ?? {}), hex: a.value.toUpperCase() }; delete t.ramp; writeJson(tokens, t);
+    await recolorBackgrounds(cwd);
     return { say: `${{ ground: 'Background', figure: 'Text', accent: 'Accent' }[a.key]} colour ${a.value}` };
+  }
+  if (a.type === 'background') {   // the brand's background: the first entry of its set, added from the library in its colours
+    let set = readJson(setFile, { entries: [] });
+    if (!(set.entries ?? []).some((e) => e.id === a.value)) { const { add } = await import('./registry.mjs'); await add([a.value], { cwd, palette: 'brand' }); set = readJson(setFile, { entries: [] }); }
+    const i = set.entries.findIndex((e) => e.id === a.value); if (i < 0) throw new Error('no such background');
+    set.entries.unshift(...set.entries.splice(i, 1)); writeJson(setFile, set);
+    return { say: `Background: ${a.value}` };
+  }
+  if (a.type === 'entrance') {   // how words arrive, unless a part says otherwise
+    if (!/^[a-z-]+$/.test(a.value)) throw new Error('bad entrance');
+    const m = readJson(motion, {}); m.entrance = a.value; writeJson(motion, m);
+    return { say: `Words arrive: ${a.value}` };
   }
   if (a.type === 'pace') {
     if (!['calm', 'medium', 'fast'].includes(a.value)) throw new Error('bad pace');
