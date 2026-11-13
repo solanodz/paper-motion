@@ -18,7 +18,7 @@ export const STAGES: Stage[] = [
     says: "Colours, type, background and movement, each playing with your own sentence. Your agent suggests; you choose by watching.",
     cmd: `${npx} board --url --title "Looks" --option sage-night --option slate-sea --option clay-desert --option ochre-sun`,
     out: "in the studio, How it looks · you chose C, clay",
-    caption: "Four looks for paper-motion, playing in the studio. The choice goes back to your agent.",
+    caption: "The brand's looks, cut one after another under paper-motion until one stays: clay. The choice goes back to your agent.",
   },
   {
     name: "Your video",
@@ -31,7 +31,7 @@ export const STAGES: Stage[] = [
     name: "Export",
     says: "Every frame is rendered on your machine. The film, and the scenes behind it, are files you own.",
     cmd: `${npx} chain paper-motion --motion-blur 5`,
-    out: "renders/paper-motion.mp4, 1920×1080, 31.2 s, every frame rendered",
+    out: "renders/paper-motion.mp4, 1920×1080, 30 s, every frame rendered",
     caption: "pieces/paper-motion/renders/paper-motion.mp4: six library blocks, rendered by the engine.",
   },
 ];

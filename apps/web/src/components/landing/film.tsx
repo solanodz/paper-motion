@@ -1,19 +1,21 @@
 "use client";
 
-// The film on the landing's monitor is a real one. Six blocks from the library, in paper-motion's own brand on the
-// grain-clay background, rendered by the engine with `chain` and joined by whips. Nothing is drawn here: these are the
-// clips (public/landing-film), encoded from examples/paper-motion-brand/pieces/landing-film, so what you watch is
-// exactly what the library gives you. Re-render there with `pamo chain landing-film --motion-blur 5` and `--drafts`.
+// The film on the landing's monitor is a real one: paper-motion's own promo, 16:9, rendered frame by frame by the
+// engine from examples/paper-motion-brand/pieces/landing-film-wide/scene.html (30 s, supersampled at 4K, motion blur).
+// Nothing is drawn here. The six scene clips (part-*.webm) are the library blocks the "What you say" step lists.
+// Re-render from examples/paper-motion-brand with
+// `pamo render pieces/landing-film-wide/scene.html --dpr 2 --motion-blur 4`, then encode film-wide.webm and film-wide.jpg.
 import { useEffect, useRef, useState } from "react";
 import { AutoVideo } from "@/components/landing/auto-video";
 
 export const SCENES = [
-  { id: "marker-highlight", beat: "The hook", d: 4.8 },
-  { id: "terminal-run", beat: "The agent", d: 6.2 },
-  { id: "browser-frame", beat: "The library", d: 6.4 },
-  { id: "toast-stack", beat: "Your approvals", d: 4 },
-  { id: "stat-row", beat: "The numbers", d: 5.6 },
-  { id: "text-mask", beat: "Liquid metal", d: 5.6 },
+  { id: "beat-cuts", beat: "The hook", d: 3.0 },
+  { id: "grain-clay", beat: "How it looks", d: 3.11 },
+  { id: "search-type", beat: "The library", d: 5.1 },
+  { id: "stat-row", beat: "The numbers", d: 4.26 },
+  { id: "terminal-run", beat: "The agent", d: 4.91 },
+  { id: "scramble", beat: "One prompt", d: 4.75 },
+  { id: "text-mask", beat: "Liquid metal", d: 4.87 },
 ] as const;
 const TOTAL = SCENES.reduce((a, s) => a + s.d, 0);
 const BASE = "/landing-film";
@@ -40,7 +42,7 @@ export function Film({ timeline = false }: { timeline?: boolean }) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [timeline]);
-  const video = <AutoVideo src={`${BASE}/film.webm`} poster={`${BASE}/film.jpg`} />;
+  const video = <AutoVideo src={`${BASE}/film-wide.webm`} poster={`${BASE}/film-wide.jpg`} />;
   if (!timeline) return video;
   const starts = SCENES.map((_, i) => SCENES.slice(0, i).reduce((x, y) => x + y.d, 0));
   return (
