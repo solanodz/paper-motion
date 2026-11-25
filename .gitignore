@@ -1,40 +1,15 @@
 node_modules/
 .DS_Store
+.vercel
 
-# Local work: pieces in progress (one holds a copyrighted instrumental) and their outputs
+# Local work: pieces in progress and their full-size renders (only web encodes go in gallery/)
 works/
 renders/
-stills/
 
-# Personal shader library while it is being moved into examples/paper-motion-brand (spec step 11)
-/library/
-
-# Example brand: the shader-set loops are local (works/shader-set/renders); the sheet exports are regenerated
-examples/paper-motion-brand/brand/shader-set/renders
-examples/paper-motion-brand/brand/sheet/sheet.png
-examples/paper-motion-brand/brand/sheet/sheet.pdf
-
-# Interview option boards are throwaway
-**/brand/.interview/
-
-# Shader sets: shots, boards and shot.js are rebuilt by `pamo shader-set build`
-**/brand/shader-set/shots/
-**/brand/shader-set/boards/
-**/brand/shader-set/shot.js
-
-# Audio never goes in the repo: sound samples are rebuilt by `pamo sound-samples`, keystroke banks and music stay local
+# Audio sources stay local; a gallery video carries its own mixed track
 *.wav
 *.mp3
 *.m4a
 *.aac
 *.flac
 *.ogg
-**/brand/sound/sounds.json
-**/brand/sound/keys/
-.vercel
-
-# Chains: per-part drafts are rebuilt by `pamo chain <piece> --drafts`
-**/pieces/*/drafts/
-# the studio's passing notes about a piece (who is listening, the join in progress)
-**/pieces/*/.agent.json
-**/pieces/*/.job.json
