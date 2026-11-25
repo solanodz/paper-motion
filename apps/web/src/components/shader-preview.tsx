@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 type Entry = { shader: string; props: Record<string, unknown>; image?: string; background?: string };
 
 /**
- * A live Paper shader for one background resource. It mounts only while on screen, so a page of
+ * A live Paper shader. It mounts only while on screen, so a page of
  * cards never holds more WebGL contexts than the browser allows.
  */
 export function ShaderPreview({ entry, className = "", still = false }: { entry: Entry; className?: string; still?: boolean }) {
@@ -33,12 +33,7 @@ export function ShaderPreview({ entry, className = "", still = false }: { entry:
     };
   }, [visible, Comp, entry.shader]);
 
-  const image =
-    entry.image === "wordmark" || entry.image === "wordmark-dark"
-      ? "/site/wordmark.png"
-      : entry.image?.startsWith("assets/")
-        ? `/files/${entry.image.split("/").pop()}`
-        : (entry.props.image as string | undefined);
+  const image = entry.image ?? (entry.props.image as string | undefined);
   const props = { ...entry.props, ...(image ? { image } : {}), ...(still ? { speed: 0 } : {}) };
 
   return (

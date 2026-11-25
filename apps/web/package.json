@@ -3,25 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "registry": "node ../../packages/engine/bin/pamo.mjs registry build --out public && cp ../../packages/engine/lib/customize.mjs src/lib/customize.mjs && cp ../../packages/engine/lib/live-board.js src/lib/board.mjs && cp ../../packages/engine/lib/find.mjs src/lib/find.mjs",
-    "predev": "npm run registry",
+    "sync": "node scripts/sync-gallery.mjs",
+    "predev": "npm run sync",
     "dev": "next dev",
-    "prebuild": "npm run registry",
+    "prebuild": "npm run sync",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "fonts": "node scripts/google-fonts.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "check": "node --no-warnings --experimental-strip-types scripts/check-gallery.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "^2.4.0",
-    "@paper-design/shaders": "^0.0.82",
     "@paper-design/shaders-react": "^0.0.82",
-    "@upstash/redis": "^1.41.0",
-    "mcp-handler": "^2.3.1",
+    "@ui-sdk/core": "^0.1.0-beta.1",
+    "@ui-sdk/react": "^0.1.0-beta.1",
     "next": "16.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "yaml": "^2.9.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -33,5 +31,6 @@
     "eslint-config-next": "16.4.5",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "type": "module"
 }

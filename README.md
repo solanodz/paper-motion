@@ -1,144 +1,44 @@
 # paper-motion
 
-**Creative-directed videos for people who use coding agents.**
+**Videos your agent can make, each with the exact prompt that made it.**
 
-<p><img src="docs/images/paper-motion.webp" width="100%" alt="paper-motion's promo, made with paper-motion: a prompt in the terminal, the render, a wall of the brand's shader loops, a dive into one of them, and the install command"></p>
+paper-motion is a gallery. Every video in it was made by a coding agent (Claude Code, Codex, Cursor…) from a single
+prompt, rendered from code. Each one comes with:
 
-A pack of agent skills that takes you from "I have a brand" to a brand sheet and your first videos, from a
-conversation with Claude Code, Codex, Cursor or any agent that reads skills. It finds out who your brand is, how it
-looks, moves and sounds, and then makes videos that stay on brand, rendered frame-exact with
-[Paper Shaders](https://shaders.paper.design).
+- the prompt, ready to copy, with fields that adapt it to your brand;
+- what you need to bring (a voice-over, a logo, ffmpeg…);
+- how honest the result is: the model, the agent, the date, and how many cold runs passed;
+- what goes wrong, and what to say to your agent when it does.
 
-If you already know your brand, bring it (fonts, colors, a brand manual, a website, a Figma or Paper file) and skip to
-the parts you need.
+Browse it at **[paper-motion.vercel.app](https://paper-motion.vercel.app)**. Agents can read
+[`/llms.txt`](https://paper-motion.vercel.app/llms.txt) and fetch any prompt as plain text at `/v/<slug>/prompt.md`.
 
-<p><img src="docs/images/brand-sheet.jpg" width="100%" alt="paper-motion's own brand sheet"></p>
+## How to use a video
 
-## How it works
+1. Pick one in the gallery.
+2. Fill in its fields (your word, your colours, your topic). The prompt changes as you type.
+3. Copy it and paste it into your agent, in the folder where the video should go.
 
-The pack asks before it makes. Every step is an interview in rounds: numbered questions, each with a recommended
-answer you can accept with a "yes", and for anything you judge with your eyes or ears, **option boards** (stills,
-short clips, or sounds played in turn) you answer with a letter.
+Every prompt ends with the same **director's pass**: contact sheets, a blind critic in a fresh subagent with at most
+six timestamped notes, and one revision. It is the one thing that reliably made agent videos better in our tests.
 
-<p><img src="docs/images/option-board.jpg" width="100%" alt="An option board: three palettes for a café, set in its own words"></p>
+## Why a gallery and not a tool
 
-Every decision lands in one place, your project's `brand/` folder, so each step builds on the last and your videos
-stay consistent from one to the next.
+paper-motion used to be a pack of skills, a render engine and a studio. On 2026-11-13 we tested it blind against
+Claude Code alone, on made-up brands. The full tool and its library both lost to the agent alone, and a leaner
+version didn't beat it by enough to be worth installing. What did improve the videos was a blind critic loop.
+The full results are in [docs/bake-off-results.md](docs/bake-off-results.md), and the reasoning behind the gallery in
+[docs/spec-gallery.md](docs/spec-gallery.md).
 
-| Step | Skill | What it settles |
-|---|---|---|
-| 1 | `identity` | Who the brand is: offer, audience, personality, voice, facts, references |
-| 2 | `visual-system` | Typefaces, palette, shape language, wordmark |
-| 3 | `brand-sheet` | The whole brand on one live page, plus PNG and PDF |
-| 4 | `motion-style` | Pace, camera, how text appears, a repertoire of transitions, endings |
-| 5 | `sound-kit` | Sound palette, typing sounds, music stance, loudness |
-| 6 | `shader-set` | The brand's moving material: fields, patterns, logo effects, image filters |
-| 7 | `make-video` | One video, from brief to final render, in 16:9, 9:16 or 1:1 |
+So the value isn't in a tool. It's in knowing what to ask for: the timing, the material, the camera and the checks.
+That is what each entry is. The old engine and skills are kept in git history (tag `v0.5`, branches `archive` and
+`lean`).
 
-Start with `/paper-motion`: it reads your brand folder and tells you where you are and what comes next. Or just ask
-for what you want ("help me define my brand", "make a launch video") and the right skill picks it up.
+## Contributing a video
 
-## Examples
-
-Each example is a finished piece with its scene, brief and brand folder in [`packages/engine/examples`](packages/engine/examples). Copy one to start from its style: `pamo new my-video --from <example>`.
-
-**Explainer · Halo** (an invented home battery): a 36 s voice-over explainer in the smooth After Effects style, with 3D depth, an inertial camera, morphs and kinetic words. [Watch it with sound](https://github.com/solanodz/paper-motion/releases/tag/example-halo-explainer).
-
-<p><img src="docs/images/halo-explainer.webp" width="100%" alt="Halo explainer: a dithered sun draws its day over a chart, energy pours into a battery, a solar panel lights up, a home lights at night"></p>
-
-**Presentation · Orbit** (an invented calendar that schedules meetings by itself): a 39 s product keynote in the same language, dark and interface-driven: one unbroken chain where a chat thread becomes a line, the line becomes the app, the app finds the gap. [Watch it with sound](https://github.com/solanodz/paper-motion/releases/tag/example-orbit-keynote).
-
-<p><img src="docs/images/orbit-keynote.webp" width="100%" alt="Orbit keynote: a chat thread squashes into a line that becomes the app's text field; the window unfolds; six calendars are scanned for a free slot; the booked card moves when someone drops out"></p>
-
-## Install
-
-Requirements: Node ≥ 18, ffmpeg, Google Chrome (or `npx playwright-core install chromium`).
-
-Any agent (Claude Code, Codex, Cursor, Gemini CLI, OpenCode…):
-
-```bash
-npx skills add solanodz/paper-motion
-```
-
-Claude Code, as a plugin:
-
-```
-/plugin marketplace add solanodz/paper-motion
-/plugin install paper-motion@paper-motion
-```
-
-The skills call the render engine, the npm package [`paper-motion`](packages/engine), through `npx paper-motion`:
-nothing else to install. To check your machine first, run `npx paper-motion setup`.
-
-From a clone of this repository:
-
-```bash
-git clone https://github.com/solanodz/paper-motion
-for d in paper-motion/skills/*/; do ln -s "$PWD/$d" ~/.claude/skills/; done
-node paper-motion/packages/engine/bin/pamo.mjs setup
-```
-
-Optional: connect the [Paper Desktop](https://paper.design) MCP to tune shaders by hand on the canvas and use it for
-style frames. Recommended, never required; the free plan allows 100 calls a week.
-
-## Use paper-motion.app
-
-[paper-motion.app](https://paper-motion.vercel.app) is a library of named resources your agent can use: component transitions, transitions, text effects, camera moves, Paper shader backgrounds, palettes, font pairs and recipes. Tell your agent which ones you want:
-
-> Use paper-motion.app to make a video for my brand. Use the backgrounds mesh-sage and grain-slate, the effects magic-move and whip-pan, the palette sage-night and the font pair instrument.
-
-The agent reads `https://paper-motion.vercel.app/llms.txt` and installs each resource into your project as code you own:
-
-```bash
-npx paper-motion add magic-move mesh-sage sage-night instrument launch
-```
-
-`npx paper-motion search <words>` and `npx paper-motion list <type>` browse the catalog from the terminal. The source of every resource is in [`registry/`](registry/).
-
-## The engine
-
-`packages/engine` renders an HTML scene, a pure function of time, frame by frame in headless Chrome and encodes it
-with ffmpeg: MP4, 10-bit HEVC, ProRes, WebM, GIF. Same input, same pixels.
-
-```bash
-pamo new launch --dir brand/pieces --format 9:16 --piece   # a scene wired to your brand
-pamo preview brand/pieces/launch/scene.html                # live, scrub with ←/→
-pamo render brand/pieces/launch/scene.html --motion-blur 8 --loudness -14
-pamo status                                                # what your brand folder has
-pamo                                                       # every command
-```
-
-All 30 Paper Shaders, a library of moves (wipes, pushes, mask reveals, dives into a frame, terminal typing),
-synthesized sound effects or real keystrokes split from your own recording, option boards, wordmarks and the brand
-sheet.
-
-## Repository
-
-```
-skills/                 the pack: paper-motion (entry), interview, identity, visual-system, brand-sheet,
-                        motion-style, sound-kit, shader-set, make-video
-packages/engine/        the `paper-motion` npm package: CLI, runtime, renderer, templates, examples
-examples/paper-motion-brand/   paper-motion's own brand folder, built with the pack
-docs/                   spec-v1.md, ADRs
-GLOSSARY.md             the shared language every skill uses
-```
-
-## Credits
-
-- The interview mechanics follow Matt Pocock's [`grilling`](https://github.com/mattpocock/skills) skill: a design
-  tree worked in rounds, with a recommended answer for every question.
-- Rendering material: [Paper Shaders](https://shaders.paper.design), Apache-2.0, © Paper. "Powered by Paper Shaders."
+Read [AGENTS.md](AGENTS.md). In short: an entry is a folder in `gallery/` with the prompt, the video and its facts,
+and it is published only after the prompt has been run cold, in a fresh session, and passed.
 
 ## License
 
-MIT for the skills and the engine. Paper Shaders: Apache-2.0.
-
----
-
-### En español
-
-**paper-motion** es un paquete de skills para agentes (Claude Code, Codex, Cursor…) que te lleva de "tengo una
-marca" a tu página de identidad y tus primeros videos, conversando. Define quién es tu marca, cómo se ve, cómo se
-mueve y cómo suena, con preguntas en rondas y tableros de opciones que elegís con una letra, y después hace videos
-que respetan esa marca, renderizados cuadro a cuadro con Paper Shaders. Si ya tenés tu marca definida, la traés y
-saltás a lo que necesites. Empezá con `/paper-motion`.
+MIT. Third-party assets inside a video are credited on its page, under their own licences.
